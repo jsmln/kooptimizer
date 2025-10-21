@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+*.env
+
+# Django
+db.sqlite3
+media/
+
+# VS Code
+.vscode/
+
+# Static (Compiled)
+static/css/output.css

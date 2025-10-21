@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Kooptimizer{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="{% static 'js/dashboard.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+
+        <section id="home">
+            <p>Welcome to the Kooptimizer dashboard. Here you can monitor and manage your optimization tasks.</p>
+        </section>
+    
+{% endblock %}

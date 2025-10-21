@@ -1,0 +1,38 @@
+# Make sure to import these at the top of your views.py
+from django.conf import settings
+from django.shortcuts import render
+from django.contrib import messages
+import requests # You may need to run 'pip install requests'
+
+# This is an example of a login or registration view
+def login_view(request):
+
+    if request.method == 'POST':
+        # 1. Get the user's token from the form
+        recaptcha_response = request.POST.get('g-recaptcha-response')
+
+        # 2. Build the data to send to Google for verification
+        data = {
+            'secret': settings.RECAPTCHA_SECRET_KEY,  # Use the key from settings.py
+            'response': recaptcha_response
+        }
+
+        # 3. Make the POST request to Google's server
+        r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+        result = r.json() # The result is a JSON object
+
+        # 4. Check if verification was successful
+        if result['success']:
+            # --- RECAPTCHA PASSED ---
+            # TODO: Add your real form logic here (e.g., create user, log them in)
+            messages.success(request, 'reCAPTCHA verified successfully!')
+            # ... continue with your code ...
+            pass # Remove this 'pass' when you add your code
+        
+        else:
+            # --- RECAPTCHA FAILED ---
+            messages.error(request, 'Invalid reCAPTCHA. Please try again.')
+            return render(request, 'login.html') # Send them back
+
+    # This is for the GET request (just showing the page)
+    return render(request, 'login.html')
