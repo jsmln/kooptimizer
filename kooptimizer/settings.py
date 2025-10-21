@@ -134,5 +134,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #  RECAPTCHA TEST KEYS (FOR DEVELOPMENT)
 #  TODO: Replace with real keys before going to production
 # ====================================================================
-RECAPTCHA_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
-RECAPTCHA_SECRET_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+RECAPTCHA_SITE_KEY = '6LeepvErAAAAAP3XNLdmBipdELXOuZqfo13T6lYEss'
+RECAPTCHA_SECRET_KEY = '6LeepvErAAAAACoTx3YxrhSVI_D9lzEtHeyE7uVf'
