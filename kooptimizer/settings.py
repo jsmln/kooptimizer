@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.cooperatives',
     'apps.communications',
-    'apps.dashboard',
+    'apps.home',
 ]
 
 MIDDLEWARE = [
