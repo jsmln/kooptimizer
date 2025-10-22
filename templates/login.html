@@ -1,13 +1,29 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block title %}Login - Kooptimizer{% endblock %}
 
 {% block content%}
+{% if error %}
+        <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 15px;">
+            {{ error }}
+        </p>
+    {% endif %}
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: green; font-weight: bold; text-align: center; margin-bottom: 15px;">
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
+    <script type="module" src="{% static 'js/main.js' %}" defer></script>
+    
     <section id="login">
         <h2>Login</h2>
-        <form id="login-form">
+        <form id="login-form" method="POST">
+            {% csrf_token %} 
             
             <div>
                 <label for="username">Username:</label>
