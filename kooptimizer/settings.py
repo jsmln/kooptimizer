@@ -61,7 +61,7 @@ ROOT_URLCONF = 'kooptimizer.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'], # tells django to look for templates in a folder named 'templates' at the project root
+        'DIRS': ['templates'], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,7 +76,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'kooptimizer.wsgi.application'
 
 
-# Database
+# Database to edit @Noe
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
