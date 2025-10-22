@@ -1,4 +1,6 @@
+
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +9,7 @@
     
     <title>{% block title %}Kooptimizer{% endblock %}</title>
     
-    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'frontend/base.css' %}" rel="stylesheet">
 
     {% block extra_head %}{% endblock %}
 
@@ -15,7 +17,10 @@
 <body>
 
     <header>
-        <h1>Kooptimizer</h1>
+        <div class="logo-title">
+            <img src="{% static 'frontend/images/Logo.png' %}" alt="Kooptimizer Logo" class="logo">
+            <h1>Kooptimizer</h1>
+        </div>
         <nav>
             <ul>
                 <li><a href="{% url 'home'%}">Home</a></li>
@@ -24,7 +29,8 @@
                 <li><a href="{% url 'about'%}">About</a></li>
             </ul>
         </nav>
-    </header>
+</header>
+
     <main>
         {% block content %}
         {% endblock %}

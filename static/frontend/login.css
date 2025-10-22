@@ -1,0 +1,98 @@
+body {
+  margin: 0;
+  font-family: "Arial Nova", "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #b71c1c, #7f0000);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+#login {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  padding: 40px 50px;
+  width: 350px;
+  animation: fadeIn 0.6s ease-in-out;
+  backdrop-filter: blur(6px);
+  position: relative;
+  z-index: 1;
+}
+
+#login h2 {
+  text-align: center;
+  color: #b71c1c;
+  font-size: 1.8em;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+  border-color: #b71c1c;
+  box-shadow: 0 0 4px rgba(183, 28, 28, 0.3);
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(90deg, #b71c1c, #a00000);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.1s;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #c62828, #8e0000);
+  transform: translateY(-1px);
+}
+
+#recaptcha-placeholder {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 400px) {
+  #login {
+    width: 90%;
+    padding: 30px;
+  }
+}
