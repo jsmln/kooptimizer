@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Home - Kooptimizer{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <script src="{% static 'js/home.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+
+<header class="home-header">
+        <h1>Welcome to the Kooptimizer Home</h1>
+        <p>You are logged in as Office Staff.</p>
+    </header>
+
+{% endblock %}
