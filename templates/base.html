@@ -23,10 +23,27 @@
         </div>
         <nav>
             <ul>
-                <li><a href="{% url 'home'%}">Home</a></li>
-                <li><a href="{% url 'login'%}">Login</a></li>
-                <li><a href="{% url 'download'%}">Download</a></li>
-                <li><a href="{% url 'about'%}">About</a></li>
+                {% if request.session.user_id %}
+                    {% if request.session.role == 'admin' %}
+                        <li><a href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a></li>
+                    {% elif request.session.role == 'cooperative_officer' %}
+                        <li><a href="{% url 'dashboard:cooperative_dashboard' %}">Dashboard</a></li>
+                    {% elif request.session.role == 'staff' %}
+                        <li><a href="{% url 'dashboard:staff_dashboard' %}">Dashboard</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'download' %}">Download</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
+                    <li class="logout-button">
+                        <a href="{% url 'logout' %}" onclick="return confirm('Are you sure you want to logout?')">
+                            Logout
+                        </a>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'download' %}">Download</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
+                {% endif %}
             </ul>
         </nav>
 </header>
@@ -35,6 +52,83 @@
         {% block content %}
         {% endblock %}
     </main>
+
+    <!-- Global Django messages (bottom-right, styled) -->
+    <div id="django-messages" aria-live="polite" aria-atomic="true">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="dj-message dj-{{ message.tags }}" role="status">
+                    <div class="dj-message-left">
+                        <div class="dj-message-icon" aria-hidden="true">!</div>
+                    </div>
+                    <div class="dj-message-body">
+                        <div class="dj-message-text">{{ message }}</div>
+                    </div>
+                    <button class="dj-message-close" aria-label="Close message">×</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <script>
+        // Floating message behavior: auto-dismiss and manual close with animation
+        (function () {
+            const container = document.getElementById('django-messages');
+            if (!container) return;
+
+            function dismiss(el) {
+                el.style.transition = 'opacity 240ms ease, transform 240ms ease';
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(18px)';
+                setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 260);
+            }
+
+            container.querySelectorAll('.dj-message').forEach((el) => {
+                // close button
+                const btn = el.querySelector('.dj-message-close');
+                if (btn) btn.addEventListener('click', () => dismiss(el));
+
+                // auto-dismiss after 5s
+                setTimeout(() => { if (document.body.contains(el)) dismiss(el); }, 5000);
+            });
+        })();
+    </script>
+
+    <style>
+        /* Bottom-right container */
+        #django-messages { position: fixed; bottom: 18px; right: 18px; z-index: 99999; width: 380px; display:flex; flex-direction:column; gap:10px; align-items:flex-end; }
+
+        .dj-message { display:flex; align-items:center; gap:12px; width:100%; max-width:380px; background:#fff; padding:12px 14px; border-radius:12px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.06); transform: translateX(12px); opacity:0; animation: slideIn .26s forwards; }
+        @keyframes slideIn { from { transform: translateX(12px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+
+        .dj-message-left { flex: 0 0 auto; }
+        .dj-message-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-family: inherit; }
+
+        .dj-message-body { flex:1 1 auto; min-width:0; }
+        .dj-message-text { font-size:14px; color:#222; line-height:1.2; word-wrap:break-word; }
+
+        .dj-message-close { background: transparent; border: none; font-size:18px; line-height:1; cursor:pointer; color: #6b6b6b; padding: 4px 6px; margin-left: 8px; border-radius:6px; }
+        .dj-message-close:hover { background: rgba(0,0,0,0.04); }
+
+        /* Type styles */
+        .dj-success { background: #f0fbf4; border-color:#d2f4da; }
+        .dj-success .dj-message-icon { background: #16a34a; }
+
+        .dj-warning { background: #fff9f0; border-color:#ffeecb; }
+        .dj-warning .dj-message-icon { background: #f59e0b; }
+
+        .dj-info { background: #f0f7ff; border-color:#dbeeff; }
+        .dj-info .dj-message-icon { background: #0ea5e9; }
+
+        .dj-error, .dj-danger { background: #fff0f2; border-color:#ffd6dc; }
+        .dj-error .dj-message-icon, .dj-danger .dj-message-icon { background: #ef476f; }
+
+        /* Slight responsive tweak */
+        @media (max-width: 480px) {
+            #django-messages { right: 12px; left:12px; width: auto; align-items:center; }
+            .dj-message { max-width: calc(100vw - 36px); }
+        }
+    </style>
 
     <footer>
         <p>&copy; 2025 Kooptimizer. All rights reserved.</p>
