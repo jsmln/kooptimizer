@@ -1,22 +1,17 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Home - Kooptimizer{% endblock %}
+{% block title %}Home - KoopTimizer{% endblock %}
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'frontend/home.css' %}">
 {% endblock %}
 
 {% block content %}
-<body>
-<div class="home-content">
-    <div class="img"></div>
-    <div class="txt1">
-        <h1>KOOPTIMIZER<span>.</span></h1>
-    </div>
-    <div class="txt2">
-        <span></span>
-    </div>
-</div>
-</body>
+
+<header class="home-header">
+        <h1>Welcome to the Kooptimizer Home</h1>
+        <p></p>
+    </header>
+
 {% endblock %}

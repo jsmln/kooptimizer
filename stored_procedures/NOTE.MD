@@ -1,0 +1,1 @@
+Run the stored procedures first before debugging. Copy and paste the contents of the SQL files individually into the PGAdmin SQL tool and execute them.

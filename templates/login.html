@@ -2,23 +2,10 @@
 
 {% load static %}
 
-{% block title %}Login - Kooptimizer{% endblock %}
-    <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-status-bar-style" content="#3367D6">
+{% block title %}Login - KoopTimizer{% endblock %}
 
 {% block content%}
-{% if error %}
-        <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 15px;">
-            {{ error }}
-        </p>
-    {% endif %}
-    {% if messages %}
-        {% for message in messages %}
-            <p style="color: green; font-weight: bold; text-align: center; margin-bottom: 15px;">
-                {{ message }}
-            </p>
-        {% endfor %}
-    {% endif %}
+{% comment %} Per-app templates should not render Django messages directly; the base template provides a floating message UI. {% endcomment %}
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <link rel="stylesheet" href="{% static 'frontend/login.css' %}">
     
