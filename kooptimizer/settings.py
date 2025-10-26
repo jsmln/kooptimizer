@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-eu6tra#vaqwuxk4z4((zawbf8h6wxi$@=+*)39(wpdwa0ll8(y'
+# Read sensitive settings from environment variables where possible.
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY', 'django-insecure-eu6tra#vaqwuxk4z4((zawbf8h6wxi$@=+*)39(wpdwa0ll8(y'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS can be provided as a comma-separated list in the ALLOWED_HOSTS
+# environment variable, e.g. "127.0.0.1,localhost,mydomain.com"
+raw_allowed = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()] if raw_allowed else []
 
 
 # Application definition
@@ -81,8 +88,12 @@ WSGI_APPLICATION = 'kooptimizer.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'kooptimizer_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -138,3 +149,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ====================================================================
 RECAPTCHA_SITE_KEY = '6LeepvErAAAAAP3XNLdmBipdELXOuZqfo13T6lYEss'
 RECAPTCHA_SECRET_KEY = '6LeepvErAAAAACoTx3YxrhSVI_D9lzEtHeyE7uVf'
+
+# ====================================================================
+#  INFOBIP SMS OTP CONFIGURATION
+# ====================================================================
+INFOBIP = {
+    'API_KEY': '59e557086ef77c70baedae43c27cc2a3-a85817e2-1561-41e1-833d-5cbd0664a5d0',
+    'BASE_URL': 'kqm92n.api.infobip.com',
+    'APPLICATION_ID': 'kooptimizer_otp_api',
+    'SENDER_ID': 'ServiceSMS',
+    'PIN_LENGTH': 4,
+    'MESSAGE_TEMPLATE': 'Your pin is {{pin}}',
+}
