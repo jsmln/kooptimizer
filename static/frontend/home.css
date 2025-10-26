@@ -1,0 +1,122 @@
+body{
+    background: linear-gradient(100deg, rgb(129, 12, 12),rgb(58, 6, 6), rgb(0, 0, 0));
+    margin: 0;
+}
+
+.home-content{
+    display: grid;
+    grid-template-columns: 30% 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(5, 1fr);
+    min-height: calc(85vh - 85px);
+    grid-template-rows: 1fr 15% 5% 5% 10%;
+    grid-template-rows:none;
+    /* min-height: 500vh; deleted*/ 
+    /* gap: 8px; */
+}
+
+.img{
+    background-image: url('images/Logo.png'); /*linear-gradient(100deg, rgba(183, 28, 28, 0.7), rgba(127, 0, 0, 0.7), rgba(0, 0, 0, 0.7))*/
+    background-repeat: no-repeat;
+    background-size: 150vh;
+    background-position: center;
+    z-index: 1;
+    grid-column: 2 / 6; 
+    grid-row: 1 / 6;
+    
+}
+
+.home-content .txt1 {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    display:flex;
+    /*flex-direction: column;*/
+    justify-content: flex-start;
+    align-items: center;
+    text-align: left; 
+    padding: 2rem;
+    grid-column-start: 1;
+    grid-row-start: 2;
+    font-size: 2.5rem;
+}
+
+.home-content .txt1 span {
+    opacity: 0;
+}
+
+.home-content .txt2 {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: left;
+    padding: 2rem;
+    grid-column: 1 / 2;
+    grid-row-start: 3;
+    font-size: 1.2rem; 
+}
+
+.home-content .txt2 span {
+    display: inline-block;
+    position: relative;
+    height: 4.2rem; 
+    line-height: 4.2rem;
+    overflow: hidden;
+}
+
+.home-content .txt2 span::after {
+    font-weight: bold;
+    font-size: 4rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    color: white;
+    white-space: nowrap;
+    content: 'Digitize Records';
+    animation: words 6s infinite;
+    display: inline-block;
+    position: relative; 
+}
+
+@keyframes words {
+    0%, 25% {
+        content: 'Digitize Records';
+        transform: translateY(0);
+        opacity: 1;
+    }
+    33% {
+        content: 'Digitize Records';
+        transform: translateY(-100%); 
+        opacity: 0; 
+    }
+
+    34% {
+        content: 'Better Governance';
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    42%, 58% {
+        content: 'Better Governance';
+        transform: translateY(0);
+        opacity: 1;
+    }
+    66% {
+        content: 'Better Governance';
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    67% {
+        content: 'Real-time Updates';
+        transform: translateY(100%); 
+        opacity: 0;
+    }
+    75%, 92% {
+        content: 'Real-time Updates';
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        content: 'Real-time Updates';
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+}

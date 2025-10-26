@@ -40,13 +40,15 @@ body::after {
 
 header {
   width: 100%;
-  background: linear-gradient(90deg, #b71c1c, #8e0e0e);
+  /* background-color: #4f0c0c;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px; */
   color: white;
-  padding: 15px 60px;
+  padding: 15px 60px 15px 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); */
   position: sticky;
   top: 0;
   z-index: 100;
@@ -61,8 +63,9 @@ header {
 .logo {
   height: 48px;
   width: auto;
+  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.4));
 }
-
+ 
 header h1 {
   font-size: 2em;
   font-weight: 700;
@@ -93,26 +96,28 @@ nav ul li a.active {
 
 main {
   flex: 1;
-  padding: 60px 80px;
+  /* padding: 60px 80px; */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
 }
 
-main > *:first-child {
-  margin-top: 20px;
-}
+/* main > *:first-child {
+   margin-top: 20px; 
+} */
 
 footer {
   width: 100%;
-  background: linear-gradient(90deg, #b71c1c, #8e0e0e);
+  /* background-color: #4f0c0c; */
+  /* border-top-left-radius: 15px;
+  border-top-right-radius: 15px; */
   color: white;
   text-align: center;
   padding: 18px 0;
   font-size: 0.95em;
   font-weight: 500;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2); */
   margin-top: auto; 
 }
 
