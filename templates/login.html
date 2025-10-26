@@ -2,10 +2,21 @@
 
 {% load static %}
 
-{% block title %}Login - KoopTimizer{% endblock %}
+{% block title %}Login - Kooptimizer{% endblock %}
 
 {% block content%}
-{% comment %} Per-app templates should not render Django messages directly; the base template provides a floating message UI. {% endcomment %}
+{% if error %}
+        <p style="color: red; font-weight: bold; text-align: center; margin-bottom: 15px;">
+            {{ error }}
+        </p>
+    {% endif %}
+    {% if messages %}
+        {% for message in messages %}
+            <p style="color: green; font-weight: bold; text-align: center; margin-bottom: 15px;">
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <link rel="stylesheet" href="{% static 'frontend/login.css' %}">
     

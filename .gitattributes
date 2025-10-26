@@ -1,6 +1,0 @@
-# Python files use LF
-*.py text eol=lf
-# Text files use LF
-*.txt text eol=lf
-# Shell scripts use LF
-*.sh text eol=lf
