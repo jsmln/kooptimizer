@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: "Arial Nova", "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  background: linear-gradient(135deg, #b71c1c, #7f0000);
+  background: linear-gradient(100deg, rgb(129, 12, 12),rgb(58, 6, 6), rgb(0, 0, 0));
   height: 100vh;
   display: flex;
   justify-content: center;
@@ -10,6 +10,7 @@ body {
 
 
 #login {
+  margin-top: 65px;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
