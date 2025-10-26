@@ -37,9 +37,9 @@ class User(models.Model):
             return {
                 'status': result[0],
                 'user_id': result[1],
-                'role': result[2],
+                'role': result[4],
                 'verification_status': result[3],
-                'is_first_login': result[4],
+                'is_first_login': result[2],
             }
         else:
             return None

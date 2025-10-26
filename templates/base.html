@@ -27,7 +27,7 @@
         <nav>
             <ul>
                 {% if request.session.user_id %}
-                    {% if request.session.role == 'admin' %}
+                {% if request.session.role == 'admin' %}
                         <li><a href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a></li>
                     {% elif request.session.role == 'cooperative_officer' %}
                         <li><a href="{% url 'dashboard:cooperative_dashboard' %}">Dashboard</a></li>

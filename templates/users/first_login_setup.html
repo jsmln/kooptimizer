@@ -1,10 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'frontend/first_login.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="first-login-setup" style="max-width:480px;margin:40px auto;padding:20px;border-radius:8px;background:#fff;">
+<div class="first-login-setup">
     <h1>Account Setup</h1>
-    
-    {# Messages are rendered globally by base.html (floating) #}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert 
+                {% if message.tags == 'success' %}alert-success
+                {% elif message.tags == 'error' %}alert-danger
+                {% elif message.tags == 'warning' %}alert-warning
+                {% else %}alert-info{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
     {% if not show_otp_form and not show_password_form %}
     <div class="verification-start">
@@ -12,30 +27,30 @@
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="send_otp">
-            <button type="submit" class="btn btn-primary">Send Verification Code</button>
+            <button type="submit">Send Verification Code</button>
         </form>
     </div>
     {% endif %}
 
     {% if show_otp_form %}
     <div class="otp-verification">
-        <p>Please enter the verification code sent to your phone.</p>
+        <div class="otp-icon">📱</div>
+        <p>Please enter the 4-digit code sent to your phone number <strong>+63********09</strong>.</p>
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="verify_otp">
-            <div class="form-group">
-                <label for="otp_code">Verification Code</label>
-                <input type="text" name="otp_code" id="otp_code" required class="form-control" 
-                       pattern="[0-9]*" inputmode="numeric" maxlength="4">
+            <div class="otp-inputs">
+                <input type="text" name="otp_1" maxlength="1" required>
+                <input type="text" name="otp_2" maxlength="1" required>
+                <input type="text" name="otp_3" maxlength="1" required>
+                <input type="text" name="otp_4" maxlength="1" required>
             </div>
-            <div style="margin-top:16px;display:flex;gap:8px;">
-                <button type="submit" class="btn btn-primary">Verify Code</button>
-                <form method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="send_otp">
-                    <button type="submit" class="btn btn-secondary">Resend Code</button>
-                </form>
-            </div>
+            <button type="submit">Verify Account</button>
+        </form>
+        <form method="post" style="margin-top:10px;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="send_otp">
+            <button type="submit" class="btn-secondary">Resend Code</button>
         </form>
     </div>
     {% endif %}
@@ -46,63 +61,48 @@
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="change_password">
-            
+
             <div class="form-group">
                 <label for="new_password">New password</label>
-                <input type="password" name="new_password" id="new_password" 
-                       required minlength="8" class="form-control">
+                <input type="password" name="new_password" id="new_password" required minlength="8" class="form-control">
             </div>
 
             <div class="form-group">
                 <label for="confirm_password">Confirm password</label>
-                <input type="password" name="confirm_password" id="confirm_password" 
-                       required minlength="8" class="form-control">
+                <input type="password" name="confirm_password" id="confirm_password" required minlength="8" class="form-control">
             </div>
 
-            <div style="margin-top:16px;display:flex;gap:8px;">
-                <button type="submit" class="btn btn-primary">Save password</button>
-                <a href="{% url 'logout' %}" class="btn btn-secondary" 
-                   style="text-decoration:none;padding:8px 12px;border-radius:4px;">Cancel</a>
-            </div>
+            <button type="submit">Save Password</button>
+            <a href="{% url 'logout' %}" class="btn-secondary">Cancel</a>
         </form>
     </div>
     {% endif %}
 </div>
 
-<style>
-.form-group {
-    margin-bottom: 1rem;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-}
-.form-control {
-    width: 100%;
-    padding: 0.375rem 0.75rem;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-}
-.alert {
-    padding: 0.75rem 1.25rem;
-    margin-bottom: 1rem;
-    border: 1px solid transparent;
-    border-radius: 0.25rem;
-}
-.alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-}
-.alert-danger {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-}
-.alert-warning {
-    color: #856404;
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-}
-</style>
+<script>
+    document.querySelectorAll('.otp-inputs input').forEach((input, index, arr) => {
+        input.addEventListener('input', () => {
+            if (input.value && index < arr.length - 1) {
+                arr[index + 1].focus();
+            }
+        });
+    });
+
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', () => {
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = "Processing...";
+            }
+        });
+    });
+
+    window.addEventListener('error', function() {
+        const alertBox = document.createElement('div');
+        alertBox.className = 'alert alert-danger';
+        alertBox.textContent = 'Something went wrong. Please try again.';
+        document.querySelector('.first-login-setup').prepend(alertBox);
+    });
+</script>
 {% endblock %}

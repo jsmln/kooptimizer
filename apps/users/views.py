@@ -82,9 +82,6 @@ def logout_view(request):
 
 
 def first_login_setup(request):
-    """
-    Handle first-time login setup with OTP verification and password change.
-    """
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, 'Session expired. Please login again.')
@@ -93,7 +90,7 @@ def first_login_setup(request):
     try:
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
-        messages.error(request, 'User not found. Please contact support.')
+        messages.error(request, 'Invalid username or password. Please contact support.')
         return redirect('login')
 
     if request.method == 'POST':
