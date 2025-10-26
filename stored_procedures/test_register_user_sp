@@ -47,7 +47,7 @@ def register_user(username: str, password: str, role: str):
 # Example Usage: register 'admin_joan'
 # ======================================================
 if __name__ == "__main__":
-    new_user = register_user("admin_joan", "AdminJoan@123!", "admin")
+    new_user = register_user("admin_user", "Admin@123", "admin")
 
     if new_user:
         print("✅ User registered successfully:")

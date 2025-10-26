@@ -11,23 +11,13 @@ from apps.core.services.otp_service import OTPService
 
 # This is the user login view
 def login_view(request):
-
     if request.method == 'POST':
-
-        # Get username and password from form
         username = request.POST.get('username')
         password = request.POST.get('password')
-
-        # Get the user's token from the form
         recaptcha_response = request.POST.get('g-recaptcha-response')
 
-        # Build the data to send to Google for verification
-        data = {
-            'secret': settings.RECAPTCHA_SECRET_KEY, 
-            'response': recaptcha_response
-        }
-
-        # Make the POST request to Google's server
+        # Verify reCAPTCHA
+        data = {'secret': settings.RECAPTCHA_SECRET_KEY, 'response': recaptcha_response}
         try:
             r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
             r.raise_for_status()
@@ -36,100 +26,52 @@ def login_view(request):
             messages.error(request, f'Server error during verification: {e}')
             return render(request, 'login.html')
 
-        # Check if reCAPTCHA verification was successful
-        if result['success']:
-            # --- RECAPTCHA PASSED - PROCEED TO DATABASE LOGIN ---
-            
-            with connection.cursor() as cursor:
-                try:
-                    # Call the stored function using %s placeholders for security.
-                    cursor.execute(
-                        "SELECT * FROM sp_login_user(%s, %s)",
-                        [username, password]
-                    )
-                    
-                    # Fetch the single result row
-                    login_result = cursor.fetchone()
-                    print(f"Login result from DB: {login_result}")
-                    
-                    # Check if we got a result
-                    if login_result is None:
-                        messages.error(request, 'Invalid login attempt.')
-                        return render(request, 'login.html')
-                    
-                    # Validate we got all expected columns
-                    if len(login_result) != 5:
-                        messages.error(request, 'System configuration error. Please contact support.')
-                        return render(request, 'login.html')
-                    
-                    # Unpack the result: (status_code, user_id, role, verification_status, is_first_login)
-                    status_code, user_id, role, verification_status, is_first_login = login_result
-                    
-                    # Validate critical fields are not None
-                    if status_code is None or user_id is None or role is None:
-                        messages.error(request, 'Invalid account state. Please contact support.')
-                        return render(request, 'login.html')
-                    
-                except (OperationalError, ProgrammingError) as e:
-                    # Database connection or query syntax errors
-                    print(f"Database connection/query error: {e}")
-                    messages.error(request, 'Unable to connect to authentication service. Please try again later.')
-                    return render(request, 'login.html')
-                    
-                except InternalError as e:
-                    # Stored procedure execution errors
-                    print(f"Stored procedure error: {e}")
-                    messages.error(request, 'Authentication service error. Please contact support.')
-                    return render(request, 'login.html')
-                    
-                except Exception as e:
-                    # Catch any other unexpected errors
-                    print(f"Unexpected database error: {e}")
-                    messages.error(request, 'An unexpected error occurred. Please try again later.')
-                    return render(request, 'login.html')
-
-            if status_code == 'SUCCESS':
-                # --- Login Successful (Credentials Valid) ---
-
-                # Set custom session variables to "log the user in"
-                request.session['user_id'] = user_id
-                request.session['role'] = role
-                
-                # Redirect to setup page if it's the first login OR if verification is pending.
-                # The setup page will handle identity verification and password change.
-                if is_first_login or verification_status == 'pending':
-                    messages.warning(request, 'You must complete account setup: verify your identity and change your temporary password.')
-                    return redirect('first_login_setup') 
-                
-                # --- NORMAL LOGIN ---
-                else:
-                    messages.success(request, f'Welcome back, {username}!')
-                    # Redirect based on role
-                    if role == 'admin':
-                        return redirect('dashboard:admin_dashboard')
-                    elif role == 'officer':
-                        return redirect('dashboard:cooperative_dashboard')
-                    elif role == 'staff':
-                        return redirect('dashboard:staff_dashboard')
-                    else:
-                        messages.error(request, 'Invalid role assignment. Please contact support.')
-                        return redirect('login')
-
-            elif status_code == 'INVALID_USERNAME_OR_PASSWORD':
-                # --- Login Failed (Security-safe message) ---
-                messages.error(request, 'Invalid Username or Password.')
-                return render(request, 'login.html')
-
-            else: # Catches 'ERROR' or any other unexpected status_code
-                messages.error(request, 'An internal error occurred. Please contact support.')
-                return render(request, 'login.html')
-        
-        else:
-            # --- RECAPTCHA FAILED ---
+        if not result.get('success'):
             messages.error(request, 'Invalid reCAPTCHA. Please try again.')
             return render(request, 'login.html')
 
-    # This is for the GET request (just showing the page)
+        # Call the stored procedure via User model helper
+        login_result = User.login_user(username, password)
+        print("Login result:", login_result)
+
+        if not login_result:
+            messages.error(request, 'Invalid login attempt.')
+            return render(request, 'login.html')
+
+        status_code = login_result['status']
+        user_id = login_result['user_id']
+        role = login_result['role']
+        verification_status = login_result['verification_status']
+        is_first_login = login_result['is_first_login']
+
+        if status_code == 'SUCCESS':
+            # Set up session data
+            request.session['user_id'] = user_id
+            request.session['role'] = role
+
+            # Handle first login or pending verification
+            if is_first_login or verification_status == 'pending':
+                messages.warning(request, 'Please complete your first-time setup.')
+                return redirect('first_login_setup')
+
+            # Redirect based on role
+            messages.success(request, f'Welcome back, {username}!')
+            if role == 'admin':
+                return redirect('dashboard:admin_dashboard')
+            elif role == 'officer':
+                return redirect('dashboard:cooperative_dashboard')
+            elif role == 'staff':
+                return redirect('dashboard:staff_dashboard')
+            else:
+                messages.error(request, 'Unknown role. Please contact support.')
+                return redirect('login')
+
+        elif status_code == 'INVALID_USERNAME_OR_PASSWORD':
+            messages.error(request, 'Invalid Username or Password.')
+        else:
+            messages.error(request, 'An internal error occurred. Please contact support.')
+
+    # GET Request
     return render(request, 'login.html')
 
 def logout_view(request):
