@@ -4,15 +4,19 @@
 {% block title %}Home - Kooptimizer{% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'css/home.css' %}">
-    <script src="{% static 'js/home.js' %}" defer></script>
+    <link rel="stylesheet" href="{% static 'frontend/home.css' %}">
 {% endblock %}
 
 {% block content %}
-
-<header class="home-header">
-        <h1>Welcome to the Kooptimizer Home</h1>
-        <p>You are logged in as Office Staff.</p>
-    </header>
-
+<body>
+<div class="home-content">
+    <div class="img"></div>
+    <div class="txt1">
+        <h1>KOOPTIMIZER<span>.</span></h1>
+    </div>
+    <div class="txt2">
+        <span></span>
+    </div>
+</div>
+</body>
 {% endblock %}
