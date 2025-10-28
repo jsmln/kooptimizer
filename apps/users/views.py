@@ -99,7 +99,7 @@ def first_login_setup(request):
         if action == 'send_otp':
             # Send OTP via Infobip
             otp_service = OTPService()
-            pin_id, success, error = otp_service.send_otp(user.phone_number)
+            pin_id, success, error = otp_service.send_otp(user.mobile_number)
             
             if success:
                 request.session['pin_id'] = pin_id
