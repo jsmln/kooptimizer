@@ -80,7 +80,6 @@ def logout_view(request):
     messages.success(request, 'You have been successfully logged out.')
     return redirect('home')
 
-
 def first_login_setup(request):
     user_id = request.session.get('user_id')
     if not user_id:
@@ -90,37 +89,46 @@ def first_login_setup(request):
     try:
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
-        messages.error(request, 'Invalid username or password. Please contact support.')
+        messages.error(request, 'Invalid user. Please contact support.')
         return redirect('login')
 
     if request.method == 'POST':
         action = request.POST.get('action')
         
+        # Pass the request to the OTPService to access the session
+        otp_service = OTPService(request)
+
         if action == 'send_otp':
-            # Send OTP via Infobip
-            otp_service = OTPService()
-            pin_id, success, error = otp_service.send_otp(user.phone_number)
+            # --- MODIFIED ---
+            # We no longer get a pin_id, just success/error
+            success, error = otp_service.send_otp(user.mobile_number)
             
             if success:
-                request.session['pin_id'] = pin_id
+                # We don't need to save a pin_id
                 messages.success(request, 'OTP has been sent to your phone.')
             else:
                 messages.error(request, f'Failed to send OTP: {error}')
+            
             return render(request, 'users/first_login_setup.html', {'show_otp_form': True})
 
         elif action == 'verify_otp':
-            pin_id = request.session.get('pin_id')
-            if not pin_id:
-                messages.error(request, 'OTP session expired. Please request a new OTP.')
-                return render(request, 'users/first_login_setup.html')
 
-            otp_code = request.POST.get('otp_code')
-            if not otp_code:
-                messages.error(request, 'Please enter the OTP code.')
+            # Read the 4 separate inputs from the form
+            otp_1 = request.POST.get('otp_1')
+            otp_2 = request.POST.get('otp_2')
+            otp_3 = request.POST.get('otp_3')
+            otp_4 = request.POST.get('otp_4')
+
+            # Check if all fields were filled
+            if not (otp_1 and otp_2 and otp_3 and otp_4):
+                messages.error(request, 'Please enter all 4 digits of the OTP.')
                 return render(request, 'users/first_login_setup.html', {'show_otp_form': True})
 
-            otp_service = OTPService()
-            success, error = otp_service.verify_otp(pin_id, otp_code)
+            # Combine them into the single string your service expects
+            otp_code = f"{otp_1}{otp_2}{otp_3}{otp_4}"
+
+            otp_service = OTPService(request)
+            success, error = otp_service.verify_otp(otp_code)
             
             if success:
                 messages.success(request, 'Phone number verified successfully.')
@@ -145,19 +153,27 @@ def first_login_setup(request):
                 messages.error(request, 'Password must be at least 8 characters long.')
                 return render(request, 'users/first_login_setup.html', {'show_password_form': True})
 
-            # Update user password and status
-            user.password = make_password(new_password)
-            user.is_first_login = False
-            user.verification_status = 'verified'
-            user.save()
+            # Hash the password
+            hashed_password = make_password(new_password)
+            
+            try:
+                # Call your stored procedure (THIS IS CORRECT)
+                User.complete_first_login(
+                    user_id=user.user_id,
+                    new_password_hash=hashed_password,
+                    verification_status='verified'
+                )
+                messages.success(request, 'Your password has been updated.')
 
-            messages.success(request, 'Your password has been updated.')
+            except Exception as e:
+                messages.error(request, f'An error occurred while updating your profile: {e}')
+                return render(request, 'users/first_login_setup.html', {'show_password_form': True})
 
             # Redirect to role-based dashboard
             role = request.session.get('role')
             if role == 'admin':
                 return redirect('dashboard:admin_dashboard')
-            elif role == 'officer' or role == 'cooperative_officer':
+            elif role == 'officer':
                 return redirect('dashboard:cooperative_dashboard')
             elif role == 'staff':
                 return redirect('dashboard:staff_dashboard')
