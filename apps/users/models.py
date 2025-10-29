@@ -15,7 +15,7 @@ class User(models.Model):
         default='pending'
     )
     is_first_login = models.BooleanField(default=True)
-    email = models.EmailField(unique=True)
+    # email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -37,9 +37,38 @@ class User(models.Model):
             return {
                 'status': result[0],
                 'user_id': result[1],
-                'role': result[4],
+                'role': result[2],
                 'verification_status': result[3],
-                'is_first_login': result[2],
+                'is_first_login': result[4]
+                
             }
         else:
             return None
+    
+    @staticmethod
+    def complete_first_login(user_id, new_password_hash, verification_status):
+        """
+        Calls the stored procedure to update user status after first login.
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT * FROM sp_complete_first_login(%s, %s, %s)",
+                [user_id, new_password_hash, verification_status]
+            )
+        return True
+
+    @property
+    def mobile_number(self):
+        """
+        Fetches the mobile number from the correct role table
+        by calling the sp_get_mobile_by_userid function.
+        """
+        with connection.cursor() as cursor:
+            # Call the new SP we just created
+            cursor.execute("SELECT * FROM sp_get_mobile_by_userid(%s)", [self.user_id])
+            result = cursor.fetchone()
+            
+            if result and result[0]:
+                return result[0]  # Return the mobile number
+                
+        return None # Return None if not foun
