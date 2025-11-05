@@ -97,3 +97,14 @@ button:hover {
     padding: 30px;
   }
 }
+
+#togglePassword {
+    position: absolute;   /* Position relative to .password-wrapper */
+    top: 49%;             /* Start vertically centered */
+    right:65px;            /* Position 15px from the right edge */
+    cursor: pointer;
+    color: #555;          /* Slightly softer color */
+    z-index: 2;           /* Ensure it's above the input field */
+    font-family: 'bootstrap-icons'; /* Correct font */
+    font-size: 1.2rem;    /* Control size with font-size */
+}
