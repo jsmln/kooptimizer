@@ -35,7 +35,7 @@
     {% if show_otp_form %}
     <div class="otp-verification">
         <div class="otp-icon">📱</div>
-        <p>Please enter the 4-digit code sent to your phone number <strong>+63********09</strong>.</p>
+        <p>Please enter the 4-digit code sent to your phone number <strong>{{ masked_mobile_number }}</strong>.</p>
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="verify_otp">
