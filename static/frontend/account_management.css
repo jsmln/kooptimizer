@@ -1,153 +1,489 @@
 .account-management-container {
-  background: #fff;
-  border-radius: 12px;
-  padding: 25px 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  color: #222;
-  width: 100%;
-  max-width: 1150px;
-  margin: 20px auto;
-  animation: fadeIn 0.4s ease-in-out;
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: #222;
+    width: 100%;
+    max-width: 1150px;
+    margin: 20px auto;
+    animation: fadeIn 0.4s ease-in-out;
+    position: fixed;
 }
 
-
 .account-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
+    display: flex;
+    /* Adjusted layout to fit search bar in the top right */
+    justify-content: space-between;
+    align-items: flex-end; /* Align bottom edges */
+    margin-bottom: 25px;
+    position: relative;
 }
 
 .tab-buttons {
-  display: flex;
-  gap: 10px;
+    display: flex;
+    gap: 10px;
+    /* Move tab buttons to the left */
+    order: 1; 
+}
+
+/* --- New Search Bar Style --- */
+.table-controls {
+    /* Position search bar area to the right, below the add buttons */
+    position: absolute;
+    top: 0;
+    right: 0;
+    order: 3;
+    display: flex; 
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 250px;
+    transition: border-color 0.3s;
+    font-size: 1em;
+}
+
+.search-input:focus {
+    border-color: #860000;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(134, 0, 0, 0.1);
 }
 
 .tab-btn {
-  background: #e0e0e0;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s;
+    background: #e0e0e0;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s;
 }
 
 .tab-btn:hover {
-  background: #ccc;
-  transform: translateY(-1px);
+    background: #ccc;
+    transform: translateY(-1px);
 }
 
 .tab-btn.active {
-  background: #860000;
-  color: #fff;
-  box-shadow: 0 3px 8px rgba(134, 0, 0, 0.3);
+    background: #860000;
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(134, 0, 0, 0.3);
 }
 
+/* Adjust Add/Total sections to flow correctly or be positioned */
 .add-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: absolute; /* Take them out of the main flow */
+    top: 0;
+    right: 0; 
+}
+
+.add-section.hidden {
+    display: none;
+}
+
+/* Ensure the 'ALL' total is positioned correctly when active */
+#all-users-section {
+    right: auto; /* Remove right positioning */
+    left: 0; /* Align to the left */
+    margin-top: 40px; /* Push it down below the tab buttons */
+    position: relative; /* Return to flow to separate it from the search bar */
+    order: 2;
 }
 
 .add-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #860000;
-  border: none;
-  color: white;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #860000;
+    border: none;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
 }
 
 .add-btn:hover {
-  background: #a00000;
+    background: #a00000;
 }
 
 .total-label {
-  font-weight: 500;
-  color: #333;
-  margin: 0;
+    font-weight: 500;
+    color: #333;
+    margin: 0;
 }
 
 .table-section {
-  display: none;
-  animation: fadeIn 0.4s ease;
+    display: none;
+    animation: fadeIn 0.4s ease;
 }
 
 .table-section.active {
-  display: block;
+    display: block;
 }
 
 .table-section h2 {
-  font-size: 1.3em;
-  color: #333;
-  margin-bottom: 10px;
+    font-size: 1.3em;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+/* --- Fixed Table Container Size --- */
+.table-wrapper {
+    /* Fixed height for all tables, regardless of content */
+    height: 400px; 
+    overflow-y: auto; 
+    padding-right: 5px; 
+    margin-bottom: 15px; 
+    /* Added subtle border to delineate the fixed area */
+    border: 1px solid #ddd; 
+    border-radius: 10px;
 }
 
 table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fafafa;
-  border-radius: 10px;
-  overflow: hidden;
+    width: 100%;
+    border-collapse: collapse;
+    background: #fafafa;
+}
+
+/* Sticky Header inside the scrollable wrapper */
+.table-wrapper table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10; 
+    background: #860000;
 }
 
 table thead {
-  background: #860000;
-  color: white;
+    background: #860000;
+    color: white;
 }
 
 table th, table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
 }
 
 table tbody tr:hover {
-  background: #f0f0f0;
+    background: #f0f0f0;
 }
 
 .action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
 }
 
 .edit-btn,
 .delete-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
 }
 
 .edit-btn {
-  background: #4caf50;
-  color: white;
+    background: #4caf50;
+    color: white;
 }
 
 .edit-btn:hover {
-  background: #43a047;
+    background: #43a047;
 }
 
 .delete-btn {
-  background: #b71c1c;
-  color: white;
+    background: #b71c1c;
+    color: white;
 }
 
 .delete-btn:hover {
-  background: #a00000;
+    background: #a00000;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Global Modal Styles --- */
+
+.modal-overlay {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); 
+    display: none; /* Default hidden state */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; 
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.visible {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 30px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #860000;
+}
+
+/* --- Stage 1: Onboarding Form Container (Scrollable) --- */
+.onboard-form-container {
+    background: #f7f7f7; 
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px; 
+    /* Set max-height and overflow to make the form scrollable */
+    max-height: 70vh; /* 70% of viewport height */
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    position: relative; 
+    transform: translateY(-50px); 
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    display: flex; /* To contain the scroll wrapper */
+}
+
+/* Scroll wrapper takes full height and handles scroll */
+.form-scroll-wrapper {
+    overflow-y: auto;
+    padding: 30px; /* Padding applied inside the scroll container */
+    width: 100%;
+}
+
+.modal-overlay.visible .onboard-form-container {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.modal-title {
+    font-size: 1.6em;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.input-instruction {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.95em;
+}
+
+.onboard-form .form-group {
+    margin-bottom: 15px;
+}
+
+.onboard-form label {
+    display: block;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 5px;
+    font-size: 0.95em;
+}
+
+.onboard-form input[type="text"],
+.onboard-form input[type="email"],
+.onboard-form input[type="tel"],
+.onboard-form select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box; 
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+.onboard-form input:focus,
+.onboard-form select:focus {
+    border-color: #860000;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(134, 0, 0, 0.1);
+}
+
+.submit-btn {
+    width: 100%;
+    background: #860000;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 700;
+    margin-top: 20px;
+    transition: background 0.3s ease;
+}
+
+.submit-btn:hover {
+    background: #a00000;
+}
+
+/* --- Stage 2: Confirmation Modal Styles --- */
+.confirm-modal-container {
+    background: #f7f7f7;
+    border-radius: 15px;
+    padding: 30px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.confirm-instruction {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 25px;
+}
+
+.confirm-data-group {
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.confirm-data-group label {
+    display: block;
+    font-weight: 500;
+    color: #666;
+    font-size: 0.85em;
+    margin-bottom: 2px;
+}
+
+.confirm-data-group input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #eee; /* Grey background for readonly fields */
+    box-sizing: border-box;
+    font-weight: 600;
+    color: #222;
+}
+
+.confirm-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.modal-button {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.primary-btn {
+    background: #860000;
+    color: white;
+}
+
+.primary-btn:hover {
+    background: #a00000;
+}
+
+.secondary-btn {
+    background: #ccc;
+    color: #333;
+}
+
+.secondary-btn:hover {
+    background: #bbb;
+}
+
+/* --- Stage 3: Send Credentials Modal Styles --- */
+.send-cred-modal-container {
+    background: #f7f7f7;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    padding-bottom: 25px;
+    position: relative;
+}
+
+.send-cred-modal-container .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    border-bottom: 1px solid #ddd;
+}
+
+.send-cred-modal-container h4 {
+    margin: 0;
+    font-size: 1.4em;
+}
+
+.modal-close-send {
+    position: static;
+    font-size: 24px;
+    color: #666;
+}
+
+.modal-body {
+    padding: 20px 30px 0;
+    text-align: center;
+}
+
+.modal-body p {
+    color: #444;
+    margin-bottom: 20px;
+}
+
+.email-display-box {
+    background: #eee;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 25px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    font-weight: 600;
+    color: #222;
+}
+
+.email-display-box span {
+    display: block;
+    line-height: 1.4;
+}
+
+.full-width-btn {
+    width: 100%;
 }
