@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'apps.communications',
     'apps.home',
     'apps.account_management',
+    'apps.databank',
 ]
 
 MIDDLEWARE = [
