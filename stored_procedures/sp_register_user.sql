@@ -26,3 +26,28 @@ END;
 $function$
 
 
+CREATE OR REPLACE FUNCTION public.sp_register_user(
+    p_username character varying, 
+    p_password_hash character varying, 
+    p_role character varying
+)
+ RETURNS users
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    v_new_user users;
+BEGIN
+    -- Hashing is done in Python. The p_password_hash is inserted directly.
+    -- verification_status is omitted, relying on the table's default value.
+    INSERT INTO users (username, password_hash, role)
+    VALUES (p_username, p_password_hash, p_role)
+    RETURNING * INTO v_new_user;
+
+    RETURN v_new_user;
+
+EXCEPTION
+    -- Handle potential unique constraint violation (username already exists)
+    WHEN unique_violation THEN
+        RETURN NULL;
+END;
+$function$
