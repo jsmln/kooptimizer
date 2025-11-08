@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.cooperatives',
     'apps.communications',
     'apps.home',
+    'apps.account_management',
 ]
 
 MIDDLEWARE = [

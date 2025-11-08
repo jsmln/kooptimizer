@@ -32,7 +32,7 @@
 
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
                 <li><a href="#">Data Bank Management</a></li>
-                <li><a href="#">Account Management</a></li>
+                <li><a href="{% url 'account_management:account_management' %}">Account Management</a></li>
             {% endif %}
 
             {% if request.session.role == 'cooperative_officer' %}

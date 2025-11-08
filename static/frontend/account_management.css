@@ -1,0 +1,153 @@
+.account-management-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 25px 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  color: #222;
+  width: 100%;
+  max-width: 1150px;
+  margin: 20px auto;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.tab-btn {
+  background: #e0e0e0;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s;
+}
+
+.tab-btn:hover {
+  background: #ccc;
+  transform: translateY(-1px);
+}
+
+.tab-btn.active {
+  background: #860000;
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(134, 0, 0, 0.3);
+}
+
+.add-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #860000;
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.add-btn:hover {
+  background: #a00000;
+}
+
+.total-label {
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.table-section {
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+
+.table-section.active {
+  display: block;
+}
+
+.table-section h2 {
+  font-size: 1.3em;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fafafa;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+table thead {
+  background: #860000;
+  color: white;
+}
+
+table th, table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+table tbody tr:hover {
+  background: #f0f0f0;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.edit-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #43a047;
+}
+
+.delete-btn {
+  background: #b71c1c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #a00000;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

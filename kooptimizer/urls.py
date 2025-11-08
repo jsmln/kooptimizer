@@ -13,6 +13,7 @@ urlpatterns = [
     path('download/', core_views.download_view, name='download'),
     path('about/', core_views.about_view, name='about'),
     path('communications/', include('apps.communications.urls', namespace='communications')),
+    path('account_management/', include('apps.account_management.urls', namespace='account_management')),
 
     
     # User-related URLs (login, logout, first-login-setup, etc.)
