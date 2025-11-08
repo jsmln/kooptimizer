@@ -31,7 +31,18 @@ def login_view(request):
             return render(request, 'login.html')
 
         # Call the stored procedure via User model helper
-        login_result = User.login_user(username, password)
+        # login_result = User.login_user(username, password)
+
+        # TEMPORARY BYPASS FOR TESTING PURPOSES ONLY
+        print(f"Bypassing login for: {username}")
+        login_result = {
+            'status': 'SUCCESS',
+            'user_id': 99,  # Use a fake ID
+            'role': 'admin', # <-- CHANGE THIS ROLE TO TEST
+            'verification_status': 'verified',
+            'is_first_login': False
+        }
+
         print("Login result:", login_result)
 
         if not login_result:
@@ -92,28 +103,35 @@ def first_login_setup(request):
         messages.error(request, 'Invalid user. Please contact support.')
         return redirect('login')
 
+    full_mobile_number = user.mobile_number
+    masked_number = ""
+
+    if full_mobile_number and len(full_mobile_number) > 4:
+        masked_number = f"{full_mobile_number[:3]}********{full_mobile_number[-2:]}"
+    
+    context = {
+        'show_otp_form': False,
+        'show_password_form': False,
+        'masked_mobile_number': masked_number  
+    }
+
     if request.method == 'POST':
         action = request.POST.get('action')
         
-        # Pass the request to the OTPService to access the session
         otp_service = OTPService(request)
 
         if action == 'send_otp':
-            # --- MODIFIED ---
-            # We no longer get a pin_id, just success/error
             success, error = otp_service.send_otp(user.mobile_number)
             
             if success:
-                # We don't need to save a pin_id
                 messages.success(request, 'OTP has been sent to your phone.')
             else:
                 messages.error(request, f'Failed to send OTP: {error}')
             
-            return render(request, 'users/first_login_setup.html', {'show_otp_form': True})
-
+            context['show_otp_form'] = True
+            return render(request, 'users/first_login_setup.html', context)
+        
         elif action == 'verify_otp':
-
-            # Read the 4 separate inputs from the form
             otp_1 = request.POST.get('otp_1')
             otp_2 = request.POST.get('otp_2')
             otp_3 = request.POST.get('otp_3')
@@ -122,8 +140,9 @@ def first_login_setup(request):
             # Check if all fields were filled
             if not (otp_1 and otp_2 and otp_3 and otp_4):
                 messages.error(request, 'Please enter all 4 digits of the OTP.')
-                return render(request, 'users/first_login_setup.html', {'show_otp_form': True})
-
+                context['show_otp_form'] = True
+                return render(request, 'users/first_login_setup.html', context)
+            
             # Combine them into the single string your service expects
             otp_code = f"{otp_1}{otp_2}{otp_3}{otp_4}"
 
@@ -132,32 +151,33 @@ def first_login_setup(request):
             
             if success:
                 messages.success(request, 'Phone number verified successfully.')
-                return render(request, 'users/first_login_setup.html', {'show_password_form': True})
+                context['show_password_form'] = True
+                return render(request, 'users/first_login_setup.html', context)
             else:
                 messages.error(request, f'Invalid OTP code: {error}')
-                return render(request, 'users/first_login_setup.html', {'show_otp_form': True})
-
+                context['show_otp_form'] = True
+                return render(request, 'users/first_login_setup.html', context)
         elif action == 'change_password':
             new_password = request.POST.get('new_password')
             confirm_password = request.POST.get('confirm_password')
 
             if not new_password or not confirm_password:
                 messages.error(request, 'Please enter and confirm your new password.')
-                return render(request, 'users/first_login_setup.html', {'show_password_form': True})
-
+                context['show_password_form'] = True
+                return render(request, 'users/first_login_setup.html', context)
             if new_password != confirm_password:
                 messages.error(request, 'Passwords do not match.')
-                return render(request, 'users/first_login_setup.html', {'show_password_form': True})
-
+                context['show_password_form'] = True
+                return render(request, 'users/first_login_setup.html', context)
             if len(new_password) < 8:
                 messages.error(request, 'Password must be at least 8 characters long.')
-                return render(request, 'users/first_login_setup.html', {'show_password_form': True})
-
+                context['show_password_form'] = True
+                return render(request, 'users/first_login_setup.html', context)
             # Hash the password
             hashed_password = make_password(new_password)
             
             try:
-                # Call your stored procedure (THIS IS CORRECT)
+                
                 User.complete_first_login(
                     user_id=user.user_id,
                     new_password_hash=hashed_password,
@@ -167,8 +187,9 @@ def first_login_setup(request):
 
             except Exception as e:
                 messages.error(request, f'An error occurred while updating your profile: {e}')
-                return render(request, 'users/first_login_setup.html', {'show_password_form': True})
-
+                context['show_password_form'] = True
+                return render(request, 'users/first_login_setup.html', context)
+            
             # Redirect to role-based dashboard
             role = request.session.get('role')
             if role == 'admin':
@@ -179,4 +200,4 @@ def first_login_setup(request):
                 return redirect('dashboard:staff_dashboard')
             return redirect('home')
 
-    return render(request, 'users/first_login_setup.html', {'show_otp_form': False, 'show_password_form': False})
+    return render(request, 'users/first_login_setup.html', context)

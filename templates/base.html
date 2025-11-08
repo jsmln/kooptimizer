@@ -20,27 +20,28 @@
     <script src="{% static 'main.js' %}"></script>
 
     <header>
+
         <div class="logo-title">
+
+            {% if request.session.user_id %}
+                <button id="sidebar-toggle-btn" class="sidebar-toggle">
+                    <i class="bi bi-list"></i>
+                </button>
+            {% endif %}
+
             <img src="{% static 'frontend/images/Logo.png' %}" alt="Kooptimizer Logo" class="logo">
             <h1>Kooptimizer</h1>
         </div>
         <nav>
             <ul>
                 {% if request.session.user_id %}
-                {% if request.session.role == 'admin' %}
-                        <li><a href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a></li>
-                    {% elif request.session.role == 'cooperative_officer' %}
-                        <li><a href="{% url 'dashboard:cooperative_dashboard' %}">Dashboard</a></li>
-                    {% elif request.session.role == 'staff' %}
-                        <li><a href="{% url 'dashboard:staff_dashboard' %}">Dashboard</a></li>
-                    {% endif %}
-                    <li><a href="{% url 'download' %}">Download</a></li>
-                    <li><a href="{% url 'about' %}">About</a></li>
+                {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'cooperative_officer'%}
                     <li class="logout-button">
                         <a href="{% url 'logout' %}" onclick="return confirm('Are you sure you want to logout?')">
                             Logout
                         </a>
                     </li>
+                {% endif %}
                 {% else %}
                     <li><a href="{% url 'home' %}">Home</a></li>
                     <li><a href="{% url 'login' %}">Login</a></li>
