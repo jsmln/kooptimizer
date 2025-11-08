@@ -4,76 +4,137 @@
 {% block title %}Account Management - KoopTimizer{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'frontend/account_management.css' %}">
+{{ block.super }}<link rel="stylesheet" href="{% static 'frontend/account_management.css' %}">
 {% endblock %}
 
 {% block dashboard_content %}
 <div class="account-management-container">
     <div class="account-header">
         <div class="tab-buttons">
+            <button class="tab-btn" data-target="all-users">ALL</button> 
             <button class="tab-btn active" data-target="staffs">Staffs</button>
             <button class="tab-btn" data-target="officers">Officers</button>
             <button class="tab-btn" data-target="admins">Admins</button>
         </div>
 
-        <div class="add-section">
-            <p class="total-label">Total Staffs: <span class="count">5</span></p>
-            <button class="add-btn"><i class="bi bi-plus-circle"></i> Add</button>
+        <div id="table-controls" class="table-controls">
+            <input type="text" id="user-search" class="search-input" placeholder="Search users...">
+        </div>
+        
+        <div class="add-section" id="staff-add-section">
+            <p class="total-label">Total Staffs: <span class="count" id="staff-count">3</span></p> 
+            <button class="add-btn" data-account-type="staff" id="onboard-staff-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        <div class="add-section hidden" id="officer-add-section">
+            <p class="total-label">Total Officers: <span class="count" id="officer-count">3</span></p>
+        </div>
+        <div class="add-section hidden" id="admin-add-section">
+            <p class="total-label">Total Admins: <span class="count" id="admin-count">2</span></p>
+            <button class="add-btn" data-account-type="admin" id="onboard-admin-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        <div class="add-section hidden" id="all-users-section">
+            <p class="total-label">Total Users: <span class="count" id="all-user-count">8</span></p>
+        </div>
+    </div>
+    
+    <div class="table-section" id="all-users">
+        <h2>All User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Full Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Role/Perm.</th>
+                        <th>Cooperative</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody id="all-users-table-body">
+                    </tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
         </div>
     </div>
 
-    <!-- STAFF TABLE -->
+
     <div class="table-section active" id="staffs">
         <h2>Staff User Accounts</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>User ID</th>
-                    <th>Staff Name</th>
-                    <th>Email Address</th>
-                    <th>Contact Number</th>
-                    <th>Cooperative Assigned</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>S001</td>
-                    <td>Isabel Delacion</td>
-                    <td>isabel@gmail.com</td>
-                    <td>09929380935</td>
-                    <td>Multipurpose Coop</td>
-                </tr>
-                <tr>
-                    <td>S002</td>
-                    <td>Jasmin Esperida</td>
-                    <td>esperidajasmin@gmail.com</td>
-                    <td>09562380468</td>
-                    <td>Agriculture Coop</td>
-                </tr>
-                <tr>
-                    <td>S003</td>
-                    <td>Hearty Delacion</td>
-                    <td>hearty@gmail.com</td>
-                    <td>09273279694</td>
-                    <td>Consumers Coop</td>
-                </tr>
-                <tr>
-                    <td>S004</td>
-                    <td>Mendy Alexis Delos Reyes</td>
-                    <td>alexismdy@gmail.com</td>
-                    <td>09953398613</td>
-                    <td>Service Coop</td>
-                </tr>
-                <tr>
-                    <td>S005</td>
-                    <td>Noe Gonzales</td>
-                    <td>gonzalesnoe@gmail.com</td>
-                    <td>09154937658</td>
-                    <td>Housing Coop</td>
-                </tr>
-            </tbody>
-        </table>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Staff Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Cooperative Assigned</th>
+                    </tr>
+                </thead>
+                <tbody id="staff-table-body">
+                    <tr data-type="staff"><td>S001</td><td>Isabel Delacion</td><td>isabel@gmail.com</td><td>09929380935</td><td>Multipurpose Coop</td></tr>
+                    <tr data-type="staff"><td>S002</td><td>Jasmin Esperida</td><td>esperidajasmin@gmail.com</td><td>09562380468</td><td>Agriculture Coop</td></tr>
+                    <tr data-type="staff"><td>S003</td><td>Art Delos Reyes</td><td>art@example.com</td><td>09000000015</td><td>Housing Cooperative</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
 
+    <div class="table-section" id="officers">
+        <h2>Officer User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Officer-in-charge</th>
+                        <th>Cooperative Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody id="officer-table-body">
+                    <tr data-type="officer"><td>O001</td><td>Mark Officer</td><td>Fishermen Cooperative</td><td>marko@coop.com</td><td>09123456789</td><td>Chairperson</td></tr>
+                    <tr data-type="officer"><td>O002</td><td>Lea Officer</td><td>Consumers Cooperative</td><td>leao@coop.com</td><td>09987654321</td><td>Secretary</td></tr>
+                    <tr data-type="officer"><td>O003</td><td>Ben Officer</td><td>Housing Cooperative</td><td>beno@coop.com</td><td>09112233445</td><td>Chairperson</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
+
+    <div class="table-section" id="admins">
+        <h2>Admin User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Admin Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                    <tr data-type="admin"><td>A001</td><td>Jasmin Esperida</td><td>super@admin.com</td><td>09010101010</td><td>Secretary</td></tr>
+                    <tr data-type="admin"><td>A002</td><td>Isabel Delacion</td><td>general@admin.com</td><td>09020202020</td><td>General Admin</td></tr>
+                </tbody>
+            </table>
+        </div>
         <div class="action-buttons">
             <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
             <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
@@ -81,31 +142,445 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="onboard-staff-modal">
+    <div class="onboard-form-container">
+        <div class="form-scroll-wrapper"> 
+            <span class="close-btn modal-close">&times;</span> 
+
+            <h3 class="modal-title" id="onboard-modal-title">Onboard Staff Account</h3>
+            <p class="input-instruction">Please input staff information</p>
+
+            <form id="onboard-form" action="#" method="POST" class="onboard-form" data-account-type="staff">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="staff-full-name">Full Name</label>
+                    <input type="text" id="staff-full-name" name="full_name" placeholder="Firstname M.I. Lastname" required>
+                </div>
+                
+                <div class="form-group" id="gender-group">
+                    <label for="staff-gender">Gender</label>
+                    <select id="staff-gender" name="gender" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="position-group">
+                    <label for="staff-position" id="position-label">Position/Role</label>
+                    <input type="text" id="staff-position" name="position" placeholder="Enter position" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="staff-email">Email Address</label>
+                    <input type="email" id="staff-email" name="email" placeholder="sample@gmail.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="staff-contact">Contact Number</label>
+                    <input type="tel" id="staff-contact" name="contact" placeholder="09**********" pattern="[0-9]{11}" title="Contact number must be 11 digits" required>
+                </div>
+                
+                <div class="form-group" id="coop-group">
+                    <label for="coop-assigned">Cooperative Assigned</label>
+                    <select id="coop-assigned" name="coop_assigned" required>
+                        <option value="" disabled selected>Choose Cooperatives</option>
+                        <option value="Credit Cooperative">Credit Cooperative</option>
+                        <option value="Consumers Cooperative">Consumers Cooperative</option>
+                        <option value="Producers Cooperative">Producers Cooperative</option>
+                        <option value="Marketing Cooperative">Marketing Cooperative</option>
+                        <option value="Housing Cooperative">Housing Cooperative</option>
+                        <option value="Agriculture Cooperative">Agriculture Cooperative</option>
+                        <option value="Multipurpose Cooperative">Multipurpose Cooperative</option>
+                        <option value="Fishermen Cooperative">Fishermen Cooperative</option>
+                        <option value="Transport Cooperative">Transport Cooperative</option>
+                        <option value="Service Cooperative">Service Cooperative</option>
+                        <option value="Workers Cooperative">Worker Cooperative</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-btn">Create Account</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="confirm-modal">
+    <div class="confirm-modal-container">
+        <p class="confirm-instruction">Please confirm if all details are correct</p>
+        
+        <div class="confirm-data-group">
+            <label>Full Name</label>
+            <input type="text" id="confirm-name" readonly>
+        </div>
+        <div class="confirm-data-group">
+            <label id="confirm-role-label">Position/Role</label>
+            <input type="text" id="confirm-position" readonly>
+        </div>
+        <div class="confirm-data-group">
+            <label>Email Address</label>
+            <input type="text" id="confirm-email" readonly>
+        </div>
+        <div class="confirm-data-group">
+            <label>Contact Number</label>
+            <input type="text" id="confirm-contact" readonly>
+        </div>
+        <div class="confirm-data-group hidden" id="confirm-coop-group">
+            <label>Cooperative Assigned</label>
+            <input type="text" id="confirm-coop" readonly>
+        </div>
+        <div class="confirm-data-group hidden" id="confirm-gender-group">
+            <label>Gender</label>
+            <input type="text" id="confirm-gender" readonly>
+        </div>
+
+        <div class="confirm-actions">
+            <button id="confirm-btn" class="modal-button primary-btn">Confirm</button>
+            <button id="edit-btn" class="modal-button secondary-btn">Edit</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay hidden" id="send-credentials-modal">
+    <div class="send-cred-modal-container">
+        <div class="modal-header">
+            <h4>Send Credentials</h4>
+            <span class="close-btn modal-close-send">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p><span id="account-type-text">Staff user</span> credentials will be sent through Email Address, confirm if the informations are correct before sending.</p>
+            <div class="email-display-box">
+                <span id="send-name-display"></span>
+                <span id="send-email-display"></span>
+            </div>
+            <button id="send-final-btn" class="modal-button primary-btn full-width-btn">Send</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Sidebar toggle (inherited from dashboard)
+    // --- Initial Data Store for 'ALL' Tab ---
+    // This script will store all user data here on load to enable combined view and search.
+    let allUsersData = [];
+
     document.addEventListener('DOMContentLoaded', function() {
-        const toggleBtn = document.getElementById('sidebar-toggle-btn');
-        const closeBtn = document.getElementById('sidebar-close-btn');
-        const overlay = document.querySelector('.sidebar-overlay');
-        const body = document.body;
+        // DOM Elements
+        const allTabBtn = document.querySelector('[data-target="all-users"]');
+        const staffTabBtn = document.querySelector('[data-target="staffs"]');
+        const officerTabBtn = document.querySelector('[data-target="officers"]');
+        const adminTabBtn = document.querySelector('[data-target="admins"]');
+        
+        const staffAddSection = document.getElementById('staff-add-section');
+        const officerAddSection = document.getElementById('officer-add-section');
+        const adminAddSection = document.getElementById('admin-add-section');
+        const allUsersSection = document.getElementById('all-users-section'); // New Total/Add section
 
-        function openSidebar() { body.classList.add('sidebar-toggled'); }
-        function closeSidebar() { body.classList.remove('sidebar-toggled'); }
+        const onboardStaffBtn = document.getElementById('onboard-staff-btn');
+        const onboardAdminBtn = document.getElementById('onboard-admin-btn');
+        const onboardModal = document.getElementById('onboard-staff-modal');
+        const onboardForm = document.getElementById('onboard-form');
+        
+        const confirmModal = document.getElementById('confirm-modal');
+        const sendCredModal = document.getElementById('send-credentials-modal');
 
-        if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
-        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-        if (overlay) overlay.addEventListener('click', closeSidebar);
-    });
+        const staffTableBody = document.getElementById('staff-table-body');
+        const officerTableBody = document.getElementById('officer-table-body');
+        const adminTableBody = document.getElementById('admin-table-body');
+        const allUsersTableBody = document.getElementById('all-users-table-body'); // New target
 
-    // Handle tab switching
-    document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.querySelectorAll(".table-section").forEach(t => t.classList.remove("active"));
+        const staffCountSpan = document.getElementById('staff-count');
+        const adminCountSpan = document.getElementById('admin-count');
+        const allUserCountSpan = document.getElementById('all-user-count'); // New count span
 
-            btn.classList.add("active");
-            document.getElementById(btn.dataset.target).classList.add("active");
+        const searchInput = document.getElementById('user-search'); // New search input
+        
+        // Form/Modal elements (retained for onboarding logic)
+        const coopGroup = document.getElementById('coop-group');
+        const positionLabel = document.getElementById('position-label');
+        const confirmRoleLabel = document.getElementById('confirm-role-label');
+        const confirmCoopGroup = document.getElementById('confirm-coop-group');
+        const confirmGenderGroup = document.getElementById('confirm-gender-group');
+        
+        let submittedData = {}; 
+
+        // --- Data Collection & Rendering Functions ---
+
+        function collectInitialData() {
+            allUsersData = [];
+            // Helper to extract cell text from a row
+            const getCells = (row, indices) => indices.map(i => row.cells[i].textContent);
+
+            // 1. Staffs (ID, Name, Email, Contact, Coop)
+            staffTableBody.querySelectorAll('tr').forEach(row => {
+                const [id, name, email, contact, coop] = getCells(row, [0, 1, 2, 3, 4]);
+                allUsersData.push({ id, name, email, contact, role: '-', coop, type: 'Staff' });
+            });
+
+            // 2. Officers (ID, Name, Coop, Email, Contact, Role)
+            officerTableBody.querySelectorAll('tr').forEach(row => {
+                const [id, name, coop, email, contact, role] = getCells(row, [0, 1, 2, 3, 4, 5]);
+                allUsersData.push({ id, name, email, contact, role, coop, type: 'Officer' });
+            });
+
+            // 3. Admins (ID, Name, Email, Contact, Position)
+            adminTableBody.querySelectorAll('tr').forEach(row => {
+                const [id, name, email, contact, role] = getCells(row, [0, 1, 2, 3, 4]);
+                allUsersData.push({ id, name, email, contact, role, coop: '-', type: 'Admin' });
+            });
+            
+            // Update total user count
+            allUserCountSpan.textContent = allUsersData.length;
+        }
+
+        function renderAllUsersTable(data) {
+            allUsersTableBody.innerHTML = '';
+            
+            data.forEach(user => {
+                const newRow = document.createElement('tr');
+                // Master Table Columns: User ID | Full Name | Email | Contact | Role/Perm. | Cooperative | Type
+                newRow.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.contact}</td>
+                    <td>${user.role}</td>
+                    <td>${user.coop}</td>
+                    <td>${user.type}</td>
+                `;
+                allUsersTableBody.appendChild(newRow);
+            });
+        }
+        
+        // Execute data collection and initial render
+        collectInitialData();
+        // Render the ALL table on load but keep the STAFF tab active
+        renderAllUsersTable(allUsersData);
+
+
+        // --- Tab Switching Logic (Updated) ---
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const target = btn.dataset.target;
+                
+                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+                document.querySelectorAll(".table-section").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".add-section").forEach(s => s.classList.add("hidden"));
+
+                btn.classList.add("active");
+                document.getElementById(target).classList.add("active");
+                
+                // Show/hide appropriate add section and search bar
+                const isSearchVisible = target === 'all-users';
+                searchInput.style.display = isSearchVisible ? 'block' : 'none';
+                
+                if (target === 'staffs') {
+                    staffAddSection.classList.remove('hidden');
+                } else if (target === 'officers') {
+                    officerAddSection.classList.remove('hidden');
+                } else if (target === 'admins') {
+                    adminAddSection.classList.remove('hidden');
+                } else if (target === 'all-users') {
+                    allUsersSection.classList.remove('hidden');
+                    // Ensure the 'ALL' table is fully rendered on switch
+                    renderAllUsersTable(allUsersData);
+                }
+            });
         });
+        
+        // Initialize state (Show search only if 'ALL' is active initially, otherwise hide)
+        searchInput.style.display = 'none'; // Hidden initially based on original active tab
+        
+        // --- Search Functionality ---
+        searchInput.addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const filteredData = allUsersData.filter(user => {
+                return Object.values(user).some(value => 
+                    value.toString().toLowerCase().includes(searchTerm)
+                );
+            });
+            renderAllUsersTable(filteredData);
+        });
+        
+        // --- Modal Control Functions (Omitted for brevity) ---
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('visible');
+        }
+
+        function closeModal(modal) {
+            modal.classList.remove('visible');
+            modal.classList.add('hidden');
+        }
+
+        // --- Stage 1: Onboarding Form Logic (Universal) ---
+
+        // Universal Open Onboarding Modal Listener
+        [onboardStaffBtn, onboardAdminBtn].forEach(btn => {
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    const accountType = btn.getAttribute('data-account-type');
+                    const isStaff = accountType === 'staff';
+                    
+                    // Update form context
+                    onboardForm.setAttribute('data-account-type', accountType);
+                    document.getElementById('onboard-modal-title').textContent = `Onboard ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`;
+
+                    // Dynamic form field visibility and labels for ONBOARDING FORM
+                    coopGroup.style.display = isStaff ? 'block' : 'none';
+                    document.getElementById('coop-assigned').required = isStaff; 
+                    
+                    positionLabel.textContent = isStaff ? 'Position/Role' : 'Position'; // Using "Position" as per Admin table header
+                    
+                    openModal(onboardModal);
+                    onboardForm.reset();
+                });
+            }
+        });
+
+        // Handle Close buttons (for Onboarding and Send Credentials modals)
+        document.querySelectorAll('.modal-close, .modal-close-send').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeModal(onboardModal);
+                closeModal(confirmModal);
+                closeModal(sendCredModal);
+                onboardForm.reset(); 
+            });
+        });
+        
+        // Stage 1 Submit -> Open Stage 2 Confirmation
+        onboardForm.addEventListener('submit', function(e) {
+            e.preventDefault(); 
+            
+            const accountType = onboardForm.getAttribute('data-account-type');
+            const isStaff = accountType === 'staff';
+
+            // 1. Collect and Store Data
+            submittedData = {
+                type: accountType,
+                name: document.getElementById('staff-full-name').value,
+                position: document.getElementById('staff-position').value,
+                email: document.getElementById('staff-email').value,
+                contact: document.getElementById('staff-contact').value,
+                gender: document.getElementById('staff-gender').options[document.getElementById('staff-gender').selectedIndex].text,
+                // Only collect coop if it is a staff account
+                coop: isStaff ? document.getElementById('coop-assigned').options[document.getElementById('coop-assigned').selectedIndex].value : null 
+            };
+            
+            // 2. Populate Confirmation Modal (Stage 2)
+            document.getElementById('confirm-name').value = submittedData.name;
+            document.getElementById('confirm-position').value = submittedData.position;
+            document.getElementById('confirm-email').value = submittedData.email;
+            document.getElementById('confirm-contact').value = submittedData.contact;
+            document.getElementById('confirm-gender').value = submittedData.gender;
+
+            // Dynamic labels and visibility for CONFIRMATION MODAL
+            confirmRoleLabel.textContent = isStaff ? 'Position/Role' : 'Position';
+            
+            // Cooperative Assigned visibility (Hide for Admin)
+            if (isStaff) {
+                document.getElementById('confirm-coop').value = submittedData.coop;
+                confirmCoopGroup.classList.remove('hidden');
+            } else {
+                confirmCoopGroup.classList.add('hidden');
+            }
+            
+            confirmGenderGroup.classList.add('hidden');
+
+            // 3. Transition: Close Stage 1, Open Stage 2
+            closeModal(onboardModal);
+            openModal(confirmModal);
+        });
+        
+        // --- Stage 2 & 3 Logic (Retained & Updated for 'ALL' table) ---
+        
+        // Edit Button -> Back to Stage 1
+        document.getElementById('edit-btn').addEventListener('click', () => {
+            closeModal(confirmModal);
+            openModal(onboardModal);
+        });
+
+        // Confirm Button -> Open Stage 3 Send Credentials
+        document.getElementById('confirm-btn').addEventListener('click', () => {
+            document.getElementById('send-name-display').textContent = submittedData.name;
+            document.getElementById('send-email-display').textContent = submittedData.email;
+            document.getElementById('account-type-text').textContent = submittedData.type.charAt(0).toUpperCase() + submittedData.type.slice(1) + ' user';
+
+            closeModal(confirmModal);
+            openModal(sendCredModal);
+        });
+
+        // Send Credentials Logic (Updates individual table AND the ALL table)
+        document.getElementById('send-final-btn').addEventListener('click', () => {
+            const type = submittedData.type;
+            const targetTableBody = type === 'staff' ? staffTableBody : adminTableBody;
+            const targetCountSpan = type === 'staff' ? staffCountSpan : adminCountSpan;
+
+            // 1. Perform Client-side Table Update (Simulating successful server action)
+            const userId = getNextUserId(targetTableBody);
+            const newRow = document.createElement('tr');
+            
+            // Master Data Object for 'ALL' table
+            const newUserData = {
+                id: userId,
+                name: submittedData.name,
+                email: submittedData.email,
+                contact: submittedData.contact,
+                role: submittedData.position || '-',
+                coop: submittedData.coop || '-',
+                type: type.charAt(0).toUpperCase() + type.slice(1)
+            };
+            
+            if (type === 'staff') {
+                newRow.innerHTML = `
+                    <td>${newUserData.id}</td>
+                    <td>${newUserData.name}</td>
+                    <td>${newUserData.email}</td>
+                    <td>${newUserData.contact}</td>
+                    <td>${newUserData.coop}</td>
+                `;
+            } else if (type === 'admin') {
+                newRow.innerHTML = `
+                    <td>${newUserData.id}</td>
+                    <td>${newUserData.name}</td>
+                    <td>${newUserData.email}</td>
+                    <td>${newUserData.contact}</td>
+                    <td>${newUserData.role}</td> 
+                `;
+            }
+            
+            targetTableBody.appendChild(newRow);
+            
+            // 2. Update All Tables and Counts
+            
+            // Add new user to master data array
+            allUsersData.push(newUserData); 
+            
+            // Re-render master table (only if the 'ALL' tab is currently active)
+            if (document.getElementById('all-users').classList.contains('active')) {
+                renderAllUsersTable(allUsersData);
+            }
+            
+            // Update individual and combined total count
+            let currentCount = parseInt(targetCountSpan.textContent, 10);
+            targetCountSpan.textContent = currentCount + 1;
+            allUserCountSpan.textContent = allUsersData.length;
+            
+            // 3. Cleanup
+            closeModal(sendCredModal);
+            onboardForm.reset(); 
+            newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            alert(`New ${type} account created and credentials sent successfully!`);
+        });
+
+        // Helper function for new User ID generation
+        function getNextUserId(tbody) {
+            const currentRows = tbody.querySelectorAll('tr').length;
+            const nextIndex = currentRows + 1;
+            const prefix = tbody.id.startsWith('staff') ? 'S' : (tbody.id.startsWith('officer') ? 'O' : 'A');
+            return prefix + nextIndex.toString().padStart(3, '0');
+        }
     });
 </script>
 {% endblock %}
