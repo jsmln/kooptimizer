@@ -94,6 +94,9 @@ body > footer {
     overflow-y: auto; 
     height: calc(100vh - 70px - 54px); 
     z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .sidebar-overlay {
@@ -153,6 +156,64 @@ body.sidebar-toggled .sidebar {
     font-weight: bold;
     box-shadow: 0 2px 8px rgba(255, 0, 0, 0.4);
 } 
+
+.sidebar-profile {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    margin-top: 161.5px; /* Pushes it down from the links */
+    border-top: 1px solid #555; /* Separator line */
+    background-color:transparent
+}
+
+.sidebar-profile .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #ff0000; /* Your theme red */
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.sidebar-profile .profile-details {
+    flex-grow: 1;
+    overflow: hidden; /* To handle long names */
+}
+
+.sidebar-profile .profile-name {
+    display: block;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-profile .profile-role {
+    display: block;
+    font-size: 0.8em;
+    color: #ccc;
+    white-space: nowrap;
+}
+
+.sidebar-profile .logout-icon {
+    color: #f0f0f0;
+    font-size: 1.5rem;
+    text-decoration: none;
+    margin-left: 10px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.sidebar-profile .logout-icon:hover {
+    color: #ff0000; /* Red on hover */
+}
 
 @media (max-width: 768px) {
     .main-container {

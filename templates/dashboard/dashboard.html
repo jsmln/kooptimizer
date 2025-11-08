@@ -42,6 +42,20 @@
             <li><a href="{% url 'communications:message' %}">Messages</a></li>
             <li><a href="{% url 'communications:announcement_form' %}">Announcements</a></li>
         </ul>
+
+                <div class="sidebar-profile">
+                <div class="avatar">
+                    {{ request.session.username|first|upper }}
+                </div>
+                <div class="profile-details">
+                    <span class="profile-name">{{ request.session.username }}</span>
+                    <span class="profile-role">{{ request.session.role|capfirst }}</span>
+                </div>
+                <a href="{% url 'logout' %}" class="logout-icon" title="Logout" onclick="return confirm('Are you sure you want to logout?')">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+                </div>
+
         </nav>
 
     <div class="sidebar-overlay"></div>

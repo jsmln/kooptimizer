@@ -6,7 +6,7 @@ from django.http import HttpResponse
 # ADD THIS FUNCTION
 def your_message_view(request):
     # This is just a placeholder. You can build the real page here later.
-    return HttpResponse("This is the placeholder for the Messages page.")
+    return render(request, 'communications/message.html')
 
 # ADD THIS FUNCTION TOO
 def your_announcement_view(request):
