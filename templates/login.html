@@ -17,7 +17,6 @@
     <link rel="stylesheet" href="{% static 'frontend/login.css' %}">
     <link rel="stylesheet" href="{% static 'path/to/bootstrap-icons.css' %}">
 
-
     <section id="login">
         <h2>Login</h2>
         <form id="login-form" method="POST">
@@ -28,7 +27,7 @@
                 <input type="text" id="username" name="username" placeholder="Enter your username" required>
             </div>
 
-            <div class="password-wrapper">
+             <div class="password-wrapper">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 <i class="bi bi-eye-slash" id="togglePassword"></i>
@@ -43,7 +42,7 @@
         </form>
     </section>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         const togglePassword = document.querySelector('#togglePassword');

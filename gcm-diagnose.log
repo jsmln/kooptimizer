@@ -1,0 +1,237 @@
+﻿Diagnose log at 2025-10-24T16:07:25Z
+
+AppPath: C:\Program Files\Git\mingw64\bin\git-credential-manager.exe
+InstallDir: C:\Program Files\Git\mingw64\bin\
+Version: 2.6.1+786ab03440ddc82e807a97c0e540f5247e44cec6
+
+------------
+Diagnostic: Environment
+Skipped: False
+Success: True
+Exception: None
+Log:
+OSType: Windows
+OSVersion: 10.0 (build 26100)
+Reading environment variables... OK
+ Variables:
+MSYSTEM_CHOST=x86_64-w64-mingw32
+_=C:/Program Files/Git/mingw64/bin/git
+ORIGINAL_TMP=C:/Users/NOEGON~1/AppData/Local/Temp
+PUBLIC=C:\Users\Public
+ALLUSERSPROFILE=C:\ProgramData
+LOGONSERVER=\\LAPTOP-8CNVPAQD
+INFOPATH=C:\Program Files\Git\mingw64\local\info;C:\Program Files\Git\mingw64\share\info;C:\Program Files\Git\usr\local\info;C:\Program Files\Git\usr\share\info;C:\Program Files\Git\usr\info;C:\Program Files\Git\share\info
+LOCALAPPDATA=C:\Users\Noe Gonzales\AppData\Local
+ProgramData=C:\ProgramData
+PKG_CONFIG_PATH=C:\Program Files\Git\mingw64\lib\pkgconfig;C:\Program Files\Git\mingw64\share\pkgconfig
+TMPDIR=C:\Users\NOEGON~1\AppData\Local\Temp
+ORIGINAL_PATH=C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\Noe Gonzales\bin;C:\Program Files\Python313\Scripts;C:\Program Files\Python313;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python313;C:\Program Files\Python310\Scripts;C:\Program Files\Python310;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files (x86)\Microsoft SQL Server\160\DTS\Binn;C:\Program Files\nodejs;C:\ProgramData\chocolatey\bin;C:\Users\Noe Gonzales\AppData\Roaming\Python\Python313\Scripts;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python310;C:\Program Files\MySQL\MySQL Shell 8.0\bin;C:\Users\Noe Gonzales\AppData\Local\Microsoft\WindowsApps;C:\Users\Noe Gonzales\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Noe Gonzales\AppData\Local\Programs\cursor\resources\app\bin;C:\Users\Noe Gonzales\AppData\Roaming\npm;C:\Users\Noe Gonzales\.vscode\extensions\ms-python.debugpy-2025.14.1-win32-x64\bundled\scripts\noConfigScripts;C:\Users\Noe Gonzales\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\debugCommand
+ZES_ENABLE_SYSMAN=1
+ACLOCAL_PATH=C:\Program Files\Git\mingw64\share\aclocal;C:\Program Files\Git\usr\share\aclocal
+BUNDLED_DEBUGPY_PATH=c:\Users\Noe Gonzales\.vscode\extensions\ms-python.debugpy-2025.14.1-win32-x64\bundled\libs\debugpy
+PWD=C:/Users/Noe Gonzales/Downloads/System/Kooptimizer
+ProgramW6432=C:\Program Files
+MINGW_PREFIX=C:/Program Files/Git/mingw64
+SYSTEMROOT=C:\Windows
+MANPATH=C:\Program Files\Git\mingw64\local\man;C:\Program Files\Git\mingw64\share\man;C:\Program Files\Git\usr\local\man;C:\Program Files\Git\usr\share\man;C:\Program Files\Git\usr\man;C:\Program Files\Git\share\man
+PYTHONSTARTUP=c:\Users\Noe Gonzales\AppData\Roaming\Code\User\workspaceStorage\8beac8501657fb4f9b02dc43c0d699ec\ms-python.python\pythonrc.py
+WINDIR=C:\Windows
+CONFIG_SITE=C:/Program Files/Git/etc/config.site
+VSCODE_GIT_ASKPASS_MAIN=c:\Users\Noe Gonzales\AppData\Local\Programs\Microsoft VS Code\resources\app\extensions\git\dist\askpass-main.js
+SHELL=C:\Program Files\Git\usr\bin\bash.exe
+MSYSTEM=MINGW64
+OS=Windows_NT
+PROCESSOR_ARCHITECTURE=x86
+MINGW_PACKAGE_PREFIX=mingw-w64-x86_64
+SHLVL=1
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY;.PYW
+DISPLAY=needs-to-be-defined
+PYDEVD_DISABLE_FILE_VALIDATION=1
+ORIGINAL_TEMP=C:/Users/NOEGON~1/AppData/Local/Temp
+CommonProgramW6432=C:\Program Files\Common Files
+ProgramFiles(x86)=C:\Program Files (x86)
+VSCODE_GIT_ASKPASS_EXTRA_ARGS=
+COMSPEC=C:\Windows\system32\cmd.exe
+MSYSTEM_CARCH=x86_64
+USERNAME=Noe Gonzales
+VSCODE_PYTHON_AUTOACTIVATE_GUARD=1
+EFC_28776_2283032206=1
+GIT_ASKPASS=c:\Users\Noe Gonzales\AppData\Local\Programs\Microsoft VS Code\resources\app\extensions\git\dist\askpass.sh
+PYTHON_BASIC_REPL=1
+MINGW_CHOST=x86_64-w64-mingw32
+TERM=xterm-256color
+ORIGINAL_XDG_CURRENT_DESKTOP=undefined
+LANG=en_US.UTF-8
+PATH=C:/Program Files/Git/mingw64/libexec/git-core;C:\Users\Noe Gonzales\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\local\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\usr\bin;C:\Program Files\Git\mingw64\bin;C:\Program Files\Git\usr\bin;C:\Users\Noe Gonzales\bin;C:\Program Files\Python313\Scripts;C:\Program Files\Python313;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python313\Scripts;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python313;C:\Program Files\Python310\Scripts;C:\Program Files\Python310;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32\OpenSSH;C:\Program Files\Git\cmd;C:\Program Files (x86)\Microsoft SQL Server\160\DTS\Binn;C:\Program Files\nodejs;C:\ProgramData\chocolatey\bin;C:\Users\Noe Gonzales\AppData\Roaming\Python\Python313\Scripts;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python310\Scripts;C:\Users\Noe Gonzales\AppData\Local\Programs\Python\Python310;C:\Program Files\MySQL\MySQL Shell 8.0\bin;C:\Users\Noe Gonzales\AppData\Local\Microsoft\WindowsApps;C:\Users\Noe Gonzales\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Noe Gonzales\AppData\Local\Programs\cursor\resources\app\bin;C:\Users\Noe Gonzales\AppData\Roaming\npm;C:\Users\Noe Gonzales\.vscode\extensions\ms-python.debugpy-2025.14.1-win32-x64\bundled\scripts\noConfigScripts;C:\Users\Noe Gonzales\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\debugCommand;C:\Program Files\Git\usr\bin\vendor_perl;C:\Program Files\Git\usr\bin\core_perl
+OneDrive=C:\Users\Noe Gonzales\OneDrive
+PSModulePath=%ProgramFiles%\WindowsPowerShell\Modules;C:\Windows\system32\WindowsPowerShell\v1.0\Modules
+PROCESSOR_REVISION=ba03
+GIT_EXEC_PATH=C:/Program Files/Git/mingw64/libexec/git-core
+ChocolateyInstall=C:\ProgramData\chocolatey
+APPDATA=C:\Users\Noe Gonzales\AppData\Roaming
+PT8HOME=C:\Program Files\Cisco Packet Tracer 8.2.2
+FPS_BROWSER_APP_PROFILE_STRING=Internet Explorer
+COMPUTERNAME=LAPTOP-8CNVPAQD
+EFC_28776_3789132940=1
+FPS_BROWSER_USER_PROFILE_STRING=Default
+DriverData=C:\Windows\System32\Drivers\DriverData
+VSCODE_DEBUGPY_ADAPTER_ENDPOINTS=c:\Users\Noe Gonzales\.vscode\extensions\ms-python.debugpy-2025.14.1-win32-x64\.noConfigDebugAdapterEndpoints\endpoint-1c95235c95191733.txt
+ChocolateyLastPathUpdate=134036790320325076
+PLINK_PROTOCOL=ssh
+PROCESSOR_LEVEL=6
+EXEPATH=C:\Program Files\Git\bin
+HOMEDRIVE=C:
+PKG_CONFIG_SYSTEM_INCLUDE_PATH=C:/Program Files/Git/mingw64/include
+OneDriveConsumer=C:\Users\Noe Gonzales\OneDrive
+PKG_CONFIG_SYSTEM_LIBRARY_PATH=C:/Program Files/Git/mingw64/lib
+PROGRAMFILES=C:\Program Files (x86)
+CHROME_CRASHPAD_PIPE_NAME=\\.\pipe\crashpad_29368_GZODNZLCVANEROWL
+SSH_ASKPASS=C:/Program Files/Git/mingw64/bin/git-askpass.exe
+USERPROFILE=C:\Users\Noe Gonzales
+GIT_TRACE2_PARENT_SID=474d9eff-1625-4dc1-a440-0720bd52cac2
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 186 Stepping 3, GenuineIntel
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+SESSIONNAME=Console
+TMP=C:\Users\NOEGON~1\AppData\Local\Temp
+TERM_PROGRAM_VERSION=1.105.1
+HOSTNAME=LAPTOP-8CNVPAQD
+TERM_PROGRAM=vscode
+USERDOMAIN=LAPTOP-8CNVPAQD
+NUMBER_OF_PROCESSORS=12
+PS1=\[]633;A\]\[\033]0;$TITLEPREFIX:$PWD\007\]\n\[\033[32m\]\u@\h \[\033[35m\]$MSYSTEM \[\033[33m\]\w\[\033[36m\]`__git_ps1`\[\033[0m\]\n$ \[]633;B\]
+EFC_28776_1592913036=1
+SYSTEMDRIVE=C:
+VSCODE_GIT_ASKPASS_NODE=C:\Users\Noe Gonzales\AppData\Local\Programs\Microsoft VS Code\Code.exe
+USERDOMAIN_ROAMINGPROFILE=LAPTOP-8CNVPAQD
+COMMONPROGRAMFILES=C:\Program Files (x86)\Common Files
+VSCODE_GIT_IPC_HANDLE=\\.\pipe\vscode-git-87fa4052a4-sock
+HOMEPATH=\Users\Noe Gonzales
+COLORTERM=truecolor
+HOME=C:\Users\Noe Gonzales
+MSYSTEM_PREFIX=C:/Program Files/Git/mingw64
+PROCESSOR_ARCHITEW6432=AMD64
+TEMP=C:\Users\NOEGON~1\AppData\Local\Temp
+EFC_28776_2775293581=1
+
+
+------------
+Diagnostic: File system
+Skipped: False
+Success: True
+Exception: None
+Log:
+Temporary directory is 'C:\Users\Noe Gonzales\AppData\Local\Temp\'...
+Checking basic file I/O...
+Writing to temporary file 'C:\Users\Noe Gonzales\AppData\Local\Temp\29f74398bacb202da2b0b628'... OK
+Reading from temporary file 'C:\Users\Noe Gonzales\AppData\Local\Temp\29f74398bacb202da2b0b628'... OK
+Deleting temporary file 'C:\Users\Noe Gonzales\AppData\Local\Temp\29f74398bacb202da2b0b628'... OK
+Testing IFileSystem instance...
+UserHomePath: C:\Users\Noe Gonzales
+UserDataDirectoryPath: C:\Users\Noe Gonzales\.gcm
+GetCurrentDirectory(): C:\Users\Noe Gonzales\Downloads\System\Kooptimizer
+
+------------
+Diagnostic: Networking
+Skipped: False
+Success: True
+Exception: None
+Log:
+Checking networking and HTTP stack...
+Creating HTTP client... OK
+IsNetworkAvailable: True
+Sending HEAD request to http://example.com...Sending HEAD request to https://example.com... OK
+ OK
+Acquiring free TCP port... OK
+Testing local HTTP loopback connections...
+Creating new HTTP listener for http://localhost:50520/... OK
+Waiting for loopback connection... OK
+Writing response... OK
+Waiting for response data... OK
+Loopback connection data OK
+
+------------
+Diagnostic: Git
+Skipped: False
+Success: True
+Exception: None
+Log:
+Getting Git version... OK
+Git version is '2.49.0.windows.1'
+Locating current repository...Git repository at 'C:/Users/Noe Gonzales/Downloads/System/Kooptimizer/.git'
+ OK
+Listing all Git configuration... OK
+Git configuration:
+file:C:/Program Files/Git/etc/gitconfig	diff.astextplain.textconv=astextplain
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.clean=git-lfs clean -- %f
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.smudge=git-lfs smudge -- %f
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.process=git-lfs filter-process
+file:C:/Program Files/Git/etc/gitconfig	filter.lfs.required=true
+file:C:/Program Files/Git/etc/gitconfig	http.sslbackend=schannel
+file:C:/Program Files/Git/etc/gitconfig	core.autocrlf=true
+file:C:/Program Files/Git/etc/gitconfig	core.fscache=true
+file:C:/Program Files/Git/etc/gitconfig	core.symlinks=false
+file:C:/Program Files/Git/etc/gitconfig	pull.rebase=false
+file:C:/Program Files/Git/etc/gitconfig	credential.helper=manager
+file:C:/Program Files/Git/etc/gitconfig	credential.https://dev.azure.com.usehttppath=true
+file:C:/Program Files/Git/etc/gitconfig	init.defaultbranch=master
+file:C:/Users/Noe Gonzales/.gitconfig	core.editor="C:\Users\Noe Gonzales\AppData\Local\Programs\Microsoft VS Code\bin\code" --wait
+file:C:/Users/Noe Gonzales/.gitconfig	core.autocrlf=true
+file:C:/Users/Noe Gonzales/.gitconfig	user.email=noegonzales781@gmail.com
+file:C:/Users/Noe Gonzales/.gitconfig	user.name=Gonzales-Noe
+file:.git/config	core.repositoryformatversion=0
+file:.git/config	core.filemode=false
+file:.git/config	core.bare=false
+file:.git/config	core.logallrefupdates=true
+file:.git/config	core.symlinks=false
+file:.git/config	core.ignorecase=true
+file:.git/config	remote.origin.url=https://github.com/hxrthe/Kooptimizer.git
+file:.git/config	remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+file:.git/config	branch.main.remote=origin
+file:.git/config	branch.main.merge=refs/heads/main
+file:.git/config	branch.main.vscode-merge-base=origin/main
+file:.git/config	branch.Gonzales-Noe.remote=origin
+file:.git/config	branch.Gonzales-Noe.merge=refs/heads/Gonzales-Noe
+file:.git/config	branch.Gonzales-Noe.github-pr-base-branch=hxrthe#Kooptimizer#main
+file:.git/config	branch.Gonzales-Noe.vscode-merge-base=origin/Gonzales-Noe
+file:.git/config	branch.base-upstream.remote=origin
+file:.git/config	branch.base-upstream.merge=refs/heads/base
+file:.git/config	branch.base-upstream.vscode-merge-base=origin/base
+file:.git/config	user.name=Gonzales-Noe
+file:.git/config	user.email=gonzales.noe.lotivo@gmail.com
+
+
+------------
+Diagnostic: Credential storage
+Skipped: False
+Success: True
+Exception: None
+Log:
+ICredentialStore instance is of type: CredentialStore
+Writing test credential... OK
+Reading test credential... OK
+Deleting test credential... OK
+
+------------
+Diagnostic: Microsoft authentication (AAD/MSA)
+Skipped: False
+Success: True
+Exception: None
+Log:
+Broker is not enabled.
+Flow type is: Auto
+Gathering MSAL token cache data... OK
+CacheDirectory: C:\Users\Noe Gonzales\AppData\Local\.IdentityService
+CacheFileName: msal.cache
+CacheFilePath: C:\Users\Noe Gonzales\AppData\Local\.IdentityService\msal.cache
+Creating cache helper... OK
+Verifying MSAL token cache persistence... OK
+
+------------
+Diagnostic: GitHub API
+Skipped: False
+Success: True
+Exception: None
+Log:
+Using 'https://github.com/' as API target.
+Querying '/meta' endpoint... OK
+

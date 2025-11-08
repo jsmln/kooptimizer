@@ -89,7 +89,7 @@ WSGI_APPLICATION = 'kooptimizer.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'kooptimizer_db'),
+        'NAME': os.environ.get('DB_NAME', 'kooptimizer_db2'),
         'USER': os.environ.get('DB_USER', 'postgres'),
         'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
         'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
@@ -145,19 +145,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ====================================================================
 #  RECAPTCHA TEST KEYS (FOR DEVELOPMENT)
-#  TODO: Replace with real keys before going to production
 # ====================================================================
 RECAPTCHA_SITE_KEY = '6LeepvErAAAAAP3XNLdmBipdELXOuZqfo13T6lYEss'
 RECAPTCHA_SECRET_KEY = '6LeepvErAAAAACoTx3YxrhSVI_D9lzEtHeyE7uVf'
 
 # ====================================================================
-#  INFOBIP SMS OTP CONFIGURATION
+#  IPROG SMS OTP CONFIGURATION
 # ====================================================================
-INFOBIP = {
-    'API_KEY': '59e557086ef77c70baedae43c27cc2a3-a85817e2-1561-41e1-833d-5cbd0664a5d0',
-    'BASE_URL': 'kqm92n.api.infobip.com',
-    'APPLICATION_ID': 'kooptimizer_otp_api',
-    'SENDER_ID': 'ServiceSMS',
-    'PIN_LENGTH': 4,
-    'MESSAGE_TEMPLATE': 'Your pin is {{pin}}',
+
+IPROG_SMS = {
+    'API_TOKEN': 'a602bb94c96ebbc31de55242ffa4c6d9f684bc87', 
+    'API_URL': 'https://sms.iprogtech.com/api/v1/sms_messages'
 }
