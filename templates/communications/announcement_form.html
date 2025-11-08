@@ -1,0 +1,213 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+
+{% block dashboard_title %}Announcements{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'frontend/announcement.css' %}">
+{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    .dashboard-main-content {
+        padding: 0;
+        overflow: hidden;
+        /* Center the layout box */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+<div class="announcement-layout">
+
+    <div id="announcement-list-view">
+        <div class="list-header">
+            <h2>Announcements</h2>
+            <button id="create-new-btn" class="create-btn">
+                <i class="bi bi-plus-circle-fill"></i> Create New
+            </button>
+        </div>
+        
+        <div class="announcement-list">
+            <div class="announcement-item" data-modal-target="modal-1">
+                <i class="bi bi-info-circle-fill"></i>
+                <div class="item-details">
+                    <span class="item-title">Annual General Assembly 2025 – Schedule & Agenda</span>
+                    <span class="item-meta">Posted: September 30, 2025</span>
+                </div>
+                <span class="item-status">Status: Scheduled</span>
+            </div>
+
+            <div class="announcement-item" data-modal-target="modal-2">
+                <i class="bi bi-info-circle-fill"></i>
+                <div class="item-details">
+                    <span class="item-title">Reminder: Submit Cooperative Profile & Financial Report</span>
+                    <span class="item-meta">Posted: September 14, 2025</span>
+                </div>
+                <span class="item-status">Status: Sent</span>
+            </div>
+
+            <div class="announcement-item" data-modal-target="modal-3">
+                <i class="bi bi-info-circle-fill"></i>
+                <div class="item-details">
+                    <span class="item-title">Free Training Workshop: Digital Tools for Cooperative Growth</span>
+                    <span class="item-meta">Posted: August 29, 2025</span>
+                </div>
+                <span class="item-status">Status: Draft</span>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="announcement-create-view" style="display: none;">
+        <div class="list-header">
+            <h2>Create New Announcement</h2>
+            <button id="cancel-create-btn" class="cancel-btn">Cancel</button>
+        </div>
+
+        <form class="announcement-form">
+            <div class="form-group">
+                <label for="title"><i class="bi bi-pencil"></i> Title</label>
+                <input type="text" id="title" placeholder="Enter your announcement title">
+            </div>
+            <div class="form-group">
+                <label for="content"><i class="bi bi-file-text"></i> Announcement Content</label>
+                <textarea id="content" rows="8" placeholder="Add description"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="channels"><i class="bi bi-send"></i> Communication Channels</label>
+                    <select id="channels">
+                        <option value="">Send to...</option>
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
+                        <option value="in-app">In-App</option>
+                        <option value="all">All Channels</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="schedule"><i class="bi bi-clock"></i> Schedule</label>
+                    <input type="datetime-local" id="schedule">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="draft-btn">Save Draft</button>
+                <button type="submit" class="send-btn">Save & Send</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<div id="modal-1" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        <div class="modal-header">
+            <i class="bi bi-info-circle"></i>
+            <h3>Annual General Assembly 2025 – Schedule & Agenda</h3>
+        </div>
+        <div class="modal-meta">
+            Posted: Tuesday, September 30, 2025<br>
+            by: Isabel Delacion
+        </div>
+        <div class="modal-body">
+            <p>Dear Cooperatives,</p>
+            <p>You are invited to attend the Annual General Assembly on November 15, 2025 at 9:00 AM, Lipa City Hall Auditorium. Topics include financial performance review, member updates, and new cooperative policies.</p>
+            <p>Please confirm attendance by November 5, 2025.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="edit-btn">Edit</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-2" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        <div class="modal-header">
+            <i class="bi bi-info-circle"></i>
+            <h3>Reminder: Submit Cooperative Profile & Financial Report</h3>
+        </div>
+        <div class="modal-meta">Posted: September 14, 2025</div>
+        <div class="modal-body">
+            <p>This is a reminder to please submit your updated cooperative profile and latest financial report by the end of the month.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="edit-btn">Edit</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-3" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        <div class="modal-header">
+            <i class="bi bi-info-circle"></i>
+            <h3>Free Training Workshop: Digital Tools for Cooperative Growth</h3>
+        </div>
+        <div class="modal-meta">Posted: August 29, 2025</div>
+        <div class="modal-body">
+            <p>This announcement is currently a draft and has not been sent.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="edit-btn">Edit</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const createBtn = document.getElementById('create-new-btn');
+        const cancelBtn = document.getElementById('cancel-create-btn');
+        const listView = document.getElementById('announcement-list-view');
+        const createView = document.getElementById('announcement-create-view');
+        
+        // --- View Switching ---
+        if (createBtn) {
+            createBtn.addEventListener('click', () => {
+                listView.style.display = 'none';
+                createView.style.display = 'block';
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                createView.style.display = 'none';
+                listView.style.display = 'block';
+            });
+        }
+        
+        // --- Modal Pop-up Logic ---
+        const announcementItems = document.querySelectorAll('.announcement-item');
+        
+        announcementItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const modalId = item.getAttribute('data-modal-target');
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('visible');
+                }
+            });
+        });
+
+        // Close modal
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                // Only close if the gray overlay itself is clicked, not the content
+                if (e.target === modal) {
+                    modal.classList.remove('visible');
+                }
+            });
+        });
+        
+        document.querySelectorAll('.modal-close-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.closest('.modal-overlay').classList.remove('visible');
+            });
+        });
+    });
+</script>
+{% endblock %}
