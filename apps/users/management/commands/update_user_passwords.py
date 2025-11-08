@@ -26,7 +26,8 @@ passwords_to_hash = [
     'OfficerLuis@123!',
     'AdminJoan@123!',
     'StaffRyan@123!',
-    'OfficerKate@123!'
+    'OfficerKate@123!',
+    'AdminLhoy@123!'
 ]
 
 print(f"--- Generating Hashes (Using Django's default: pbkdf2_sha256) ---")

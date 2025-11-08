@@ -8,16 +8,17 @@
 html, body {
   height: 100%;
   font-family: "Arial Nova", "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  background-color: #fff;
+  background-color: transparent;
   color: #222;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   overflow-x: hidden;
+  background: linear-gradient(100deg, rgb(129, 12, 12),rgb(58, 6, 6), rgb(0, 0, 0));
 }
 
-body::before {
-  content: "";
+/* body::before {
+  content: ""; 
   position: fixed;
   top: 0;
   left: 0;
@@ -36,19 +37,15 @@ body::after {
   height: 100%;
   background: linear-gradient(135deg, rgba(183, 28, 28, 0.3), rgba(127, 0, 0, 0.3));
   z-index: -1;
-}
+} */
 
 header {
   width: 100%;
-  /* background-color: #4f0c0c;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px; */
   color: white;
   padding: 15px 60px 15px 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); */
   position: sticky;
   top: 0;
   z-index: 100;
@@ -127,7 +124,6 @@ footer p {
 
 header, main, footer {
   position: relative;
-  z-index: 1;
 }
 
 @media (max-width: 768px) {

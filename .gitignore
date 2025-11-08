@@ -13,3 +13,6 @@ media/
 
 # Static (Compiled)
 static/css/output.css
+
+# Logs
+gcm-diagnose.log
