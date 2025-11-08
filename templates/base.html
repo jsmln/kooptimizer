@@ -35,7 +35,7 @@
         <nav>
             <ul>
                 {% if request.session.user_id %}
-                {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'cooperative_officer'%}
+                {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'officer'%}
                     <li class="logout-button">
                         <a href="{% url 'logout' %}" onclick="return confirm('Are you sure you want to logout?')">
                             Logout
