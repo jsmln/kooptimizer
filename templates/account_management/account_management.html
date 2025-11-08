@@ -1,0 +1,111 @@
+{% extends "dashboard/dashboard.html" %}
+{% load static %}
+
+{% block title %}Account Management - KoopTimizer{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'frontend/account_management.css' %}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="account-management-container">
+    <div class="account-header">
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-target="staffs">Staffs</button>
+            <button class="tab-btn" data-target="officers">Officers</button>
+            <button class="tab-btn" data-target="admins">Admins</button>
+        </div>
+
+        <div class="add-section">
+            <p class="total-label">Total Staffs: <span class="count">5</span></p>
+            <button class="add-btn"><i class="bi bi-plus-circle"></i> Add</button>
+        </div>
+    </div>
+
+    <!-- STAFF TABLE -->
+    <div class="table-section active" id="staffs">
+        <h2>Staff User Accounts</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Staff Name</th>
+                    <th>Email Address</th>
+                    <th>Contact Number</th>
+                    <th>Cooperative Assigned</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>S001</td>
+                    <td>Isabel Delacion</td>
+                    <td>isabel@gmail.com</td>
+                    <td>09929380935</td>
+                    <td>Multipurpose Coop</td>
+                </tr>
+                <tr>
+                    <td>S002</td>
+                    <td>Jasmin Esperida</td>
+                    <td>esperidajasmin@gmail.com</td>
+                    <td>09562380468</td>
+                    <td>Agriculture Coop</td>
+                </tr>
+                <tr>
+                    <td>S003</td>
+                    <td>Hearty Delacion</td>
+                    <td>hearty@gmail.com</td>
+                    <td>09273279694</td>
+                    <td>Consumers Coop</td>
+                </tr>
+                <tr>
+                    <td>S004</td>
+                    <td>Mendy Alexis Delos Reyes</td>
+                    <td>alexismdy@gmail.com</td>
+                    <td>09953398613</td>
+                    <td>Service Coop</td>
+                </tr>
+                <tr>
+                    <td>S005</td>
+                    <td>Noe Gonzales</td>
+                    <td>gonzalesnoe@gmail.com</td>
+                    <td>09154937658</td>
+                    <td>Housing Coop</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Sidebar toggle (inherited from dashboard)
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('sidebar-toggle-btn');
+        const closeBtn = document.getElementById('sidebar-close-btn');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const body = document.body;
+
+        function openSidebar() { body.classList.add('sidebar-toggled'); }
+        function closeSidebar() { body.classList.remove('sidebar-toggled'); }
+
+        if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+    });
+
+    // Handle tab switching
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            document.querySelectorAll(".table-section").forEach(t => t.classList.remove("active"));
+
+            btn.classList.add("active");
+            document.getElementById(btn.dataset.target).classList.add("active");
+        });
+    });
+</script>
+{% endblock %}
