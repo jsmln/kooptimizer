@@ -1,0 +1,245 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+
+{% block dashboard_title %}Profile Management{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'frontend/profile_form.css' %}">
+{% endblock %}
+
+{% block dashboard_content %}
+<style>
+    .dashboard-main-content {
+        padding: 0;
+        overflow: hidden; /* This removes the outer scrollbar */
+        
+        /* This ensures your form box stays centered */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
+
+<div class="profile-form-container">
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <fieldset>
+            <legend>Please input your cooperative profile information</legend>
+
+            <div class="form-group">
+                <label for="coop-name">Name of Cooperative</label>
+                <input type="text" id="coop-name" name="coop_name" placeholder="Enter name of Cooperative">
+            </div>
+
+            <div class="form-group">
+                <label for="coop-address">Cooperative Address</label>
+                <input type="text" id="coop-address" name="coop_address" placeholder="Enter Cooperative Address">
+            </div>
+
+            <div class="form-group">
+                <label for="coop-contact">Cooperative Contact Number</label>
+                <input type="tel" id="coop-contact" name="coop_contact" placeholder="09*********">
+            </div>
+
+            <div class="form-group">
+                <label for="coop-email">Cooperative Email Address</label>
+                <input type="email" id="coop-email" name="coop_email" placeholder="sample@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label for="cda-reg-num">CDA Registration Number</label>
+                <input type="text" id="cda-reg-num" name="cda_reg_num" placeholder="****-*********">
+            </div>
+
+            <div class="form-group">
+                <label for="cda-reg-date">CDA Registration Date</label>
+                <input type="date" id="cda-reg-date" name="cda_reg_date">
+            </div>
+
+            <div class="form-group">
+                <label for="lccdc-membership-date">LCCDC Membership</label>
+                <input type="date" id="lccdc-membership-date" name="lccdc_membership_date">
+            </div>
+
+            <div class="form-group">
+                <label for="area-operation">Area of Operation</label>
+                <select id="area-operation" name="area_operation">
+                    <option value="">Select area of operation</option>
+                    <option value="city">City</option>
+                    <option value="municipal">Municipal</option>
+                    <option value="provincial">Provincial</option>
+                    <option value="regional">Regional</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="business-activity">Business Activity</label>
+                <input type="text" id="business-activity" name="business_activity" placeholder="Enter business activity">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="num-bod">Number of Board Directors</label>
+                    <input type="number" id="num-bod" name="num_bod" placeholder="Enter number of BOD">
+                </div>
+                <div class="form-group">
+                    <label for="num-se">Number of Salaried Employees</label>
+                    <input type="number" id="num-se" name="num_se" placeholder="Enter number of SE">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Certificate of Compliance</label>
+                    <div class="form-check-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="coc-yes" name="coc" value="yes">
+                            <label for="coc-yes">Yes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="coc-no" name="coc" value="no">
+                            <label for="coc-no">No</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Certificate of Tax Exemption</label>
+                    <div class="form-check-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="cte-yes" name="cte" value="yes">
+                            <label for="cte-yes">Yes</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="checkbox" id="cte-no" name="cte" value="no">
+                            <label for="cte-no">No</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </fieldset>
+        
+        <fieldset>
+            <legend>Please input your financial information</legend>
+            <div class="form-row-file">
+                <div class="form-group">
+                    <label>2022 Assets</label>
+                    <label for="assets-2022" class="file-label"><i class="bi bi-upload"></i> Add file</label>
+                    <input type="file" id="assets-2022" name="assets_2022" class="file-input">
+                </div>
+                <div class="form-group">
+                    <label>2023 Assets</label>
+                    <label for="assets-2023" class="file-label"><i class="bi bi-upload"></i> Add file</label>
+                    <input type="file" id="assets-2023" name="assets_2023" class="file-input">
+                </div>
+                <div class="form-group">
+                    <label>2024 Assets</label>
+                    <label for="assets-2024" class="file-label"><i class="bi bi-upload"></i> Add file</label>
+                    <input type="file" id="assets-2024" name="assets_2024" class="file-input">
+                </div>
+            </div>
+            <div class="form-row-file">
+                <div class="form-group">
+                    <label>Total Paid Up Capital</label>
+                    <label for="paid-up-capital" class="file-label"><i class="bi bi-upload"></i> Add file</label>
+                    <input type="file" id="paid-up-capital" name="paid_up_capital" class="file-input">
+                </div>
+                <div class="form-group">
+                    <label>Net Surplus/Loss</label>
+                    <label for="net-surplus" class="file-label"><i class="bi bi-upload"></i> Add file</label>
+                    <input type="file" id="net-surplus" name="net_surplus" class="file-input">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="subscribed-capital">Total Subscribed Capital</label>
+                    <input type="text" id="subscribed-capital" name="subscribed_capital" placeholder="Enter total SC">
+                </div>
+                <div class="form-group">
+                    <label for="statutory-fund">Total Statutory Fund</label>
+                    <input type="text" id="statutory-fund" name="statutory_fund" placeholder="Enter total SF">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Please input cooperative Officers</legend>
+            <div class="form-group">
+                <label for="officer-chairperson">CHAIRPERSON</label>
+                <input type="text" id="officer-chairperson" name="officer_chairperson" placeholder="Last name, First name M.I.">
+            </div>
+            <div class="form-group">
+                <label for="officer-vicechair">VICE CHAIRPERSON</label>
+                <input type="text" id="officer-vicechair" name="officer_vicechair" placeholder="Last name, First name M.I.">
+            </div>
+            <div class="form-group">
+                <label for="officer-members">MEMBERS (BOD)</label>
+                <input type="text" id="officer-members" name="officer_members" placeholder="Name, Name, Name....">
+            </div>
+            <div class="form-group">
+                <label for="officer-secretary">SECRETARY</label>
+                <input type="text" id="officer-secretary" name="officer_secretary" placeholder="Last name, First name M.I.">
+            </div>
+            <div class="form-group">
+                <label for="officer-treasurer">TREASURER</label>
+                <input type="text" id="officer-treasurer" name="officer_treasurer" placeholder="Last name, First name M.I.">
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Please input cooperative Committee Members</legend>
+            
+            <label class="grid-label">Audit Committee</label>
+            <div class="committee-grid">
+                <input type="text" name="audit_1" placeholder="Full name">
+                <input type="text" name="audit_2" placeholder="Full name">
+                <input type="text" name="audit_3" placeholder="Full name">
+            </div>
+            
+            <label class="grid-label">Election Committee</label>
+            <div class="committee-grid">
+                <input type="text" name="election_1" placeholder="Full name">
+                <input type="text" name="election_2" placeholder="Full name">
+                <input type="text" name="election_3" placeholder="Full name">
+            </div>
+            
+            <label class="grid-label">Ethics Committee</label>
+            <div class="committee-grid">
+                <input type="text" name="ethics_1" placeholder="Full name">
+                <input type="text" name="ethics_2" placeholder="Full name">
+                <input type="text" name="ethics_3" placeholder="Full name">
+            </div>
+
+            </fieldset>
+
+        <fieldset>
+            <legend>Please input cooperative Management Staffs</legend>
+            <div class="form-group">
+                <label for="staff-manager">MANAGER</label>
+                <input type="text" id="staff-manager" name="staff_manager" placeholder="Last name, First name M.I.">
+            </div>
+            <div class="form-group">
+                <label for="staff-bookkeeper">BOOK KEEPER</label>
+                <input type="text" id="staff-bookkeeper" name="staff_bookkeeper" placeholder="Last name, First name M.I.">
+            </div>
+            <div class="form-group">
+                <label for="staff-clerk1">STORE CLERK 1</label>
+                <input type="text" id="staff-clerk1" name="staff_clerk1" placeholder="Last name, First name M.I.">
+            </div>
+            <div class="form-group">
+                <label for="staff-clerk2">STORE CLERK 2</label>
+                <input type="text" id="staff-clerk2" name="staff_clerk2" placeholder="Last name, First name M.I.">
+            </div>
+            <div class="form-group">
+                <label for="staff-clerk3">STORE CLERK 3</label>
+                <input type="text" id="staff-clerk3" name="staff_clerk3" placeholder="Last name, First name M.I.">
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit" class="submit-btn">Submit</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
