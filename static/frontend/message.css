@@ -202,9 +202,38 @@
     display: flex;
     padding: 20px;
     background: #efefef;
-    border-top: 1px solid #444;
-    gap: 15px;
+    border-top: 1px solid #ddd; /* Lighter border */
+    gap: 10px; /* Reduced gap */
     flex-shrink: 0;
+    align-items: center; /* Vertically center buttons */
+}
+
+/* NEW: Style for the paperclip button */
+.attach-btn {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 10px;
+    transition: color 0.2s;
+}
+.attach-btn:hover {
+    color: #b71c1c; /* Your theme red */
+}
+
+.message-input input[type="text"] {
+    flex-grow: 1;
+    padding: 12px 20px;
+    background: #fff; /* White background */
+    border: 1px solid #ccc; /* Add border */
+    border-radius: 25px;
+    color: #2d2d2d;
+    font-size: 1rem;
+}
+.message-input input[type="text"]:focus {
+    outline: none;
+    border-color: #b71c1c;
 }
 
 .message-input input {
@@ -230,4 +259,148 @@
 
 .send-btn:hover {
     background-color: #ff0000;
+}
+
+/* --- NEW: Styles for file/image messages --- */
+.message-image {
+    max-width: 100%;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.message-file {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 10px 15px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.2s;
+}
+.message-file:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+.message-file i {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+.message-file span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Adjust file message bubble colors */
+.message.incoming .message-file {
+    color: #333;
+}
+.message.outgoing .message-file {
+    color: #fff;
+}
+.message.outgoing .message-file:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    
+    /* Hide by default */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px; /* Good size for a contact list */
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    position: relative;
+    
+    /* Animation */
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: scale(1);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+}
+.modal-close-btn:hover {
+    color: #000;
+}
+
+.modal-header {
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.modal-header h3 {
+    color: #2d2d2d;
+    margin: 0;
+}
+.modal-instruction {
+    font-size: 0.9em;
+    color: #777;
+    margin-top: 5px;
+}
+
+.modal-body {
+    max-height: 50vh; /* Make the list scrollable */
+    overflow-y: auto;
+}
+
+.modal-contact-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modal-contact-item:hover {
+    background-color: #f0f0f0; /* Light hover */
+}
+
+/* We can reuse the .avatar style from the main list */
+.modal-contact-item .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    margin-right: 12px;
+}
+
+/* We can reuse the .contact-name style */
+.modal-contact-item .contact-name {
+    color: #2d2d2d;
+    font-weight: 500;
 }
