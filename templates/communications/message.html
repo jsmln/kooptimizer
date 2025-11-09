@@ -31,7 +31,7 @@
             <input type="text" placeholder="Search">
         </div>
         <div class="contact-list">
-            <div class="contact-item active">
+            <div class="contact-item">
                 <div class="avatar">J</div>
                 <div class="contact-details">
                     <span class="contact-name">Jasmin Esperida</span>
@@ -108,112 +108,378 @@
         </div>
 
         <div class="message-input">
-            <input type="text" placeholder="Type a message...">
-            <button class="send-btn" title="Send">
+            <input type="file" id="file-input" style="display: none;" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">
+            
+            <button class="attach-btn" id="attach-btn" title="Attach file">
+                <i class="bi bi-paperclip"></i>
+            </button>
+            
+            <input type="text" id="text-input" placeholder="Type a message...">
+            
+            <button class="send-btn" id="send-btn" title="Send">
                 <i class="bi bi-send-fill"></i>
             </button>
         </div>
 
     </div>
+    <div id="new-message-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        
+        <div class="modal-header">
+            <h3>New Message</h3>
+            <p class="modal-instruction">Select a contact to start a conversation.</p>
+        </div>
+        
+        <div class="modal-body">
+            <div class="modal-contact-list">
+                
+                <div class="modal-contact-item" data-contact-name="Jasmin Esperida">
+                    <div class="avatar">J</div>
+                    <span class="contact-name">Jasmin Esperida</span>
+                </div>
+                
+                <div class="modal-contact-item" data-contact-name="Hearty Delacion">
+                    <div class="avatar">H</div>
+                    <span class="contact-name">Hearty Delacion</span>
+                </div>
+                
+                <div class="modal-contact-item" data-contact-name="Noe Gonzales">
+                    <div class="avatar">N</div>
+                    <span class="contact-name">Noe Gonzales</span>
+                </div>
+                
+                <div class="modal-contact-item" data-contact-name="Lhoy Floro">
+                    <div class="avatar">L</div>
+                    <span class="contact-name">Lhoy Floro</span>
+                </div>
+                
+                <div class="modal-contact-item" data-contact-name="Uno Santillan">
+                    <div class="avatar">U</div>
+                    <span class="contact-name">Uno Santillan</span>
+                </div>
 
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // 1. Hardcoded "database" of conversations
-    const conversations = {
-        "Jasmin Esperida": {
-            initial: "J",
-            messages: [
-                { type: "incoming", text: "Good afternoon! Let's discuss the upcoming audit. Are you free at 3 PM?", time: "14m ago" },
-                { type: "outgoing", text: "Hi Jasmin, 3 PM works for me. Should I prepare the financial reports?", time: "12m ago" },
-                { type: "incoming", text: "Yes, please. And the member activity logs from last quarter. Thanks!", time: "10m ago" },
-                { type: "outgoing", text: "Got it. I'll have them ready.", time: "9m ago" }
-            ]
-        },
-        "Hearty Delacion": {
-            initial: "H",
-            messages: [
-                { type: "incoming", text: "We're finalizing our meeting notes. Can you check them?", time: "35m ago" },
-                { type: "outgoing", text: "Sure, send them over. I'll look at them now.", time: "30m ago" }
-            ]
-        },
-        "Noe Gonzales": {
-            initial: "N",
-            messages: [
-                { type: "incoming", text: "We're updating the database schema. Will push the new migration file soon.", time: "50m ago" }
-            ]
-        },
-        "Lhoy Floro": {
-            initial: "L",
-            messages: [
-                { type: "incoming", text: "Please review the attached documents for the Data Bank Management module.", time: "1hr ago" },
-                { type: "outgoing", text: "On it. Will send my feedback this afternoon.", time: "1hr ago" },
-                { type: "outgoing", text: "Looks good, just one minor revision on page 3.", time: "20m ago" }
-            ]
-        },
-        "Uno Santillan": {
-            initial: "U",
-            messages: [
-                { type: "incoming", text: "We received your cooperative's latest report.", time: "9hr ago" }
-            ]
-        }
-    };
-
-    // 2. Get references to all the elements we need to change
+    // 1. Get references to all the elements
     const allContacts = document.querySelectorAll('.contact-item');
     const chatHeaderAvatar = document.querySelector('.chat-header .avatar');
     const chatHeaderName = document.querySelector('.chat-header h3');
     const messageArea = document.querySelector('.message-area');
+    const sendBtn = document.getElementById('send-btn');
+    const textInput = document.getElementById('text-input');
+    const contactList = document.querySelector('.contact-list');
+    const searchInput = document.querySelector('.search-bar input');
+    const attachBtn = document.getElementById('attach-btn');
+    const fileInput = document.getElementById('file-input');
+    const newMsgBtn = document.querySelector('.new-message-btn');
+    const newMsgModal = document.getElementById('new-message-modal');
+    const modalCloseBtn = newMsgModal.querySelector('.modal-close-btn');
+    const modalContactItems = newMsgModal.querySelectorAll('.modal-contact-item');
 
-    // 3. Function to update the chat window
-    function loadConversation(contactName, contactInitial) {
-        // Update header
-        chatHeaderAvatar.textContent = contactInitial;
-        chatHeaderName.textContent = contactName;
+    // 2. Helper function to calculate 'time ago'
+    function timeAgo(isoString) {
+        if (!isoString) return "";
+        const date = new Date(isoString);
+        if (isNaN(date)) return isoString;
+        const now = new Date();
+        const seconds = Math.floor((now - date) / 1000);
+        if (seconds < 10) return "Just now";
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + "y ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + "mo ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + "d ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + "h ago";
+        interval = seconds / 60;
+        if (interval >= 1) return Math.floor(interval) + "m ago";
+        return Math.floor(seconds) + "s ago";
+    }
 
-        // Clear previous messages
-        messageArea.innerHTML = '';
+    // 3. Hardcoded "database" with REAL timestamps
+    const now = Date.now();
+    const defaultConversations = {
+        "Jasmin Esperida": { initial: "J", messages: [ { type: "incoming", text: "Good afternoon!", time: new Date(now - 14 * 60000).toISOString() } ] },
+        "Hearty Delacion": { initial: "H", messages: [ { type: "incoming", text: "We're finalizing our meeting notes.", time: new Date(now - 35 * 60000).toISOString() } ] },
+        "Noe Gonzales": { initial: "N", messages: [ { type: "incoming", text: "We're updating the database schema.", time: new Date(now - 50 * 60000).toISOString() } ] },
+        "Lhoy Floro": { initial: "L", messages: [ { type: "incoming", text: "Please review the attached documents.", time: new Date(now - 60 * 60000).toISOString() } ] },
+        "Uno Santillan": { initial: "U", messages: [ { type: "incoming", text: "We received your cooperative's latest report.", time: new Date(now - 9 * 3600000).toISOString() } ] }
+    };
 
-        // Get new messages from our "database"
-        const conversation = conversations[contactName];
-        if (!conversation) {
-            messageArea.innerHTML = '<p class="no-messages">No messages for this user.</p>';
-            return;
-        }
+    // 4. Load conversations from localStorage or use defaults
+    let conversations;
+    const storedConversations = localStorage.getItem('kooptimizerChats');
+    if (storedConversations) {
+        conversations = JSON.parse(storedConversations);
+    } else {
+        conversations = defaultConversations;
+        localStorage.setItem('kooptimizerChats', JSON.stringify(conversations));
+    }
 
-        // Create and add new message elements
-        conversation.messages.forEach(msg => {
+    // --- 5. NEW: Function to append any message (text, image, or file) ---
+        function appendMessage(msg) {
             const messageElement = document.createElement('div');
-            messageElement.classList.add('message', msg.type); // 'message incoming' or 'message outgoing'
+            messageElement.classList.add('message', msg.type);
             
+            let contentHTML = '';
+            
+            // Check the message text
+            if (msg.text.startsWith('data:image/')) {
+                // It's an image
+                contentHTML = `<img src="${msg.text}" alt="Uploaded Image" class="message-image">`;
+            } else if (msg.text.startsWith('data:')) {
+                // It's another file (PDF, etc.)
+                contentHTML = `
+                    <a href="${msg.text}" download="file" class="message-file">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                        <span>File Attached (Click to download)</span>
+                    </a>
+                `;
+            } else {
+                // It's plain text
+                contentHTML = `<p>${msg.text}</p>`;
+            }
+
             messageElement.innerHTML = `
-                <p>${msg.text}</p>
-                <span class="time">${msg.time}</span>
+                ${contentHTML}
+                <span class="time" data-timestamp="${msg.time}">${timeAgo(msg.time)}</span>
             `;
             messageArea.appendChild(messageElement);
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+    // 6. Function to load a full conversation history
+    function loadConversation(contactName, contactInitial) {
+        chatHeaderAvatar.textContent = contactInitial;
+        chatHeaderName.textContent = contactName;
+        messageArea.innerHTML = '';
+        const conversation = conversations[contactName];
+        if (!conversation || !conversation.messages) {
+            messageArea.innerHTML = '<p class="no-messages" style="text-align:center; color: #888;">No messages for this user.</p>';
+            return;
+        }
+        conversation.messages.forEach(msg => {
+            appendMessage(msg);
         });
     }
 
-    // 4. Add click event listener to each contact
+    // --- 7. NEW: Function to save a new message (of any type) ---
+        function saveAndAppendMessage(messageText) {
+            const activeContactName = chatHeaderName.textContent;
+            const newISOTime = new Date().toISOString(); 
+            const newMessage = { type: "outgoing", text: messageText, time: newISOTime };
+
+            if (!conversations[activeContactName]) {
+                const initial = activeContactName[0] || "?";
+                conversations[activeContactName] = { initial: initial, messages: [] };
+            }
+            conversations[activeContactName].messages.push(newMessage);
+            
+            // --- DANGER: This will fail if the file string is > 5-10MB ---
+            try {
+                localStorage.setItem('kooptimizerChats', JSON.stringify(conversations));
+            } catch (e) {
+                console.error("LocalStorage is full! Could not save message.", e);
+                alert("Error: Your chat storage is full. Cannot send large file.");
+                return; // Stop
+            }
+            // --- End of DANGER zone ---
+
+            appendMessage(newMessage);
+
+            // Update contact list preview
+            const activeContactItem = document.querySelector('.contact-item.active');
+            if (activeContactItem) {
+                const preview = activeContactItem.querySelector('.message-preview');
+                const timestamp = activeContactItem.querySelector('.timestamp');
+                
+                // --- NEW: Update preview for files ---
+                let previewText = messageText;
+                if (messageText.startsWith('data:image/')) {
+                    previewText = "[Image]";
+                } else if (messageText.startsWith('data:')) {
+                    previewText = "[File]";
+                }
+                
+                preview.textContent = "You: " + previewText;
+                timestamp.textContent = "Just now"; 
+                timestamp.setAttribute('data-timestamp', newISOTime); 
+                activeContactItem.dataset.lastMessageTime = newISOTime;
+                contactList.prepend(activeContactItem);
+            }
+        }
+
+        // --- 8. Function to send TEXT message ---
+        function sendTextMessage() {
+            const text = textInput.value;
+            if (text.trim() === "") return;
+            saveAndAppendMessage(text);
+            textInput.value = "";
+        }
+        
+        // --- 9. NEW: Function to handle FILE sending ---
+        function handleFileSend(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const base64String = e.target.result;
+                saveAndAppendMessage(base64String);
+            };
+            
+            reader.onerror = function(e) {
+                console.error("File reading error", e);
+                alert("Error: Could not read file.");
+            };
+
+            // Read the file as a Base64 string
+            reader.readAsDataURL(file);
+        }
+
+        // 10. Click Listeners
     allContacts.forEach(contact => {
         contact.addEventListener('click', () => {
-            // Remove 'active' class from the currently active contact
-            const currentActive = document.querySelector('.contact-item.active');
-            if (currentActive) {
-                currentActive.classList.remove('active');
-            }
-
-            // Add 'active' class to the clicked contact
+            allContacts.forEach(c => c.classList.remove('active'));
             contact.classList.add('active');
-
-            // Get the data from the clicked contact
             const contactName = contact.querySelector('.contact-name').textContent;
             const contactInitial = contact.querySelector('.avatar').textContent;
-
-            // Load the new conversation
             loadConversation(contactName, contactInitial);
         });
     });
+    
+    sendBtn.addEventListener('click', sendTextMessage);
+    textInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') sendTextMessage();
+    });
+    attachBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            handleFileSend(e.target.files[0]);
+        }
+        e.target.value = null; 
+    });
+    searchInput.addEventListener('keyup', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        allContacts.forEach(contact => {
+            const contactName = contact.querySelector('.contact-name').textContent.toLowerCase();
+            if (contactName.includes(searchTerm)) {
+                contact.style.display = 'flex';
+            } else {
+                contact.style.display = 'none';
+            }
+        });
+    });
 
+    // --- NEW: Event Listeners for the New Message Modal ---
+    newMsgBtn.addEventListener('click', (e) => {
+        e.preventDefault(); // Stop the <a> tag from jumping
+        newMsgModal.classList.add('visible');
+    });
+
+    function closeNewMsgModal() {
+        newMsgModal.classList.remove('visible');
+    }
+
+    modalCloseBtn.addEventListener('click', closeNewMsgModal);
+    newMsgModal.addEventListener('click', (e) => {
+        if (e.target === newMsgModal) { // If the gray overlay is clicked
+            closeNewMsgModal();
+        }
+    });
+
+    // Logic for clicking a contact in the modal
+    modalContactItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const targetName = item.dataset.contactName;
+
+            // Find the matching contact in the main list
+            let foundContact = null;
+            allContacts.forEach(contact => {
+                if (contact.querySelector('.contact-name').textContent === targetName) {
+                    foundContact = contact;
+                }
+            });
+
+            if (foundContact) {
+                // Simulate a click on the main list contact
+                foundContact.click();
+            }
+
+            closeNewMsgModal();
+        });
+    });
+    
+        // --- 11. Function to update all previews and sort ---
+        function updateAllPreviewsAndSort() {
+            const contactsArray = Array.from(allContacts); 
+            contactsArray.forEach(contact => {
+                const contactName = contact.querySelector('.contact-name').textContent;
+                const conversation = conversations[contactName];
+                if (conversation && conversation.messages.length > 0) {
+                    const lastMessage = conversation.messages[conversation.messages.length - 1];
+                    const preview = contact.querySelector('.message-preview');
+                    const timestamp = contact.querySelector('.timestamp');
+                    
+                    // --- NEW: Check for file types in preview ---
+                    let previewText = lastMessage.text;
+                    if (lastMessage.type === 'outgoing') {
+                        previewText = "You: ";
+                    } else {
+                        previewText = "";
+                    }
+                    
+                    if (lastMessage.text.startsWith('data:image/')) {
+                        previewText += "[Image]";
+                    } else if (lastMessage.text.startsWith('data:')) {
+                        previewText += "[File]";
+                    } else {
+                        previewText += lastMessage.text; // Plain text
+                    }
+                    
+                    preview.textContent = previewText;
+                    timestamp.textContent = timeAgo(lastMessage.time);
+                    timestamp.setAttribute('data-timestamp', lastMessage.time);
+                    contact.dataset.lastMessageTime = lastMessage.time; 
+                } else {
+                    contact.dataset.lastMessageTime = '1970-01-01T00:00:00.000Z';
+                }
+            });
+
+            const sortedContacts = contactsArray.sort((a, b) => {
+                return new Date(b.dataset.lastMessageTime) - new Date(a.dataset.lastMessageTime);
+            });
+
+            sortedContacts.forEach(contact => {
+                contactList.appendChild(contact);
+            });
+        }
+        
+        // --- 12. Load default conversation and update/sort all previews ---
+        updateAllPreviewsAndSort(); 
+        const topContact = contactList.querySelector('.contact-item'); 
+        if (topContact) {
+            allContacts.forEach(c => c.classList.remove('active'));
+            topContact.classList.add('active'); 
+            const contactName = topContact.querySelector('.contact-name').textContent;
+            const contactInitial = topContact.querySelector('.avatar').textContent;
+            loadConversation(contactName, contactInitial);
+        }
+
+        // 13. REAL-TIME UPDATER
+    function refreshAllTimestamps() {
+        const timestampElements = document.querySelectorAll('[data-timestamp]');
+        timestampElements.forEach(element => {
+            const isoString = element.getAttribute('data-timestamp');
+            element.textContent = timeAgo(isoString);
+        });
+    }
+    setInterval(refreshAllTimestamps, 10000);
 </script>
 {% endblock %}
