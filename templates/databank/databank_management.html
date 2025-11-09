@@ -49,44 +49,41 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr data-modal-target="profile-modal">
                     <td>Plaridel Multipurpose Cooperative</td>
                     <td>Balintawak, Lipa, Batangas</td>
                     <td>plaridelmulticoop@gmail.com</td>
                     <td>09178064570</td>
                     <td>1414-06140255</td>
                 </tr>
-                <tr>
+                <tr data-modal-target="profile-modal">
                     <td>Agriculture Cooperative</td>
                     <td>Sabang, Lipa, Batangas</td>
                     <td>lipaagriculture@gmail.com</td>
                     <td>09929380946</td>
                     <td>1414-06140256</td>
                 </tr>
-                <tr>
+                <tr data-modal-target="profile-modal">
                     <td>Consumer Cooperative</td>
                     <td>Dagatan, Lipa, Batangas</td>
                     <td>coopconsumer@gmail.com</td>
                     <td>09272739984</td>
                     <td>1414-06140257</td>
                 </tr>
-                <tr>
+                <tr data-modal-target="profile-modal">
                     <td>Housing Cooperative</td>
                     <td>Inosluban, Lipa, Batangas</td>
                     <td>housingcooplipa@gmail.com</td>
                     <td>09935239653</td>
                     <td>1414-06140258</td>
                 </tr>
-                <tr>
+                <tr data-modal-target="profile-modal">
                     <td>Workers Cooperative</td>
                     <td>Maraouy, Lipa, Batangas</td>
                     <td>workerscooplipa@gmail.com</td>
                     <td>09154937568</td>
                     <td>1414-06140259</td>
                 </tr>
-                <tr><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr><td></td><td></td><td></td><td></td><td></td></tr>
                 <tr><td></td><td></td><td></td><td></td><td></td></tr>
             </tbody>
@@ -99,4 +96,95 @@
     </div>
 
 </div>
+
+<div id="profile-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close-btn">&times;</button>
+        
+        <div class="modal-header">
+            <h3>Consumer Cooperative Profile Information</h3>
+            <div class="modal-meta">
+                Last Updated: Tuesday, September 30, 2025<br>
+                by: Isabel Delacion, Chairperson
+            </div>
+        </div>
+
+        <div class="modal-body">
+            <section class="modal-section">
+                <h4>COOPERATIVE GENERAL INFORMATION</h4>
+                <div class="info-grid">
+                    <span>Cooperative Name:</span> <span>Consumer Cooperative</span>
+                    <span>Cooperative Address:</span> <span>Sabang, Lipa City, Batangas</span>
+                    <span>Cooperative Contact Number:</span> <span>09929380925</span>
+                    <span>Cooperative Email Address:</span> <span>consumercoop@gmail.com</span>
+                    <span>CDA Registration Number:</span> <span>1414-060923055</span>
+                    <span>CDA Registration Date:</span> <span>09-06-2005</span>
+                    <span>LCCDC Membership:</span> <span>09-14-2014</span>
+                    <span>Area of Operation:</span> <span>Consumer</span>
+                    <span>Business Activity:</span> <span>Supply and demand</span>
+                    <span>Number of Board Directors:</span> <span>3</span>
+                    <span>Number of Salaried Employees:</span> <span>14</span>
+                    <span>Certificate of Compliance:</span> <span>Yes</span>
+                    <span>Certificate of Tax Exemption:</span> <span>Yes</span>
+                </div>
+            </section>
+
+            <section class="modal-section">
+                <h4>FINANCIAL RECORDS</h4>
+                <div class="info-grid">
+                    <span>2022 Assets:</span> <span>142,657.00</span>
+                    <span>2023 Assets:</span> <span>258,843.00</span>
+                    <span>2024 Assets:</span> <span>356,964.68</span>
+                    <span>Total Paid Up Capital:</span> <span>108,243.78</span>
+                    <span>Total Subscribed Capital:</span> <span>50,876.75</span>
+                    <span>Net Surplus/Loss:</span> <span>10,653.54</span>
+                    <span>Total Statutory Fund:</span> <span>14,785.90</span>
+                </div>
+            </section>
+
+            <section class="modal-section">
+                <h4>COOPERATIVE OFFICERS</h4>
+                <div class="info-grid">
+                    <span>CHAIRPERSON:</span> <span>Isabel Delacion</span>
+                    <span>VICE CHAIRPERSON:</span> <span>Jasmin Esperida</span>
+                </div>
+            </section>
+        </div>
+
+        <div class="modal-footer">
+            <button class="edit-btn">Edit</button>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableRows = document.querySelectorAll('.table-container tbody tr[data-modal-target]');
+        const modal = document.getElementById('profile-modal');
+        if (!modal) return;
+
+        const closeBtn = modal.querySelector('.modal-close-btn');
+
+        // Open modal
+        tableRows.forEach(row => {
+            // Only add click listener to rows with data
+            if (row.cells[0].textContent.trim() !== "") {
+                row.addEventListener('click', () => {
+                    modal.classList.add('visible');
+                });
+            }
+        });
+
+        // Close modal via 'X' button
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('visible');
+        });
+
+        // Close modal by clicking overlay
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('visible');
+            }
+        });
+    });
+</script>
 {% endblock %}
