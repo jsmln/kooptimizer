@@ -1,0 +1,219 @@
+{% extends 'dashboard/dashboard.html' %}
+{% load static %}
+
+{% block dashboard_title %}Messages{% endblock %}
+
+{% block extra_head %}
+    {# This is the new CSS file for this page #}
+    {{ block.super }} <link rel="stylesheet" href="{% static 'frontend/message.css' %}">
+{% endblock %}
+
+{% block dashboard_content %}
+
+<style>
+    .dashboard-main-content {
+        padding: 0;
+        overflow: hidden; /* Prevent parent from scrolling */
+    }
+</style>
+
+<div class="message-layout">
+
+    <div class="conversation-list">
+        <div class="list-header">
+            <h2>Messages</h2>
+            <a href="#" class="new-message-btn" title="New Message">
+                <i class="bi bi-pencil-square"></i>
+            </a>
+        </div>
+        <div class="search-bar">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Search">
+        </div>
+        <div class="contact-list">
+            <div class="contact-item active">
+                <div class="avatar">J</div>
+                <div class="contact-details">
+                    <span class="contact-name">Jasmin Esperida</span>
+                    <span class="message-preview">Good afternoon! Let...</span>
+                </div>
+                <span class="timestamp">14m</span>
+            </div>
+            
+            <div class="contact-item">
+                <div class="avatar">H</div>
+                <div class="contact-details">
+                    <span class="contact-name">Hearty Delacion</span>
+                    <span class="message-preview">We're finalizing our m...</span>
+                </div>
+                <span class="timestamp">35m</span>
+            </div>
+
+            <div class="contact-item">
+                <div class="avatar">N</div>
+                <div class="contact-details">
+                    <span class="contact-name">Noe Gonzales</span>
+                    <span class="message-preview">We're updating the d...</span>
+                </div>
+                <span class="timestamp">50m</span>
+            </div>
+
+            <div class="contact-item">
+                <div class="avatar">L</div>
+                <div class="contact-details">
+                    <span class="contact-name">Lhoy Floro</span>
+                    <span class="message-preview">Please review the at...</span>
+                </div>
+                <span class="timestamp">1hr</span>
+            </div>
+
+            <div class="contact-item">
+                <div class="avatar">U</div>
+                <div class="contact-details">
+                    <span class="contact-name">Uno Santillan</span>
+                    <span class="message-preview">We received your co...</span>
+                </div>
+                <span class="timestamp">9hr</span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="chat-window">
+        
+        <div class="chat-header">
+            <div class="avatar">J</div>
+            <h3>Jasmin Esperida</h3>
+            </div>
+
+        <div class="message-area">
+            
+            <div class="message incoming">
+                <p>Good afternoon! Let's discuss the upcoming audit. Are you free at 3 PM?</p>
+                <span class="time">14m ago</span>
+            </div>
+            <div class="message outgoing">
+                <p>Hi Jasmin, 3 PM works for me. Should I prepare the financial reports?</p>
+                <span class="time">12m ago</span>
+            </div>
+            <div class="message incoming">
+                <p>Yes, please. And the member activity logs from last quarter. Thanks!</p>
+                <span class="time">10m ago</span>
+            </div>
+             <div class="message outgoing">
+                <p>Got it. I'll have them ready.</p>
+                <span class="time">9m ago</span>
+            </div>
+            
+        </div>
+
+        <div class="message-input">
+            <input type="text" placeholder="Type a message...">
+            <button class="send-btn" title="Send">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // 1. Hardcoded "database" of conversations
+    const conversations = {
+        "Jasmin Esperida": {
+            initial: "J",
+            messages: [
+                { type: "incoming", text: "Good afternoon! Let's discuss the upcoming audit. Are you free at 3 PM?", time: "14m ago" },
+                { type: "outgoing", text: "Hi Jasmin, 3 PM works for me. Should I prepare the financial reports?", time: "12m ago" },
+                { type: "incoming", text: "Yes, please. And the member activity logs from last quarter. Thanks!", time: "10m ago" },
+                { type: "outgoing", text: "Got it. I'll have them ready.", time: "9m ago" }
+            ]
+        },
+        "Hearty Delacion": {
+            initial: "H",
+            messages: [
+                { type: "incoming", text: "We're finalizing our meeting notes. Can you check them?", time: "35m ago" },
+                { type: "outgoing", text: "Sure, send them over. I'll look at them now.", time: "30m ago" }
+            ]
+        },
+        "Noe Gonzales": {
+            initial: "N",
+            messages: [
+                { type: "incoming", text: "We're updating the database schema. Will push the new migration file soon.", time: "50m ago" }
+            ]
+        },
+        "Lhoy Floro": {
+            initial: "L",
+            messages: [
+                { type: "incoming", text: "Please review the attached documents for the Data Bank Management module.", time: "1hr ago" },
+                { type: "outgoing", text: "On it. Will send my feedback this afternoon.", time: "1hr ago" },
+                { type: "outgoing", text: "Looks good, just one minor revision on page 3.", time: "20m ago" }
+            ]
+        },
+        "Uno Santillan": {
+            initial: "U",
+            messages: [
+                { type: "incoming", text: "We received your cooperative's latest report.", time: "9hr ago" }
+            ]
+        }
+    };
+
+    // 2. Get references to all the elements we need to change
+    const allContacts = document.querySelectorAll('.contact-item');
+    const chatHeaderAvatar = document.querySelector('.chat-header .avatar');
+    const chatHeaderName = document.querySelector('.chat-header h3');
+    const messageArea = document.querySelector('.message-area');
+
+    // 3. Function to update the chat window
+    function loadConversation(contactName, contactInitial) {
+        // Update header
+        chatHeaderAvatar.textContent = contactInitial;
+        chatHeaderName.textContent = contactName;
+
+        // Clear previous messages
+        messageArea.innerHTML = '';
+
+        // Get new messages from our "database"
+        const conversation = conversations[contactName];
+        if (!conversation) {
+            messageArea.innerHTML = '<p class="no-messages">No messages for this user.</p>';
+            return;
+        }
+
+        // Create and add new message elements
+        conversation.messages.forEach(msg => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', msg.type); // 'message incoming' or 'message outgoing'
+            
+            messageElement.innerHTML = `
+                <p>${msg.text}</p>
+                <span class="time">${msg.time}</span>
+            `;
+            messageArea.appendChild(messageElement);
+        });
+    }
+
+    // 4. Add click event listener to each contact
+    allContacts.forEach(contact => {
+        contact.addEventListener('click', () => {
+            // Remove 'active' class from the currently active contact
+            const currentActive = document.querySelector('.contact-item.active');
+            if (currentActive) {
+                currentActive.classList.remove('active');
+            }
+
+            // Add 'active' class to the clicked contact
+            contact.classList.add('active');
+
+            // Get the data from the clicked contact
+            const contactName = contact.querySelector('.contact-name').textContent;
+            const contactInitial = contact.querySelector('.avatar').textContent;
+
+            // Load the new conversation
+            loadConversation(contactName, contactInitial);
+        });
+    });
+
+</script>
+{% endblock %}
