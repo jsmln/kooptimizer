@@ -38,7 +38,7 @@ def login_view(request):
         login_result = {
             'status': 'SUCCESS',
             'user_id': 99,  # Use a fake ID
-            'role': 'admin', # <-- CHANGE THIS ROLE TO TEST
+            'role': 'staff', # <-- CHANGE THIS ROLE TO TEST
             'verification_status': 'verified',
             'is_first_login': False
         }

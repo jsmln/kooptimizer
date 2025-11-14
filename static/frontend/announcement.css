@@ -1,7 +1,7 @@
 /* ----- Main Layout ----- */
 .announcement-layout {
-    width: 95%;
-    height: 95%;
+    width: 90%;
+    height: 90%;
     display: flex;
     flex-direction: column; /* Stack header and list */
     background-color: #efefef; /* Light background */
