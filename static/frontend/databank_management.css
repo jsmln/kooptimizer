@@ -1,13 +1,15 @@
 /* ----- Main Databank Layout Box ----- */
 .databank-layout {
-    width: 95%;
-    height: 95%;
-    display: flex;
-    flex-direction: column; /* Stacks header, toolbar, table, footer */
-    background-color: #efefef; /* Light grey background */
+    background: #fff;
     border-radius: 12px;
+    padding: 25px 30px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
+    color: #222;
+    width: 100%;
+    max-width: 1150px;
+    margin: 40px auto;
+    animation: fadeIn 0.4s ease-in-out;
+    position: fixed;
 }
 
 /* ----- Header Area ----- */
@@ -129,30 +131,6 @@
     background-color: #f8f9fa;
     flex-shrink: 0;
 }
-.view-btn, .edit-btn {
-    border: none;
-    padding: 10px 25px;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.view-btn {
-    background-color: #6c757d;
-    color: #fff;
-}
-.view-btn:hover {
-    background-color: #5a6268;
-}
-.edit-btn {
-    background-color: #555;
-    color: #fff;
-}
-.edit-btn:hover {
-    background-color: #333;
-}
-
 /* ... (Keep all your existing .databank-layout, .table-container, etc. styles) ... */
 
 /* ----- NEW: Styles for clickable table rows ----- */
