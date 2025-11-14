@@ -19,7 +19,7 @@ class OTPService:
         """Generates a random numerical pin."""
         return str(random.randint(10**(length - 1), (10**length) - 1))
 
-    def send_otp(self, mobile_number, message_template="Your OTP is: {pin}"):
+    def send_otp(self, mobile_number, message_template="Welcome to KoopTimizer! Your verification code is {pin}. Do not share this with anyone."):
         """
         Generates, stores, and sends an OTP.
         """

@@ -53,8 +53,15 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/login.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
-  "theme_color": "#000000"
+  "theme_color": "#000000",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://platinoid-sandra-endocentric.ngrok-free.dev/static/manifest.json"
+    }
+  ]
+
 }

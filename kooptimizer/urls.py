@@ -21,7 +21,7 @@ urlpatterns = [
     # User-related URLs (login, logout, first-login-setup, etc.)
     path('users/', include('apps.users.urls')),
 
-    # Dashboard URLs
+    # Dashboard URLss
     path('dashboard/', include('apps.dashboard.urls', namespace='dashboard')),
 
 

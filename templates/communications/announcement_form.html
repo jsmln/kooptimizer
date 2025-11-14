@@ -5,209 +5,867 @@
 
 {% block extra_head %}
     {{ block.super }}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
+
     <link rel="stylesheet" href="{% static 'frontend/announcement.css' %}">
 {% endblock %}
 
 {% block dashboard_content %}
+
+<script>
+    // Embed data from Django view into JavaScript variables
+    const cooperativesData = {{ cooperatives_json|safe }};
+    const officersByCoopData = {{ officers_by_coop_json|safe }};
+</script>
+
 <style>
     .dashboard-main-content {
         padding: 0;
-        overflow: hidden;
-        /* Center the layout box */
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        overflow: hidden; /* Prevent parent from scrolling */
     }
+    
+    /* 2. REMOVED OLD STYLES for .officer-select, as Tom-Select now handles this */
 </style>
 
 <div class="announcement-layout">
-
-    <div id="announcement-list-view">
-        <div class="list-header">
-            <h2>Announcements</h2>
-            <button id="create-new-btn" class="create-btn">
-                <i class="bi bi-plus-circle-fill"></i> Create New
+    <div class="row g-0 h-100">
+        <div class="col-md-3 border-end d-flex flex-column p-3 bg-light">
+            <div class="list-header">
+                <h2>Announcements</h2>
+                </a>
+            </div>
+            <hr id="announcement-title-header">
+            <button id="create-new-btn" class="btn btn-danger btn-lg w-100 mb-3">
+                <i class="bi bi-plus-circle-fill me-2"></i> Create New
             </button>
+            
+            <ul class="nav nav-pills flex-column sidebar-nav mt-2" id="announcement-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" data-bs-toggle="pill" data-bs-target="#sent-view">
+                        <span><i class="bi bi-send-fill me-2"></i> Sent</span>
+                        <span class="badge">12</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-bs-toggle="pill" data-bs-target="#draft-view">
+                        <span><i class="bi bi-pencil-square me-2"></i> Draft</span>
+                        <span class="badge">3</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-bs-toggle="pill" data-bs-target="#scheduled-view">
+                        <span><i class="bi bi-clock-history me-2"></i> Scheduled</span>
+                        <span class="badge">1</span>
+                    </a>
+                </li>
+            </ul>
         </div>
-        
-        <div class="announcement-list">
-            <div class="announcement-item" data-modal-target="modal-1">
-                <i class="bi bi-info-circle-fill"></i>
-                <div class="item-details">
-                    <span class="item-title">Annual General Assembly 2025 – Schedule & Agenda</span>
-                    <span class="item-meta">Posted: September 30, 2025</span>
+
+        <div class="col-md-9 d-flex flex-column h-100">
+
+            <div id="list-view-container" class="d-flex flex-column h-100">
+                <div class="p-3 border-bottom">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Search announcements...">
+                        <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
+                    </div>
                 </div>
-                <span class="item-status">Status: Scheduled</span>
+
+                <div class="tab-content list-scroll-area">
+                    
+                    <div class="tab-pane fade show active" id="sent-view">
+                        <div class="list-group list-group-flush">
+                            {% for item in sent_announcements %}
+                            <a href="#" class="list-group-item list-group-item-action py-3" 
+                               data-modal-id="view-sent-modal" 
+                               data-id="{{ item.announcement_id }}"
+                               data-title="{{ item.title }}"
+                               data-content="{{ item.description }}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ item.title }}</h5>
+                                    <small class="text-muted">{{ item.sent_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-1 text-truncate">{{ item.description }}</p>
+                                <small>
+                                    {% if item.type == 'sms' %}
+                                        <span class="badge bg-primary"><i class="bi bi-phone me-1"></i>SMS</span>
+                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                        <span class="badge bg-success"><i class="bi bi-envelope me-1"></i>Email</span>
+                                    {% endif %}
+                                </small>
+                            </a>
+                            {% empty %}
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                <p>No sent announcements found.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="draft-view">
+                        <div class="list-group list-group-flush">
+                            {% for item in draft_announcements %}
+                            <a href="#" class="list-group-item list-group-item-action py-3 open-draft-btn"
+                               data-id="{{ item.announcement_id }}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ item.title }}</h5>
+                                    <small class="text-muted">{{ item.updated_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-1 text-truncate">{{ item.description|default:"No content yet..." }}</p>
+                                <small>
+                                    {% if item.type == 'sms' %}
+                                        <span class="badge bg-primary"><i class="bi bi-phone me-1"></i>SMS</span>
+                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                        <span class="badge bg-success"><i class="bi bi-envelope me-1"></i>Email</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Type</span>
+                                    {% endif %}
+                                </small>
+                            </a>
+                            {% empty %}
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-pencil-square fs-1 d-block mb-2"></i>
+                                <p>No drafts found.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="scheduled-view">
+                        <div class="list-group list-group-flush">
+                            {% for item in scheduled_announcements %}
+                            <a href="#" class="list-group-item list-group-item-action py-3" 
+                               data-modal-id="view-scheduled-modal"
+                               data-id="{{ item.announcement_id }}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ item.title }}</h5>
+                                    <small class="text-danger">
+                                        Sends: {{ item.sent_at|date:"M d, Y @ g:i A" }}
+                                    </small>
+                                </div>
+                                <p class="mb-1 text-truncate">{{ item.description }}</p>
+                                <small>
+                                    {% if item.type == 'sms' %}
+                                        <span class="badge bg-primary"><i class="bi bi-phone me-1"></i>SMS</span>
+                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                        <span class="badge bg-success"><i class="bi bi-envelope me-1"></i>Email</span>
+                                    {% endif %}
+                                </small>
+                            </a>
+                            {% empty %}
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-clock-history fs-1 d-block mb-2"></i>
+                                <p>No scheduled announcements.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="announcement-item" data-modal-target="modal-2">
-                <i class="bi bi-info-circle-fill"></i>
-                <div class="item-details">
-                    <span class="item-title">Reminder: Submit Cooperative Profile & Financial Report</span>
-                    <span class="item-meta">Posted: September 14, 2025</span>
+            <div id="create-view-container" class="d-none flex-column h-100">
+                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                    <h2 class="h4 m-0">New Announcement</h2>
+                    <button id="cancel-create-btn" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i> Cancel
+                    </button>
                 </div>
-                <span class="item-status">Status: Sent</span>
-            </div>
 
-            <div class="announcement-item" data-modal-target="modal-3">
-                <i class="bi bi-info-circle-fill"></i>
-                <div class="item-details">
-                    <span class="item-title">Free Training Workshop: Digital Tools for Cooperative Growth</span>
-                    <span class="item-meta">Posted: August 29, 2025</span>
+                <div class="list-scroll-area p-4">
+                    <form id="main-announcement-form">
+                        <div class="mb-3">
+                            <label for="announcement-type" class="form-label fw-bold">Select type of announcement</label>
+                            <select class="form-select" id="announcement-type">
+                                <option value="" selected>Choose...</option>
+                                <option value="sms">SMS</option>
+                                <option value="email">Email</option>
+                            </select>
+                        </div>
+
+                        <div id="dynamic-form-fields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Recipients</label>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Add recipients to this announcement.</span>
+                                    <button class="btn btn-sm btn-outline-danger" type="button" id="add-recipient-btn">
+                                        <i class="bi bi-plus-circle me-1"></i> Add Recipient
+                                    </button>
+                                </div>
+                                
+                                <div id="recipient-rows-container" class="d-flex flex-column gap-2">
+                                    <div class="recipient-row d-flex align-items-center gap-2">
+                                        <div class="row g-2 flex-grow-1">
+                                            <div class="col-md-6">
+                                                <select class="form-select coop-select" name="cooperative_name[]">
+                                                    <option value="" selected>Choose Cooperative...</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <select class="officer-select" name="cooperative_officers[]" multiple disabled>
+                                                    <option value="">-- Select Cooperative First --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-recipient-btn d-none">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="announcement-title" class="form-label fw-bold">Announcement Title</label>
+                                <input type="text" class="form-control" id="announcement-title" placeholder="Enter title">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="announcement-content" class="form-label fw-bold">Announcement Content</label>
+                                <textarea class="form-control" id="announcement-content" rows="8" placeholder="Type your message..."></textarea>
+                            </div>
+
+                            <div id="email-fields" class="d-none">
+                                <div class="mb-3">
+                                    <label for="formFile" class="form-label fw-bold">Attachment/s</label>
+                                    <input class="form-control" type="file" id="formFile" multiple>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div> 
+                
+                <div class="mt-auto p-3 border-top">
+                    <div class="d-flex justify-content-end align-items-center gap-2">
+                        <button type="button" class="btn btn-secondary">Save Draft</button>
+                        
+                        <div class="btn-group" id="send-button-group">
+                            <button type="button" class="btn btn-danger" id="send-btn-main" style="background-color: #b71c1c;">
+                                Send
+                            </button>
+                            <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split btn-split-dropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #b71c1c;">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" id="schedule-send-link">
+                                    <i class="bi bi-clock me-2"></i>Schedule Send
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
-                <span class="item-status">Status: Draft</span>
-            </div>
+                <template id="recipient-row-template">
+                    <div class="recipient-row d-flex align-items-center gap-2">
+                        <div class="row g-2 flex-grow-1">
+                            <div class="col-md-6">
+                                <select class="form-select coop-select" name="cooperative_name[]">
+                                    <option value="" selected>Choose Cooperative...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <select class="officer-select" name="cooperative_officers[]" multiple disabled>
+                                    <option value="">-- Select Cooperative First --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-recipient-btn">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </template>
 
+            </div>
         </div>
     </div>
-
-    <div id="announcement-create-view" style="display: none;">
-        <div class="list-header">
-            <h2>Create New Announcement</h2>
-            <button id="cancel-create-btn" class="cancel-btn">Cancel</button>
-        </div>
-
-        <form class="announcement-form">
-            <div class="form-group">
-                <label for="title"><i class="bi bi-pencil"></i> Title</label>
-                <input type="text" id="title" placeholder="Enter your announcement title">
-            </div>
-            <div class="form-group">
-                <label for="content"><i class="bi bi-file-text"></i> Announcement Content</label>
-                <textarea id="content" rows="8" placeholder="Add description"></textarea>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="channels"><i class="bi bi-send"></i> Communication Channels</label>
-                    <select id="channels">
-                        <option value="">Send to...</option>
-                        <option value="email">Email</option>
-                        <option value="sms">SMS</option>
-                        <option value="in-app">In-App</option>
-                        <option value="all">All Channels</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="schedule"><i class="bi bi-clock"></i> Schedule</label>
-                    <input type="datetime-local" id="schedule">
-                </div>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="draft-btn">Save Draft</button>
-                <button type="submit" class="send-btn">Save & Send</button>
-            </div>
-        </form>
-    </div>
-
 </div>
 
-<div id="modal-1" class="modal-overlay">
-    <div class="modal-content">
-        <button class="modal-close-btn">&times;</button>
-        <div class="modal-header">
-            <i class="bi bi-info-circle"></i>
-            <h3>Annual General Assembly 2025 – Schedule & Agenda</h3>
-        </div>
-        <div class="modal-meta">
-            Posted: Tuesday, September 30, 2025<br>
-            by: Isabel Delacion
-        </div>
-        <div class="modal-body">
-            <p>Dear Cooperatives,</p>
-            <p>You are invited to attend the Annual General Assembly on November 15, 2025 at 9:00 AM, Lipa City Hall Auditorium. Topics include financial performance review, member updates, and new cooperative policies.</p>
-            <p>Please confirm attendance by November 5, 2025.</p>
-        </div>
-        <div class="modal-footer">
-            <button class="edit-btn">Edit</button>
+
+<div class="modal fade" id="view-sent-modal" tabindex="-1" aria-labelledby="view-sent-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <div class="modal-title" id="view-sent-modal-label">
+                    <h4 class="mb-0">Annual General Assembly 2025</h4>
+                    <small class="text-muted">Posted: Tuesday, September 30, 2025 by Isabel Delacion</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Dear Cooperatives,</p>
+                <p>You are invited to attend the Annual General Assembly on November 15, 2025 at 9:00 AM, Lipa City Hall Auditorium. Topics include financial performance review, member updates, and new cooperative policies.</p>
+                <p>Please confirm attendance by November 5, 2025.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Edit</button>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="modal-2" class="modal-overlay">
-    <div class="modal-content">
-        <button class="modal-close-btn">&times;</button>
-        <div class="modal-header">
-            <i class="bi bi-info-circle"></i>
-            <h3>Reminder: Submit Cooperative Profile & Financial Report</h3>
-        </div>
-        <div class="modal-meta">Posted: September 14, 2025</div>
-        <div class="modal-body">
-            <p>This is a reminder to please submit your updated cooperative profile and latest financial report by the end of the month.</p>
-        </div>
-        <div class="modal-footer">
-            <button class="edit-btn">Edit</button>
-        </div>
-    </div>
-</div>
-
-<div id="modal-3" class="modal-overlay">
-    <div class="modal-content">
-        <button class="modal-close-btn">&times;</button>
-        <div class="modal-header">
-            <i class="bi bi-info-circle"></i>
-            <h3>Free Training Workshop: Digital Tools for Cooperative Growth</h3>
-        </div>
-        <div class="modal-meta">Posted: August 29, 2025</div>
-        <div class="modal-body">
-            <p>This announcement is currently a draft and has not been sent.</p>
-        </div>
-        <div class="modal-footer">
-            <button class="edit-btn">Edit</button>
+<div class="modal fade" id="view-scheduled-modal" tabindex="-1" aria-labelledby="view-scheduled-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <div class="modal-title" id="view-scheduled-modal-label">
+                    <h4 class="mb-0">Upcoming Holiday Notice</h4>
+                    <small class="text-danger fw-bold">Scheduled for: November 10, 2025 @ 9:00 AM</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Please be advised that our offices will be closed on November 11, 2025, in observance of...</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger">Cancel Send</button>
+            </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade"id="schedule-send-modal" tabindex="-1" aria-labelledby="schedule-send-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="schedule-send-modal-label">Schedule Send</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Choose a date and time to send this announcement.</p>
+                <div class="mb-2">
+                    <label for="schedule-date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="schedule-date">
+                </div>
+                <div>
+                    <label for="schedule-time" class="form-label">Time</label>
+                    <input type="time" class="form-control" id="schedule-time">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Save Schedule</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-cancel-modal" tabindex="-1" aria-labelledby="confirm-cancel-modal-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirm-cancel-modal-label">Unsaved Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to cancel announcement creation?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">No, Stay</button>
+                <button type="button" class="btn btn-danger" id="confirm-cancel-btn">Yes, Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0rPoDGiZ5JvBDDGa6hXoVl7kwkxa6UYTRzC8iYhFdaYh0lH4PfPmUAmkG" crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const createBtn = document.getElementById('create-new-btn');
-        const cancelBtn = document.getElementById('cancel-create-btn');
-        const listView = document.getElementById('announcement-list-view');
-        const createView = document.getElementById('announcement-create-view');
-        
-        // --- View Switching ---
-        if (createBtn) {
-            createBtn.addEventListener('click', () => {
-                listView.style.display = 'none';
-                createView.style.display = 'block';
-            });
-        }
+document.addEventListener('DOMContentLoaded', () => {
 
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => {
-                createView.style.display = 'none';
-                listView.style.display = 'block';
-            });
-        }
-        
-        // --- Modal Pop-up Logic ---
-        const announcementItems = document.querySelectorAll('.announcement-item');
-        
-        announcementItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const modalId = item.getAttribute('data-modal-target');
-                const modal = document.getElementById(modalId);
-                if (modal) {
-                    modal.classList.add('visible');
-                }
-            });
-        });
+    // --- Get Elements (Unchanged) ---
+    const listView = document.getElementById('list-view-container');
+    const createView = document.getElementById('create-view-container');
+    const createBtn = document.getElementById('create-new-btn');
+    const cancelBtn = document.getElementById('cancel-create-btn');
+    const draftButtons = document.querySelectorAll('.open-draft-btn');
+    const announcementType = document.getElementById('announcement-type');
+    const dynamicFields = document.getElementById('dynamic-form-fields');
+    const emailFields = document.getElementById('email-fields');
+    const sendBtnMain = document.getElementById('send-btn-main');
+    const addRecipientBtn = document.getElementById('add-recipient-btn');
+    const recipientRowsContainer = document.getElementById('recipient-rows-container');
+    const recipientRowTemplate = document.getElementById('recipient-row-template');
+    const saveDraftBtn = createView.querySelector('.btn-secondary[type="button"]');
+    const mainForm = document.getElementById('main-announcement-form');
 
-        // Close modal
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                // Only close if the gray overlay itself is clicked, not the content
-                if (e.target === modal) {
-                    modal.classList.remove('visible');
-                }
-            });
+    // --- Modal Logic (Unchanged) ---
+    const viewSentModal = new bootstrap.Modal(document.getElementById('view-sent-modal'));
+    const viewScheduledModal = new bootstrap.Modal(document.getElementById('view-scheduled-modal'));
+    const scheduleSendModal = new bootstrap.Modal(document.getElementById('schedule-send-modal'));
+    const confirmCancelModal = new bootstrap.Modal(document.getElementById('confirm-cancel-modal'));
+    document.body.addEventListener('click', function(e) {
+        const viewTrigger = e.target.closest('a[data-modal-id]');
+        if (viewTrigger) {
+            e.preventDefault();
+            const modalId = viewTrigger.getAttribute('data-modal-id');
+            if (modalId === 'view-sent-modal') viewSentModal.show();
+            else if (modalId === 'view-scheduled-modal') viewScheduledModal.show();
+        }
+        const scheduleTrigger = e.target.closest('#schedule-send-link');
+        if (scheduleTrigger) {
+            e.preventDefault();
+            scheduleSendModal.show();
+        }
+    });
+    const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+    let pendingTabTrigger = null; 
+    if(confirmCancelBtn) {
+        confirmCancelBtn.addEventListener('click', () => {
+            confirmCancelModal.hide();
+            showListView(); 
+            if (pendingTabTrigger) {
+                pendingTabTrigger.show();
+                pendingTabTrigger = null; 
+            }
         });
-        
-        document.querySelectorAll('.modal-close-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.closest('.modal-overlay').classList.remove('visible');
-            });
+    }
+    var triggerTabList = [].slice.call(document.querySelectorAll('#announcement-nav a'));
+    triggerTabList.forEach(function (triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl);
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            const isCreateViewVisible = createView.classList.contains('d-flex');
+            if (isCreateViewVisible) {
+                pendingTabTrigger = tabTrigger; 
+                confirmCancelModal.show(); 
+            } else {
+                tabTrigger.show();
+            }
         });
     });
+
+    // ========================================================
+    // ===== COOPERATIVE & OFFICER LOGIC                =====
+    // ========================================================
+
+    /**
+     * Gets a list of all currently selected cooperative IDs from all rows.
+     */
+    function getCurrentlySelectedCoops() {
+        const selectedCoops = [];
+        recipientRowsContainer.querySelectorAll('.coop-select').forEach(select => {
+            if (select.value) {
+                selectedCoops.push(select.value);
+            }
+        });
+        return selectedCoops;
+    }
+
+   /**
+     * Updates all coop dropdowns to disable and move selected options to the bottom.
+     */
+    function updateAvailableCooperatives() {
+        const selectedCoopIds = getCurrentlySelectedCoops();
+        
+        recipientRowsContainer.querySelectorAll('.coop-select').forEach(select => {
+            const currentSelectValue = select.value;
+            
+            // Create arrays to re-sort the options
+            const options = Array.from(select.querySelectorAll('option'));
+            const specialOptions = [];
+            const availableOptions = [];
+            const unavailableOptions = [];
+
+            options.forEach(option => {
+                const value = option.value;
+                const isSelectedElsewhere = selectedCoopIds.includes(value);
+
+                if (!value) {
+                    // This is the "Choose Cooperative..." placeholder
+                    specialOptions.push(option);
+                } else if (value === currentSelectValue) {
+                    // This is the option already selected in *this* row
+                    option.disabled = false;
+                    specialOptions.push(option);
+                } else if (isSelectedElsewhere) {
+                    // This option is selected in *another* row
+                    option.disabled = true;
+                    unavailableOptions.push(option);
+                } else {
+                    // This option is fully available
+                    option.disabled = false;
+                    availableOptions.push(option);
+                }
+            });
+
+            // Re-build the select element in the new order
+            select.innerHTML = '';
+            [...specialOptions, ...availableOptions, ...unavailableOptions].forEach(option => {
+                select.appendChild(option);
+            });
+        });
+    }
+
+    /**
+     * Creates a new TomSelect instance on a <select> element.
+     */
+    function initializeTomSelect(selectElement, placeholderText) {
+        if (selectElement.tomselect) {
+            selectElement.tomselect.destroy();
+        }
+        new TomSelect(selectElement, {
+            plugins: ['remove_button'],
+            placeholder: placeholderText,
+            
+            onItemAdd: function(value, $item) {
+                const tomSelect = this;
+                const totalIndividuals = tomSelect.individualOfficerCount || 0;
+                let currentSelection = tomSelect.getValue(); 
+
+                if (value === 'all') {
+                    if (currentSelection.length > 1) {
+                        tomSelect.setValue(['all']);
+                    }
+                    return;
+                }
+
+                if (currentSelection.includes('all')) {
+                    const newSelection = currentSelection.filter(v => v !== 'all');
+                    tomSelect.setValue(newSelection);
+                    return;
+                }
+                
+                if (totalIndividuals > 0 && currentSelection.length === totalIndividuals) {
+                    tomSelect.setValue(['all']);
+                }
+            }
+        });
+    }
+
+    /**
+     * Populates a <select> element with the list of cooperatives.
+     */
+    function populateCooperatives(coopSelect) {
+        coopSelect.innerHTML = '<option value="" selected>Choose Cooperative...</option>';
+        
+        // This is the line that was crashing your script
+        // cooperativesData is defined at the top of the file
+        cooperativesData.forEach(coop => {
+            const option = new Option(coop.name, coop.id);
+            coopSelect.add(option);
+        });
+    }
+
+    /**
+     * Populates the officer TomSelect instance based on the chosen cooperative.
+     */
+    function populateOfficers(officerSelect, coopId) {
+        const tomSelect = officerSelect.tomselect;
+        if (!tomSelect) return; 
+
+        tomSelect.clear();
+        tomSelect.clearOptions();
+        tomSelect.individualOfficerCount = 0;
+
+        if (!coopId) {
+            tomSelect.addOption({value: '', text: '-- Select Cooperative First --'});
+            tomSelect.settings.placeholder = '-- Select Cooperative First --';
+            tomSelect.disable();
+        } else {
+            // officersByCoopData is defined at the top of the file
+            const officers = officersByCoopData[coopId];
+            if (officers && officers.length > 0) {
+                tomSelect.addOption({value: 'all', text: 'All Officers'});
+                officers.forEach(officer => {
+                    tomSelect.addOption({value: officer.id, text: officer.name});
+                });
+                tomSelect.individualOfficerCount = officers.length;
+                tomSelect.settings.placeholder = 'Select officer(s)...';
+            } else {
+                tomSelect.settings.placeholder = '-- No Officers Found --';
+            }
+            tomSelect.enable();
+        }
+        tomSelect.refreshPlaceholder();
+    }
+
+    // --- Event Listener for Adding New Rows ---
+    if (addRecipientBtn) {
+        addRecipientBtn.addEventListener('click', () => {
+            const newRow = recipientRowTemplate.content.cloneNode(true);
+            const newCoopSelect = newRow.querySelector('.coop-select');
+            populateCooperatives(newCoopSelect); 
+            
+            const newOfficerSelect = newRow.querySelector('.officer-select');
+            initializeTomSelect(newOfficerSelect, '-- Select Cooperative First --');
+            
+            recipientRowsContainer.appendChild(newRow);
+            updateRecipientRemoveButtons();
+            
+            // *** FIX: Call your function ***
+            updateAvailableCooperatives();
+        });
+    }
+
+    // --- Event Listener for Removing Rows ---
+    if (recipientRowsContainer) {
+        recipientRowsContainer.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('.remove-recipient-btn');
+            if (removeBtn) {
+                const rowToRemove = removeBtn.closest('.recipient-row');
+                if (rowToRemove) {
+                    const officerSelect = rowToRemove.querySelector('.officer-select');
+                    if (officerSelect && officerSelect.tomselect) {
+                        officerSelect.tomselect.destroy();
+                    }
+                    rowToRemove.remove();
+                    updateRecipientRemoveButtons();
+                    
+                    // *** FIX: Call your function ***
+                    updateAvailableCooperatives();
+                }
+            }
+        });
+    }
+    
+    // --- Event Listener for changing a Cooperative ---
+    if (recipientRowsContainer) {
+        recipientRowsContainer.addEventListener('change', (e) => {
+            if (e.target && e.target.classList.contains('coop-select')) {
+                const selectedCoopId = e.target.value;
+                const recipientRow = e.target.closest('.recipient-row');
+                const officerSelect = recipientRow.querySelector('.officer-select');
+                
+                populateOfficers(officerSelect, selectedCoopId);
+                
+                // *** FIX: Call your function ***
+                updateAvailableCooperatives();
+            }
+        });
+    }
+
+    /**
+     * Updates which "remove" buttons are visible.
+     */
+    function updateRecipientRemoveButtons() {
+        const rows = recipientRowsContainer.querySelectorAll('.recipient-row');
+        rows.forEach((row, index) => {
+            const removeBtn = row.querySelector('.remove-recipient-btn');
+            if (index > 0) {
+                removeBtn.classList.remove('d-none');
+            } else {
+                removeBtn.classList.add('d-none');
+            }
+        });
+    }
+    
+    // --- Populate the very first row on page load ---
+    try {
+        const firstCoopSelect = recipientRowsContainer.querySelector('.coop-select');
+        if (firstCoopSelect) {
+            populateCooperatives(firstCoopSelect);
+            
+            const firstOfficerSelect = recipientRowsContainer.querySelector('.officer-select');
+            if (firstOfficerSelect) {
+                initializeTomSelect(firstOfficerSelect, '-- Select Cooperative First --');
+            }
+        }
+        updateRecipientRemoveButtons();
+        updateAvailableCooperatives();
+
+    } catch (e) {
+        console.error(
+            'CRITICAL ERROR: Failed to load cooperative data.',
+            'This usually means the Django view is not passing `cooperatives_json` or `officers_by_coop_json` to the template.',
+            'Error details:', e
+        );
+        // We log the error, but we DON'T stop the script.
+        // This allows the event listeners below to still be attached.
+    }
+
+
+    // ===========================================
+    // ===== VIEW SWITCHING LOGIC (NOW WORKS) =====
+    // ===========================================
+    function showCreateView() {
+        listView.classList.remove('d-flex');
+        listView.classList.add('d-none');
+        createView.classList.remove('d-none');
+        createView.classList.add('d-flex');
+        const currentActive = document.querySelector('.sidebar-nav .nav-link.active');
+        if (currentActive) currentActive.classList.remove('active');
+    }
+
+    function showListView() {
+        createView.classList.remove('d-flex');
+        createView.classList.add('d-none');
+        listView.classList.remove('d-none');
+        listView.classList.add('d-flex');
+        resetForm();
+    }
+    
+    function resetForm() {
+        mainForm.reset();
+        dynamicFields.classList.add('d-none');
+        emailFields.classList.add('d-none');
+        
+        recipientRowsContainer.querySelectorAll('.officer-select').forEach(select => {
+            if (select.tomselect) {
+                select.tomselect.destroy();
+            }
+        });
+
+        recipientRowsContainer.innerHTML = ''; 
+        
+        const newRow = recipientRowTemplate.content.cloneNode(true); 
+        const newCoopSelect = newRow.querySelector('.coop-select');
+        populateCooperatives(newCoopSelect);
+        
+        const newOfficerSelect = newRow.querySelector('.officer-select');
+        initializeTomSelect(newOfficerSelect, '-- Select Cooperative First --');
+        
+        recipientRowsContainer.appendChild(newRow);
+        updateRecipientRemoveButtons();
+        
+        // *** FIX: Call your function ***
+        updateAvailableCooperatives();
+    }
+
+    // *** These listeners will now be attached successfully ***
+    if(createBtn) createBtn.addEventListener('click', showCreateView);
+    
+    if(cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            pendingTabTrigger = null;
+            confirmCancelModal.show();
+        });
+    }
+    draftButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault(); 
+            showCreateView();
+            // TODO: Logic to fetch and populate draft data would go here
+        });
+    });
+    if(announcementType) {
+        announcementType.addEventListener('change', () => {
+            const selectedType = announcementType.value;
+            if (selectedType === 'sms' || selectedType === 'email') {
+                dynamicFields.classList.remove('d-none');
+                if (selectedType === 'email') {
+                    emailFields.classList.remove('d-none');
+                    sendBtnMain.textContent = 'Send Email';
+                } else {
+                    emailFields.classList.add('d-none');
+                    sendBtnMain.textContent = 'Send SMS';
+                }
+            } else {
+                dynamicFields.classList.add('d-none');
+            }
+        });
+    }
+
+    // ===========================================
+    // ===== FORM SUBMISSION LOGIC (Unchanged) =====
+    // ===========================================
+    
+    if (sendBtnMain) {
+        sendBtnMain.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = announcementType.value;
+            if (type === 'sms') {
+                submitAnnouncement('send_sms');
+            } else if (type === 'email') {
+                alert('Email sending not yet implemented.');
+            }
+        });
+    }
+
+    if (saveDraftBtn) {
+        saveDraftBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            submitAnnouncement('save_draft');
+        });
+    }
+
+    function collectFormData(action) {
+        const title = document.getElementById('announcement-title').value;
+        const content = document.getElementById('announcement-content').value;
+        const type = announcementType.value;
+        
+        const recipientRows = recipientRowsContainer.querySelectorAll('.recipient-row');
+        const recipients = [];
+        
+        recipientRows.forEach(row => {
+            const coopSelect = row.querySelector('.coop-select');
+            const officerSelect = row.querySelector('.officer-select');
+            
+            if (coopSelect && coopSelect.value && officerSelect && officerSelect.tomselect) {
+                const selectedOfficerValues = officerSelect.tomselect.getValue(); 
+                
+                if (selectedOfficerValues.includes('all')) {
+                    recipients.push({
+                        coop_id: coopSelect.value,
+                        officer_id: 'all'
+                    });
+                } else {
+                    selectedOfficerValues.forEach(officerId => {
+                        if (officerId) {
+                            recipients.push({
+                                coop_id: coopSelect.value,
+                                officer_id: officerId
+                            });
+                        }
+                    });
+                }
+            }
+        });
+
+        if (!type) {
+            alert('Please select an announcement type (SMS or Email).'); return null;
+        }
+        if (!title || !content) {
+            alert('Please fill in the Title and Content.'); return null;
+        }
+        if (recipients.length === 0 && action !== 'save_draft') {
+            alert('Please add at least one valid recipient to send.'); return null;
+        }
+
+        return {
+            action: action,
+            title: title,
+            content: content,
+            type: type,
+            recipients: recipients
+        };
+    }
+
+    async function submitAnnouncement(action) {
+        const data = collectFormData(action);
+        if (!data) return;
+        
+        console.log('Sending data:', data);
+
+        try {
+            const response = await fetch("{% url 'communications:handle_announcement' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                alert(result.message);
+                showListView();
+            } else {
+                alert(`Error: ${result.message}`);
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            alert('An error occurred while communicating with the server.');
+        }
+    }
+});
 </script>
 {% endblock %}
