@@ -139,3 +139,7 @@ def announcement_view(request):
     }
     
     return render(request, 'communications/announcement_form.html', context)
+# ADD THIS FUNCTION
+def your_message_view(request):
+    # This is just a placeholder. You can build the real page here later.
+    return render(request, 'communications/message.html')
