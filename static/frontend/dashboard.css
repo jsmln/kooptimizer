@@ -93,7 +93,7 @@ body > footer {
     color: #e0e0e0; 
     overflow-y: auto; 
     height: calc(100vh - 70px - 54px); 
-    z-index: 1;
+    /* z-index: 1; */
     display: flex;
     justify-content: center;
     align-items: center;

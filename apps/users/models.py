@@ -1,6 +1,8 @@
 from django.db import models, connection
 
-
+# ===================================================
+#  User Model
+# ===================================================
 class User(models.Model):
     user_id = models.AutoField(primary_key=True, db_column='user_id')
     username = models.CharField(max_length=150, unique=True)
@@ -15,12 +17,11 @@ class User(models.Model):
         default='pending'
     )
     is_first_login = models.BooleanField(default=True)
-    # email = models.EmailField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        managed = False   # Important! Do NOT let Django manage this table
+        managed = False 
         db_table = 'users'
 
     def __str__(self):
@@ -71,4 +72,5 @@ class User(models.Model):
             if result and result[0]:
                 return result[0]  # Return the mobile number
                 
-        return None # Return None if not foun
+        return None
+    

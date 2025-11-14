@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Download - KoopTimizer{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'frontend/download.css' %}">
+{% endblock %}
+
+{% block content %}
+<section id="download-page">
+    <div class="download-card">
+        <h2>Install KoopTimizer</h2>
+        
+        <button id="install-pwa-button" class="btn-install" style="display: none;">
+            <i class="bi bi-download"></i>
+            Install App Now
+        </button>
+
+        <div id="install-success-message" class="dj-message dj-success" style="display: none; max-width: 100%; margin-bottom: 25px; animation: none; opacity: 1; transform: none;">
+            <div class="dj-message-left">
+                <div class="dj-message-icon" aria-hidden="true">!</div>
+            </div>
+            <div class="dj-message-body">
+                <div class="dj-message-text">KoopTimizer has been successfully installed!</div>
+            </div>
+        </div>
+
+        <a href="/" id="open-pwa-button" class="btn-install" style="display: none;">
+            <i class="bi bi-box-arrow-up-right"></i>
+            Open App
+        </a>
+        
+        <p class="subtitle" id="install-subtitle">
+            This is a Progressive Web App (PWA). You can install it on your device for a faster, app-like experience.
+        </p>
+
+        <div class="instructions-container" id="install-instructions">
+            
+            <p class="subtitle-note">
+                If the <strong>"Install App"</strong> button doesn't appear above, please use the manual instructions for your browser below.
+            </p>
+            
+            <div class="instruction-set">
+                <div class="instruction-header">
+                    <i class="bi bi-display"></i>
+                    <h3>Desktop (Chrome / Edge)</h3>
+                </div>
+                <ol>
+                    <li>Open KoopTimizer in your browser.</li>
+                    <li>Look for the <strong>Install icon</strong> in the address bar.</li>
+                    <li>Click the icon and then click <strong>"Install"</strong>.</li>
+                </ol>
+            </div>
+            
+            <div class="instruction-set">
+                <div class="instruction-header">
+                    <i class="bi bi-android2"></i>
+                    <h3>Android (Chrome)</h3>
+                </div>
+                <ol>
+                    <li>Open KoopTimizer in your Chrome browser.</li>
+                    <li>Tap the <strong>three-dot menu (⋮)</strong> in the top-right.</li>
+                    <li>Select <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong>.</li>
+                </ol>
+            </div>
+            
+            <div class="instruction-set">
+                <div class="instruction-header">
+                    <i class="bi bi-apple"></i>
+                    <h3>iPhone / iPad (Safari)</h3>
+                </div>
+                <ol>
+                    <li>Open KoopTimizer in the Safari browser.</li>
+                    <li>Tap the <strong>Share icon</strong> (square with arrow) at the bottom.</li>
+                    <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+{% block extra_scripts %}
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const installButton = document.getElementById('install-pwa-button');
+    const installSuccess = document.getElementById('install-success-message');
+    const openPwaButton = document.getElementById('open-pwa-button');
+    const installInstructions = document.getElementById('install-instructions');
+    const installSubtitle = document.getElementById('install-subtitle');
+
+    function showInstalledMessage() {
+        installButton.style.display = 'none';
+        installSuccess.style.display = 'flex';
+        openPwaButton.style.display = 'block';
+        installInstructions.style.display = 'none';
+        installSubtitle.textContent = 'The app is already installed on your device.';
+    }
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        showInstalledMessage();
+        return;
+    }
+
+    if ('getInstalledRelatedApps' in navigator) {
+        try {
+            const relatedApps = await navigator.getInstalledRelatedApps();
+            if (relatedApps.length > 0) {
+                showInstalledMessage();
+                return;
+            }
+        } catch (error) {
+            console.error('Error checking for installed apps:', error);
+        }
+    }
+
+    if (window.deferredPrompt) {
+        installButton.style.display = 'block';
+        // (Optional) Hide the manual instructions
+       {% comment %} document.getElementById('install-instructions').style.display = 'none';
+       document.getElementById('install-subtitle').textContent = 'Click the button below to install the app.'; {% endcomment %}
+    }
+    installButton.addEventListener('click', async () => {
+        installButton.style.display = 'none';
+        window.deferredPrompt.prompt();
+        
+        const { outcome } = await window.deferredPrompt.userChoice;
+        
+        window.deferredPrompt = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed');
+        showInstalledMessage();
+    });
+});
+</script>
+{% endblock %}

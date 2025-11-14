@@ -51,9 +51,9 @@
                     <span class="profile-name">{{ request.session.username }}</span>
                     <span class="profile-role">{{ request.session.role|capfirst }}</span>
                 </div>
-                <a href="{% url 'logout' %}" class="logout-icon" title="Logout" onclick="return confirm('Are you sure you want to logout?')">
-                    <i class="bi bi-box-arrow-right"></i>
-                </a>
+                    <a href="#" class="logout-icon" title="Logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </a>
                 </div>
 
         </nav>
