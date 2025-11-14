@@ -1,0 +1,56 @@
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import sys
+
+# Fix Unicode output in Windows terminal
+sys.stdout.reconfigure(encoding='utf-8')
+
+def register_user(username: str, password: str, role: str):
+    """
+    Calls the PostgreSQL stored procedure sp_register_user
+    to register a new user securely with bcrypt hashing.
+
+    Returns:
+        dict: newly created user record
+        None: if username already exists
+    """
+    conn = None
+    try:
+        # --- Connect to your PostgreSQL database ---
+        conn = psycopg2.connect(
+            host="127.0.0.1",
+            database="kooptimizer_db",
+            user="postgres",
+            password="postgres"
+        )
+        conn.autocommit = True
+
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Call the stored procedure
+            cur.execute("""
+                SELECT * FROM public.sp_register_user(%s, %s, %s);
+            """, (username, password, role))
+
+            result = cur.fetchone()
+            return result  # Returns user record or None if duplicate
+
+    except psycopg2.Error as e:
+        print("Database error:", e)
+        return None
+
+    finally:
+        if conn:
+            conn.close()
+
+
+# ======================================================
+# Example Usage: register 'admin_joan'
+# ======================================================
+if __name__ == "__main__":
+    new_user = register_user("admin_user", "adminuser14", "admin")
+
+    if new_user:
+        print("✅ User registered successfully:")
+        print(new_user)
+    else:
+        print("⚠️ Username already exists or error occurred.")
