@@ -12,11 +12,12 @@ urlpatterns = [
     path('home/', home_views.home_view, name='home'),
     path('download/', core_views.download_view, name='download'),
     path('about/', core_views.about_view, name='about'),
-    
+    path('communications/', include('apps.communications.urls', namespace='communications')),
+
     # User-related URLs (login, logout, first-login-setup, etc.)
     path('users/', include('apps.users.urls')),
 
-    # Dashboard URLs
+    # Dashboard URLss
     path('dashboard/', include('apps.dashboard.urls', namespace='dashboard')),
 
 
