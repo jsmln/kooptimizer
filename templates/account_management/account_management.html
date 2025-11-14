@@ -511,67 +511,108 @@
         });
 
         // Send Credentials Logic (Updates individual table AND the ALL table)
-        document.getElementById('send-final-btn').addEventListener('click', () => {
-            const type = submittedData.type;
-            const targetTableBody = type === 'staff' ? staffTableBody : adminTableBody;
-            const targetCountSpan = type === 'staff' ? staffCountSpan : adminCountSpan;
+        document.getElementById('send-final-btn').addEventListener('click', function() {
+            const sendButton = this;
+            const originalButtonText = sendButton.innerHTML;
+            
+            // This is the token Django needs for security
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; 
 
-            // 1. Perform Client-side Table Update (Simulating successful server action)
-            const userId = getNextUserId(targetTableBody);
-            const newRow = document.createElement('tr');
-            
-            // Master Data Object for 'ALL' table
-            const newUserData = {
-                id: userId,
-                name: submittedData.name,
-                email: submittedData.email,
-                contact: submittedData.contact,
-                role: submittedData.position || '-',
-                coop: submittedData.coop || '-',
-                type: type.charAt(0).toUpperCase() + type.slice(1)
-            };
-            
-            if (type === 'staff') {
-                newRow.innerHTML = `
-                    <td>${newUserData.id}</td>
-                    <td>${newUserData.name}</td>
-                    <td>${newUserData.email}</td>
-                    <td>${newUserData.contact}</td>
-                    <td>${newUserData.coop}</td>
-                `;
-            } else if (type === 'admin') {
-                newRow.innerHTML = `
-                    <td>${newUserData.id}</td>
-                    <td>${newUserData.name}</td>
-                    <td>${newUserData.email}</td>
-                    <td>${newUserData.contact}</td>
-                    <td>${newUserData.role}</td> 
-                `;
-            }
-            
-            targetTableBody.appendChild(newRow);
-            
-            // 2. Update All Tables and Counts
-            
-            // Add new user to master data array
-            allUsersData.push(newUserData); 
-            
-            // Re-render master table (only if the 'ALL' tab is currently active)
-            if (document.getElementById('all-users').classList.contains('active')) {
-                renderAllUsersTable(allUsersData);
-            }
-            
-            // Update individual and combined total count
-            let currentCount = parseInt(targetCountSpan.textContent, 10);
-            targetCountSpan.textContent = currentCount + 1;
-            allUserCountSpan.textContent = allUsersData.length;
-            
-            // 3. Cleanup
-            closeModal(sendCredModal);
-            onboardForm.reset(); 
-            newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
-            alert(`New ${type} account created and credentials sent successfully!`);
+            // Disable button and show loading state
+            sendButton.disabled = true;
+            // You can add a CSS class for .spinner to show a loading animation
+            sendButton.innerHTML = '<span class="spinner"></span> Sending...'; 
+
+            // 1. Send the data to your new Django API view
+            fetch('/account_management/api/send-credentials/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken // Send the CSRF token
+                },
+                // submittedData is the global variable you already use
+                body: JSON.stringify(submittedData) 
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // If server returns an error (400, 500, etc.)
+                    return response.json().then(err => { throw new Error(err.message) });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // --- EMAIL SENT SUCCESSFULLY! ---
+                    
+                    // Now, we can run all your original code to update the UI
+                    const type = submittedData.type;
+                    const targetTableBody = type === 'staff' ? staffTableBody : adminTableBody;
+                    const targetCountSpan = type === 'staff' ? staffCountSpan : adminCountSpan;
+                    
+                    const userId = getNextUserId(targetTableBody);
+                    const newRow = document.createElement('tr');
+                    
+                    const newUserData = {
+                        id: userId,
+                        name: submittedData.name,
+                        email: submittedData.email,
+                        contact: submittedData.contact,
+                        role: submittedData.position || '-',
+                        coop: submittedData.coop || '-',
+                        type: type.charAt(0).toUpperCase() + type.slice(1)
+                    };
+                    
+                    if (type === 'staff') {
+                        newRow.innerHTML = `
+                            <td>${newUserData.id}</td>
+                            <td>${newUserData.name}</td>
+                            <td>${newUserData.email}</td>
+                            <td>${newUserData.contact}</td>
+                            <td>${newUserData.coop}</td>
+                        `;
+                    } else if (type === 'admin') {
+                        newRow.innerHTML = `
+                            <td>${newUserData.id}</td>
+                            <td>${newUserData.name}</td>
+                            <td>${newUserData.email}</td>
+                            <td>${newUserData.contact}</td>
+                            <td>${newUserData.role}</td>
+                        `;
+                    }
+                    
+                    targetTableBody.appendChild(newRow);
+                    allUsersData.push(newUserData);
+                    
+                    if (document.getElementById('all-users').classList.contains('active')) {
+                        renderAllUsersTable(allUsersData);
+                    }
+                    
+                    let currentCount = parseInt(targetCountSpan.textContent, 10);
+                    targetCountSpan.textContent = currentCount + 1;
+                    allUserCountSpan.textContent = allUsersData.length;
+                    
+                    closeModal(sendCredModal);
+                    onboardForm.reset(); 
+                    newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    
+                    alert(`New ${type} account created and credentials sent successfully!`);
+
+                } else {
+                    // --- API FAILED (e.g., bad data) ---
+                    console.error('API Error:', data.message);
+                    alert(`Failed to send credentials. Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                // --- NETWORK or API ERROR (e.g., Brevo failed) ---
+                console.error('Fetch Error:', error);
+                alert(`An error occurred: ${error.message}`);
+            })
+            .finally(() => {
+                // Re-enable button
+                sendButton.disabled = false;
+                sendButton.innerHTML = originalButtonText;
+            });
         });
 
         // Helper function for new User ID generation
