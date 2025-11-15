@@ -98,13 +98,17 @@ button:hover {
   }
 }
 
+.password-wrapper {
+  position: relative;
+}
+
 #togglePassword {
-    position: absolute;   /* Position relative to .password-wrapper */
-    top: 49%;             /* Start vertically centered */
-    right:65px;            /* Position 15px from the right edge */
+    position: absolute;   
+    top: 37%;             
+    right: 15px;
     cursor: pointer;
-    color: #555;          /* Slightly softer color */
-    z-index: 2;           /* Ensure it's above the input field */
-    font-family: 'bootstrap-icons'; /* Correct font */
-    font-size: 1.2rem;    /* Control size with font-size */
+    color: #555;  
+    z-index: 2; 
+    font-family: 'bootstrap-icons'; 
+    font-size: 1.2rem;  
 }
