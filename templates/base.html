@@ -22,6 +22,7 @@
     <script src="{% static 'main.js' %}"></script>
 
     <header>
+
         <div class="logo-title">
 
             {% if request.session.user_id %}
@@ -36,7 +37,7 @@
        <nav>
             <ul>
                 {% if request.session.user_id %}
-                {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'cooperative_officer'%}
+                {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'officer'%}
                     <li class="logout-button">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
                             Logout
@@ -180,3 +181,4 @@
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
+

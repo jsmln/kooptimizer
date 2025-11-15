@@ -31,7 +31,18 @@ def login_view(request):
             return render(request, 'login.html')
 
         # Call the stored procedure via User model helper
-        login_result = User.login_user(username, password)
+        # login_result = User.login_user(username, password)
+
+        # TEMPORARY BYPASS FOR TESTING PURPOSES ONLY
+        print(f"Bypassing login for: {username}")
+        login_result = {
+            'status': 'SUCCESS',
+            'user_id': 99,  # Use a fake ID
+            'role': 'admin', # <-- CHANGE THIS ROLE TO TEST
+            'verification_status': 'verified',
+            'is_first_login': False
+        }
+
         print("Login result:", login_result)
 
         if not login_result:

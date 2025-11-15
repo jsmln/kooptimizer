@@ -69,6 +69,8 @@ INSTALLED_APPS = [
     'apps.cooperatives',
     'apps.communications',
     'apps.home',
+    'apps.account_management',
+    'apps.databank',
 ]
 
 MIDDLEWARE = [
@@ -176,3 +178,16 @@ IPROG_SMS = {
     'API_URL': 'https://sms.iprogtech.com/api/v1/sms_messages',
     'API_URL_BULK': 'https://sms.iprogtech.com/api/v1/sms_messages/send_bulk'
 }
+
+#Here pls 
+
+
+
+
+
+
+
+
+
+
+
