@@ -1,10 +1,10 @@
 from django.contrib.auth.hashers import PBKDF2PasswordHasher
 
 # --- Your input values ---
-password_to_hash = "StaffM123"
+password_to_hash = "AdminJ123"
 salt = "mMogCn84UFOf6yDf83ZjqO"
 iterations = 1000000
-original_hash = "pbkdf2_sha256$1000000$mMogCn84UFOf6yDf83ZjqO$O8u6S6iCXiLhDDA/i1P5aBceg7iX9XCMfalRmhiqBo0="
+original_hash = "pbkdf2_sha256$1000000$yJHpU2aSZEzp3cknr6gh5i$ID51SIGSmibymbCaXIPm79LFx2xAjB9UHEMi2iNsqOE="
 # --------------------------
 
 # 1. Create an instance of the correct hasher

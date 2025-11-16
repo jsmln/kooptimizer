@@ -48,7 +48,6 @@ class Staff(models.Model):
 class Cooperative(models.Model):
     coop_id = models.AutoField(primary_key=True, db_column='coop_id')
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, db_column='staff_id', blank=True, null=True)
-    admin = models.ForeignKey(Admin, on_delete=models.SET_NULL, db_column='admin_id', blank=True, null=True)
     cooperative_name = models.CharField(max_length=200, unique=True, db_column='cooperative_name')
     mobile_number = models.CharField(max_length=20, blank=True, null=True, db_column='mobile_number')
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
@@ -57,10 +56,9 @@ class Cooperative(models.Model):
     class Meta:
         managed = False
         db_table = 'cooperatives'
-    
+
     def __str__(self):
         return self.cooperative_name
-
 # ======================================================
 # 5) OFFICERS MODEL
 # ======================================================
@@ -86,6 +84,50 @@ class Officer(models.Model):
     def __str__(self):
         return self.fullname or str(self.user.username)
 
+# ======================================================
+# 8) MESSAGES MODEL
+# ======================================================
+class Message(models.Model):
+    message_id = models.AutoField(primary_key=True, db_column='message_id')
+    sender = models.ForeignKey('users.User', on_delete=models.SET_NULL, db_column='sender_id', blank=True, null=True, related_name='sent_messages')
+    message = models.TextField()
+    attachment = models.BinaryField(blank=True, null=True, db_column='attachment')
+    attachment_filename = models.CharField(max_length=255, blank=True, null=True, db_column='attachment_filename')
+    attachment_content_type = models.CharField(max_length=255, blank=True, null=True, db_column='attachment_content_type')
+    attachment_size = models.BigIntegerField(blank=True, null=True, db_column='attachment_size')
+    sent_at = models.DateTimeField(auto_now_add=True, db_column='sent_at')
+    
+    class Meta:
+        managed = False
+        db_table = 'messages'
+    
+    def __str__(self):
+        return f"Message from {self.sender.username} at {self.sent_at}"
+
+# ======================================================
+# 8.5) MESSAGE RECIPIENTS MODEL
+# ======================================================
+# ... (Previous imports)
+
+# Update MessageRecipient to track status
+class MessageRecipient(models.Model):
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, db_column='message_id')
+    receiver = models.ForeignKey('users.User', on_delete=models.CASCADE, db_column='receiver_id', related_name='received_messages')
+    received_at = models.DateTimeField(blank=True, null=True, db_column='received_at')
+    
+    # --- NEW FIELDS ---
+    status = models.CharField(
+        max_length=20, 
+        default='sent', 
+        choices=[('sent', 'Sent'), ('delivered', 'Delivered'), ('seen', 'Seen')],
+        db_column='status'
+    )
+    seen_at = models.DateTimeField(blank=True, null=True, db_column='seen_at')
+    
+    class Meta:
+        managed = False
+        db_table = 'message_recipients'
+        unique_together = (('message', 'receiver'),)
 # ======================================================
 # 9) ANNOUNCEMENTS MODEL (Updated)
 # ======================================================
