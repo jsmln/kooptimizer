@@ -4,7 +4,48 @@
 {% block title %}Account Management - KoopTimizer{% endblock %}
 
 {% block extra_head %}
-{{ block.super }}<link rel="stylesheet" href="{% static 'frontend/account_management.css' %}">
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'frontend/account_management.css' %}">
+<style>
+    /* Ensure action buttons are hidden by default */
+    .action-buttons {
+        display: none;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    /* Selected row highlighting */
+    tbody tr.selected {
+        background-color: #e3f2fd !important;
+    }
+    
+    /* Modal overlay */
+    .modal-overlay {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    
+    .modal-overlay.hidden {
+        display: none;
+    }
+    
+    /* Cursor pointer for clickable rows */
+    tbody tr {
+        cursor: pointer;
+    }
+    
+    tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+</style>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -21,16 +62,13 @@
             <input type="text" id="user-search" class="search-input" placeholder="Search users...">
         </div>
         
-        <div id="table-controls" class="table-controls">
-            <input type="text" id="user-search" class="search-input" placeholder="Search users...">
-        </div>
-        
         <div class="add-section" id="staff-add-section">
             <p class="total-label">Total Staffs: <span class="count" id="staff-count">{{ staffs|length }}</span></p> 
             <button class="add-btn" data-account-type="staff" id="onboard-staff-btn"><i class="bi bi-plus-circle"></i> Add</button> 
         </div>
         <div class="add-section hidden" id="officer-add-section">
             <p class="total-label">Total Officers: <span class="count" id="officer-count">{{ officers|length }}</span></p>
+            <button class="add-btn" data-account-type="officer" id="onboard-officer-btn"><i class="bi bi-plus-circle"></i> Add</button> 
         </div>
         <div class="add-section hidden" id="admin-add-section">
             <p class="total-label">Total Admins: <span class="count" id="admin-count">{{ admins|length }}</span></p>
@@ -47,7 +85,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>User ID</th>
+                        <th>#</th>
                         <th>Full Name</th>
                         <th>Email Address</th>
                         <th>Contact Number</th>
@@ -56,8 +94,7 @@
                         <th>Type</th>
                     </tr>
                 </thead>
-                <tbody id="all-users-table-body">
-                    </tbody>
+                <tbody id="all-users-table-body"></tbody>
             </table>
         </div>
         <div class="action-buttons">
@@ -66,14 +103,13 @@
         </div>
     </div>
 
-
     <div class="table-section active" id="staffs">
         <h2>Staff User Accounts</h2>
         <div class="table-wrapper"> 
             <table>
                 <thead>
                     <tr>
-                        <th>User ID</th>
+                        <th>#</th>
                         <th>Staff Name</th>
                         <th>Email Address</th>
                         <th>Contact Number</th>
@@ -82,8 +118,8 @@
                 </thead>
                 <tbody id="staff-table-body">
                     {% for staff in staffs %}
-                    <tr data-type="staff">
-                        <td>{{ staff.formatted_id }}</td>
+                    <tr data-type="staff" data-user-id="{{ staff.user_id }}" data-profile-id="{{ staff.profile_id }}">
+                        <td>{{ forloop.counter }}</td>
                         <td>{{ staff.fullname }}</td>
                         <td>{{ staff.email }}</td>
                         <td>{{ staff.contact }}</td>
@@ -107,7 +143,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>User ID</th>
+                        <th>#</th>
                         <th>Officer-in-charge</th>
                         <th>Cooperative Name</th>
                         <th>Email Address</th>
@@ -117,8 +153,8 @@
                 </thead>
                 <tbody id="officer-table-body">
                     {% for officer in officers %}
-                    <tr data-type="officer">
-                        <td>{{ officer.formatted_id }}</td>
+                    <tr data-type="officer" data-user-id="{{ officer.user_id }}" data-profile-id="{{ officer.profile_id }}">
+                        <td>{{ forloop.counter }}</td>
                         <td>{{ officer.fullname }}</td>
                         <td>{{ officer.coop_name }}</td>
                         <td>{{ officer.email }}</td>
@@ -143,7 +179,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>User ID</th>
+                        <th>#</th>
                         <th>Admin Name</th>
                         <th>Email Address</th>
                         <th>Contact Number</th>
@@ -152,8 +188,8 @@
                 </thead>
                 <tbody id="admin-table-body">
                     {% for admin in admins %}
-                    <tr data-type="admin">
-                        <td>{{ admin.formatted_id }}</td>
+                    <tr data-type="admin" data-user-id="{{ admin.user_id }}" data-profile-id="{{ admin.profile_id }}">
+                        <td>{{ forloop.counter }}</td>
                         <td>{{ admin.fullname }}</td>
                         <td>{{ admin.email }}</td>
                         <td>{{ admin.contact }}</td>
@@ -172,16 +208,18 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="onboard-staff-modal">
+<!-- ONBOARD/EDIT MODAL -->
+<div class="modal-overlay hidden" id="onboard-staff-modal">
     <div class="onboard-form-container">
         <div class="form-scroll-wrapper"> 
             <span class="close-btn modal-close">&times;</span> 
-
             <h3 class="modal-title" id="onboard-modal-title">Onboard Staff Account</h3>
-            <p class="input-instruction">Please input staff information</p>
+            <p class="input-instruction">Please input information</p>
 
             <form id="onboard-form" action="#" method="POST" class="onboard-form" data-account-type="staff">
                 {% csrf_token %}
+                <input type="hidden" id="edit-user-id" name="edit_user_id" value="">
+                
                 <div class="form-group">
                     <label for="staff-full-name">Full Name</label>
                     <input type="text" id="staff-full-name" name="full_name" placeholder="Firstname M.I. Lastname" required>
@@ -191,9 +229,9 @@
                     <label for="staff-gender">Gender</label>
                     <select id="staff-gender" name="gender" required>
                         <option value="" disabled selected>Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Others">Others</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
                     </select>
                 </div>
 
@@ -216,442 +254,778 @@
                     <label for="coop-assigned">Cooperative Assigned</label>
                     <select id="coop-assigned" name="coop_assigned" required>
                         <option value="" disabled selected>Choose Cooperatives</option>
-                        <option value="Credit Cooperative">Credit Cooperative</option>
-                        <option value="Consumers Cooperative">Consumers Cooperative</option>
-                        <option value="Producers Cooperative">Producers Cooperative</option>
-                        <option value="Marketing Cooperative">Marketing Cooperative</option>
-                        <option value="Housing Cooperative">Housing Cooperative</option>
-                        <option value="Agriculture Cooperative">Agriculture Cooperative</option>
-                        <option value="Multipurpose Cooperative">Multipurpose Cooperative</option>
-                        <option value="Fishermen Cooperative">Fishermen Cooperative</option>
-                        <option value="Transport Cooperative">Transport Cooperative</option>
-                        <option value="Service Cooperative">Service Cooperative</option>
-                        <option value="Workers Cooperative">Worker Cooperative</option>
+                        {% for coop in cooperatives %}
+                            <option value="{{ coop.coop_id }}">{{ coop.cooperative_name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
-                <button type="submit" class="submit-btn">Create Account</button>
+                <div id="form-buttons-add">
+                    <button type="submit" class="submit-btn">Create Account</button>
+                </div>
+                <div id="form-buttons-edit" style="display: none;">
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                    <button type="button" id="edit-cancel-btn" class="cancel-btn">Cancel</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
+<!-- CONFIRM MODAL (FOR ADD) -->
 <div class="modal-overlay hidden" id="confirm-modal">
-    <div class="confirm-modal-container">
-        <p class="confirm-instruction">Please confirm if all details are correct</p>
-        
-        <div class="confirm-data-group">
-            <label>Full Name</label>
-            <input type="text" id="confirm-name" readonly>
-        </div>
-        <div class="confirm-data-group">
-            <label id="confirm-role-label">Position/Role</label>
-            <input type="text" id="confirm-position" readonly>
-        </div>
-        <div class="confirm-data-group">
-            <label>Email Address</label>
-            <input type="text" id="confirm-email" readonly>
-        </div>
-        <div class="confirm-data-group">
-            <label>Contact Number</label>
-            <input type="text" id="confirm-contact" readonly>
-        </div>
-        <div class="confirm-data-group hidden" id="confirm-coop-group">
-            <label>Cooperative Assigned</label>
-            <input type="text" id="confirm-coop" readonly>
-        </div>
-        <div class="confirm-data-group hidden" id="confirm-gender-group">
-            <label>Gender</label>
-            <input type="text" id="confirm-gender" readonly>
-        </div>
-
-        <div class="confirm-actions">
-            <button id="confirm-btn" class="modal-button primary-btn">Confirm</button>
-            <button id="edit-btn" class="modal-button secondary-btn">Edit</button>
-        </div>
+  <div class="confirm-modal-container">
+    <p class="confirm-instruction">Please confirm if all details are correct</p>
+    
+    <div class="confirm-data-group">
+      <label>Full Name</label>
+      <input type="text" id="confirm-name" readonly>
     </div>
+    <div class="confirm-data-group">
+      <label id="confirm-role-label">Position/Role</label>
+      <input type="text" id="confirm-position" readonly>
+    </div>
+    <div class="confirm-data-group">
+      <label>Email Address</label>
+      <input type="text" id="confirm-email" readonly>
+    </div>
+    <div class="confirm-data-group">
+      <label>Contact Number</label>
+      <input type="text" id="confirm-contact" readonly>
+    </div>
+    <div class="confirm-data-group hidden" id="confirm-coop-group">
+      <label>Cooperative Assigned</label>
+      <textarea id="confirm-coop" readonly></textarea>
+    </div>
+    <div class="confirm-data-group hidden" id="confirm-gender-group">
+      <label>Gender</label>
+      <input type="text" id="confirm-gender" readonly>
+    </div>
+
+    <div class="confirm-actions">
+      <button id="confirm-btn" class="modal-button primary-btn">Confirm</button>
+      <button id="confirm-edit-btn" class="modal-button secondary-btn">Edit</button>
+    </div>
+  </div>
 </div>
 
+<!-- SEND CREDENTIALS MODAL -->
 <div class="modal-overlay hidden" id="send-credentials-modal">
-    <div class="send-cred-modal-container">
-        <div class="modal-header">
-            <h4>Send Credentials</h4>
-            <span class="close-btn modal-close-send">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p><span id="account-type-text">Staff user</span> credentials will be sent through Email Address, confirm if the informations are correct before sending.</p>
-            <div class="email-display-box">
-                <span id="send-name-display"></span>
-                <span id="send-email-display"></span>
-            </div>
-            <button id="send-final-btn" class="modal-button primary-btn full-width-btn">Send</button>
-        </div>
+  <div class="send-cred-modal-container">
+    <div class="modal-header">
+      <h4>Send Credentials</h4>
+      <span class="close-btn modal-close-send">&times;</span>
     </div>
+    <div class="modal-body">
+      <p><span id="account-type-text">Staff user</span> credentials will be sent through Email Address, confirm if the informations are correct before sending.</p>
+      <div class="email-display-box">
+        <span id="send-name-display"></span>
+        <span id="send-email-display"></span>
+      </div>
+      <button id="send-final-btn" class="modal-button primary-btn full-width-btn">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEACTIVATE CONFIRMATION MODAL -->
+<div class="modal-overlay hidden" id="deactivate-confirm-modal">
+  <div class="confirm-modal-container">
+    <h3>Deactivate Account</h3>
+    <p id="deactivate-confirm-text">Are you sure you want to deactivate this account?</p>
+    <div class="confirm-actions">
+      <button id="deactivate-confirm-btn" class="modal-button primary-btn">Continue</button>
+      <button id="deactivate-cancel-btn" class="modal-button secondary-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL EDIT MODAL -->
+<div class="modal-overlay hidden" id="cancel-edit-modal">
+  <div class="confirm-modal-container">
+    <h3>Cancel Editing</h3>
+    <p>Are you sure you want to cancel editing? Unsaved changes will be lost.</p>
+    <div class="confirm-actions">
+      <button id="cancel-edit-confirm-btn" class="modal-button primary-btn">Continue</button>
+      <button id="cancel-edit-cancel-btn" class="modal-button secondary-btn">Go Back</button>
+    </div>
+  </div>
 </div>
 
 <script>
-    // --- Initial Data Store for 'ALL' Tab ---
-    // This script will store all user data here on load to enable combined view and search.
+(function() {
+    'use strict';
+    
+    console.log('Account Management Script Loaded');
+    
     let allUsersData = [];
+    let selectedRowData = { element: null, userId: null, profileId: null, type: null, name: null };
+    let submittedData = {}; 
+    let isEditMode = false;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // DOM Elements
-        const allTabBtn = document.querySelector('[data-target="all-users"]');
-        const staffTabBtn = document.querySelector('[data-target="staffs"]');
-        const officerTabBtn = document.querySelector('[data-target="officers"]');
-        const adminTabBtn = document.querySelector('[data-target="admins"]');
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function initialize() {
+        console.log('Initializing...');
         
-        const staffAddSection = document.getElementById('staff-add-section');
-        const officerAddSection = document.getElementById('officer-add-section');
-        const adminAddSection = document.getElementById('admin-add-section');
-        const allUsersSection = document.getElementById('all-users-section'); // New Total/Add section
-
-        const onboardStaffBtn = document.getElementById('onboard-staff-btn');
-        const onboardAdminBtn = document.getElementById('onboard-admin-btn');
-        const onboardModal = document.getElementById('onboard-staff-modal');
-        const onboardForm = document.getElementById('onboard-form');
+        // Get all DOM elements
+        const elements = {
+            onboardStaffBtn: document.getElementById('onboard-staff-btn'),
+            onboardAdminBtn: document.getElementById('onboard-admin-btn'),
+            onboardOfficerBtn: document.getElementById('onboard-officer-btn'),
+            onboardModal: document.getElementById('onboard-staff-modal'),
+            onboardForm: document.getElementById('onboard-form'),
+            confirmModal: document.getElementById('confirm-modal'),
+            sendCredModal: document.getElementById('send-credentials-modal'),
+            deactivateModal: document.getElementById('deactivate-confirm-modal'),
+            cancelEditModal: document.getElementById('cancel-edit-modal'),
+            staffTableBody: document.getElementById('staff-table-body'),
+            officerTableBody: document.getElementById('officer-table-body'),
+            adminTableBody: document.getElementById('admin-table-body'),
+            allUsersTableBody: document.getElementById('all-users-table-body'),
+            staffCountSpan: document.getElementById('staff-count'),
+            adminCountSpan: document.getElementById('admin-count'),
+            officerCountSpan: document.getElementById('officer-count'),
+            allUserCountSpan: document.getElementById('all-user-count'),
+            searchInput: document.getElementById('user-search'),
+            coopGroup: document.getElementById('coop-group'),
+            coopSelectEl: document.getElementById('coop-assigned'),
+            positionLabel: document.getElementById('position-label'),
+            formFullName: document.getElementById('staff-full-name'),
+            formGender: document.getElementById('staff-gender'),
+            formPosition: document.getElementById('staff-position'),
+            formEmail: document.getElementById('staff-email'),
+            formContact: document.getElementById('staff-contact'),
+            formEditUserId: document.getElementById('edit-user-id'),
+            formButtonsAdd: document.getElementById('form-buttons-add'),
+            formButtonsEdit: document.getElementById('form-buttons-edit'),
+            confirmRoleLabel: document.getElementById('confirm-role-label'),
+            confirmCoopGroup: document.getElementById('confirm-coop-group'),
+            confirmCoopTextarea: document.getElementById('confirm-coop')
+        };
         
-        const confirmModal = document.getElementById('confirm-modal');
-        const sendCredModal = document.getElementById('send-credentials-modal');
+        console.log('Elements loaded:', elements);
+        
+        // Check if all critical elements exist
+        if (!elements.onboardStaffBtn) {
+            console.error('Critical elements missing!');
+            return;
+        }
+        
+        collectInitialData();
+        renderAllUsersTable(allUsersData);
+        setupEventListeners(elements);
+        
+        console.log('Initialization complete');
+    }
 
+    function collectInitialData() {
+        allUsersData = [];
+        
         const staffTableBody = document.getElementById('staff-table-body');
         const officerTableBody = document.getElementById('officer-table-body');
         const adminTableBody = document.getElementById('admin-table-body');
-        const allUsersTableBody = document.getElementById('all-users-table-body'); // New target
-
-        const staffCountSpan = document.getElementById('staff-count');
-        const adminCountSpan = document.getElementById('admin-count');
-        const allUserCountSpan = document.getElementById('all-user-count'); // New count span
-
-        const searchInput = document.getElementById('user-search'); // New search input
+        const allUserCountSpan = document.getElementById('all-user-count');
         
-        // Form/Modal elements (retained for onboarding logic)
-        const coopGroup = document.getElementById('coop-group');
-        const positionLabel = document.getElementById('position-label');
-        const confirmRoleLabel = document.getElementById('confirm-role-label');
-        const confirmCoopGroup = document.getElementById('confirm-coop-group');
-        const confirmGenderGroup = document.getElementById('confirm-gender-group');
-        
-        let submittedData = {}; 
+        const tables = [
+            { body: staffTableBody, type: 'Staff', indices: [1, 2, 3, 4], roleIndex: -1, coopIndex: 4 },
+            { body: officerTableBody, type: 'Officer', indices: [1, 2, 3, 4, 5], roleIndex: 5, coopIndex: 2 },
+            { body: adminTableBody, type: 'Admin', indices: [1, 2, 3, 4], roleIndex: 4, coopIndex: -1 }
+        ];
 
-        // --- Data Collection & Rendering Functions ---
-
-        function collectInitialData() {
-            allUsersData = [];
-            // Helper to extract cell text from a row
-            const getCells = (row, indices) => indices.map(i => row.cells[i].textContent);
-
-            // 1. Staffs (ID, Name, Email, Contact, Coop)
-            staffTableBody.querySelectorAll('tr').forEach(row => {
-                const [id, name, email, contact, coop] = getCells(row, [0, 1, 2, 3, 4]);
-                allUsersData.push({ id, name, email, contact, role: '-', coop, type: 'Staff' });
-            });
-
-            // 2. Officers (ID, Name, Coop, Email, Contact, Role)
-            officerTableBody.querySelectorAll('tr').forEach(row => {
-                const [id, name, coop, email, contact, role] = getCells(row, [0, 1, 2, 3, 4, 5]);
-                allUsersData.push({ id, name, email, contact, role, coop, type: 'Officer' });
-            });
-
-            // 3. Admins (ID, Name, Email, Contact, Position)
-            adminTableBody.querySelectorAll('tr').forEach(row => {
-                const [id, name, email, contact, role] = getCells(row, [0, 1, 2, 3, 4]);
-                allUsersData.push({ id, name, email, contact, role, coop: '-', type: 'Admin' });
-            });
-            
-            // Update total user count
-            allUserCountSpan.textContent = allUsersData.length;
-        }
-
-        function renderAllUsersTable(data) {
-            allUsersTableBody.innerHTML = '';
-            
-            data.forEach(user => {
-                const newRow = document.createElement('tr');
-                // Master Table Columns: User ID | Full Name | Email | Contact | Role/Perm. | Cooperative | Type
-                newRow.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td>${user.contact}</td>
-                    <td>${user.role}</td>
-                    <td>${user.coop}</td>
-                    <td>${user.type}</td>
-                `;
-                allUsersTableBody.appendChild(newRow);
-            });
-        }
-        
-        // Execute data collection and initial render
-        collectInitialData();
-        // Render the ALL table on load but keep the STAFF tab active
-        renderAllUsersTable(allUsersData);
-
-
-        // --- Tab Switching Logic (Updated) ---
-        document.querySelectorAll(".tab-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const target = btn.dataset.target;
+        tables.forEach(table => {
+            table.body.querySelectorAll('tr').forEach(row => {
+                if (row.cells.length <= 1) return;
                 
-                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-                document.querySelectorAll(".table-section").forEach(t => t.classList.remove("active"));
-                document.querySelectorAll(".add-section").forEach(s => s.classList.add("hidden"));
-
-                btn.classList.add("active");
-                document.getElementById(target).classList.add("active");
+                const cells = Array.from(row.cells).map(cell => cell.textContent);
                 
-                // Show/hide appropriate add section and search bar
-                const isSearchVisible = target === 'all-users';
-                searchInput.style.display = isSearchVisible ? 'block' : 'none';
-                
-                if (target === 'staffs') {
-                    staffAddSection.classList.remove('hidden');
-                } else if (target === 'officers') {
-                    officerAddSection.classList.remove('hidden');
-                } else if (target === 'admins') {
-                    adminAddSection.classList.remove('hidden');
-                } else if (target === 'all-users') {
-                    allUsersSection.classList.remove('hidden');
-                    // Ensure the 'ALL' table is fully rendered on switch
-                    renderAllUsersTable(allUsersData);
-                }
-            });
-        });
-        
-        // Initialize state (Show search only if 'ALL' is active initially, otherwise hide)
-        searchInput.style.display = 'none'; // Hidden initially based on original active tab
-        
-        // --- Search Functionality ---
-        searchInput.addEventListener('keyup', (e) => {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            const filteredData = allUsersData.filter(user => {
-                return Object.values(user).some(value => 
-                    value.toString().toLowerCase().includes(searchTerm)
-                );
-            });
-            renderAllUsersTable(filteredData);
-        });
-        
-        // --- Modal Control Functions (Omitted for brevity) ---
-        function openModal(modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('visible');
-        }
-
-        function closeModal(modal) {
-            modal.classList.remove('visible');
-            modal.classList.add('hidden');
-        }
-
-        // --- Stage 1: Onboarding Form Logic (Universal) ---
-
-        // Universal Open Onboarding Modal Listener
-        [onboardStaffBtn, onboardAdminBtn].forEach(btn => {
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    const accountType = btn.getAttribute('data-account-type');
-                    const isStaff = accountType === 'staff';
-                    
-                    // Update form context
-                    onboardForm.setAttribute('data-account-type', accountType);
-                    document.getElementById('onboard-modal-title').textContent = `Onboard ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`;
-
-                    // Dynamic form field visibility and labels for ONBOARDING FORM
-                    coopGroup.style.display = isStaff ? 'block' : 'none';
-                    document.getElementById('coop-assigned').required = isStaff; 
-                    
-                    positionLabel.textContent = isStaff ? 'Position/Role' : 'Position'; // Using "Position" as per Admin table header
-                    
-                    openModal(onboardModal);
-                    onboardForm.reset();
+                allUsersData.push({
+                    user_id: row.dataset.userId,
+                    profile_id: row.dataset.profileId,
+                    name: cells[1],
+                    email: table.type === 'Officer' ? cells[3] : cells[2],
+                    contact: table.type === 'Officer' ? cells[4] : cells[3],
+                    role: table.roleIndex !== -1 ? cells[table.roleIndex] : '-',
+                    coop: table.coopIndex !== -1 ? cells[table.coopIndex] : '-',
+                    type: table.type
                 });
+            });
+        });
+        
+        allUserCountSpan.textContent = allUsersData.length;
+        console.log('Collected user data:', allUsersData.length, 'users');
+    }
+
+    function renderAllUsersTable(data) {
+        const allUsersTableBody = document.getElementById('all-users-table-body');
+        allUsersTableBody.innerHTML = '';
+        
+        if (data.length === 0) {
+             allUsersTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
+             return;
+        }
+
+        data.forEach((user, index) => {
+            const newRow = document.createElement('tr');
+            newRow.dataset.userId = user.user_id;
+            newRow.dataset.profileId = user.profile_id;
+            newRow.dataset.type = user.type;
+
+            newRow.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>${user.contact}</td>
+                <td>${user.role}</td>
+                <td>${user.coop}</td>
+                <td>${user.type}</td>
+            `;
+            allUsersTableBody.appendChild(newRow);
+        });
+    }
+
+    function setupEventListeners(el) {
+        console.log('Setting up event listeners...');
+        
+        // Tab switching
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => handleTabClick(btn));
+        });
+        
+        // Search functionality
+        el.searchInput.style.display = 'none';
+        el.searchInput.addEventListener('keyup', handleSearch);
+        
+        // Row selection
+        document.querySelectorAll('tbody').forEach(tbody => {
+            tbody.addEventListener('click', handleRowClick);
+        });
+        
+        // Add buttons
+        [el.onboardStaffBtn, el.onboardAdminBtn, el.onboardOfficerBtn].forEach(btn => {
+            if (btn) {
+                console.log('Adding click listener to:', btn.id);
+                btn.addEventListener('click', () => handleAddButtonClick(btn, el));
             }
         });
-
-        // Handle Close buttons (for Onboarding and Send Credentials modals)
+        
+        // Form submission
+        el.onboardForm.addEventListener('submit', (e) => handleFormSubmit(e, el));
+        
+        // Confirmation buttons
+        document.getElementById('confirm-edit-btn').addEventListener('click', () => {
+            closeModal(el.confirmModal);
+            openModal(el.onboardModal);
+        });
+        
+        document.getElementById('confirm-btn').addEventListener('click', () => handleConfirmButton(el));
+        
+        // Send credentials
+        document.getElementById('send-final-btn').addEventListener('click', function() {
+            handleSendCredentials(this, el);
+        });
+        
+        // Edit/Delete buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleEditClick(el));
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleDeleteClick(el));
+        });
+        
+        // Deactivate modal buttons
+        document.getElementById('deactivate-cancel-btn').addEventListener('click', () => closeModal(el.deactivateModal));
+        document.getElementById('deactivate-confirm-btn').addEventListener('click', () => handleDeactivateConfirm(el));
+        
+        // Cancel edit modal buttons
+        document.getElementById('edit-cancel-btn').addEventListener('click', () => openModal(el.cancelEditModal));
+        document.getElementById('cancel-edit-cancel-btn').addEventListener('click', () => closeModal(el.cancelEditModal));
+        document.getElementById('cancel-edit-confirm-btn').addEventListener('click', () => {
+            closeModal(el.cancelEditModal);
+            closeModal(el.onboardModal);
+        });
+        
+        // Close buttons
         document.querySelectorAll('.modal-close, .modal-close-send').forEach(btn => {
             btn.addEventListener('click', () => {
-                closeModal(onboardModal);
-                closeModal(confirmModal);
-                closeModal(sendCredModal);
-                onboardForm.reset(); 
+                closeModal(el.onboardModal);
+                closeModal(el.confirmModal);
+                closeModal(el.sendCredModal);
             });
         });
         
-        // Stage 1 Submit -> Open Stage 2 Confirmation
-        onboardForm.addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            
-            const accountType = onboardForm.getAttribute('data-account-type');
-            const isStaff = accountType === 'staff';
+        console.log('Event listeners setup complete');
+    }
 
-            // 1. Collect and Store Data
-            submittedData = {
-                type: accountType,
-                name: document.getElementById('staff-full-name').value,
-                position: document.getElementById('staff-position').value,
-                email: document.getElementById('staff-email').value,
-                contact: document.getElementById('staff-contact').value,
-                gender: document.getElementById('staff-gender').options[document.getElementById('staff-gender').selectedIndex].text,
-                // Only collect coop if it is a staff account
-                coop: isStaff ? document.getElementById('coop-assigned').options[document.getElementById('coop-assigned').selectedIndex].value : null 
-            };
+    function handleTabClick(btn) {
+        const target = btn.dataset.target;
+        
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".table-section").forEach(t => {
+            t.classList.remove("active");
+            t.querySelector('.action-buttons').style.display = 'none';
+        });
+        document.querySelectorAll(".add-section").forEach(s => s.classList.add("hidden"));
+        document.querySelectorAll('tbody tr.selected').forEach(row => row.classList.remove('selected'));
+
+        btn.classList.add("active");
+        document.getElementById(target).classList.add("active");
+        
+        const searchInput = document.getElementById('user-search');
+        const isSearchVisible = target === 'all-users';
+        searchInput.style.display = isSearchVisible ? 'block' : 'none';
+        
+        if (target === 'staffs') document.getElementById('staff-add-section').classList.remove('hidden');
+        else if (target === 'officers') document.getElementById('officer-add-section').classList.remove('hidden');
+        else if (target === 'admins') document.getElementById('admin-add-section').classList.remove('hidden');
+        else if (target === 'all-users') {
+            document.getElementById('all-users-section').classList.remove('hidden');
+            renderAllUsersTable(allUsersData);
+        }
+        
+        selectedRowData.element = null;
+    }
+
+    function handleSearch(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const filteredData = allUsersData.filter(user => {
+            return user.name.toLowerCase().includes(searchTerm) ||
+                   user.email.toLowerCase().includes(searchTerm) ||
+                   user.contact.toLowerCase().includes(searchTerm) ||
+                   user.role.toLowerCase().includes(searchTerm) ||
+                   user.coop.toLowerCase().includes(searchTerm) ||
+                   user.type.toLowerCase().includes(searchTerm);
+        });
+        renderAllUsersTable(filteredData);
+    }
+
+    function handleRowClick(e) {
+        const row = e.target.closest('tr');
+        if (!row || row.cells.length <= 1) return;
+        
+        const userId = row.dataset.userId;
+        const profileId = row.dataset.profileId;
+        const type = row.dataset.type;
+        const name = row.cells[1].textContent;
+
+        const currentTableSection = row.closest('.table-section');
+        const actionButtons = currentTableSection.querySelector('.action-buttons');
+        
+        if (selectedRowData.element === row) {
+            row.classList.remove('selected');
+            actionButtons.style.display = 'none';
+            selectedRowData.element = null;
+        } else {
+            if (selectedRowData.element) {
+                selectedRowData.element.classList.remove('selected');
+                const prevTable = selectedRowData.element.closest('.table-section');
+                if (prevTable) prevTable.querySelector('.action-buttons').style.display = 'none';
+            }
             
-            // 2. Populate Confirmation Modal (Stage 2)
+            row.classList.add('selected');
+            actionButtons.style.display = 'flex';
+            selectedRowData = { element: row, userId, profileId, type, name };
+        }
+        
+        console.log('Row selected:', selectedRowData);
+    }
+
+    function handleAddButtonClick(btn, el) {
+        console.log('Add button clicked:', btn.id);
+        isEditMode = false;
+        const accountType = btn.getAttribute('data-account-type');
+        
+        setupFormForType(accountType, [], el);
+
+        el.onboardForm.reset();
+        el.formEditUserId.value = '';
+        document.getElementById('onboard-modal-title').textContent = `Onboard ${capitalize(accountType)} Account`;
+        
+        el.formButtonsAdd.style.display = 'block';
+        el.formButtonsEdit.style.display = 'none';
+        
+        openModal(el.onboardModal);
+    }
+
+    function setupFormForType(accountType, assignedCoops, el) {
+        const isOfficer = accountType === 'officer';
+        const isStaff = accountType === 'staff';
+        
+        el.onboardForm.setAttribute('data-account-type', accountType);
+
+        el.coopSelectEl.multiple = isStaff;
+        el.coopSelectEl.required = isOfficer || isStaff;
+        el.coopGroup.style.display = (isOfficer || isStaff) ? 'block' : 'none';
+        
+        el.positionLabel.textContent = (isStaff || isOfficer) ? 'Position/Role' : 'Position';
+
+        const options = Array.from(el.coopSelectEl.options);
+        options.forEach(opt => {
+            opt.selected = assignedCoops.includes(parseInt(opt.value));
+        });
+    }
+
+    function handleFormSubmit(e, el) {
+        e.preventDefault();
+        console.log('Form submitted');
+        
+        const accountType = el.onboardForm.getAttribute('data-account-type');
+        const isOfficer = accountType === 'officer';
+        const isStaff = accountType === 'staff';
+
+        let coopId, coopText, coopIds = [], coopTexts = [];
+        
+        if (isOfficer) {
+            coopId = el.coopSelectEl.value;
+            coopText = el.coopSelectEl.options[el.coopSelectEl.selectedIndex].text;
+        } else if (isStaff) {
+            coopIds = Array.from(el.coopSelectEl.selectedOptions).map(opt => opt.value);
+            coopTexts = Array.from(el.coopSelectEl.selectedOptions).map(opt => opt.text);
+        }
+
+        submittedData = {
+            type: accountType,
+            name: el.formFullName.value,
+            position: el.formPosition.value,
+            email: el.formEmail.value,
+            contact: el.formContact.value,
+            gender: el.formGender.value,
+            coop: isStaff ? coopIds : (isOfficer ? coopId : null),
+            coop_text: isStaff ? coopTexts : (isOfficer ? coopText : null)
+        };
+
+        if (isEditMode) {
+            saveChanges(el);
+        } else {
             document.getElementById('confirm-name').value = submittedData.name;
             document.getElementById('confirm-position').value = submittedData.position;
             document.getElementById('confirm-email').value = submittedData.email;
             document.getElementById('confirm-contact').value = submittedData.contact;
-            document.getElementById('confirm-gender').value = submittedData.gender;
+            el.confirmRoleLabel.textContent = (isStaff || isOfficer) ? 'Position/Role' : 'Position';
 
-            // Dynamic labels and visibility for CONFIRMATION MODAL
-            confirmRoleLabel.textContent = isStaff ? 'Position/Role' : 'Position';
-            
-            // Cooperative Assigned visibility (Hide for Admin)
-            if (isStaff) {
-                document.getElementById('confirm-coop').value = submittedData.coop;
-                confirmCoopGroup.classList.remove('hidden');
+            if (isStaff || isOfficer) {
+                el.confirmCoopTextarea.value = isStaff ? submittedData.coop_text.join('\n') : submittedData.coop_text;
+                el.confirmCoopGroup.classList.remove('hidden');
             } else {
-                confirmCoopGroup.classList.add('hidden');
+                el.confirmCoopGroup.classList.add('hidden');
             }
             
-            confirmGenderGroup.classList.add('hidden');
-
-            // 3. Transition: Close Stage 1, Open Stage 2
-            closeModal(onboardModal);
-            openModal(confirmModal);
-        });
-        
-        // --- Stage 2 & 3 Logic (Retained & Updated for 'ALL' table) ---
-        
-        // Edit Button -> Back to Stage 1
-        document.getElementById('edit-btn').addEventListener('click', () => {
-            closeModal(confirmModal);
-            openModal(onboardModal);
-        });
-
-        // Confirm Button -> Open Stage 3 Send Credentials
-        document.getElementById('confirm-btn').addEventListener('click', () => {
-            document.getElementById('send-name-display').textContent = submittedData.name;
-            document.getElementById('send-email-display').textContent = submittedData.email;
-            document.getElementById('account-type-text').textContent = submittedData.type.charAt(0).toUpperCase() + submittedData.type.slice(1) + ' user';
-
-            closeModal(confirmModal);
-            openModal(sendCredModal);
-        });
-
-        // Send Credentials Logic (Updates individual table AND the ALL table)
-        document.getElementById('send-final-btn').addEventListener('click', function() {
-            const sendButton = this;
-            const originalButtonText = sendButton.innerHTML;
-            
-            // This is the token Django needs for security
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; 
-
-            // Disable button and show loading state
-            sendButton.disabled = true;
-            // You can add a CSS class for .spinner to show a loading animation
-            sendButton.innerHTML = '<span class="spinner"></span> Sending...'; 
-
-            // 1. Send the data to your new Django API view
-            fetch('/account_management/api/send-credentials/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken // Send the CSRF token
-                },
-                // submittedData is the global variable you already use
-                body: JSON.stringify(submittedData) 
-            })
-            .then(response => {
-                if (!response.ok) {
-                    // If server returns an error (400, 500, etc.)
-                    return response.json().then(err => { throw new Error(err.message) });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    // --- EMAIL SENT SUCCESSFULLY! ---
-                    
-                    // Now, we can run all your original code to update the UI
-                    const type = submittedData.type;
-                    const targetTableBody = type === 'staff' ? staffTableBody : adminTableBody;
-                    const targetCountSpan = type === 'staff' ? staffCountSpan : adminCountSpan;
-                    
-                    const userId = getNextUserId(targetTableBody);
-                    const newRow = document.createElement('tr');
-                    
-                    const newUserData = {
-                        id: userId,
-                        name: submittedData.name,
-                        email: submittedData.email,
-                        contact: submittedData.contact,
-                        role: submittedData.position || '-',
-                        coop: submittedData.coop || '-',
-                        type: type.charAt(0).toUpperCase() + type.slice(1)
-                    };
-                    
-                    if (type === 'staff') {
-                        newRow.innerHTML = `
-                            <td>${newUserData.id}</td>
-                            <td>${newUserData.name}</td>
-                            <td>${newUserData.email}</td>
-                            <td>${newUserData.contact}</td>
-                            <td>${newUserData.coop}</td>
-                        `;
-                    } else if (type === 'admin') {
-                        newRow.innerHTML = `
-                            <td>${newUserData.id}</td>
-                            <td>${newUserData.name}</td>
-                            <td>${newUserData.email}</td>
-                            <td>${newUserData.contact}</td>
-                            <td>${newUserData.role}</td>
-                        `;
-                    }
-                    
-                    targetTableBody.appendChild(newRow);
-                    allUsersData.push(newUserData);
-                    
-                    if (document.getElementById('all-users').classList.contains('active')) {
-                        renderAllUsersTable(allUsersData);
-                    }
-                    
-                    let currentCount = parseInt(targetCountSpan.textContent, 10);
-                    targetCountSpan.textContent = currentCount + 1;
-                    allUserCountSpan.textContent = allUsersData.length;
-                    
-                    closeModal(sendCredModal);
-                    onboardForm.reset(); 
-                    newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    
-                    alert(`New ${type} account created and credentials sent successfully!`);
-
-                } else {
-                    // --- API FAILED (e.g., bad data) ---
-                    console.error('API Error:', data.message);
-                    alert(`Failed to send credentials. Error: ${data.message}`);
-                }
-            })
-            .catch(error => {
-                // --- NETWORK or API ERROR (e.g., Brevo failed) ---
-                console.error('Fetch Error:', error);
-                alert(`An error occurred: ${error.message}`);
-            })
-            .finally(() => {
-                // Re-enable button
-                sendButton.disabled = false;
-                sendButton.innerHTML = originalButtonText;
-            });
-        });
-
-        // Helper function for new User ID generation
-        function getNextUserId(tbody) {
-            const currentRows = tbody.querySelectorAll('tr').length;
-            const nextIndex = currentRows + 1;
-            const prefix = tbody.id.startsWith('staff') ? 'S' : (tbody.id.startsWith('officer') ? 'O' : 'A');
-            return prefix + nextIndex.toString().padStart(3, '0');
+            closeModal(el.onboardModal);
+            openModal(el.confirmModal);
         }
-    });
+    }
+
+    function handleConfirmButton(el) {
+        document.getElementById('send-name-display').textContent = submittedData.name;
+        document.getElementById('send-email-display').textContent = submittedData.email;
+        document.getElementById('account-type-text').textContent = `${capitalize(submittedData.type)} user`;
+        closeModal(el.confirmModal);
+        openModal(el.sendCredModal);
+    }
+
+    function handleSendCredentials(sendButton, el) {
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<span class="spinner"></span> Sending...';
+
+        fetch('/account_management/api/send-credentials/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+            body: JSON.stringify(submittedData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const newUserData = data.user;
+                addNewRowToTable(newUserData);
+                
+                allUsersData.push({
+                    user_id: newUserData.user_id,
+                    profile_id: newUserData.profile_id,
+                    name: newUserData.name,
+                    email: newUserData.email,
+                    contact: newUserData.contact,
+                    role: newUserData.position || '-',
+                    coop: newUserData.coop_name || '-',
+                    type: capitalize(newUserData.role)
+                });
+                
+                document.getElementById('all-user-count').textContent = allUsersData.length;
+                closeModal(el.sendCredModal);
+                el.onboardForm.reset();
+                alert(`New ${newUserData.role} account created and credentials sent!`);
+            } else {
+                alert(`Failed to send credentials. Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`An error occurred: ${error.message}`);
+        })
+        .finally(() => {
+            sendButton.disabled = false;
+            sendButton.innerHTML = "Send";
+        });
+    }
+
+    function handleEditClick(el) {
+        console.log('Edit button clicked');
+        if (!selectedRowData.userId) {
+            console.log('No user selected');
+            return;
+        }
+        openEditModal(selectedRowData.userId, selectedRowData.type.toLowerCase(), el);
+    }
+
+    function handleDeleteClick(el) {
+        console.log('Delete button clicked');
+        if (!selectedRowData.name) {
+            console.log('No user selected');
+            return;
+        }
+        document.getElementById('deactivate-confirm-text').textContent = 
+            `Are you sure you want to deactivate ${selectedRowData.name}'s account?`;
+        openModal(el.deactivateModal);
+    }
+
+    function handleDeactivateConfirm(el) {
+        const userId = selectedRowData.userId;
+        if (!userId) return;
+
+        fetch(`/account_management/api/deactivate-user/${userId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                removeRowFromTable(userId);
+                alert('Account deactivated successfully.');
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`An error occurred: ${error.message}`);
+        })
+        .finally(() => closeModal(el.deactivateModal));
+    }
+
+    function openEditModal(userId, type, el) {
+        isEditMode = true;
+        console.log('Opening edit modal for user:', userId, 'type:', type);
+        
+        fetch(`/account_management/api/get-user-details/${userId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const details = data.details;
+                console.log('User details:', details);
+                
+                const assignedCoops = details.assigned_coops || (details.coop_id ? [details.coop_id] : []);
+                setupFormForType(type, assignedCoops, el);
+
+                el.formFullName.value = details.fullname || '';
+                el.formGender.value = details.gender || '';
+                el.formPosition.value = details.position || '';
+                el.formEmail.value = details.email || '';
+                el.formContact.value = details.mobile_number || '';
+                el.formEditUserId.value = userId;
+
+                document.getElementById('onboard-modal-title').textContent = `Edit ${capitalize(type)} Account`;
+                el.formButtonsAdd.style.display = 'none';
+                el.formButtonsEdit.style.display = 'block';
+
+                openModal(el.onboardModal);
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`An error occurred: ${error.message}`);
+        });
+    }
+
+    function saveChanges(el) {
+        const userId = el.formEditUserId.value;
+        if (!userId) return;
+
+        console.log('Saving changes for user:', userId);
+
+        fetch(`/account_management/api/update-user/${userId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+            body: JSON.stringify(submittedData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateRowInTable(userId, submittedData);
+                alert('Account updated successfully.');
+                closeModal(el.onboardModal);
+            } else {
+                alert(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(`An error occurred: ${error.message}`);
+        });
+    }
+
+    function addNewRowToTable(userData) {
+        const type = userData.role;
+        const newRow = document.createElement('tr');
+        newRow.dataset.userId = userData.user_id;
+        newRow.dataset.profileId = userData.profile_id;
+        newRow.dataset.type = type;
+
+        let targetTableBody, targetCountSpan, html;
+        
+        if (type === 'staff') {
+            targetTableBody = document.getElementById('staff-table-body');
+            targetCountSpan = document.getElementById('staff-count');
+            html = `
+                <td>...</td>
+                <td>${userData.name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.contact}</td>
+                <td>${userData.coop_name}</td>
+            `;
+        } else if (type === 'admin') {
+            targetTableBody = document.getElementById('admin-table-body');
+            targetCountSpan = document.getElementById('admin-count');
+            html = `
+                <td>...</td>
+                <td>${userData.name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.contact}</td>
+                <td>${userData.position}</td>
+            `;
+        } else if (type === 'officer') {
+            targetTableBody = document.getElementById('officer-table-body');
+            targetCountSpan = document.getElementById('officer-count');
+            html = `
+                <td>...</td>
+                <td>${userData.name}</td>
+                <td>${userData.coop_name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.contact}</td>
+                <td>${userData.position}</td>
+            `;
+        }
+        
+        newRow.innerHTML = html;
+        
+        const emptyRow = targetTableBody.querySelector('td[colspan]');
+        if (emptyRow) emptyRow.parentElement.remove();
+
+        targetTableBody.appendChild(newRow);
+        renumberTable(targetTableBody);
+
+        let currentCount = parseInt(targetCountSpan.textContent, 10);
+        targetCountSpan.textContent = currentCount + 1;
+    }
+
+    function updateRowInTable(userId, data) {
+        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+        if (!row) return;
+
+        if (data.type === 'staff') {
+            row.cells[1].textContent = data.name;
+            row.cells[2].textContent = data.email;
+            row.cells[3].textContent = data.contact;
+            row.cells[4].textContent = Array.isArray(data.coop_text) ? data.coop_text.join(', ') : data.coop_text;
+        } else if (data.type === 'officer') {
+            row.cells[1].textContent = data.name;
+            row.cells[2].textContent = data.coop_text;
+            row.cells[3].textContent = data.email;
+            row.cells[4].textContent = data.contact;
+            row.cells[5].textContent = data.position;
+        } else if (data.type === 'admin') {
+            row.cells[1].textContent = data.name;
+            row.cells[2].textContent = data.email;
+            row.cells[3].textContent = data.contact;
+            row.cells[4].textContent = data.position;
+        }
+        
+        const allUserEntry = allUsersData.find(u => u.user_id == userId);
+        if (allUserEntry) {
+            allUserEntry.name = data.name;
+            allUserEntry.email = data.email;
+            allUserEntry.contact = data.contact;
+            allUserEntry.role = data.position || '-';
+            allUserEntry.coop = Array.isArray(data.coop_text) ? data.coop_text.join(', ') : (data.coop_text || '-');
+        }
+        
+        if (document.getElementById('all-users').classList.contains('active')) {
+            renderAllUsersTable(allUsersData);
+        }
+    }
+
+    function removeRowFromTable(userId) {
+        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+        if (row) {
+            const tbody = row.closest('tbody');
+            row.remove();
+            renumberTable(tbody);
+            
+            const type = selectedRowData.type;
+            let targetCountSpan;
+            if (type === 'Staff') targetCountSpan = document.getElementById('staff-count');
+            else if (type === 'Officer') targetCountSpan = document.getElementById('officer-count');
+            else if (type === 'Admin') targetCountSpan = document.getElementById('admin-count');
+            
+            if (targetCountSpan) {
+                let currentCount = parseInt(targetCountSpan.textContent, 10);
+                targetCountSpan.textContent = currentCount - 1;
+            }
+        }
+        
+        allUsersData = allUsersData.filter(u => u.user_id != userId);
+        document.getElementById('all-user-count').textContent = allUsersData.length;
+        
+        if (document.getElementById('all-users').classList.contains('active')) {
+            renderAllUsersTable(allUsersData);
+        }
+        
+        document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');
+        selectedRowData.element = null;
+    }
+
+    function renumberTable(tbody) {
+        if (!tbody) return;
+        tbody.querySelectorAll('tr').forEach((row, index) => {
+            if (row.cells.length > 1) {
+                row.cells[0].textContent = index + 1;
+            }
+        });
+    }
+
+    function openModal(modal) {
+        modal.classList.remove('hidden');
+        console.log('Modal opened:', modal.id);
+    }
+
+    function closeModal(modal) {
+        modal.classList.add('hidden');
+        console.log('Modal closed:', modal.id);
+    }
+
+    function capitalize(s) {
+        if (typeof s !== 'string') return '';
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        initialize();
+    }
+})();
 </script>
 {% endblock %}

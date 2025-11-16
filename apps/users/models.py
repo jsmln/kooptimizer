@@ -17,6 +17,8 @@ class User(models.Model):
         default='pending'
     )
     is_first_login = models.BooleanField(default=True)
+    is_online = models.BooleanField(default=False, db_column='is_online')
+    last_active = models.DateTimeField(blank=True, null=True, db_column='last_active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

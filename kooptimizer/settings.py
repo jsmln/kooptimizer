@@ -39,6 +39,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    '127.0.0.1:8000'
     '.ngrok-free.dev',
     'platinoid-sandra-endocentric.ngrok-free.dev'
 ]
