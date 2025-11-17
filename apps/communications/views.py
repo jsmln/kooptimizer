@@ -1,19 +1,3 @@
-<<<<<<< HEAD
-from django.shortcuts import render
-from django.http import HttpResponse
-
-# ... (You might have other imports) ...
-
-# ADD THIS FUNCTION
-def your_message_view(request):
-    # This is just a placeholder. You can build the real page here later.
-    return render(request, 'communications/message.html')
-
-# ADD THIS FUNCTION TOO
-def your_announcement_view(request):
-    # This is also a placeholder for the URL 'communications:announcement_form'
-    return render(request, 'communications/announcement_form.html')
-=======
 from io import BytesIO
 import json
 from django.shortcuts import render, get_object_or_404
@@ -581,4 +565,3 @@ def convert_attachment_to_pdf(request, message_id):
 
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
->>>>>>> 362cfd97af961fea06f50ba8610d51388bf3bdaa
