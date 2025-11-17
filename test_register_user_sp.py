@@ -31,7 +31,7 @@ def register_user(username: str, password: str, role: str):
 
         conn = psycopg2.connect(
             host="127.0.0.1",
-            database="kooptimizer_db2",
+            database="kooptimizer_db3",
             user="postgres",
             password="postgres"
         )
@@ -62,7 +62,7 @@ def register_user(username: str, password: str, role: str):
 if __name__ == "__main__":
     # REMINDER: You must change 'your_project_name.settings' at the top 
     # of this file for this script to run.
-    new_user = register_user("admin_user", "Admin@123", "admin")
+    new_user = register_user("admin_user", "pbkdf2_sha256$1000000$yJHpU2aSZEzp3cknr6gh5i$ID51SIGSmibymbCaXIPm79LFx2xAjB9UHEMi2iNsqOE=", "admin")
 
     if new_user:
         print("✅ User registered successfully:")

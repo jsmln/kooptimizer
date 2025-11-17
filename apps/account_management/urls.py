@@ -4,9 +4,10 @@ from . import views
 app_name = 'account_management'
 
 urlpatterns = [
-    # This is the path for your main page
     path('account_management/', views.account_management, name='account_management'),
     
-    # ADD THIS NEW LINE for the API
     path('api/send-credentials/', views.send_credentials_view, name='send_credentials'),
+    path('api/get-user-details/<int:user_id>/', views.get_user_details_view, name='get_user_details'),
+    path('api/update-user/<int:user_id>/', views.update_user_view, name='update_user'),
+    path('api/deactivate-user/<int:user_id>/', views.deactivate_user_view, name='deactivate_user'),
 ]
