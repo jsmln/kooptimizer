@@ -31,6 +31,7 @@ def login_view(request):
             return render(request, 'login.html')
 
         # Call the stored procedure via User model helper
+<<<<<<< HEAD
         # login_result = User.login_user(username, password)
 
         # TEMPORARY BYPASS FOR TESTING PURPOSES ONLY
@@ -44,6 +45,14 @@ def login_view(request):
         }
 
         print("Login result:", login_result)
+=======
+        try:
+            login_result = User.login_user(username, password)
+        except Exception as e:
+            # Stored procedure or DB call failed — require a real login.
+            messages.error(request, 'Login service unavailable. Please try again later.')
+            return render(request, 'login.html')
+>>>>>>> 362cfd97af961fea06f50ba8610d51388bf3bdaa
 
         if not login_result:
             messages.error(request, 'Invalid login attempt.')

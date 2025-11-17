@@ -4,18 +4,89 @@
 {% block dashboard_title %}Messages{% endblock %}
 
 {% block extra_head %}
-    {# This is the new CSS file for this page #}
-    {{ block.super }} <link rel="stylesheet" href="{% static 'frontend/message.css' %}">
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'frontend/message.css' %}">
+    <!-- PDF.js library for built-in PDF rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        .dashboard-main-content {
+            padding: 0;
+            overflow: hidden;
+        }
+        /* Responsive layout for messages */
+        .message-layout { display: flex; height: calc(100vh - 140px); gap: 12px; }
+        .conversation-list { width: 320px; min-width: 260px; max-width: 420px; overflow-y: auto; }
+        .chat-window { flex: 1; display: flex; flex-direction: column; }
+        .message-area { flex: 1; overflow-y: auto; padding: 18px; }
+        .message-input { display:flex; align-items:center; gap:8px; padding:12px 18px; border-top:1px solid #eee; }
+        .message-input input[type="text"] { flex:1; padding:10px 14px; border-radius:22px; border:1px solid #ddd; }
+        .attachment { margin-top:6px; }
+        .attachment img.thumb { max-width: 240px; max-height: 160px; border-radius:8px; display:block; cursor:pointer; }
+        .attachment .doc-preview { padding:6px 10px; background:#f4f4f4; border-radius:6px; display:inline-block; cursor:pointer; }
+
+        /* Modal preview - large and wide with fixed size */
+        .preview-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1200; }
+        .preview-content { background:#fff; width:90vw; height:90vh; box-shadow:0 10px 30px rgba(0,0,0,0.4); border-radius:8px; overflow:hidden; transform: translateY(6px); opacity:0; transition: all 220ms ease; display:flex; flex-direction:column; }
+        .preview-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#8B0000; border-bottom:1px solid #666; color:#fff; flex-shrink:0; }
+        .preview-title { flex:1; font-weight:500; }
+        .preview-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .preview-controls button { padding:6px 10px; border-radius:4px; border:0; background:#d32f2f; color:#fff; cursor:pointer; font-size:13px; transition: background 150ms; white-space:nowrap; }
+        .preview-controls button:hover { background:#a80000; }
+        .preview-controls a { text-decoration:none; padding:6px 12px; border-radius:4px; background:#d32f2f; color:#fff; font-size:13px; transition:background 150ms; cursor:pointer; white-space:nowrap; }
+        .preview-controls a:hover { background:#a80000; }
+        .preview-zoom-level { font-size:12px; min-width:45px; text-align:center; color:#fff; }
+        .preview-body { flex:1; width:100%; display:flex; align-items:center; justify-content:center; background:#1a1a1a; overflow:auto; position:relative; }
+        .preview-body img { max-width:100%; max-height:100%; object-fit:contain; cursor:grab; }
+        .preview-body img:active { cursor:grabbing; }
+        .preview-body canvas { display:block; margin:auto; }
+        .preview-body #pdf-container { width:100%; height:100%; overflow:auto; }
+
+        .preview-overlay.show .preview-content { transform: translateY(0); opacity:1; }
+
+        /* Loading spinner */
+        .loading-spinner-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1300; }
+        .loading-content { text-align:center; }
+        .spinner { border:4px solid rgba(255,255,255,0.3); border-top:4px solid #d32f2f; border-radius:50%; width:48px; height:48px; animation:spin 1s linear infinite; margin:0 auto 16px; }
+        @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+        .loading-content p { color:#fff; font-size:16px; margin:0; }
+
+        /* Small screens */
+        @media (max-width: 800px) {
+            .message-layout { flex-direction: column; height: auto; }
+            .conversation-list { width:100%; max-height:240px; }
+            .chat-window { width:100%; }
+            .attachment img.thumb { max-width: 160px; max-height: 120px; }
+        }
+        .loading-spinner {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .group-header {
+            padding: 10px 15px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #666;
+            background: #f5f5f5;
+            text-transform: uppercase;
+        }
+        .group-items {
+            display: flex;
+            flex-direction: column;
+        }
+        .contact-role {
+            font-size: 11px;
+            color: #999;
+        }
+    </style>
 {% endblock %}
 
 {% block dashboard_content %}
-
-<style>
-    .dashboard-main-content {
-        padding: 0;
-        overflow: hidden; /* Prevent parent from scrolling */
-    }
-</style>
 
 <div class="message-layout">
 
@@ -30,158 +101,123 @@
             <i class="bi bi-search"></i>
             <input type="text" placeholder="Search">
         </div>
-        <div class="contact-list">
-            <div class="contact-item">
-                <div class="avatar">J</div>
-                <div class="contact-details">
-                    <span class="contact-name">Jasmin Esperida</span>
-                    <span class="message-preview">Good afternoon! Let...</span>
-                </div>
-                <span class="timestamp">14m</span>
-            </div>
-            
-            <div class="contact-item">
-                <div class="avatar">H</div>
-                <div class="contact-details">
-                    <span class="contact-name">Hearty Delacion</span>
-                    <span class="message-preview">We're finalizing our m...</span>
-                </div>
-                <span class="timestamp">35m</span>
-            </div>
-
-            <div class="contact-item">
-                <div class="avatar">N</div>
-                <div class="contact-details">
-                    <span class="contact-name">Noe Gonzales</span>
-                    <span class="message-preview">We're updating the d...</span>
-                </div>
-                <span class="timestamp">50m</span>
-            </div>
-
-            <div class="contact-item">
-                <div class="avatar">L</div>
-                <div class="contact-details">
-                    <span class="contact-name">Lhoy Floro</span>
-                    <span class="message-preview">Please review the at...</span>
-                </div>
-                <span class="timestamp">1hr</span>
-            </div>
-
-            <div class="contact-item">
-                <div class="avatar">U</div>
-                <div class="contact-details">
-                    <span class="contact-name">Uno Santillan</span>
-                    <span class="message-preview">We received your co...</span>
-                </div>
-                <span class="timestamp">9hr</span>
-            </div>
-
+        <div class="contact-list" id="contact-list">
+            <div class="loading-spinner">Loading contacts...</div>
         </div>
     </div>
 
     <div class="chat-window">
         
         <div class="chat-header">
-            <div class="avatar">J</div>
-            <h3>Jasmin Esperida</h3>
-            </div>
+            <div class="avatar" id="chat-avatar">-</div>
+            <h3 id="chat-name">Select a contact</h3>
+        </div>
 
-        <div class="message-area">
-            
-            <div class="message incoming">
-                <p>Good afternoon! Let's discuss the upcoming audit. Are you free at 3 PM?</p>
-                <span class="time">14m ago</span>
+        <div class="message-area" id="message-area">
+            <div class="empty-state">
+                <p>No messages yet. Select a contact to start messaging.</p>
             </div>
-            <div class="message outgoing">
-                <p>Hi Jasmin, 3 PM works for me. Should I prepare the financial reports?</p>
-                <span class="time">12m ago</span>
-            </div>
-            <div class="message incoming">
-                <p>Yes, please. And the member activity logs from last quarter. Thanks!</p>
-                <span class="time">10m ago</span>
-            </div>
-             <div class="message outgoing">
-                <p>Got it. I'll have them ready.</p>
-                <span class="time">9m ago</span>
-            </div>
-            
         </div>
 
         <div class="message-input">
-            <input type="file" id="file-input" style="display: none;" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">
+            <!-- keep input in DOM but move offscreen to avoid display:none browser quirks -->
+            <input type="file" id="file-input" style="position: absolute; left: -9999px;" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">
             
             <button class="attach-btn" id="attach-btn" title="Attach file">
                 <i class="bi bi-paperclip"></i>
             </button>
+            <span id="attached-filename" style="margin-left:8px; font-size:12px; color:#666;"></span>
             
-            <input type="text" id="text-input" placeholder="Type a message...">
+            <input type="text" id="text-input" placeholder="Type a message..." disabled>
             
-            <button class="send-btn" id="send-btn" title="Send">
+            <button class="send-btn" id="send-btn" title="Send" disabled>
                 <i class="bi bi-send-fill"></i>
             </button>
         </div>
 
     </div>
-    <div id="new-message-modal" class="modal-overlay">
-    <div class="modal-content">
-        <button class="modal-close-btn">&times;</button>
-        
-        <div class="modal-header">
-            <h3>New Message</h3>
-            <p class="modal-instruction">Select a contact to start a conversation.</p>
-        </div>
-        
-        <div class="modal-body">
-            <div class="modal-contact-list">
-                
-                <div class="modal-contact-item" data-contact-name="Jasmin Esperida">
-                    <div class="avatar">J</div>
-                    <span class="contact-name">Jasmin Esperida</span>
-                </div>
-                
-                <div class="modal-contact-item" data-contact-name="Hearty Delacion">
-                    <div class="avatar">H</div>
-                    <span class="contact-name">Hearty Delacion</span>
-                </div>
-                
-                <div class="modal-contact-item" data-contact-name="Noe Gonzales">
-                    <div class="avatar">N</div>
-                    <span class="contact-name">Noe Gonzales</span>
-                </div>
-                
-                <div class="modal-contact-item" data-contact-name="Lhoy Floro">
-                    <div class="avatar">L</div>
-                    <span class="contact-name">Lhoy Floro</span>
-                </div>
-                
-                <div class="modal-contact-item" data-contact-name="Uno Santillan">
-                    <div class="avatar">U</div>
-                    <span class="contact-name">Uno Santillan</span>
-                </div>
 
+    <!-- New Message Modal -->
+    <div id="new-message-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn">&times;</button>
+            
+            <div class="modal-header">
+                <h3>New Message</h3>
+                <p class="modal-instruction">Select a contact to start a conversation.</p>
             </div>
+            
+            <div class="modal-body">
+                <div class="modal-contact-list" id="modal-contact-list">
+                    <div class="loading-spinner">Loading contacts...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Loading spinner overlay -->
+<div id="loading-overlay" class="loading-spinner-overlay" style="display:none;">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p id="loading-text">Converting document to PDF...</p>
+    </div>
+</div>
+
+<!-- Preview modal (hidden until used) -->
+<div id="preview-modal" class="preview-overlay" style="display:none;">
+    <div class="preview-content" role="dialog" aria-modal="true">
+        <div class="preview-header">
+            <div class="preview-title" id="preview-title">Preview</div>
+            <div class="preview-controls">
+                <button id="zoomOut" onclick="zoomOut()">−</button>
+                <span class="preview-zoom-level" id="zoomLevel">100%</span>
+                <button id="zoomIn" onclick="zoomIn()">+</button>
+                <div id="page-controls" style="display:none; gap:8px; align-items:center;">
+                    <button id="prevPage" onclick="previousPage()" style="background:#666;">‹ Prev</button>
+                    <span class="preview-zoom-level" id="pageCounter" style="min-width:60px;">Page 1</span>
+                    <button id="nextPage" onclick="nextPage()" style="background:#666;">Next ›</button>
+                </div>
+                <a id="preview-download-original" class="btn" href="#" style="text-decoration:none; background:#d32f2f;">Download</a>
+                <a id="preview-download-pdf" class="btn" href="#" style="text-decoration:none; background:#d32f2f; display:none;">As PDF</a>
+                <button id="preview-close" onclick="closePreview()" style="background:#666;">✕</button>
+            </div>
+        </div>
+        <div class="preview-body" id="preview-body">
+            <!-- content injected dynamically: <img> or <canvas> for PDF -->
         </div>
     </div>
 </div>
 
 <script>
-    // 1. Get references to all the elements
-    const allContacts = document.querySelectorAll('.contact-item');
-    const chatHeaderAvatar = document.querySelector('.chat-header .avatar');
-    const chatHeaderName = document.querySelector('.chat-header h3');
-    const messageArea = document.querySelector('.message-area');
-    const sendBtn = document.getElementById('send-btn');
-    const textInput = document.getElementById('text-input');
+    // ========================================
+    // Configuration
+    // ========================================
+    const userRole = "{{ user_role }}";
+    let currentConversationReceiverId = null;
+    let allContacts = [];
+
+    // ========================================
+    // DOM References
+    // ========================================
     const contactList = document.querySelector('.contact-list');
-    const searchInput = document.querySelector('.search-bar input');
+    const messageArea = document.getElementById('message-area');
+    const chatHeaderAvatar = document.getElementById('chat-avatar');
+    const chatHeaderName = document.getElementById('chat-name');
+    const textInput = document.getElementById('text-input');
+    const sendBtn = document.getElementById('send-btn');
     const attachBtn = document.getElementById('attach-btn');
     const fileInput = document.getElementById('file-input');
+    const searchInput = document.querySelector('.search-bar input');
     const newMsgBtn = document.querySelector('.new-message-btn');
     const newMsgModal = document.getElementById('new-message-modal');
     const modalCloseBtn = newMsgModal.querySelector('.modal-close-btn');
-    const modalContactItems = newMsgModal.querySelectorAll('.modal-contact-item');
+    const modalContactList = document.getElementById('modal-contact-list');
 
-    // 2. Helper function to calculate 'time ago'
+    // ========================================
+    // Utility Functions
+    // ========================================
     function timeAgo(isoString) {
         if (!isoString) return "";
         const date = new Date(isoString);
@@ -202,184 +238,388 @@
         return Math.floor(seconds) + "s ago";
     }
 
-    // 3. Hardcoded "database" with REAL timestamps
-    const now = Date.now();
-    const defaultConversations = {
-        "Jasmin Esperida": { initial: "J", messages: [ { type: "incoming", text: "Good afternoon!", time: new Date(now - 14 * 60000).toISOString() } ] },
-        "Hearty Delacion": { initial: "H", messages: [ { type: "incoming", text: "We're finalizing our meeting notes.", time: new Date(now - 35 * 60000).toISOString() } ] },
-        "Noe Gonzales": { initial: "N", messages: [ { type: "incoming", text: "We're updating the database schema.", time: new Date(now - 50 * 60000).toISOString() } ] },
-        "Lhoy Floro": { initial: "L", messages: [ { type: "incoming", text: "Please review the attached documents.", time: new Date(now - 60 * 60000).toISOString() } ] },
-        "Uno Santillan": { initial: "U", messages: [ { type: "incoming", text: "We received your cooperative's latest report.", time: new Date(now - 9 * 3600000).toISOString() } ] }
-    };
-
-    // 4. Load conversations from localStorage or use defaults
-    let conversations;
-    const storedConversations = localStorage.getItem('kooptimizerChats');
-    if (storedConversations) {
-        conversations = JSON.parse(storedConversations);
-    } else {
-        conversations = defaultConversations;
-        localStorage.setItem('kooptimizerChats', JSON.stringify(conversations));
+    function getInitials(name) {
+        return name ? name.charAt(0).toUpperCase() : "?";
     }
 
-    // --- 5. NEW: Function to append any message (text, image, or file) ---
-        function appendMessage(msg) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', msg.type);
-            
-            let contentHTML = '';
-            
-            // Check the message text
-            if (msg.text.startsWith('data:image/')) {
-                // It's an image
-                contentHTML = `<img src="${msg.text}" alt="Uploaded Image" class="message-image">`;
-            } else if (msg.text.startsWith('data:')) {
-                // It's another file (PDF, etc.)
-                contentHTML = `
-                    <a href="${msg.text}" download="file" class="message-file">
-                        <i class="bi bi-file-earmark-text-fill"></i>
-                        <span>File Attached (Click to download)</span>
-                    </a>
-                `;
-            } else {
-                // It's plain text
-                contentHTML = `<p>${msg.text}</p>`;
+    // ========================================
+    // Load Contacts (Updated)
+    // ========================================
+    async function loadContacts() {
+        try {
+            const response = await fetch('/communications/api/message/contacts/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                alert('Session expired. You will be redirected to the login page.');
+                window.location.href = '/';
+                return;
             }
 
-            messageElement.innerHTML = `
-                ${contentHTML}
-                <span class="time" data-timestamp="${msg.time}">${timeAgo(msg.time)}</span>
-            `;
-            messageArea.appendChild(messageElement);
-            messageArea.scrollTop = messageArea.scrollHeight;
-        }
+            const data = await response.json();
 
-    // 6. Function to load a full conversation history
-    function loadConversation(contactName, contactInitial) {
-        chatHeaderAvatar.textContent = contactInitial;
-        chatHeaderName.textContent = contactName;
-        messageArea.innerHTML = '';
-        const conversation = conversations[contactName];
-        if (!conversation || !conversation.messages) {
-            messageArea.innerHTML = '<p class="no-messages" style="text-align:center; color: #888;">No messages for this user.</p>';
+            if (data.status !== 'success') {
+                throw new Error(data.message || 'Failed to load contacts');
+            }
+
+            // The backend now returns a pre-sorted flat list with last_message data
+            allContacts = data.contacts;
+            
+            renderContacts();
+            renderModalContacts();
+        } catch (error) {
+            console.error('Error loading contacts:', error);
+            contactList.innerHTML = '<div class="empty-state">Failed to load contacts</div>';
+        }
+    }
+
+    // ========================================
+    // Render Contacts in Main List (Updated: Flat List)
+    // ========================================
+    function renderContacts() {
+        contactList.innerHTML = '';
+
+        if (allContacts.length === 0) {
+            contactList.innerHTML = '<div class="empty-state">No contacts available</div>';
             return;
         }
-        conversation.messages.forEach(msg => {
-            appendMessage(msg);
+
+        // Iterate directly over the flat list (no groups)
+        allContacts.forEach(contact => {
+            const contactElement = createContactElement(contact);
+            contactList.appendChild(contactElement);
         });
     }
 
-    // --- 7. NEW: Function to save a new message (of any type) ---
-        function saveAndAppendMessage(messageText) {
-            const activeContactName = chatHeaderName.textContent;
-            const newISOTime = new Date().toISOString(); 
-            const newMessage = { type: "outgoing", text: messageText, time: newISOTime };
-
-            if (!conversations[activeContactName]) {
-                const initial = activeContactName[0] || "?";
-                conversations[activeContactName] = { initial: initial, messages: [] };
-            }
-            conversations[activeContactName].messages.push(newMessage);
-            
-            // --- DANGER: This will fail if the file string is > 5-10MB ---
-            try {
-                localStorage.setItem('kooptimizerChats', JSON.stringify(conversations));
-            } catch (e) {
-                console.error("LocalStorage is full! Could not save message.", e);
-                alert("Error: Your chat storage is full. Cannot send large file.");
-                return; // Stop
-            }
-            // --- End of DANGER zone ---
-
-            appendMessage(newMessage);
-
-            // Update contact list preview
-            const activeContactItem = document.querySelector('.contact-item.active');
-            if (activeContactItem) {
-                const preview = activeContactItem.querySelector('.message-preview');
-                const timestamp = activeContactItem.querySelector('.timestamp');
-                
-                // --- NEW: Update preview for files ---
-                let previewText = messageText;
-                if (messageText.startsWith('data:image/')) {
-                    previewText = "[Image]";
-                } else if (messageText.startsWith('data:')) {
-                    previewText = "[File]";
-                }
-                
-                preview.textContent = "You: " + previewText;
-                timestamp.textContent = "Just now"; 
-                timestamp.setAttribute('data-timestamp', newISOTime); 
-                activeContactItem.dataset.lastMessageTime = newISOTime;
-                contactList.prepend(activeContactItem);
-            }
-        }
-
-        // --- 8. Function to send TEXT message ---
-        function sendTextMessage() {
-            const text = textInput.value;
-            if (text.trim() === "") return;
-            saveAndAppendMessage(text);
-            textInput.value = "";
-        }
+    function createContactElement(contact) {
+        const contactDiv = document.createElement('div');
+        contactDiv.className = 'contact-item';
+        contactDiv.dataset.userId = contact.user_id;
         
-        // --- 9. NEW: Function to handle FILE sending ---
-        function handleFileSend(file) {
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const base64String = e.target.result;
-                saveAndAppendMessage(base64String);
-            };
-            
-            reader.onerror = function(e) {
-                console.error("File reading error", e);
-                alert("Error: Could not read file.");
-            };
+        // Use data directly from the backend object
+        const messagePreview = contact.last_message ? contact.last_message : 'No messages yet';
+        const timestamp = contact.last_time ? timeAgo(contact.last_time) : '';
 
-            // Read the file as a Base64 string
-            reader.readAsDataURL(file);
+        // Added Cooperative Name below the contact name
+        contactDiv.innerHTML = `
+            <div class="avatar">${getInitials(contact.name)}</div>
+            <div class="contact-details">
+                <span class="contact-name">${contact.name}</span>
+                <span class="contact-role" style="font-size: 11px; color: #888; margin-bottom: 2px;">${contact.coop}</span>
+                <span class="message-preview">${escapeHtml(messagePreview)}</span>
+            </div>
+            <span class="timestamp" data-timestamp="${contact.last_time}">${timestamp}</span>
+        `;
+
+        contactDiv.addEventListener('click', () => {
+            selectContact(contact);
+        });
+
+        return contactDiv;
+    }
+
+    // ========================================
+    // Render Modal Contacts (Updated: Flat List)
+    // ========================================
+    function renderModalContacts() {
+        modalContactList.innerHTML = '';
+
+        if (allContacts.length === 0) {
+            modalContactList.innerHTML = `
+                <div class="empty-state d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                    <p class="mt-3 mb-0 fw-medium">No contacts available</p>
+                </div>`;
+            return;
         }
 
-        // 10. Click Listeners
-    allContacts.forEach(contact => {
-        contact.addEventListener('click', () => {
-            allContacts.forEach(c => c.classList.remove('active'));
-            contact.classList.add('active');
-            const contactName = contact.querySelector('.contact-name').textContent;
-            const contactInitial = contact.querySelector('.avatar').textContent;
-            loadConversation(contactName, contactInitial);
+        allContacts.forEach(contact => {
+            const modalContactDiv = document.createElement('div');
+            modalContactDiv.className = 'modal-contact-item';
+            modalContactDiv.innerHTML = `
+                <div class="avatar">${getInitials(contact.name)}</div>
+                <div style="flex: 1;">
+                    <span class="contact-name">${contact.name}</span>
+                    <div style="font-size: 11px; color: #999;">${contact.coop}</div>
+                </div>
+            `;
+                    
+            modalContactDiv.addEventListener('click', () => {
+                selectContact(contact);
+                closeNewMsgModal();
+            });
+
+            modalContactList.appendChild(modalContactDiv);
         });
+    }
+
+    // ========================================
+    // Select Contact and Load Conversation (Updated)
+    // ========================================
+    async function selectContact(contact) {
+        currentConversationReceiverId = contact.user_id;
+        
+        // Update UI
+        document.querySelectorAll('.contact-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`[data-user-id="${contact.user_id}"]`)?.classList.add('active');
+
+        chatHeaderAvatar.textContent = getInitials(contact.name);
+        // Show name and coop in header
+        chatHeaderName.innerHTML = `${contact.name} <br><span style="font-size:12px;font-weight:normal;color:#ccc">${contact.coop}</span>`;
+
+        // Enable input
+        textInput.disabled = false;
+        sendBtn.disabled = false;
+
+        // Load conversation
+        await loadConversation(contact.user_id);
+    }
+
+    // ========================================
+    // Load Conversation Messages
+    // ========================================
+    async function loadConversation(receiverId) {
+        try {
+            const response = await fetch(`/communications/api/message/conversation/${receiverId}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                alert('Session expired. Redirecting to login.');
+                window.location.href = '/';
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.status !== 'success') {
+                throw new Error(data.message || 'Failed to load conversation');
+            }
+
+            messageArea.innerHTML = '';
+            
+            if (data.messages.length === 0) {
+                messageArea.innerHTML = '<div class="empty-state"><p>No messages yet. Start the conversation!</p></div>';
+                return;
+            }
+
+            data.messages.forEach(msg => {
+                appendMessageElement(msg);
+            });
+
+            messageArea.scrollTop = messageArea.scrollHeight;
+        } catch (error) {
+            console.error('Error loading conversation:', error);
+            messageArea.innerHTML = `<div class="empty-state">Error loading messages</div>`;
+        }
+    }
+
+    function appendMessageElement(msg) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', msg.type);
+        const contentHTML = `<p>${escapeHtml(msg.text || '')}</p>`;
+        let attachmentHTML = '';
+        if (msg.has_attachment) {
+            const fname = msg.attachment_filename || 'attachment';
+            const size = msg.attachment_size ? ' (' + Math.round(msg.attachment_size / 1024) + ' KB)' : '';
+            const href = `/communications/api/message/attachment/${msg.message_id}/`;
+
+            // If content type indicates image, show thumbnail and open modal on click
+            if (msg.attachment_content_type && msg.attachment_content_type.startsWith('image')) {
+                attachmentHTML = `
+                    <div class="attachment">
+                        <img class="thumb" src="${href}" alt="${escapeHtml(fname)}" data-message-id="${msg.message_id}" />
+                        <div style="font-size:12px;color:#666;margin-top:6px">${escapeHtml(fname)}${size}</div>
+                    </div>`;
+            } else {
+                // Document/other: show doc preview box that opens iframe modal
+                attachmentHTML = `
+                    <div class="attachment">
+                        <div class="doc-preview" data-href="${href}" data-fname="${escapeHtml(fname)}" data-content-type="${msg.attachment_content_type || ''}">📎 ${escapeHtml(fname)}${size} (preview)</div>
+                    </div>`;
+            }
+        }
+
+        messageElement.innerHTML = `
+            ${contentHTML}
+            ${attachmentHTML}
+            <span class="time" data-timestamp="${msg.time}">${timeAgo(msg.time)}</span>
+        `;
+
+        messageArea.appendChild(messageElement);
+
+        // Attach click handlers for dynamic preview elements
+        if (msg.has_attachment) {
+            // image thumbnails
+            const imgEl = messageElement.querySelector('img.thumb');
+            if (imgEl) {
+                imgEl.addEventListener('click', () => {
+                    openPreviewImage(imgEl.src, msg.attachment_filename || 'image');
+                });
+            }
+
+            // document preview boxes
+            const docEl = messageElement.querySelector('.doc-preview');
+            if (docEl) {
+                docEl.addEventListener('click', () => {
+                    const src = docEl.getAttribute('data-href');
+                    const fname = docEl.getAttribute('data-fname') || 'file';
+                    const contentType = docEl.getAttribute('data-content-type') || '';
+                    openPreviewDocument(src, fname, contentType);
+                });
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // ========================================
+    // Send Message (Updated: Refresh Contacts)
+    // ========================================
+    async function sendMessage() {
+        const messageText = textInput.value.trim();
+
+        // Allow sending when either message text or an attachment exists
+        const hasFile = fileInput.files && fileInput.files.length > 0;
+        if ((!messageText && !hasFile) || !currentConversationReceiverId) {
+            return;
+        }
+
+        try {
+            // Use FormData so we can support file uploads
+            const form = new FormData();
+            form.append('receiver_id', currentConversationReceiverId);
+            form.append('message', messageText);
+            if (fileInput.files && fileInput.files[0]) {
+                form.append('attachment', fileInput.files[0]);
+            }
+
+            const response = await fetch('/communications/api/message/send/', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: form
+            });
+
+            if (response.status === 401) {
+                alert('Session expired. Redirecting to login.');
+                window.location.href = '/';
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.status !== 'success') {
+                alert('Error sending message: ' + data.message);
+                return;
+            }
+
+            // Clear input and attached file
+            textInput.value = '';
+            fileInput.value = '';
+            attachedFilenameEl.textContent = '';
+            if(clientPreviewEl) {
+                clientPreviewEl.remove();
+                clientPreviewEl = null;
+            }
+
+            // 1. Reload conversation to show new message
+            await loadConversation(currentConversationReceiverId);
+            // 2. Reload contacts to update the sidebar (move to top, update timestamp/preview)
+            await loadContacts();
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Failed to send message');
+        }
+    }
+
+    // ========================================
+    // Event Listeners
+    // ========================================
+    sendBtn.addEventListener('click', sendMessage);
+    textInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
     });
-    
-    sendBtn.addEventListener('click', sendTextMessage);
-    textInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') sendTextMessage();
-    });
-    attachBtn.addEventListener('click', () => {
+
+    // Attach button - opens file picker
+    attachBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         fileInput.click();
     });
+
+    // Show selected filename, client-side preview and enable send when a file is chosen
+    const attachedFilenameEl = document.getElementById('attached-filename');
+    let clientPreviewUrl = null;
+    let clientPreviewEl = null;
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-            handleFileSend(e.target.files[0]);
+        const f = fileInput.files && fileInput.files[0];
+        // clean previous preview
+        if (clientPreviewUrl) {
+            URL.revokeObjectURL(clientPreviewUrl);
+            clientPreviewUrl = null;
         }
-        e.target.value = null; 
+        if (clientPreviewEl) {
+            clientPreviewEl.remove();
+            clientPreviewEl = null;
+        }
+
+        if (f) {
+            attachedFilenameEl.textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+            // If image, show client-side preview
+            if (f.type && f.type.startsWith('image')) {
+                clientPreviewUrl = URL.createObjectURL(f);
+                clientPreviewEl = document.createElement('img');
+                clientPreviewEl.src = clientPreviewUrl;
+                clientPreviewEl.className = 'thumb';
+                clientPreviewEl.style.marginLeft = '8px';
+                clientPreviewEl.style.maxHeight = '56px';
+                clientPreviewEl.style.borderRadius = '6px';
+                attachedFilenameEl.parentNode.insertBefore(clientPreviewEl, attachedFilenameEl.nextSibling);
+                // click to open full preview (before upload, uses client preview)
+                clientPreviewEl.addEventListener('click', () => openPreviewImage(clientPreviewUrl, f.name));
+            }
+
+            // Enable send button if a conversation is selected
+            if (currentConversationReceiverId) sendBtn.disabled = false;
+        } else {
+            attachedFilenameEl.textContent = '';
+        }
     });
+
     searchInput.addEventListener('keyup', () => {
         const searchTerm = searchInput.value.toLowerCase();
-        allContacts.forEach(contact => {
-            const contactName = contact.querySelector('.contact-name').textContent.toLowerCase();
-            if (contactName.includes(searchTerm)) {
-                contact.style.display = 'flex';
-            } else {
-                contact.style.display = 'none';
-            }
+        document.querySelectorAll('.contact-item').forEach(item => {
+            const contactName = item.querySelector('.contact-name').textContent.toLowerCase();
+            item.style.display = contactName.includes(searchTerm) ? 'flex' : 'none';
         });
     });
 
-    // --- NEW: Event Listeners for the New Message Modal ---
+    // Modal controls
     newMsgBtn.addEventListener('click', (e) => {
-        e.preventDefault(); // Stop the <a> tag from jumping
+        e.preventDefault();
         newMsgModal.classList.add('visible');
     });
 
@@ -389,97 +629,318 @@
 
     modalCloseBtn.addEventListener('click', closeNewMsgModal);
     newMsgModal.addEventListener('click', (e) => {
-        if (e.target === newMsgModal) { // If the gray overlay is clicked
+        if (e.target === newMsgModal) {
             closeNewMsgModal();
         }
     });
 
-    // Logic for clicking a contact in the modal
-    modalContactItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const targetName = item.dataset.contactName;
+    // ========================================
+    // Initialize
+    // ========================================
+    document.addEventListener('DOMContentLoaded', () => {
+        loadContacts();
+    });
 
-            // Find the matching contact in the main list
-            let foundContact = null;
-            allContacts.forEach(contact => {
-                if (contact.querySelector('.contact-name').textContent === targetName) {
-                    foundContact = contact;
+    // ========================================
+    // PREVIEW & PDF LOGIC (UNCHANGED)
+    // ========================================
+    const previewModal = document.getElementById('preview-modal');
+    const previewBody = document.getElementById('preview-body');
+    const previewClose = document.getElementById('preview-close');
+    const previewDownload = document.getElementById('preview-download');
+
+    let currentZoom = 100;
+    let pdfDoc = null;
+    let currentPage = 1;
+    let isPdfOpen = false;
+    let totalPages = 0;
+    let previewMessageId = null;
+    let isConvertibleDocument = false;
+
+    const CONVERTIBLE_TYPES = [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  // .docx
+        'application/msword',  // .doc
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',  // .xlsx
+        'application/vnd.ms-excel',  // .xls
+    ];
+
+    function zoomIn() {
+        currentZoom = Math.min(currentZoom + 10, 300);
+        applyZoom();
+    }
+
+    function zoomOut() {
+        currentZoom = Math.max(currentZoom - 10, 50);
+        applyZoom();
+    }
+
+    function applyZoom() {
+        document.getElementById('zoomLevel').textContent = currentZoom + '%';
+        const img = previewBody.querySelector('img');
+        if (img) {
+            img.style.transform = `scale(${currentZoom / 100})`;
+        }
+        // For PDF, re-render at new scale
+        if (isPdfOpen && pdfDoc) {
+            renderPdfPage(currentPage);
+        }
+    }
+
+    async function renderPdfPage(pageNum) {
+        try {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: currentZoom / 100 });
+            const canvas = previewBody.querySelector('canvas') || document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            if (!previewBody.contains(canvas)) {
+                previewBody.innerHTML = '';
+                previewBody.appendChild(canvas);
+            }
+            // Update page counter
+            document.getElementById('pageCounter').textContent = `Page ${pageNum} / ${totalPages}`;
+        } catch (e) {
+            console.error('PDF render error:', e);
+        }
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderPdfPage(currentPage);
+        }
+    }
+
+    function nextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderPdfPage(currentPage);
+        }
+    }
+
+    // Handle keyboard navigation (Arrow keys) and scroll wheel
+    function setupPdfNavigation() {
+        // Remove old listeners if they exist
+        document.removeEventListener('keydown', handlePdfKeyboard);
+        previewBody.removeEventListener('wheel', handlePdfScroll);
+        
+        document.addEventListener('keydown', handlePdfKeyboard);
+        previewBody.addEventListener('wheel', handlePdfScroll, { passive: false });
+    }
+
+    function handlePdfKeyboard(e) {
+        if (!isPdfOpen || !pdfDoc || previewModal.style.display === 'none') return;
+        
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            nextPage();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            previousPage();
+        }
+    }
+
+    function handlePdfScroll(e) {
+        if (!isPdfOpen || !pdfDoc || previewModal.style.display === 'none') return;
+        
+        // Only intercept scroll if content doesn't need scrolling
+        const hasVerticalScroll = previewBody.scrollHeight > previewBody.clientHeight;
+        const hasHorizontalScroll = previewBody.scrollWidth > previewBody.clientWidth;
+        
+        if (!hasVerticalScroll && !hasHorizontalScroll) {
+            e.preventDefault();
+            if (e.deltaY > 0) {
+                nextPage();
+            } else if (e.deltaY < 0) {
+                previousPage();
+            }
+        }
+    }
+
+    function openPreviewImage(src, title) {
+        currentZoom = 100;
+        isPdfOpen = false;
+        isConvertibleDocument = false;
+        previewBody.innerHTML = `<img src="${src}" alt="${escapeHtml(title)}" style="max-width:100%; max-height:100%; object-fit:contain;" />`;
+        document.getElementById('preview-title').textContent = title;
+        document.getElementById('zoomLevel').textContent = '100%';
+        document.getElementById('page-controls').style.display = 'none';
+        document.getElementById('preview-download-pdf').style.display = 'none';
+        previewModal.classList.add('show');
+        previewModal.style.display = 'flex';
+        
+        try {
+            const url = new URL(src, window.location.origin);
+            url.searchParams.set('download', '1');
+            document.getElementById('preview-download-original').href = url.toString();
+        } catch (e) {
+            document.getElementById('preview-download-original').href = src + '?download=1';
+        }
+    }
+
+    function openPreviewDocument(src, title, contentType) {
+        currentZoom = 100;
+        isPdfOpen = true;
+        isConvertibleDocument = CONVERTIBLE_TYPES.includes(contentType);
+        document.getElementById('preview-title').textContent = title;
+        document.getElementById('zoomLevel').textContent = '100%';
+        
+        // Extract message_id from src URL
+        let messageId = null;
+        try {
+            const url = new URL(src, window.location.origin);
+            const pathParts = url.pathname.split('/');
+            messageId = pathParts[pathParts.length - 2];
+            url.searchParams.set('download', '1');
+            document.getElementById('preview-download-original').href = url.toString();
+        } catch (e) {
+            document.getElementById('preview-download-original').href = src + '?download=1';
+        }
+
+        previewMessageId = messageId;
+
+        // If already PDF or is an image, load directly
+        if (contentType === 'application/pdf' || contentType.startsWith('image')) {
+            loadPdfPreview(src, title, contentType);
+            document.getElementById('preview-download-pdf').style.display = 'none';
+        } 
+        // If convertible document, show loading and convert
+        else if (isConvertibleDocument && messageId) {
+            showLoadingOverlay('Converting document to PDF...');
+            convertAndPreview(messageId, src, title);
+        } 
+        // Otherwise try to load directly as PDF (might be already PDF)
+        else {
+            loadPdfPreview(src, title, contentType);
+            document.getElementById('preview-download-pdf').style.display = 'none';
+        }
+    }
+
+    async function convertAndPreview(messageId, originalSrc, title) {
+        try {
+            const response = await fetch(`/communications/api/message/attachment/${messageId}/convert-pdf/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
 
-            if (foundContact) {
-                // Simulate a click on the main list contact
-                foundContact.click();
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Conversion failed');
             }
 
-            closeNewMsgModal();
-        });
-    });
-    
-        // --- 11. Function to update all previews and sort ---
-        function updateAllPreviewsAndSort() {
-            const contactsArray = Array.from(allContacts); 
-            contactsArray.forEach(contact => {
-                const contactName = contact.querySelector('.contact-name').textContent;
-                const conversation = conversations[contactName];
-                if (conversation && conversation.messages.length > 0) {
-                    const lastMessage = conversation.messages[conversation.messages.length - 1];
-                    const preview = contact.querySelector('.message-preview');
-                    const timestamp = contact.querySelector('.timestamp');
-                    
-                    // --- NEW: Check for file types in preview ---
-                    let previewText = lastMessage.text;
-                    if (lastMessage.type === 'outgoing') {
-                        previewText = "You: ";
-                    } else {
-                        previewText = "";
-                    }
-                    
-                    if (lastMessage.text.startsWith('data:image/')) {
-                        previewText += "[Image]";
-                    } else if (lastMessage.text.startsWith('data:')) {
-                        previewText += "[File]";
-                    } else {
-                        previewText += lastMessage.text; // Plain text
-                    }
-                    
-                    preview.textContent = previewText;
-                    timestamp.textContent = timeAgo(lastMessage.time);
-                    timestamp.setAttribute('data-timestamp', lastMessage.time);
-                    contact.dataset.lastMessageTime = lastMessage.time; 
-                } else {
-                    contact.dataset.lastMessageTime = '1970-01-01T00:00:00.000Z';
-                }
-            });
+            // Convert response to blob and create object URL
+            const blob = await response.blob();
+            const pdfUrl = URL.createObjectURL(blob);
 
-            const sortedContacts = contactsArray.sort((a, b) => {
-                return new Date(b.dataset.lastMessageTime) - new Date(a.dataset.lastMessageTime);
-            });
+            // Hide loading and show PDF
+            hideLoadingOverlay();
+            previewModal.classList.add('show');
+            previewModal.style.display = 'flex';
 
-            sortedContacts.forEach(contact => {
-                contactList.appendChild(contact);
-            });
+            // Show download options
+            document.getElementById('preview-download-pdf').href = pdfUrl;
+            document.getElementById('preview-download-pdf').download = title.rsplit('.', 1)[0] + '.pdf';
+            document.getElementById('preview-download-pdf').style.display = 'inline-block';
+
+            // Load and render the converted PDF
+            loadPdfFromBlob(pdfUrl, title);
+        } catch (error) {
+            hideLoadingOverlay();
+            previewModal.classList.add('show');
+            previewModal.style.display = 'flex';
+            previewBody.innerHTML = `<p style="color:#d32f2f;">Error converting document: ${error.message}</p>`;
+            console.error('Conversion error:', error);
         }
-        
-        // --- 12. Load default conversation and update/sort all previews ---
-        updateAllPreviewsAndSort(); 
-        const topContact = contactList.querySelector('.contact-item'); 
-        if (topContact) {
-            allContacts.forEach(c => c.classList.remove('active'));
-            topContact.classList.add('active'); 
-            const contactName = topContact.querySelector('.contact-name').textContent;
-            const contactInitial = topContact.querySelector('.avatar').textContent;
-            loadConversation(contactName, contactInitial);
-        }
-
-        // 13. REAL-TIME UPDATER
-    function refreshAllTimestamps() {
-        const timestampElements = document.querySelectorAll('[data-timestamp]');
-        timestampElements.forEach(element => {
-            const isoString = element.getAttribute('data-timestamp');
-            element.textContent = timeAgo(isoString);
-        });
     }
-    setInterval(refreshAllTimestamps, 10000);
-</script>
-{% endblock %}
+
+    function loadPdfPreview(src, title, contentType) {
+        previewModal.classList.add('show');
+        previewModal.style.display = 'flex';
+        previewBody.innerHTML = '<p style="color:#aaa;">Loading document...</p>';
+
+        // If convertible, show PDF download option
+        if (isConvertibleDocument) {
+            const pdfUrl = new URL(src, window.location.origin);
+            pdfUrl.searchParams.set('format', 'pdf');
+            pdfUrl.searchParams.set('download', '1');
+            document.getElementById('preview-download-pdf').href = pdfUrl.toString();
+            document.getElementById('preview-download-pdf').style.display = 'inline-block';
+        } else {
+            document.getElementById('preview-download-pdf').style.display = 'none';
+        }
+
+        // Load PDF with PDF.js
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            window.pdfjsLib.getDocument(src).promise.then(doc => {
+                pdfDoc = doc;
+                currentPage = 1;
+                totalPages = doc.numPages;
+                document.getElementById('page-controls').style.display = totalPages > 1 ? 'flex' : 'none';
+                renderPdfPage(1);
+                setupPdfNavigation();
+            }).catch(err => {
+                previewBody.innerHTML = `<p style="color:#d32f2f;">Error loading document: ${err.message}</p>`;
+                console.error('PDF load error:', err);
+            });
+        } else {
+            previewBody.innerHTML = `<iframe src="${src}" title="${escapeHtml(title)}" style="width:100%; height:100%; border:0;"></iframe>`;
+            document.getElementById('page-controls').style.display = 'none';
+        }
+    }
+
+    function loadPdfFromBlob(blobUrl, title) {
+        previewBody.innerHTML = '<p style="color:#aaa;">Rendering PDF...</p>';
+
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            window.pdfjsLib.getDocument(blobUrl).promise.then(doc => {
+                pdfDoc = doc;
+                currentPage = 1;
+                totalPages = doc.numPages;
+                document.getElementById('page-controls').style.display = totalPages > 1 ? 'flex' : 'none';
+                renderPdfPage(1);
+                setupPdfNavigation();
+            }).catch(err => {
+                previewBody.innerHTML = `<p style="color:#d32f2f;">Error rendering PDF: ${err.message}</p>`;
+                console.error('PDF render error:', err);
+            });
+        }
+    }
+
+    function showLoadingOverlay(message = 'Converting document to PDF...') {
+        document.getElementById('loading-text').textContent = message;
+        document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    function hideLoadingOverlay() {
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    function closePreview() {
+        previewModal.style.display = 'none';
+        previewBody.innerHTML = '';
+        pdfDoc = null;
+        isPdfOpen = false;
+        currentZoom = 100;
+        previewMessageId = null;
+        
+        // Clean up event listeners
+        document.removeEventListener('keydown', handlePdfKeyboard);
+        previewBody.removeEventListener('wheel', handlePdfScroll);
+    }
+
+    previewClose.addEventListener('click', closePreview);
+    previewModal.addEventListener('click', (e) => { if (e.target === previewModal) closePreview(); });
+
+    // Refresh timestamps every 10 seconds
+    setInterval(() => {
+        document.querySelectorAll('[data-timestamp]').forEach(el => {
+            const isoString = el.getAttribute('data-timestamp');
+            el.textContent = timeAgo(isoString);
+        });
+    }, 10000);
+</script>{% endblock %}

@@ -31,9 +31,28 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 # ALLOWED_HOSTS can be provided as a comma-separated list in the ALLOWED_HOSTS
 # environment variable, e.g. "127.0.0.1,localhost,mydomain.com"
-raw_allowed = os.environ.get('ALLOWED_HOSTS', '')
-ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()] if raw_allowed else []
+# raw_allowed = os.environ.get('ALLOWED_HOSTS', '')
+# ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()] if raw_allowed else []
+# settings.py
 
+# Start with the default hosts required for development and ngrok
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '127.0.0.1:8000'
+    '.ngrok-free.dev',
+    'platinoid-sandra-endocentric.ngrok-free.dev'
+]
+
+# Get extra hosts from the environment variable (for production, etc.)
+raw_allowed = os.environ.get('ALLOWED_HOSTS', '')
+if raw_allowed:
+    # Add any hosts from the env var to our list
+    ALLOWED_HOSTS.extend([h.strip() for h in raw_allowed.split(',') if h.strip()])
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://platinoid-sandra-endocentric.ngrok-free.dev' 
+]
 
 # Application definition
 
@@ -157,7 +176,8 @@ RECAPTCHA_SECRET_KEY = '6LeepvErAAAAACoTx3YxrhSVI_D9lzEtHeyE7uVf'
 
 IPROG_SMS = {
     'API_TOKEN': 'a602bb94c96ebbc31de55242ffa4c6d9f684bc87', 
-    'API_URL': 'https://sms.iprogtech.com/api/v1/sms_messages'
+    'API_URL': 'https://sms.iprogtech.com/api/v1/sms_messages',
+    'API_URL_BULK': 'https://sms.iprogtech.com/api/v1/sms_messages/send_bulk'
 }
 
 #Here pls

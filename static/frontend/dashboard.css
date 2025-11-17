@@ -93,7 +93,7 @@ body > footer {
     color: #e0e0e0; 
     overflow-y: auto; 
     height: calc(100vh - 70px - 54px); 
-    z-index: 1;
+    /* z-index: 1; */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -163,7 +163,7 @@ body.sidebar-toggled .sidebar {
     padding: 15px 20px;
     margin-top: 161.5px; /* Pushes it down from the links */
     border-top: 1px solid #555; /* Separator line */
-    background-color:transparent;
+    background-color:transparent
 }
 
 .sidebar-profile .avatar {
