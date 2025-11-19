@@ -396,10 +396,10 @@
                             {% endif %}
                         </td>
                         <td>{{ coop.district|default:"N/A" }}</td>
-                        <td class="text-truncate" style="max-width: 200px;" title="{{ coop.address }}">
+                        <td style="min-width: 180px;">
                             {{ coop.address|default:"N/A" }}
                         </td>
-                        <td>
+                        <td style="min-width: 200px;">
                             <div class="contact-info">
                                 {% if coop.email_address %}
                                     <div><i class="bi bi-envelope"></i> {{ coop.email_address }}</div>
