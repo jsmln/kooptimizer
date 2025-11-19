@@ -9,237 +9,343 @@
 {% endblock %}
 
 {% block dashboard_content %}
-<style>
-    .dashboard-main-content {
-        padding: 0;
-        overflow: hidden; /* This removes the outer scrollbar */
-        
-        /* This ensures your form box stays centered */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
 
 <div class="profile-form-container">
+    <div class="form-header">
+        <h2>Cooperative Profile</h2>
+        <p>Update and manage your cooperative's information.</p>
+    </div>
+
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         
         <fieldset>
-            <legend>Please input your cooperative profile information</legend>
+            <legend>General Information</legend>
 
             <div class="form-group">
-                <label for="coop-name">Name of Cooperative</label>
-                <input type="text" id="coop-name" name="coop_name" placeholder="Enter name of Cooperative">
+                <label for="coop-name" class="required">Name of Cooperative</label>
+                <input type="text" id="coop-name" name="coop_name" placeholder="Enter name of Cooperative" required>
             </div>
 
             <div class="form-group">
-                <label for="coop-address">Cooperative Address</label>
-                <input type="text" id="coop-address" name="coop_address" placeholder="Enter Cooperative Address">
-            </div>
-
-            <div class="form-group">
-                <label for="coop-contact">Cooperative Contact Number</label>
-                <input type="tel" id="coop-contact" name="coop_contact" placeholder="09*********">
-            </div>
-
-            <div class="form-group">
-                <label for="coop-email">Cooperative Email Address</label>
-                <input type="email" id="coop-email" name="coop_email" placeholder="sample@gmail.com">
-            </div>
-
-            <div class="form-group">
-                <label for="cda-reg-num">CDA Registration Number</label>
-                <input type="text" id="cda-reg-num" name="cda_reg_num" placeholder="****-*********">
-            </div>
-
-            <div class="form-group">
-                <label for="cda-reg-date">CDA Registration Date</label>
-                <input type="date" id="cda-reg-date" name="cda_reg_date">
-            </div>
-
-            <div class="form-group">
-                <label for="lccdc-membership-date">LCCDC Membership</label>
-                <input type="date" id="lccdc-membership-date" name="lccdc_membership_date">
-            </div>
-
-            <div class="form-group">
-                <label for="area-operation">Area of Operation</label>
-                <select id="area-operation" name="area_operation">
-                    <option value="">Select area of operation</option>
-                    <option value="city">City</option>
-                    <option value="municipal">Municipal</option>
-                    <option value="provincial">Provincial</option>
-                    <option value="regional">Regional</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="business-activity">Business Activity</label>
-                <input type="text" id="business-activity" name="business_activity" placeholder="Enter business activity">
+                <label for="coop-address" class="required">Cooperative Address</label>
+                <input type="text" id="coop-address" name="coop_address" placeholder="Enter Cooperative Address" required>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="num-bod">Number of Board Directors</label>
-                    <input type="number" id="num-bod" name="num_bod" placeholder="Enter number of BOD">
+                    <label for="coop-district" class="required">District</label>
+                    <select id="coop-district" name="coop_district" required>
+                        <option value="">Select District</option>
+                        <option value="1">East</option>
+                        <option value="2">West</option>
+                        <option value="3">North</option>
+                        <option value="4">South</option>
+                        <option value="5">Urban</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="num-se">Number of Salaried Employees</label>
-                    <input type="number" id="num-se" name="num_se" placeholder="Enter number of SE">
+                    <label for="coop-category" class="required">Category</label>
+                    <select id="coop-category" name="coop_category" required>
+                        <option value="">Select Category</option>
+                        <option value="micro">Micro</option>
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                    </select>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Certificate of Compliance</label>
+                    <label for="coop-contact" class="required">Contact Number</label>
+                    <input type="tel" id="coop-contact" name="coop_contact" placeholder="09*********" required>
+                </div>
+                <div class="form-group">
+                    <label for="coop-email" class="required">Email Address</label>
+                    <input type="email" id="coop-email" name="coop_email" placeholder="sample@gmail.com" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cda-reg-num" class="required">CDA Registration No.</label>
+                    <input type="text" id="cda-reg-num" name="cda_reg_num" placeholder="****-*********" required>
+                </div>
+                <div class="form-group">
+                    <label for="cda-reg-date" class="required">Registration Date</label>
+                    <input type="date" id="cda-reg-date" name="cda_reg_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="lccdc-membership-date" class="required">LCCDC Membership</label>
+                    <input type="date" id="lccdc-membership-date" name="lccdc_membership_date" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="area-operation" class="required">Area of Operation</label>
+                    <select id="area-operation" name="area_operation" required>
+                        <option value="">Select area</option>
+                        <option value="city">City</option>
+                        <option value="municipal">Municipal</option>
+                        <option value="provincial">Provincial</option>
+                        <option value="regional">Regional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="business-activity" class="required">Business Activity</label>
+                    <input type="text" id="business-activity" name="business_activity" placeholder="e.g. Lending, Service" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="num-bod" class="required">No. of Board Directors</label>
+                    <input type="number" id="num-bod" name="num_bod" placeholder="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="num-se" class="required">No. of Salaried Employees</label>
+                    <input type="number" id="num-se" name="num_se" placeholder="0" required>
+                </div>
+            </div>
+
+            <div class="form-row checkbox-row">
+                <div class="form-group">
+                    <label class="required">Certificate of Compliance</label>
                     <div class="form-check-group">
-                        <div class="form-check">
-                            <input type="checkbox" id="coc-yes" name="coc" value="yes">
-                            <label for="coc-yes">Yes</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" id="coc-no" name="coc" value="no">
-                            <label for="coc-no">No</label>
-                        </div>
+                        <label class="radio-container">Yes
+                            <input type="radio" name="coc" value="yes" required>
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="radio-container">No
+                            <input type="radio" name="coc" value="no" required>
+                            <span class="checkmark"></span>
+                        </label>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Certificate of Tax Exemption</label>
+                    <label class="required">Certificate of Tax Exemption</label>
                     <div class="form-check-group">
-                        <div class="form-check">
-                            <input type="checkbox" id="cte-yes" name="cte" value="yes">
-                            <label for="cte-yes">Yes</label>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" id="cte-no" name="cte" value="no">
-                            <label for="cte-no">No</label>
-                        </div>
+                        <label class="radio-container">Yes
+                            <input type="radio" name="cte" value="yes" required>
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="radio-container">No
+                            <input type="radio" name="cte" value="no" required>
+                            <span class="checkmark"></span>
+                        </label>
                     </div>
                 </div>
             </div>
         </fieldset>
         
         <fieldset>
-            <legend>Please input your financial information</legend>
-            <div class="form-row-file">
-                <div class="form-group">
-                    <label>2022 Assets</label>
-                    <label for="assets-2022" class="file-label"><i class="bi bi-upload"></i> Add file</label>
-                    <input type="file" id="assets-2022" name="assets_2022" class="file-input">
+            <legend>Financial Records</legend>
+            <p class="input-instruction">Please upload documents for Assets, Net Surplus, and Paid Up Capital.</p>
+            
+            <div class="form-group">
+                <label class="required">Upload Financial Documents</label>
+                <div class="file-upload-wrapper">
+                    <label for="financial-docs" class="file-label"><i class="bi bi-cloud-upload"></i> Choose Files</label>
+                    <input type="file" id="financial-docs" name="financial_documents" class="file-input" multiple>
                 </div>
-                <div class="form-group">
-                    <label>2023 Assets</label>
-                    <label for="assets-2023" class="file-label"><i class="bi bi-upload"></i> Add file</label>
-                    <input type="file" id="assets-2023" name="assets_2023" class="file-input">
-                </div>
-                <div class="form-group">
-                    <label>2024 Assets</label>
-                    <label for="assets-2024" class="file-label"><i class="bi bi-upload"></i> Add file</label>
-                    <input type="file" id="assets-2024" name="assets_2024" class="file-input">
-                </div>
-            </div>
-            <div class="form-row-file">
-                <div class="form-group">
-                    <label>Total Paid Up Capital</label>
-                    <label for="paid-up-capital" class="file-label"><i class="bi bi-upload"></i> Add file</label>
-                    <input type="file" id="paid-up-capital" name="paid_up_capital" class="file-input">
-                </div>
-                <div class="form-group">
-                    <label>Net Surplus/Loss</label>
-                    <label for="net-surplus" class="file-label"><i class="bi bi-upload"></i> Add file</label>
-                    <input type="file" id="net-surplus" name="net_surplus" class="file-input">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="subscribed-capital">Total Subscribed Capital</label>
-                    <input type="text" id="subscribed-capital" name="subscribed_capital" placeholder="Enter total SC">
-                </div>
-                <div class="form-group">
-                    <label for="statutory-fund">Total Statutory Fund</label>
-                    <input type="text" id="statutory-fund" name="statutory_fund" placeholder="Enter total SF">
+                
+                <div id="file-preview-container" class="file-preview-container">
+                    <div class="no-files">No files selected</div>
                 </div>
             </div>
         </fieldset>
 
         <fieldset>
-            <legend>Please input cooperative Officers</legend>
-            <div class="form-group">
-                <label for="officer-chairperson">CHAIRPERSON</label>
-                <input type="text" id="officer-chairperson" name="officer_chairperson" placeholder="Last name, First name M.I.">
-            </div>
-            <div class="form-group">
-                <label for="officer-vicechair">VICE CHAIRPERSON</label>
-                <input type="text" id="officer-vicechair" name="officer_vicechair" placeholder="Last name, First name M.I.">
-            </div>
-            <div class="form-group">
-                <label for="officer-members">MEMBERS (BOD)</label>
-                <input type="text" id="officer-members" name="officer_members" placeholder="Name, Name, Name....">
-            </div>
-            <div class="form-group">
-                <label for="officer-secretary">SECRETARY</label>
-                <input type="text" id="officer-secretary" name="officer_secretary" placeholder="Last name, First name M.I.">
-            </div>
-            <div class="form-group">
-                <label for="officer-treasurer">TREASURER</label>
-                <input type="text" id="officer-treasurer" name="officer_treasurer" placeholder="Last name, First name M.I.">
+            <legend>Cooperative Officers</legend>
+            <p class="input-instruction">Includes BOD, Committees, and Management Staff. (At least one entry required)</p>
+            
+            <div class="input-table-container">
+                <table class="input-table">
+                    <thead>
+                        <tr>
+                            <th class="required">Name</th>
+                            <th class="required">Position</th>
+                            <th class="required">Gender</th>
+                            <th class="required">Mobile Number</th>
+                            <th class="required">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in "12345" %}
+                        <tr>
+                            <td><input type="text" name="officer_name[]" placeholder="Full Name" {% if forloop.first %}required{% endif %}></td>
+                            <td><input type="text" name="officer_position[]" placeholder="Position" {% if forloop.first %}required{% endif %}></td>
+                            <td>
+                                <select name="officer_gender[]" {% if forloop.first %}required{% endif %}>
+                                    <option value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="officer_mobile[]" placeholder="09xxxxxxxxx" {% if forloop.first %}required{% endif %}></td>
+                            <td><input type="email" name="officer_email[]" placeholder="Email" {% if forloop.first %}required{% endif %}></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="button" class="add-row-btn"><i class="bi bi-plus-circle"></i> Add Row</button>
             </div>
         </fieldset>
 
         <fieldset>
-            <legend>Please input cooperative Committee Members</legend>
+            <legend>Cooperative Members</legend>
+            <p class="input-instruction">List of initial members. (At least one entry required)</p>
             
-            <label class="grid-label">Audit Committee</label>
-            <div class="committee-grid">
-                <input type="text" name="audit_1" placeholder="Full name">
-                <input type="text" name="audit_2" placeholder="Full name">
-                <input type="text" name="audit_3" placeholder="Full name">
-            </div>
-            
-            <label class="grid-label">Election Committee</label>
-            <div class="committee-grid">
-                <input type="text" name="election_1" placeholder="Full name">
-                <input type="text" name="election_2" placeholder="Full name">
-                <input type="text" name="election_3" placeholder="Full name">
-            </div>
-            
-            <label class="grid-label">Ethics Committee</label>
-            <div class="committee-grid">
-                <input type="text" name="ethics_1" placeholder="Full name">
-                <input type="text" name="ethics_2" placeholder="Full name">
-                <input type="text" name="ethics_3" placeholder="Full name">
-            </div>
-
-            </fieldset>
-
-        <fieldset>
-            <legend>Please input cooperative Management Staffs</legend>
-            <div class="form-group">
-                <label for="staff-manager">MANAGER</label>
-                <input type="text" id="staff-manager" name="staff_manager" placeholder="Last name, First name M.I.">
-            </div>
-            <div class="form-group">
-                <label for="staff-bookkeeper">BOOK KEEPER</label>
-                <input type="text" id="staff-bookkeeper" name="staff_bookkeeper" placeholder="Last name, First name M.I.">
-            </div>
-            <div class="form-group">
-                <label for="staff-clerk1">STORE CLERK 1</label>
-                <input type="text" id="staff-clerk1" name="staff_clerk1" placeholder="Last name, First name M.I.">
-            </div>
-            <div class="form-group">
-                <label for="staff-clerk2">STORE CLERK 2</label>
-                <input type="text" id="staff-clerk2" name="staff_clerk2" placeholder="Last name, First name M.I.">
-            </div>
-            <div class="form-group">
-                <label for="staff-clerk3">STORE CLERK 3</label>
-                <input type="text" id="staff-clerk3" name="staff_clerk3" placeholder="Last name, First name M.I.">
+            <div class="input-table-container">
+                <table class="input-table">
+                    <thead>
+                        <tr>
+                            <th class="required">Name</th>
+                            <th class="required">Gender</th>
+                            <th class="required">Mobile Number</th>
+                            <th class="required">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in "12345" %}
+                        <tr>
+                            <td><input type="text" name="member_name[]" placeholder="Full Name" {% if forloop.first %}required{% endif %}></td>
+                            <td>
+                                <select name="member_gender[]" {% if forloop.first %}required{% endif %}>
+                                    <option value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="member_mobile[]" placeholder="09xxxxxxxxx" {% if forloop.first %}required{% endif %}></td>
+                            <td><input type="email" name="member_email[]" placeholder="Email" {% if forloop.first %}required{% endif %}></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="button" class="add-row-btn"><i class="bi bi-plus-circle"></i> Add Row</button>
             </div>
         </fieldset>
 
         <div class="form-actions">
-            <button type="submit" class="submit-btn">Submit</button>
+            <button type="submit" class="submit-btn"><i class="bi bi-save"></i> Save Profile</button>
         </div>
     </form>
 </div>
+
+<script>
+    // --- 1. DYNAMIC ROW LOGIC ---
+    document.querySelectorAll('.add-row-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tableBody = this.previousElementSibling.querySelector('tbody');
+            const firstRow = tableBody.querySelector('tr');
+            const newRow = firstRow.cloneNode(true);
+            
+            // Clear inputs
+            newRow.querySelectorAll('input').forEach(input => {
+                input.value = '';
+                input.removeAttribute('required');
+            });
+            newRow.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+                select.removeAttribute('required');
+            });
+            
+            tableBody.appendChild(newRow);
+        });
+    });
+
+    // --- 2. FILE UPLOAD LOGIC (Additive + Remove) ---
+    const fileInput = document.getElementById('financial-docs');
+    const previewContainer = document.getElementById('file-preview-container');
+    
+    // Master list to hold all selected files
+    let allSelectedFiles = [];
+
+    // Function to format file size
+    function formatBytes(bytes, decimals = 2) {
+        if (!+bytes) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    }
+
+    // Sync the internal array with the actual input element
+    function updateFileInput() {
+        const dataTransfer = new DataTransfer();
+        allSelectedFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+    }
+
+    // Remove a file from the list
+    window.removeFile = function(index) {
+        allSelectedFiles.splice(index, 1);
+        updateFileInput();
+        renderPreviews();
+    };
+
+    // Render the visual list
+    function renderPreviews() {
+        previewContainer.innerHTML = '';
+
+        if (allSelectedFiles.length === 0) {
+            previewContainer.innerHTML = '<div class="no-files">No files selected</div>';
+            return;
+        }
+
+        allSelectedFiles.forEach((file, index) => {
+            const item = document.createElement('div');
+            item.className = 'file-preview-item';
+
+            // Determine Icon
+            let iconClass = 'bi-file-earmark'; 
+            let colorClass = '';
+
+            if (file.type.startsWith('image/')) {
+                iconClass = 'bi-file-earmark-image';
+                colorClass = 'icon-image';
+            } else if (file.type === 'application/pdf') {
+                iconClass = 'bi-file-earmark-pdf';
+                colorClass = 'icon-pdf';
+            } else if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
+                iconClass = 'bi-file-earmark-word';
+                colorClass = 'icon-word';
+            } else if (file.name.endsWith('.xls') || file.name.endsWith('.xlsx')) {
+                iconClass = 'bi-file-earmark-excel';
+                colorClass = 'icon-excel';
+            }
+
+            item.innerHTML = `
+                <div class="file-info-wrapper">
+                    <i class="bi ${iconClass} file-icon ${colorClass}"></i>
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">(${formatBytes(file.size)})</span>
+                </div>
+                <i class="bi bi-x-lg remove-file-btn" onclick="removeFile(${index})" title="Remove file"></i>
+            `;
+            previewContainer.appendChild(item);
+        });
+    }
+
+    // Event Listener for File Selection
+    fileInput.addEventListener('change', function(e) {
+        const newFiles = Array.from(this.files);
+        
+        // Add new files to our master list (filtering duplicates if desired, currently allowing all)
+        newFiles.forEach(file => {
+            // Optional: Check for duplicates
+            const exists = allSelectedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (!exists) {
+                allSelectedFiles.push(file);
+            }
+        });
+
+        updateFileInput(); // Update the input's internal file list
+        renderPreviews();  // Update UI
+    });
+</script>
 {% endblock %}
