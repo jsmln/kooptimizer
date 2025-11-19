@@ -6,6 +6,7 @@
 {% block extra_head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'frontend/databank_management.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -24,12 +25,6 @@
         </div>
     </div>
 
-    <div class="databank-toolbar">
-        <button class="filter-btn" title="Filter Options">
-            <i class="bi bi-filter"></i> Filter
-        </button>
-    </div>
-
     <div class="table-section">
         <div class="table-wrapper">
             <table id="coop-table">
@@ -44,6 +39,13 @@
                 </thead>
                 <tbody>
                     <tr data-modal-target="profile-modal">
+                        <td>Consumer Cooperative</td>
+                        <td>Sabang, Lipa City, Batangas</td>
+                        <td>consumercoop@gmail.com</td>
+                        <td>09929380925</td>
+                        <td>1414-060923055</td>
+                    </tr>
+                    <tr data-modal-target="profile-modal">
                         <td>Plaridel Multipurpose Cooperative</td>
                         <td>Balintawak, Lipa, Batangas</td>
                         <td>plaridelmulticoop@gmail.com</td>
@@ -56,13 +58,6 @@
                         <td>lipaagriculture@gmail.com</td>
                         <td>09929380946</td>
                         <td>1414-06140256</td>
-                    </tr>
-                    <tr data-modal-target="profile-modal">
-                        <td>Consumer Cooperative</td>
-                        <td>Dagatan, Lipa, Batangas</td>
-                        <td>coopconsumer@gmail.com</td>
-                        <td>09272739984</td>
-                        <td>1414-06140257</td>
                     </tr>
                     <tr data-modal-target="profile-modal">
                         <td>Housing Cooperative</td>
@@ -92,97 +87,117 @@
     <div class="modal-content">
         <div class="modal-top-bar">
             <h3>Cooperative Profile</h3>
-            <button class="modal-close-btn">&times;</button>
+            <div class="modal-actions">
+                <button class="pdf-btn" id="download-pdf-btn" title="Download as PDF">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> <span>Download Profile</span>
+                </button>
+                <button class="modal-close-btn">&times;</button>
+            </div>
         </div>
         
         <div class="modal-scroll-area">
-            <div class="modal-header-section">
-                <div class="coop-avatar">C</div>
-                <div class="coop-title-info">
-                    <h4 id="modal-coop-name">Consumer Cooperative</h4>
-                    <span class="badge-cda">CDA: 1414-060923055</span>
-                    <div class="update-info">Last Updated: Sept 30, 2025 by Isabel Delacion</div>
+            <div id="printable-area">
+                <div class="modal-header-section">
+                    <div class="coop-avatar">C</div>
+                    <div class="coop-title-info">
+                        <h4 id="modal-coop-name">Consumer Cooperative</h4>
+                        <span class="badge-cda">CDA: 1414-060923055</span>
+                        <div class="update-info">Last Updated: Sept 30, 2025 by Isabel Delacion</div>
+                    </div>
                 </div>
-            </div>
 
-            <div class="modal-body">
-                <section class="info-section">
-                    <h5 class="section-title">General Information</h5>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>Address</label>
-                            <p>Sabang, Lipa City, Batangas</p>
+                <div class="modal-body">
+                    <section class="info-section">
+                        <h5 class="section-title">Cooperative General Information</h5>
+                        <div class="info-grid two-col">
+                            <div class="info-item"><label>Cooperative Name</label><p>Consumer Cooperative</p></div>
+                            <div class="info-item"><label>Cooperative Address</label><p>Sabang, Lipa City, Batangas</p></div>
+                            <div class="info-item"><label>Contact Number</label><p>09929380925</p></div>
+                            <div class="info-item"><label>Email Address</label><p>consumercoop@gmail.com</p></div>
+                            <div class="info-item"><label>CDA Registration Number</label><p>1414-060923055</p></div>
+                            <div class="info-item"><label>District</label><p>East</p></div>
+                            <div class="info-item"><label>CDA Registration Date</label><p>09-06-2005</p></div>
+                            <div class="info-item"><label>LCCDC Membership</label><p>09-14-2014</p></div>
+                            <div class="info-item"><label>Category</label><p>Small</p></div>
+                            <div class="info-item"><label>Area of Operation</label><p>Consumer</p></div>
+                            <div class="info-item"><label>Business Activity</label><p>Supply and demand</p></div>
+                            <div class="info-item"><label>No. of Board Directors</label><p>3</p></div>
+                            <div class="info-item"><label>No. of Salaried Employees</label><p>14</p></div>
+                            <div class="info-item"><label>Certificate of Compliance</label><p><span class="status-yes">Yes</span></p></div>
+                            <div class="info-item"><label>Certificate of Tax Exemption</label><p><span class="status-yes">Yes</span></p></div>
                         </div>
-                        <div class="info-item">
-                            <label>Email Address</label>
-                            <p>consumercoop@gmail.com</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Contact Number</label>
-                            <p>09929380925</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Area of Operation</label>
-                            <p>Consumer</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Business Activity</label>
-                            <p>Supply and demand</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Registration Date</label>
-                            <p>09-06-2005</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Compliance Cert.</label>
-                            <p><span class="status-yes">Yes</span></p>
-                        </div>
-                        <div class="info-item">
-                            <label>Tax Exemption</label>
-                            <p><span class="status-yes">Yes</span></p>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section class="info-section">
-                    <h5 class="section-title">Financial Overview (2024)</h5>
-                    <div class="info-grid three-col">
-                        <div class="info-item">
-                            <label>Assets</label>
-                            <p>₱ 356,964.68</p>
+                    <section class="info-section">
+                        <h5 class="section-title">Financial Records</h5>
+                        <div class="info-grid three-col">
+                            <div class="info-item"><label>2022 Assets</label><p>₱ 142,657.00</p></div>
+                            <div class="info-item"><label>2023 Assets</label><p>₱ 258,843.00</p></div>
+                            <div class="info-item"><label>2024 Assets</label><p>₱ 356,964.68</p></div>
+                            <div class="info-item"><label>Total Paid Up Capital</label><p>₱ 108,243.78</p></div>
+                            <div class="info-item"><label>Net Surplus/Loss</label><p>₱ 10,653.54</p></div>
                         </div>
-                        <div class="info-item">
-                            <label>Paid Up Capital</label>
-                            <p>₱ 108,243.78</p>
-                        </div>
-                        <div class="info-item">
-                            <label>Net Surplus</label>
-                            <p>₱ 10,653.54</p>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section class="info-section">
-                    <h5 class="section-title">Key Officers</h5>
-                    <div class="officers-list">
-                        <div class="officer-item">
-                            <span class="role">Chairperson</span>
-                            <span class="name">Isabel Delacion</span>
+                    <section class="info-section">
+                        <h5 class="section-title">Cooperative Officers</h5>
+                        <div class="modal-table-container">
+                            <table class="modal-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                        <th>Gender</th>
+                                        <th>Mobile Number</th>
+                                        <th>Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Isabel Delacion</td><td>Chairperson</td><td>Female</td><td>0917-123-4567</td><td>isabel.d@email.com</td></tr>
+                                    <tr><td>Jasmin Esperida</td><td>Vice Chairperson</td><td>Female</td><td>0918-234-5678</td><td>jasmin.e@email.com</td></tr>
+                                    <tr><td>Art Delos Reyes</td><td>BOD Member</td><td>Male</td><td>0919-345-6789</td><td>art.dr@email.com</td></tr>
+                                    <tr><td>Noe Gonzales</td><td>BOD Member</td><td>Male</td><td>0920-456-7890</td><td>noe.g@email.com</td></tr>
+                                    <tr><td>Maria Lopez</td><td>Secretary</td><td>Female</td><td>0921-567-8901</td><td>maria.l@email.com</td></tr>
+                                    <tr><td>Ramon Santos</td><td>Treasurer</td><td>Male</td><td>0922-678-9012</td><td>ramon.s@email.com</td></tr>
+                                    <tr><td>Luis Fernando</td><td>Credit Comm.</td><td>Male</td><td>0923-789-0123</td><td>luis.f@email.com</td></tr>
+                                    <tr><td>Anna Cruz</td><td>Educ. Comm.</td><td>Female</td><td>0924-890-1234</td><td>anna.c@email.com</td></tr>
+                                    <tr><td>Pedro Tan</td><td>Manager</td><td>Male</td><td>0925-901-2345</td><td>pedro.t@email.com</td></tr>
+                                    <tr><td>Luisa Moreno</td><td>Bookkeeper</td><td>Female</td><td>0926-012-3456</td><td>luisa.m@email.com</td></tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="officer-item">
-                            <span class="role">Vice Chairperson</span>
-                            <span class="name">Jasmin Esperida</span>
+                    </section>
+
+                    <section class="info-section">
+                        <h5 class="section-title">Cooperative Members</h5>
+                        <div class="modal-table-container">
+                            <table class="modal-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Gender</th>
+                                        <th>Mobile Number</th>
+                                        <th>Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Juan dela Cruz</td><td>Male</td><td>0950-111-2222</td><td>juan.dc@email.com</td></tr>
+                                    <tr><td>Maria Clara Santos</td><td>Female</td><td>0950-333-4444</td><td>maria.cs@email.com</td></tr>
+                                    <tr><td>Jose Rizalino</td><td>Male</td><td>0950-555-6666</td><td>jose.r@email.com</td></tr>
+                                    <tr><td>Andres Bonifacio Jr.</td><td>Male</td><td>0950-777-8888</td><td>andres.b@email.com</td></tr>
+                                    <tr><td>Gabriela Silang</td><td>Female</td><td>0950-999-0000</td><td>gabriela.s@email.com</td></tr>
+                                    <tr><td>Emilio Aguinaldo IV</td><td>Male</td><td>0951-111-2222</td><td>emilio.a@email.com</td></tr>
+                                    <tr><td>Melchora Aquino</td><td>Female</td><td>0951-333-4444</td><td>melchora.a@email.com</td></tr>
+                                    <tr><td>Antonio Luna</td><td>Male</td><td>0951-555-6666</td><td>antonio.l@email.com</td></tr>
+                                    <tr><td>Gregorio del Pilar</td><td>Male</td><td>0951-777-8888</td><td>gregorio.dp@email.com</td></tr>
+                                    <tr><td>Apolinario Mabini</td><td>Male</td><td>0951-999-0000</td><td>apolinario.m@email.com</td></tr>
+                                    <tr><td>Teresa Magbanua</td><td>Female</td><td>0952-111-2222</td><td>teresa.m@email.com</td></tr>
+                                    <tr><td>Diego Silang</td><td>Male</td><td>0952-333-4444</td><td>diego.s@email.com</td></tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="officer-item">
-                            <span class="role">Secretary</span>
-                            <span class="name">Maria Lopez</span>
-                        </div>
-                        <div class="officer-item">
-                            <span class="role">Treasurer</span>
-                            <span class="name">Ramon Santos</span>
-                        </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
             </div>
         </div>
 
@@ -195,27 +210,22 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        console.log("Databank Script Loaded");
-
         const modal = document.getElementById('profile-modal');
         const tableRows = document.querySelectorAll('tr[data-modal-target]');
         const closeButtons = document.querySelectorAll('.modal-close-btn, .close-modal-trigger');
-        
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+
         if (modal) {
-            // Open Modal on Row Click
             tableRows.forEach(row => {
                 row.addEventListener('click', function() {
-                    // You can add logic here to fetch specific row data if needed
                     modal.classList.add('visible');
                 });
             });
 
-            // Close Modal Function
             const closeModal = () => {
                 modal.classList.remove('visible');
             };
 
-            // Attach Close Event to buttons
             closeButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation(); 
@@ -223,12 +233,34 @@
                 });
             });
 
-            // Close when clicking the overlay background
             modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
+                if (e.target === modal) closeModal();
             });
+
+            if (downloadPdfBtn) {
+                downloadPdfBtn.addEventListener('click', function() {
+                    const element = document.getElementById('printable-area');
+                    const coopName = document.getElementById('modal-coop-name').textContent.trim();
+                    const opt = {
+                        margin: 0.3,
+                        filename: `${coopName}_Profile.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                    };
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+                    this.disabled = true;
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        this.innerHTML = originalContent;
+                        this.disabled = false;
+                    }).catch(err => {
+                        console.error(err);
+                        this.innerHTML = originalContent;
+                        this.disabled = false;
+                    });
+                });
+            }
         }
     });
 </script>
