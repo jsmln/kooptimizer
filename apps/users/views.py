@@ -14,6 +14,20 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+
+        # ============================================================
+        # 🛠️ HARDCODED TEST ACCOUNT (Remove in Production)
+        # ============================================================
+        if username == 'testadmin' and password == '12345':
+            # Set dummy session data required by your Dashboard
+            request.session['user_id'] = 9999 
+            request.session['username'] = 'Administrator' 
+            request.session['role'] = 'admin'  # Change to 'staff' or 'officer' to test other views
+            
+            messages.success(request, 'Welcome back, Administrator! (Bypassed)')
+            return redirect('dashboard:admin_dashboard')
+        # ============================================================
+
         recaptcha_response = request.POST.get('g-recaptcha-response')
 
         # Verify reCAPTCHA
@@ -35,7 +49,7 @@ def login_view(request):
             login_result = User.login_user(username, password)
         except Exception as e:
             # Stored procedure or DB call failed — require a real login.
-            messages.error(request, 'Login service unavailable. Please try again later.')
+            messages.error(request, 'Login service unavailable. Please try again l  ater.')
             return render(request, 'login.html')
 
         if not login_result:
@@ -194,3 +208,109 @@ def first_login_setup(request):
             return redirect('home')
 
     return render(request, 'users/first_login_setup.html', context)
+
+# Helper decorator to check if logged in
+def login_required_custom(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.session.get('user_id'):
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+@login_required_custom
+def profile_settings(request):
+    user_id = request.session.get('user_id')
+    
+    # --- HANDLER FOR TEST ACCOUNT ---
+    if user_id == 9999:
+        # Create a fake user object just for the template
+        class DummyUser:
+            username = request.session.get('username', 'Test Admin')
+            first_name = "Test"
+            last_name = "Admin"
+            email = "admin@kooptimizer.com"
+            profile_picture = None
+        
+        context = {'user': DummyUser()}
+        return render(request, 'users/settings.html', context)
+    # --------------------------------
+
+    try:
+        user = User.objects.get(user_id=user_id)
+    except User.DoesNotExist:
+        messages.error(request, "User not found.")
+        return redirect('login')
+
+    context = {
+        'user': user,
+    }
+    return render(request, 'users/settings.html', context)
+
+@login_required_custom
+def update_profile(request):
+    if request.method != 'POST':
+        return redirect('users:profile_settings')
+
+    user_id = request.session.get('user_id')
+
+    # --- HANDLER FOR TEST ACCOUNT ---
+    if user_id == 9999:
+        messages.success(request, "Profile updated! (This is a simulation for the Test Account)")
+        # Simulate name change in session
+        if request.POST.get('first_name'):
+             request.session['username'] = request.POST.get('first_name')
+        return redirect('users:profile_settings')
+    # --------------------------------
+    
+    try:
+        user = User.objects.get(user_id=user_id)
+        
+        # 1. Get Form Data
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        email = request.POST.get('email')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        avatar = request.FILES.get('avatar')
+
+        # 2. Update Basic Info
+        if first_name: user.first_name = first_name
+        if last_name: user.last_name = last_name
+        if email: user.email = email
+
+        # 3. Handle Password Change
+        if new_password:
+            if new_password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect('users:profile_settings')
+            
+            if len(new_password) < 8:
+                messages.error(request, "Password must be at least 8 characters.")
+                return redirect('users:profile_settings')
+                
+            user.password_hash = make_password(new_password) # Note: Your model might use 'password' or 'password_hash'
+
+        # 4. Handle Avatar Upload
+        if avatar:
+            if avatar.size > 2 * 1024 * 1024:
+                messages.error(request, "Profile picture too large (Max 2MB).")
+                return redirect('users:profile_settings')
+            
+            user.profile_picture = avatar
+
+        user.save()
+        
+        # Update Session Name
+        request.session['username'] = f"{user.first_name} {user.last_name}" 
+        request.session.modified = True
+
+        messages.success(request, "Profile updated successfully!")
+        return redirect('users:profile_settings')
+
+    except User.DoesNotExist:
+        messages.error(request, "User not found.")
+        return redirect('login')
+    except Exception as e:
+        print(f"Error updating profile: {e}")
+        messages.error(request, "An error occurred while saving changes.")
+        return redirect('users:profile_settings')

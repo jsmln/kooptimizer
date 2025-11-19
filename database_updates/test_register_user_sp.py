@@ -31,7 +31,7 @@ def register_user(username: str, password: str, role: str):
 
         conn = psycopg2.connect(
             host="127.0.0.1",
-            database="kooptimizer_db3",
+            database="kooptimizer_db2",
             user="postgres",
             password="postgres"
         )

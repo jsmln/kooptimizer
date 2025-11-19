@@ -1,255 +1,187 @@
-/* This rule was in the dashboard_content block */
-.dashboard-main-content {
-    padding: 0;
-}
-
-/* Main layout card, styled like .message-layout */
+/* --- 1. LAYOUT WRAPPER --- */
 .announcement-layout {
     display: flex;
-    width: 95%;
-    border-radius: 12px;
+    width: 96%;  
+    height: 92%; 
+    gap: 20px; /* Space between Sidebar and Content */
+    background: transparent;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    height: 95%; 
-    flex-direction: column;
-    background-color: #fff; 
 }
-#announcement-title-header {
-    font-weight: 700; 
-    color: #212529;
-    
-    /* NEW: Align icon and text */
+
+/* --- 2. LEFT CARD: NAVIGATION SIDEBAR --- */
+.announcement-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
     display: flex;
-    align-items: center;
-
-    /* NEW: Adjust font size to look better */
-    font-size: 1.25rem; 
+    flex-direction: column;
 }
-/* ----- Sidebar Nav Link (MODIFIED) ----- */
 
+/* Create New Button */
+#create-new-btn {
+    background-color: #b71c1c;
+    border: none;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 12px;
+    transition: 0.2s;
+}
+#create-new-btn:hover { background-color: #8a1515; }
+
+/* Navigation Links (Gmail Style) */
 .sidebar-nav .nav-item {
-    /* Extend to the left edge */
-    margin-left: -1rem; 
-    
-    /* DO NOT extend to the right edge */
-    margin-right: 0; 
+    margin-bottom: 4px;
+    padding-right: 15px; /* Space for the rounded edge */
 }
 
 .sidebar-nav .nav-link {
-    color: #333;
+    color: #555;
     font-weight: 500;
-    
-    /* These are from before and are correct */
+    padding: 10px 20px;
+    border-radius: 0 25px 25px 0; /* Rounded Right Edge */
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.2s;
+}
 
-    /* Re-align the text padding */
-    padding: 0.85rem 1rem;
+.sidebar-nav .nav-link i { font-size: 1.1rem; color: #888; }
 
-    /* MODIFIED: Add the Gmail-style border radius */
-    /* (top-left, top-right, bottom-right, bottom-left) */
-    border-radius: 0 15rem 15rem 0; 
+.sidebar-nav .nav-link:hover {
+    background-color: #f5f5f5;
+    color: #000;
 }
 
 .sidebar-nav .nav-link.active {
-    background-color: #b71c1c; /* Theme red */
-    color: #fff;
+    background-color: #fff0f2; /* Light Red Bg */
+    color: #b71c1c;
 }
-.sidebar-nav .nav-link:hover {
-    background-color: #f1f1f1;
-}
-.sidebar-nav .nav-link.active:hover {
-    background-color: #a31919;
-}
+.sidebar-nav .nav-link.active i { color: #b71c1c; }
 
-
-/* ===== Badge Styling (No changes needed) ===== */
-.sidebar-nav .nav-link .badge {
-    /* background-color: #e9ecef; */
-    color: #333; /* Dark text */
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 0.3em 0.6em;
-}
-
-.sidebar-nav .nav-link.active .badge {
-    /* background-color: #fff; */
-    color: #ffffff; /* Red text */
-}
-.list-header .h2{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    flex-shrink: 0;
-}
-
-.list-header h2 {
-    color: #2d2d2d;
-    margin: 0;
-}
-
-/* Content panes */
-.content-pane {
-    display: none; /* Hidden by default */
-    height: 100%;
-    flex-direction: column;
-}
-.content-pane.active {
-    display: flex; /* Shown when active */
-}
-
-/* Make the list scrollable */
-.list-scroll-area {
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-/* Style for the split send button */
-.btn-split-dropdown {
-    border-left: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-/* =================================== */
-/* ===== STYLES FOR BLACK TEXT ===== */
-/* =================================== */
-
-#create-view-container .form-label {
-    color: #212529; /* Standard dark black */
-}
-
-#create-view-container .form-control,
-#create-view-container .form-select {
-    color: #212529;
-}
-
-#create-view-container .text-muted {
-    color: #212529 !important; /* Override Bootstrap's .text-muted */
-}
-
-#create-view-container ::placeholder {
-    color: #495057; 
-    opacity: 1; 
-}
-
-#create-view-container .form-select option {
-    color: #212529;
-}
-
-/* ----- "New Announcement" Title Styling ----- */
-#create-view-container .h4 {
-    color: #a91c2c; /* Theme red */
-    font-weight: 700; /* Make it bold */
-}
-
-/* ----- "Cancel" Button Styling ----- */
-#cancel-create-btn {
-    color: #a91c2c; /* Red text */
-    border-color: #a91c2c; /* Red border */
-    font-weight: 600;
-}
-
-#cancel-create-btn:hover {
-    color: #fff; /* White text on hover */
-    background-color: #a91c2c; /* Red background on hover */
-    border-color: #a91c2c;
-}
-
-/* =================================== */
-/* === CANCEL CONFIRMATION MODAL STYLES === */
-/* =================================== */
-#confirm-cancel-modal .modal-content {
-    border-radius: 12px;
-    border: none;
-    background-color: #ffffff;
-}
-
-#confirm-cancel-modal .modal-header {
-    border-bottom: none;
-    padding: 1.5rem 1.5rem 0.5rem;
-}
-
-#confirm-cancel-modal .modal-title {
-    color: #a91c2c; /* Theme red */
-    font-weight: 700;
-    font-size: 1.75rem;
-}
-
-#confirm-cancel-modal .modal-body {
+.sidebar-nav .badge {
+    background-color: #f0f0f0;
     color: #333;
-    padding: 0.5rem 1.5rem 1.5rem;
-    font-size: 1rem;
-}
-
-#confirm-cancel-modal .modal-footer {
-    border-top: none;
-    padding: 0 1.5rem 1.5rem;
-}
-
-#confirm-cancel-btn {
-    background-color: #a91c2c;
-    border-color: #a91c2c;
-    color: #fff;
     font-weight: 600;
-    padding: 0.5rem 1.25rem;
+    border-radius: 10px;
 }
-
-#confirm-cancel-btn:hover {
-    background-color: #8c1823;
-    border-color: #8c1823;
-}
-
-/* Sidebar "Announcements" Title */
-#announcement-title-header {
-    font-weight: 700; 
-    color: #212529;
-}
-
-/* Sidebar "Create New" Button */
-#create-new-btn {
+.sidebar-nav .nav-link.active .badge {
     background-color: #b71c1c;
-    /* Add a hover effect to match other buttons */
-}
-#create-new-btn:hover {
-    background-color: #a31919;
+    color: #fff;
 }
 
-/* Form "Send" Button */
-#send-btn-main {
-    background-color: #b71c1c;
-}
-#send-btn-main:hover {
-    background-color: #a31919;
-}
-
-/* Form "Send" Button Dropdown Arrow */
-.btn-danger-split {
-    background-color: #b71c1c;
-}
-.btn-danger-split:hover {
-    background-color: #a31919;
+/* --- 3. RIGHT CARD: CONTENT AREA --- */
+.announcement-content {
+    flex: 1;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-/* Bootstrap modals should render at the body level with proper z-index */
-.modal {
-    z-index: 1060 !important; /* Standard Bootstrap modal z-index */
+/* Content Header */
+.content-header {
+    height: 70px;
+    padding: 0 25px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    background: #fff;
 }
 
-.modal-backdrop {
-    z-index: 1055 !important; /* Backdrop should be below modal */
+/* Search Input */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+.search-wrapper input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    background: #f9f9f9;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    color: #000;
+}
+.search-wrapper input:focus {
+    background: #fff;
+    border-color: #b71c1c;
+    outline: none;
+}
+.search-wrapper i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
 }
 
-/* Ensure no parent containers interfere with modal interactions */
-body.modal-open {
-    overflow: hidden; /* Prevent body scroll when modal is open */
+/* Scrollable List Area */
+.list-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
 }
 
-/* Make sure modal content is fully interactive */
-.modal-dialog {
-    pointer-events: auto;
+/* List Items */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #f9f9f9;
+    padding: 18px 25px;
+    transition: background 0.1s;
+}
+.list-group-item:hover {
+    background-color: #fafafa;
+    cursor: pointer;
 }
 
-.modal-content {
-    pointer-events: auto;
+/* Badges in List */
+.badge-type {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
+.badge-type.sms { background-color: #e3f2fd; color: #0d47a1; }
+.badge-type.email { background-color: #e8f5e9; color: #1b5e20; }
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #999;
+    padding: 40px;
+}
+.empty-state i { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
+
+/* --- FORM STYLES --- */
+.form-label { font-size: 0.9rem; color: #333; }
+.form-control, .form-select {
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    background: #fcfcfc;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #b71c1c;
+    box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1);
+    background: #fff;
+}
+
+/* Tom Select Customization */
+.ts-control {
+    border-radius: 8px;
+    border: 1px solid #eee;
+    padding: 10px;
+}
+.ts-control.focus { border-color: #b71c1c; box-shadow: none; }
