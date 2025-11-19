@@ -98,6 +98,11 @@
                 <div class="avatar">
                     {{ request.session.username|first|upper }}
                 </div>
+
+                <a href="{% url 'users:profile_settings' %}" class="settings-btn-mini" title="Settings">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </a>
+
                 <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal" class="logout-btn-mini" title="Logout">
                     <i class="bi bi-box-arrow-right"></i>
                 </a>
