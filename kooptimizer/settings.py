@@ -182,8 +182,12 @@ IPROG_SMS = {
 
 #Here pls
 
+# settings.py
+import os
+from decouple import config 
 
-
+# NEW (Safe)
+TICKETMASTER_API_KEY = config('TICKETMASTER_API_KEY', default='')
 
 
 
