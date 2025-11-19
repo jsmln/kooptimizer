@@ -43,3 +43,4 @@ def staff_dashboard(request):
     return render(request, 'dashboard/staff_dashboard.html', {
         'page_title': 'Staff Dashboard'
     })
+
