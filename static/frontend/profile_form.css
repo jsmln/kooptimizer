@@ -1,36 +1,96 @@
-/* ----- Main Form Box ----- */
+:root {
+    --bg-main: #F4F7FE;
+    --sidebar-bg: #FFFFFF;
+    --text-dark: #2B3674;
+    --text-gray: #A3AED0;
+    --brand-red: #a91e2c;
+    --brand-red-light: #fff0f2;
+    --card-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08);
+}
 
-.profile-form-container {
-    /* width: 70%; */
-    height: 95%;
+/* --- Global Page Adjustments --- */
+.dashboard-main-content {
+    padding: 0;
+    height: 100%;
     overflow: hidden;
-    /* background-color: #efefef;  */
-    /* border-radius: 12px; */
-    /* box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); */
-    overflow-y:auto; 
-    padding: 30px 40px;
-    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-main); 
+}
+
+/* ----- Main Form Box ----- */
+.profile-form-container {
+    width: 95%;
+    max-width: 1000px;
+    height: 95%; /* Fills most of dashboard area */
+    background-color: var(--sidebar-bg);
+    border-radius: 15px;
+    box-shadow: var(--card-shadow);
+    padding: 0; /* Padding handled by header/form */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Prevents box expansion */
+}
+
+.form-header {
+    padding: 25px 40px;
+    border-bottom: 1px solid #f0f0f0;
+    background: var(--sidebar-bg);
+    flex-shrink: 0;
+}
+
+.form-header h2 {
+    margin: 0;
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.form-header p {
+    margin: 5px 0 0 0;
+    color: var(--text-dark);
+    font-size: 0.9rem;
 }
 
 .profile-form-container form {
-    max-width: 900px;
-    margin: 0 auto;
+    padding: 30px 40px;
+    overflow-y: auto; /* Scroll happens INSIDE the form area */
+    flex: 1;
 }
 
+/* Fieldsets & Legends */
 fieldset {
     border: none;
     padding: 0;
-    margin: 0 0 30px 0;
+    margin: 0 0 40px 0;
 }
 
 legend {
-    font-size: 1.25rem;
-    font-weight: 500;
-    color: #efefef; /* Dark text */
-    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     width: 100%;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
+    padding-left: 10px;
+    border-left: 4px solid var(--brand-red); 
+}
+
+.input-instruction {
+    font-size: 0.85rem;
+    color: var(--text-dark);
     font-style: italic;
+    margin-bottom: 15px;
+}
+
+label.required::after,
+th.required::after {
+    content: " *";
+    color: var(--brand-red);
+    font-weight: bold;
+    margin-left: 2px;
 }
 
 /* ----- Form Groups ----- */
@@ -38,14 +98,14 @@ legend {
     display: flex;
     flex-direction: column;
     margin-bottom: 20px;
+    flex: 1;
 }
 
 .form-group label {
-    font-size: 0.9rem;
-    color: #efefef; /* Dark text */
-    font-weight: 500;
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    font-weight: 600;
     margin-bottom: 8px;
-    text-transform: uppercase;
 }
 
 .form-group input[type="text"],
@@ -53,54 +113,111 @@ legend {
 .form-group input[type="tel"],
 .form-group input[type="date"],
 .form-group input[type="number"],
-.form-group select {
+.form-group select,
+.form-group textarea {
     width: 100%;
-    padding: 15px 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: #fff; /* White inputs */
-    font-size: 1rem;
-    color: #efefef;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05) inset;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background-color: var(--sidebar-bg);
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    transition: border 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--brand-red);
+    box-shadow: 0 0 0 3px rgba(169, 30, 44, 0.1);
 }
 
 .form-group input::placeholder {
-    color: #aaa;
-    font-style: italic;
+    color: var(--text-gray);
+    opacity: 0.7;
 }
 
-/* ----- Form Rows ----- */
-.form-row, .form-row-file {
+/* ----- Layout Grid ----- */
+.form-row {
     display: flex;
     gap: 20px;
-}
-.form-row .form-group, .form-row-file .form-group {
-    flex: 1;
+    width: 100%;
 }
 
-/* ----- Checkboxes ----- */
+/* ----- Custom Radio Buttons (Compliance/Tax) ----- */
 .form-check-group {
     display: flex;
-    gap: 25px;
-    padding-top: 10px;
+    gap: 20px;
+    padding-top: 5px;
 }
-.form-check {
+
+.radio-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    user-select: none;
 }
-.form-check label {
-    margin-bottom: 0;
-    text-transform: none;
-    font-size: 1rem;
-    color: #efefef;
+
+.radio-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
 }
-.form-check input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 18px;
+    width: 18px;
+    background-color: #eee;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+.radio-container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+.radio-container input:checked ~ .checkmark {
+    background-color: var(--brand-red);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.radio-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.radio-container .checkmark:after {
+    top: 6px;
+    left: 6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sidebar-bg);
 }
 
 /* ----- Custom File Input ----- */
+.file-upload-wrapper {
+    position: relative;
+}
+
 .file-input {
     width: 0.1px;
     height: 0.1px;
@@ -111,65 +228,228 @@ legend {
 }
 
 .file-label {
-    display: inline-block;
-    padding: 12px 20px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border: 1px dashed var(--brand-red);
+    border-radius: 10px;
+    text-align: center;
     cursor: pointer;
     font-weight: 500;
-    color: #555;
-    transition: background-color 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.file-label i {
-    margin-right: 8px;
-}
-.file-label:hover {
-    background-color: #f9f9f9;
+    color: var(--brand-red);
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    box-sizing: border-box;
 }
 
-/* ----- Committee Grid ----- */
-.grid-label {
-    font-size: 1rem;
-    color: #333;
-    font-weight: 500;
-    margin-bottom: 10px;
-    text-align: center;
+.file-label i {
+    margin-right: 6px;
+    font-size: 1.1rem;
 }
-.committee-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
+
+.file-label:hover {
+    background-color: var(--brand-red-light);
 }
-.committee-grid input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
+
+/* --- FILE PREVIEW STYLES --- */
+/* --- UPDATED FILE PREVIEW STYLES --- */
+.file-preview-container {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.file-preview-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Separates content from X button */
+    background: #f8f9fa;
+    padding: 10px 12px;
     border-radius: 8px;
-    background-color: #fff;
+    border: 1px solid #e0e0e0;
     font-size: 0.9rem;
+    color: var(--text-dark);
+    transition: background 0.2s;
+}
+
+.file-preview-item:hover {
+    background: #fff;
+    border-color: var(--brand-red);
+}
+
+.file-info-wrapper {
+    display: flex;
+    align-items: center;
+    overflow: hidden; /* Prevents long text overflow */
+    flex: 1;
+}
+
+.file-icon {
+    margin-right: 12px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+/* Specific Icon Colors */
+.icon-image { color: #9c27b0; }
+.icon-pdf { color: #e53935; }
+.icon-word { color: #1e88e5; }
+.icon-excel { color: #43a047; }
+.bi-file-earmark { color: var(--text-gray); }
+
+.file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 10px;
+    font-weight: 500;
+    max-width: 70%; /* Ensures name doesn't push size/x off screen */
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: var(--text-gray);
+    white-space: nowrap;
+}
+
+.no-files {
+    color: var(--text-gray);
+    font-size: 0.85rem;
+    font-style: italic;
+    padding-left: 5px;
+}
+
+/* Remove "X" Button */
+.remove-file-btn {
+    margin-left: 15px;
+    cursor: pointer;
+    color: #dc3545; /* Bootstrap Danger Red */
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    background: transparent;
+}
+
+.remove-file-btn:hover {
+    background-color: #ffebee;
+    color: #b71c1c;
+    transform: scale(1.1);
+}
+
+/* ----- INPUT TABLE (Officers & Members) ----- */
+.input-table-container {
+    overflow-x: auto;
+    margin-bottom: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+}
+
+.input-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px; /* Forces scroll on small screens */
+}
+
+.input-table th {
+    background-color: #f8f9fa;
+    color: var(--text-dark);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.input-table td {
+    padding: 8px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fff;
+}
+
+/* Input styling inside table */
+.input-table input,
+.input-table select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    box-sizing: border-box;
+}
+
+.input-table input:focus,
+.input-table select:focus {
+    border-color: var(--brand-red);
+    outline: none;
+}
+
+.add-row-btn {
+    margin-top: 10px;
+    background: none;
+    border: 1px dashed var(--text-dark);
+    color: var(--text-dark);
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.add-row-btn:hover {
+    border-color: var(--brand-red);
+    color: var(--brand-red);
+    background-color: var(--brand-red-light);
 }
 
 /* ----- Submit Button ----- */
 .form-actions {
-    text-align: center;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-    margin-top: 30px;
+    padding: 20px 0;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
 }
+
 .submit-btn {
-    padding: 15px 40px;
-    background-color: #ff2626;
-    color: #fff;
+    padding: 12px 40px;
+    background-color: var(--brand-red);
+    color: var(--sidebar-bg);
     border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 500;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+
 .submit-btn:hover {
-    background-color: #ff0000;
+    background-color: #8a1824; 
+    transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .profile-form-container {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+    }
 }

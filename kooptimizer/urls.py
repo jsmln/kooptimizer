@@ -24,7 +24,6 @@ urlpatterns = [
     # Dashboard URLss
     path('dashboard/', include('apps.dashboard.urls', namespace='dashboard')),
 
-
 ]
 
 # serves as static files (CSS/JS) during development

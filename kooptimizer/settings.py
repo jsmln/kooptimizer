@@ -217,9 +217,14 @@ IPROG_SMS = {
     'API_URL_BULK': 'https://sms.iprogtech.com/api/v1/sms_messages/send_bulk'
 }
 
-#Here pls 
+#Here pls
 
+# settings.py
+import os
+from decouple import config 
 
+# NEW (Safe)
+TICKETMASTER_API_KEY = config('TICKETMASTER_API_KEY', default='')
 
 
 
