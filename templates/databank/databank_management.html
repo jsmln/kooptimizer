@@ -2,33 +2,34 @@
 {% load static %}
 
 {% block dashboard_title %}Data Bank Management{% endblock %}
+{% block page_header %}Data Bank Management{% endblock %}
 
 {% block extra_head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'frontend/databank_management.css' %}">
     <style>
-        /* OCR Assistant Drawer Styles */
+        /* OCR Assistant Drawer - Redesigned for Modern UI */
         .ocr-drawer-wrapper {
             position: fixed;
             right: 0;
             top: 0;
             height: 100vh;
-            z-index: 1040;
+            z-index: 1050;
             pointer-events: none;
         }
         
         .ocr-drawer {
             position: absolute;
-            right: -350px;
+            right: -380px;
             top: 0;
-            width: 350px;
+            width: 380px;
             height: 100%;
             background: #ffffff;
-            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
-            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -8px 0 24px rgba(43, 54, 116, 0.12);
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: all;
             overflow-y: auto;
-            border-left: 3px solid #8e0e0e;
+            border-left: 1px solid #edf2f7;
         }
         
         .ocr-drawer.open {
@@ -36,62 +37,68 @@
         }
         
         .ocr-drawer-header {
-            background: linear-gradient(135deg, #b71c1c 0%, #8e0e0e 100%);
-            color: #efefef;
-            padding: 24px 20px;
+            background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+            color: #ffffff;
+            padding: 28px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border-bottom: 3px solid #771520;
         }
         
         .ocr-drawer-header h3 {
             margin: 0;
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 19px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: 0.3px;
+        }
+        
+        .ocr-drawer-header h3 i {
+            font-size: 22px;
         }
         
         .ocr-drawer-close {
-            background: rgba(239, 239, 239, 0.15);
-            border: 1px solid rgba(239, 239, 239, 0.3);
-            color: #efefef;
-            width: 34px;
-            height: 34px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 22px;
-            transition: all 0.2s;
+            font-size: 20px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .ocr-drawer-close:hover {
-            background: rgba(239, 239, 239, 0.25);
+            background: rgba(255, 255, 255, 0.25);
             transform: rotate(90deg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
         .ocr-drawer-body {
-            padding: 24px 20px;
-            background: #f8f9fa;
+            padding: 28px 24px;
+            background: #f8f9fc;
         }
         
         .ocr-toggle-btn {
             position: fixed;
-            right: 20px;
-            bottom: 80px;
-            width: 64px;
-            height: 64px;
+            right: 24px;
+            bottom: 90px;
+            width: 68px;
+            height: 68px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #b71c1c 0%, #8e0e0e 100%);
-            color: #efefef;
-            border: 3px solid rgba(239, 239, 239, 0.2);
-            box-shadow: 0 6px 20px rgba(183, 28, 28, 0.5);
+            background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 8px 24px rgba(169, 30, 44, 0.4);
             cursor: pointer;
-            z-index: 1030;
+            z-index: 1040;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: all;
             display: flex;
@@ -100,160 +107,170 @@
         }
         
         .ocr-toggle-btn:hover {
-            transform: scale(1.08) translateY(-2px);
-            box-shadow: 0 8px 24px rgba(183, 28, 28, 0.6);
-            border-color: rgba(239, 239, 239, 0.4);
+            transform: scale(1.1) translateY(-3px);
+            box-shadow: 0 12px 32px rgba(169, 30, 44, 0.5);
         }
         
         .ocr-toggle-btn:active {
-            transform: scale(1.02);
+            transform: scale(1.04);
         }
         
         .ocr-toggle-btn i {
-            font-size: 26px;
+            font-size: 28px;
         }
         
         .ocr-upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 12px;
-            padding: 32px;
+            border: 2px dashed #d1d5db;
+            border-radius: 16px;
+            padding: 40px 28px;
             text-align: center;
             background: #ffffff;
             cursor: pointer;
             transition: all 0.3s;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
         
         .ocr-upload-area:hover,
         .ocr-upload-area.dragover {
-            border-color: #b71c1c;
-            background: #fff5f5;
-            box-shadow: 0 4px 12px rgba(183, 28, 28, 0.15);
+            border-color: #a91e2c;
+            background: #fff5f6;
+            box-shadow: 0 6px 16px rgba(169, 30, 44, 0.12);
+            transform: translateY(-2px);
         }
         
         .ocr-upload-area i {
-            font-size: 52px;
-            color: #b71c1c;
-            margin-bottom: 12px;
+            font-size: 56px;
+            color: #a91e2c;
+            margin-bottom: 16px;
             display: block;
         }
         
         .ocr-upload-area h5 {
-            color: #2d2d2d;
-            font-weight: 600;
-            margin: 8px 0;
+            color: #2B3674;
+            font-weight: 700;
+            margin: 12px 0 8px;
+            font-size: 17px;
+        }
+        
+        .ocr-upload-area p {
+            color: #A3AED0;
+            font-size: 14px;
+            margin: 0;
         }
         
         .ocr-btn-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
         
         .ocr-action-btn {
-            padding: 14px 10px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
+            padding: 16px 12px;
+            border: 1px solid #edf2f7;
+            border-radius: 12px;
             background: #ffffff;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            gap: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         }
         
         .ocr-action-btn:hover {
-            border-color: #b71c1c;
-            background: #fff5f5;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(183, 28, 28, 0.15);
+            border-color: #a91e2c;
+            background: #fff5f6;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(169, 30, 44, 0.12);
         }
         
         .ocr-action-btn:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
         
         .ocr-action-btn i {
-            font-size: 28px;
-            color: #b71c1c;
+            font-size: 30px;
+            color: #a91e2c;
         }
         
         .ocr-action-btn span {
-            font-size: 11px;
-            color: #555;
-            font-weight: 500;
+            font-size: 12px;
+            color: #2B3674;
+            font-weight: 600;
         }
         
         .ocr-result-area {
-            margin-top: 20px;
+            margin-top: 24px;
             background: #ffffff;
-            padding: 16px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #edf2f7;
         }
         
         .ocr-result-area label {
-            color: #2d2d2d;
-            font-size: 13px;
-            margin-bottom: 8px;
+            color: #2B3674;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
             display: block;
         }
         
         .ocr-result-text {
             width: 100%;
-            min-height: 200px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            min-height: 220px;
+            padding: 14px;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
             font-family: 'Courier New', monospace;
             font-size: 13px;
             resize: vertical;
-            background: #fafafa;
-            color: #2d2d2d;
-            transition: border-color 0.2s;
+            background: #f8f9fc;
+            color: #2B3674;
+            transition: all 0.2s;
         }
         
         .ocr-result-text:focus {
             outline: none;
-            border-color: #b71c1c;
+            border-color: #a91e2c;
             background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(169, 30, 44, 0.08);
         }
         
         .ocr-result-actions {
-            margin-top: 12px;
+            margin-top: 14px;
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
         
         .ocr-result-actions button {
             flex: 1;
-            padding: 11px;
+            padding: 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
+            font-size: 13.5px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
         }
         
         .btn-apply {
-            background: linear-gradient(135deg, #b71c1c 0%, #8e0e0e 100%);
-            color: #efefef;
-            box-shadow: 0 2px 6px rgba(183, 28, 28, 0.3);
+            background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(169, 30, 44, 0.25);
         }
         
         .btn-apply:hover {
-            background: linear-gradient(135deg, #8e0e0e 0%, #7f0000 100%);
-            box-shadow: 0 4px 10px rgba(183, 28, 28, 0.4);
-            transform: translateY(-1px);
+            background: linear-gradient(135deg, #8a1824 0%, #771520 100%);
+            box-shadow: 0 6px 16px rgba(169, 30, 44, 0.35);
+            transform: translateY(-2px);
         }
         
         .btn-apply:active {
@@ -261,23 +278,23 @@
         }
         
         .btn-clear {
-            background: #efefef;
-            color: #555;
-            border: 1px solid #ddd;
+            background: #f8f9fc;
+            color: #2B3674;
+            border: 1px solid #edf2f7;
         }
         
         .btn-clear:hover {
-            background: #e0e0e0;
-            border-color: #ccc;
+            background: #edf2f7;
+            border-color: #d1d5db;
         }
         
         .ocr-loading {
             display: none;
             text-align: center;
-            padding: 30px 20px;
+            padding: 36px 24px;
             background: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
         }
         
         .ocr-loading.active {
