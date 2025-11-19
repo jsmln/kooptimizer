@@ -183,7 +183,7 @@ a { text-decoration: none; }
     box-shadow: 0px 2px 5px rgba(0,0,0,0.02);
 }
 .user-info { text-align: right; line-height: 1.2; }
-.u-name { display: block; font-weight: 700; font-size: 0.85rem; }
+.u-name { display: block; font-weight: 700; font-size: 0.85rem; color: var(--text-gray); }
 .u-role { display: block; font-size: 0.7rem; color: var(--text-gray); }
 .user-menu .avatar {
     width: 32px; height: 32px; border-radius: 50%;
@@ -219,4 +219,18 @@ a { text-decoration: none; }
     
     body.sidebar-open .sidebar { transform: translateX(0); }
     body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: all; }
+}
+
+.settings-btn-mini {
+    color: #A3AED0; /* Light Gray */
+    font-size: 1.2rem;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.settings-btn-mini:hover {
+    color: #a91e2c; /* Theme Red */
 }
