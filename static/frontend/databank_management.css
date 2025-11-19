@@ -5,41 +5,44 @@
     height: 100%;
     width: 100%;
     background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(43, 54, 116, 0.08);
     overflow: hidden;
+    margin: 24px;
 }
 
 /* --- Header Area --- */
 .databank-header {
-    padding: 20px 30px;
+    padding: 28px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #f0f0f0;
-    background: #fff;
+    border-bottom: 1px solid #edf2f7;
+    background: linear-gradient(135deg, #fff 0%, #f8f9fc 100%);
     flex-shrink: 0;
 }
 
 .header-left h2 {
     margin: 0;
     color: #2B3674;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 700;
 }
 
 .header-left .subtitle {
-    margin: 5px 0 0 0;
+    margin: 8px 0 0 0;
     color: #A3AED0;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .stat-card {
-    background: #f8f9fa;
-    padding: 10px 20px;
-    border-radius: 10px;
+    background: linear-gradient(135deg, #fff5f6 0%, #ffffff 100%);
+    padding: 14px 24px;
+    border-radius: 12px;
     text-align: right;
     border-left: 4px solid #a91e2c;
+    box-shadow: 0 2px 8px rgba(169, 30, 44, 0.08);
 }
 
 .stat-label {
@@ -48,31 +51,62 @@
     color: #A3AED0;
     text-transform: uppercase;
     font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
     display: block;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    color: #2B3674;
+    color: #a91e2c;
+    margin-top: 4px;
 }
 
 /* --- Toolbar --- */
 .databank-toolbar {
-    padding: 15px 30px;
+    padding: 20px 32px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     background: #fff;
     flex-shrink: 0;
+    gap: 16px;
 }
 
-/* .filter-btn {
+.toolbar-left {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.add-btn {
+    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+    color: #fff;
+    border: none;
+    padding: 11px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(169, 30, 44, 0.25);
+}
+
+.add-btn:hover {
+    background: linear-gradient(135deg, #8a1824 0%, #771520 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(169, 30, 44, 0.35);
+}
+
+.filter-btn {
     background: #fff;
-    border: 1px solid #e0e0e0;
-    color: #555;
-    padding: 8px 16px;
-    border-radius: 8px;
+    border: 1px solid #edf2f7;
+    color: #2B3674;
+    padding: 11px 18px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 600;
     display: flex;
@@ -84,8 +118,38 @@
 .filter-btn:hover {
     border-color: #a91e2c;
     color: #a91e2c;
-    background: #fff5f5;
-} */
+    background: #fff5f6;
+}
+
+.search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-bar i {
+    position: absolute;
+    left: 14px;
+    color: #A3AED0;
+    font-size: 16px;
+}
+
+.search-bar input {
+    padding: 11px 14px 11px 42px;
+    border: 1px solid #edf2f7;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    width: 280px;
+    transition: all 0.2s;
+    background: #f8f9fc;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: #a91e2c;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(169, 30, 44, 0.08);
+}
 
 /* --- Table Section --- */
 .table-section {
@@ -93,13 +157,24 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 0 30px 20px 30px;
+    padding: 0 32px 28px 32px;
 }
 
 .table-wrapper {
     flex: 1;
     overflow: auto;
-    border: 1px solid #eee;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #d1d5db;
     border-radius: 10px;
 }
 
@@ -111,45 +186,55 @@ table {
 
 /* Main Dashboard Table Headers */
 #coop-table thead th {
-    background: #a91e2c;
+    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
     color: #fff;
-    padding: 15px;
+    padding: 16px 18px;
     text-align: left;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     position: sticky;
     top: 0;
     z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #771520;
 }
 
 /* Main Dashboard Table Cells */
 #coop-table tbody td {
-    padding: 12px 15px;
+    padding: 14px 18px;
     border-bottom: 1px solid #f0f0f0;
     color: #2B3674;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
-/* --- RESTORED HOVER BEHAVIOR --- */
+/* --- ENHANCED HOVER BEHAVIOR --- */
 #coop-table tbody tr[data-modal-target] {
     cursor: pointer;
-    position: relative; /* Needed for z-index */
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #coop-table tbody tr[data-modal-target]:hover {
-    background-color: #fff0f0;
-    transform: scale(1.002); /* The "pop" effect */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    z-index: 5; /* Brings row above others */
+    background-color: #fff5f6;
+    transform: scale(1.002);
+    box-shadow: 0 4px 12px rgba(169, 30, 44, 0.1);
+    z-index: 5;
     border-left: 4px solid #a91e2c;
 }
 
+#coop-table tbody tr[data-modal-target]:hover td:first-child {
+    padding-left: 14px;
+}
+
 .table-footer {
-    padding: 10px 0;
+    padding: 14px 0;
     color: #A3AED0;
     font-size: 0.85rem;
     text-align: right;
     flex-shrink: 0;
+    font-weight: 500;
 }
 
 /* --- Modal Styling --- */
@@ -341,6 +426,15 @@ table {
     font-size: 0.85rem;
 }
 
+.status-inactive {
+    color: #d32f2f;
+    font-weight: bold;
+    background: #ffebee;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
 /* --- NEW STYLES FOR MODAL TABLES (Officers & Members) --- */
 .modal-table-container {
     overflow-x: auto;
@@ -423,4 +517,152 @@ table {
     .pdf-btn span {
         display: none;
     }
+}
+/* --- New Table Styles for Combined Data --- */
+.badge-category {
+    display: inline-block;
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #fff5f6 0%, #ffffff 100%);
+    color: #a91e2c;
+    border: 1px solid #ffebee;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.badge-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 10px;
+    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+    color: #fff;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.contact-info {
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.contact-info div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0;
+}
+
+.contact-info i {
+    color: #a91e2c;
+    font-size: 0.9rem;
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-end {
+    text-align: right !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+
+.text-muted {
+    color: #A3AED0 !important;
+}
+
+/* Action Buttons in Table */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #edf2f7;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.btn-view {
+    color: #4299e1;
+}
+
+.btn-view:hover {
+    background: #ebf8ff;
+    border-color: #4299e1;
+}
+
+.btn-edit {
+    color: #48bb78;
+}
+
+.btn-edit:hover {
+    background: #f0fff4;
+    border-color: #48bb78;
+}
+
+.btn-delete {
+    color: #f56565;
+}
+
+.btn-delete:hover {
+    background: #fff5f5;
+    border-color: #f56565;
+}
+
+/* Table Footer Enhancements */
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination {
+    display: flex;
+    gap: 4px;
+}
+
+.pagination button {
+    padding: 6px 12px;
+    border: 1px solid #edf2f7;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.pagination button:hover {
+    background: #f8f9fc;
+    border-color: #a91e2c;
+    color: #a91e2c;
+}
+
+.pagination button.active {
+    background: #a91e2c;
+    color: #fff;
+    border-color: #a91e2c;
 }
