@@ -57,7 +57,7 @@
     color: #2B3674;
 }
 
-/* --- Toolbar (Filter Only) --- */
+/* --- Toolbar --- */
 .databank-toolbar {
     padding: 15px 30px;
     display: flex;
@@ -67,7 +67,7 @@
     flex-shrink: 0;
 }
 
-.filter-btn {
+/* .filter-btn {
     background: #fff;
     border: 1px solid #e0e0e0;
     color: #555;
@@ -85,7 +85,7 @@
     border-color: #a91e2c;
     color: #a91e2c;
     background: #fff5f5;
-}
+} */
 
 /* --- Table Section --- */
 .table-section {
@@ -109,7 +109,8 @@ table {
     white-space: nowrap;
 }
 
-thead th {
+/* Main Dashboard Table Headers */
+#coop-table thead th {
     background: #a91e2c;
     color: #fff;
     padding: 15px;
@@ -121,32 +122,26 @@ thead th {
     z-index: 10;
 }
 
-tbody td {
+/* Main Dashboard Table Cells */
+#coop-table tbody td {
     padding: 12px 15px;
     border-bottom: 1px solid #f0f0f0;
     color: #2B3674;
     font-size: 0.9rem;
 }
 
-/* Clickable Row Styling */
-/* Ensure the row looks interactive */
-tbody tr[data-modal-target] {
+/* --- RESTORED HOVER BEHAVIOR --- */
+#coop-table tbody tr[data-modal-target] {
     cursor: pointer;
-    transition: all 0.2s ease;
+    position: relative; /* Needed for z-index */
 }
 
-/* Row Highlight on Hover */
-tbody tr[data-modal-target]:hover {
-    background-color: #fff0f0; /* Light red tint */
-    transform: scale(1.002); /* Slight pop effect */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    z-index: 1;
-    position: relative;
-}
-
-/* Remove old action cell styles */
-.action-cell {
-    display: none;
+#coop-table tbody tr[data-modal-target]:hover {
+    background-color: #fff0f0;
+    transform: scale(1.002); /* The "pop" effect */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    z-index: 5; /* Brings row above others */
+    border-left: 4px solid #a91e2c;
 }
 
 .table-footer {
@@ -182,7 +177,7 @@ tbody tr[data-modal-target]:hover {
 .modal-content {
     background: #fff;
     width: 90%;
-    max-width: 650px;
+    max-width: 900px; /* Wider for tables */
     max-height: 85vh;
     border-radius: 15px;
     display: flex;
@@ -209,6 +204,32 @@ tbody tr[data-modal-target]:hover {
     margin: 0;
     color: #2B3674;
     font-size: 1.1rem;
+}
+
+.modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.pdf-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #a91e2c;
+    color: #a91e2c;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pdf-btn:hover {
+    background: #a91e2c;
+    color: #fff;
 }
 
 .modal-close-btn {
@@ -279,29 +300,29 @@ tbody tr[data-modal-target]:hover {
 
 .section-title {
     margin: 0 0 15px 0;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     color: #A3AED0;
     letter-spacing: 0.5px;
-    border-left: 3px solid #a91e2c;
+    border-left: 4px solid #a91e2c;
     padding-left: 10px;
+    font-weight: 700;
 }
 
+/* Grids for General Info */
 .info-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 15px;
 }
-
-.info-grid.three-col {
-    grid-template-columns: 1fr 1fr 1fr;
-}
+.info-grid.two-col { grid-template-columns: 1fr 1fr; }
+.info-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
 
 .info-item label {
     display: block;
     font-size: 0.75rem;
     color: #A3AED0;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    font-weight: 600;
 }
 
 .info-item p {
@@ -315,35 +336,48 @@ tbody tr[data-modal-target]:hover {
     color: #2e7d32;
     font-weight: bold;
     background: #e8f5e9;
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: 4px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
 }
 
-/* Officers List */
-.officers-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.officer-item {
-    background: #f8f9fa;
-    padding: 10px;
+/* --- NEW STYLES FOR MODAL TABLES (Officers & Members) --- */
+.modal-table-container {
+    overflow-x: auto;
+    border: 1px solid #eee;
     border-radius: 8px;
 }
 
-.officer-item .role {
-    display: block;
-    font-size: 0.7rem;
+.modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.modal-table th {
+    background: #f8f9fa;
     color: #A3AED0;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.8rem;
     text-transform: uppercase;
 }
 
-.officer-item .name {
-    display: block;
-    font-weight: 600;
+.modal-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #f9f9f9;
     color: #2B3674;
+}
+
+.modal-table tr:last-child td {
+    border-bottom: none;
+}
+
+.modal-table tr:hover {
+    background: #fafafa;
 }
 
 /* Modal Footer */
@@ -365,10 +399,7 @@ tbody tr[data-modal-target]:hover {
     font-weight: 600;
     transition: background 0.2s;
 }
-
-.primary-btn:hover {
-    background: #8a1824;
-}
+.primary-btn:hover { background: #8a1824; }
 
 .secondary-btn {
     background: #f0f0f0;
@@ -379,12 +410,17 @@ tbody tr[data-modal-target]:hover {
     cursor: pointer;
     font-weight: 600;
 }
-
 .secondary-btn:hover { background: #e0e0e0; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .info-grid, .info-grid.three-col, .officers-list {
+    .info-grid.two-col, .info-grid.three-col {
         grid-template-columns: 1fr;
+    }
+    .modal-actions {
+        gap: 10px;
+    }
+    .pdf-btn span {
+        display: none;
     }
 }
