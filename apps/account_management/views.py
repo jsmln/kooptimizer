@@ -101,17 +101,31 @@ def send_credentials_view(request):
             # Create user in database
             new_user_data = {}
             with connection.cursor() as cursor:
-                cursor.callproc('sp_create_user_profile', [
-                    email,
-                    password_hash,
-                    role,
-                    name,
-                    email,
-                    contact,
-                    gender,
-                    position,
-                    officer_coop_id,
-                    staff_coop_ids
+                # Call the stored procedure directly with proper casting for all parameters
+                cursor.execute("""
+                    SELECT * FROM sp_create_user_profile(
+                        %s::varchar,           -- p_username
+                        %s::varchar,           -- p_password_hash
+                        %s::user_role_enum,    -- p_role
+                        %s::varchar,           -- p_fullname
+                        %s::varchar,           -- p_email
+                        %s::varchar,           -- p_mobile_number
+                        %s::gender_enum,       -- p_gender
+                        %s::varchar,           -- p_position
+                        %s::integer,           -- p_officer_coop_id
+                        %s::integer[]          -- p_staff_coop_ids
+                    )
+                """, [
+                    email,           # p_username
+                    password_hash,   # p_password_hash
+                    role,            # p_role
+                    name,            # p_fullname
+                    email,           # p_email
+                    contact,         # p_mobile_number
+                    gender,          # p_gender
+                    position,        # p_position
+                    officer_coop_id, # p_officer_coop_id
+                    staff_coop_ids   # p_staff_coop_ids
                 ])
                 result = cursor.fetchone()
                 new_user_data = {
@@ -130,7 +144,7 @@ def send_credentials_view(request):
             try:
                 subject = "Your New Kooptimizer Account Credentials"
                 PUBLIC_TUNNEL_URL = 'https://rv9qfbq1-8000.asse.devtunnels.ms/'
-                logo_url = f"{PUBLIC_TUNNEL_URL}/static/frontend/images/Header.png"
+                logo_url = f"{PUBLIC_TUNNEL_URL}/static/frontend/images/header.png"
                 
                 context = {
                     'name': name,

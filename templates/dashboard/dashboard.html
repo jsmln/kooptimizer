@@ -40,7 +40,9 @@
             {% endif %}
 
             <li><a href="{% url 'communications:message' %}">Messages</a></li>
+            {% if request.session.role == 'admin' or request.session.role == 'staff' %}
             <li><a href="{% url 'communications:announcement_form' %}">Announcements</a></li>
+            {% endif %}
         </ul>
 
                 <div class="sidebar-profile">

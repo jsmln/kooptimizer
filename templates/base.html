@@ -144,16 +144,22 @@
         NProgress.configure({ 
             showSpinner: true, 
             easing: 'ease',    
-            speed: 500        
+            speed: 500,
+            minimum: 0.08,
+            trickleSpeed: 200
         });
+        
         // Find all links and forms
-        const allLinks = document.querySelectorAll('a[href]:not([data-bs-toggle])');
+        const allLinks = document.querySelectorAll('a[href]:not([data-bs-toggle]):not([href^="#"])');
         const allForms = document.querySelectorAll('form');
 
-        // Add click listener to links
+        // Add click listener to links (only for actual navigation)
         allLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                NProgress.start();
+            link.addEventListener('click', (e) => {
+                // Don't start progress for modal triggers, dropdowns, etc.
+                if (!link.hasAttribute('data-bs-toggle') && !link.getAttribute('href').startsWith('#')) {
+                    NProgress.start();
+                }
             });
         });
 
@@ -164,11 +170,31 @@
             });
         });
 
+        // Complete progress bar when page is fully loaded
+        window.addEventListener('load', () => {
+            NProgress.done();
+        });
+
+        // Complete progress bar when DOM is ready (for AJAX navigations)
+        document.addEventListener('DOMContentLoaded', () => {
+            NProgress.done();
+        });
+
         // This handles stopping NProgress if a user hits the back button
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) { 
                 NProgress.done();
             }
+        });
+
+        // Handle browser navigation (back/forward buttons)
+        window.addEventListener('popstate', () => {
+            NProgress.done();
+        });
+
+        // Complete progress on any modal shown (since modals don't navigate)
+        document.addEventListener('shown.bs.modal', () => {
+            NProgress.done();
         });
 
         const logoutModal = document.getElementById('logoutModal');

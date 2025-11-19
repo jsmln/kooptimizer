@@ -52,23 +52,24 @@
 <div class="account-management-container">
     <div class="account-header">
         <div class="tab-buttons">
+            {% if request.session.role == 'admin' %}
             <button class="tab-btn" data-target="all-users">ALL</button> 
+            <button class="tab-btn" data-target="admins">Admins</button>
             <button class="tab-btn active" data-target="staffs">Staffs</button>
             <button class="tab-btn" data-target="officers">Officers</button>
-            <button class="tab-btn" data-target="admins">Admins</button>
+            {% elif request.session.role == 'staff' %}
+            <button class="tab-btn active" data-target="officers">Officers</button>
+            {% endif %}
         </div>
 
         <div id="table-controls" class="table-controls">
             <input type="text" id="user-search" class="search-input" placeholder="Search users...">
         </div>
         
+        {% if request.session.role == 'admin' %}
         <div class="add-section" id="staff-add-section">
             <p class="total-label">Total Staffs: <span class="count" id="staff-count">{{ staffs|length }}</span></p> 
             <button class="add-btn" data-account-type="staff" id="onboard-staff-btn"><i class="bi bi-plus-circle"></i> Add</button> 
-        </div>
-        <div class="add-section hidden" id="officer-add-section">
-            <p class="total-label">Total Officers: <span class="count" id="officer-count">{{ officers|length }}</span></p>
-            <button class="add-btn" data-account-type="officer" id="onboard-officer-btn"><i class="bi bi-plus-circle"></i> Add</button> 
         </div>
         <div class="add-section hidden" id="admin-add-section">
             <p class="total-label">Total Admins: <span class="count" id="admin-count">{{ admins|length }}</span></p>
@@ -77,8 +78,20 @@
         <div class="add-section hidden" id="all-users-section">
             <p class="total-label">Total Users: <span class="count" id="all-user-count">0</span></p>
         </div>
+        <div class="add-section hidden" id="officer-add-section">
+            <p class="total-label">Total Officers: <span class="count" id="officer-count">{{ officers|length }}</span></p>
+            <button class="add-btn" data-account-type="officer" id="onboard-officer-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        {% elif request.session.role == 'staff' %}
+        <div class="add-section" id="officer-add-section">
+            <p class="total-label">Total Officers: <span class="count" id="officer-count">{{ officers|length }}</span></p>
+            <button class="add-btn" data-account-type="officer" id="onboard-officer-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        {% endif %}
     </div>
-    
+
+    {% if request.session.role == 'admin' %}
+    <!-- ALL USERS TABLE (Admin Only) -->
     <div class="table-section" id="all-users">
         <h2>All User Accounts</h2>
         <div class="table-wrapper"> 
@@ -103,6 +116,42 @@
         </div>
     </div>
 
+    <!-- ADMINS TABLE (Admin Only) -->
+    <div class="table-section" id="admins">
+        <h2>Admin User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Admin Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                    {% for admin in admins %}
+                    <tr data-type="admin" data-user-id="{{ admin.user_id }}" data-profile-id="{{ admin.profile_id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ admin.fullname }}</td>
+                        <td>{{ admin.email }}</td>
+                        <td>{{ admin.contact }}</td>
+                        <td>{{ admin.position }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center;">No admin accounts found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
+
+    <!-- STAFFS TABLE (Admin Only) -->
     <div class="table-section active" id="staffs">
         <h2>Staff User Accounts</h2>
         <div class="table-wrapper"> 
@@ -136,8 +185,10 @@
             <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
         </div>
     </div>
+    {% endif %}
 
-    <div class="table-section" id="officers">
+    <!-- OFFICERS TABLE (Admin and Staff) -->
+    <div class="table-section {% if request.session.role == 'staff' %}active{% endif %}" id="officers">
         <h2>Officer User Accounts</h2>
         <div class="table-wrapper"> 
             <table>
@@ -163,40 +214,6 @@
                     </tr>
                     {% empty %}
                     <tr><td colspan="6" style="text-align:center;">No officer accounts found.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="action-buttons">
-            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
-            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
-        </div>
-    </div>
-
-    <div class="table-section" id="admins">
-        <h2>Admin User Accounts</h2>
-        <div class="table-wrapper"> 
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Admin Name</th>
-                        <th>Email Address</th>
-                        <th>Contact Number</th>
-                        <th>Position</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-table-body">
-                    {% for admin in admins %}
-                    <tr data-type="admin" data-user-id="{{ admin.user_id }}" data-profile-id="{{ admin.profile_id }}">
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ admin.fullname }}</td>
-                        <td>{{ admin.email }}</td>
-                        <td>{{ admin.contact }}</td>
-                        <td>{{ admin.position }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5" style="text-align:center;">No admin accounts found.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -351,11 +368,18 @@
   </div>
 </div>
 
+<!-- Notification Container (styled like base.html) -->
+<div id="account-notifications" aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; max-width: 400px;"></div>
+
 <script>
 (function() {
     'use strict';
     
     console.log('Account Management Script Loaded');
+    
+    // Get user role from session
+    const USER_ROLE = '{{ request.session.role }}';
+    console.log('Current user role:', USER_ROLE);
     
     let allUsersData = [];
     let selectedRowData = { element: null, userId: null, profileId: null, type: null, name: null };
@@ -364,6 +388,59 @@
 
     function getCsrfToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function hasAccessToAccountType(accountType) {
+        if (USER_ROLE === 'admin') {
+            return true; // Admin has access to everything
+        }
+        if (USER_ROLE === 'staff') {
+            return accountType === 'officer'; // Staff can only access officers
+        }
+        return false;
+    }
+
+    // Notification system (styled like base.html)
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('account-notifications');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        notification.className = `dj-message dj-${type}`;
+        notification.setAttribute('role', 'status');
+        notification.style.marginBottom = '10px';
+        
+        notification.innerHTML = `
+            <div class="dj-message-left">
+                <div class="dj-message-icon" aria-hidden="true">!</div>
+            </div>
+            <div class="dj-message-body">
+                <div class="dj-message-text">${message}</div>
+            </div>
+            <button class="dj-message-close" aria-label="Close message">×</button>
+        `;
+
+        container.appendChild(notification);
+
+        // Close button functionality
+        const closeBtn = notification.querySelector('.dj-message-close');
+        closeBtn.addEventListener('click', () => dismissNotification(notification));
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                dismissNotification(notification);
+            }
+        }, 5000);
+    }
+
+    function dismissNotification(el) {
+        el.style.transition = 'opacity 240ms ease, transform 240ms ease';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(18px)';
+        setTimeout(() => {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 260);
     }
 
     function initialize() {
@@ -407,14 +484,12 @@
         
         console.log('Elements loaded:', elements);
         
-        // Check if all critical elements exist
-        if (!elements.onboardStaffBtn) {
-            console.error('Critical elements missing!');
-            return;
+        // Collect initial data (only for admin)
+        if (USER_ROLE === 'admin') {
+            collectInitialData();
+            renderAllUsersTable(allUsersData);
         }
         
-        collectInitialData();
-        renderAllUsersTable(allUsersData);
         setupEventListeners(elements);
         
         console.log('Initialization complete');
@@ -435,30 +510,36 @@
         ];
 
         tables.forEach(table => {
-            table.body.querySelectorAll('tr').forEach(row => {
-                if (row.cells.length <= 1) return;
-                
-                const cells = Array.from(row.cells).map(cell => cell.textContent);
-                
-                allUsersData.push({
-                    user_id: row.dataset.userId,
-                    profile_id: row.dataset.profileId,
-                    name: cells[1],
-                    email: table.type === 'Officer' ? cells[3] : cells[2],
-                    contact: table.type === 'Officer' ? cells[4] : cells[3],
-                    role: table.roleIndex !== -1 ? cells[table.roleIndex] : '-',
-                    coop: table.coopIndex !== -1 ? cells[table.coopIndex] : '-',
-                    type: table.type
+            if (table.body) {
+                table.body.querySelectorAll('tr').forEach(row => {
+                    if (row.cells.length <= 1) return;
+                    
+                    const cells = Array.from(row.cells).map(cell => cell.textContent);
+                    
+                    allUsersData.push({
+                        user_id: row.dataset.userId,
+                        profile_id: row.dataset.profileId,
+                        name: cells[1],
+                        email: table.type === 'Officer' ? cells[3] : cells[2],
+                        contact: table.type === 'Officer' ? cells[4] : cells[3],
+                        role: table.roleIndex !== -1 ? cells[table.roleIndex] : '-',
+                        coop: table.coopIndex !== -1 ? cells[table.coopIndex] : '-',
+                        type: table.type
+                    });
                 });
-            });
+            }
         });
         
-        allUserCountSpan.textContent = allUsersData.length;
+        if (allUserCountSpan) {
+            allUserCountSpan.textContent = allUsersData.length;
+        }
         console.log('Collected user data:', allUsersData.length, 'users');
     }
 
     function renderAllUsersTable(data) {
         const allUsersTableBody = document.getElementById('all-users-table-body');
+        if (!allUsersTableBody) return;
+        
         allUsersTableBody.innerHTML = '';
         
         if (data.length === 0) {
@@ -493,22 +574,27 @@
             btn.addEventListener("click", () => handleTabClick(btn));
         });
         
-        // Search functionality
-        el.searchInput.style.display = 'none';
-        el.searchInput.addEventListener('keyup', handleSearch);
+        // Search functionality (only for admin)
+        if (USER_ROLE === 'admin' && el.searchInput) {
+            el.searchInput.style.display = 'none';
+            el.searchInput.addEventListener('keyup', handleSearch);
+        }
         
         // Row selection
         document.querySelectorAll('tbody').forEach(tbody => {
             tbody.addEventListener('click', handleRowClick);
         });
         
-        // Add buttons
-        [el.onboardStaffBtn, el.onboardAdminBtn, el.onboardOfficerBtn].forEach(btn => {
-            if (btn) {
-                console.log('Adding click listener to:', btn.id);
-                btn.addEventListener('click', () => handleAddButtonClick(btn, el));
-            }
-        });
+        // Add buttons (check permissions)
+        if (el.onboardStaffBtn && hasAccessToAccountType('staff')) {
+            el.onboardStaffBtn.addEventListener('click', () => handleAddButtonClick(el.onboardStaffBtn, el));
+        }
+        if (el.onboardAdminBtn && hasAccessToAccountType('admin')) {
+            el.onboardAdminBtn.addEventListener('click', () => handleAddButtonClick(el.onboardAdminBtn, el));
+        }
+        if (el.onboardOfficerBtn && hasAccessToAccountType('officer')) {
+            el.onboardOfficerBtn.addEventListener('click', () => handleAddButtonClick(el.onboardOfficerBtn, el));
+        }
         
         // Form submission
         el.onboardForm.addEventListener('submit', (e) => handleFormSubmit(e, el));
@@ -565,24 +651,40 @@
         document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".table-section").forEach(t => {
             t.classList.remove("active");
-            t.querySelector('.action-buttons').style.display = 'none';
+            const actionButtons = t.querySelector('.action-buttons');
+            if (actionButtons) actionButtons.style.display = 'none';
         });
         document.querySelectorAll(".add-section").forEach(s => s.classList.add("hidden"));
         document.querySelectorAll('tbody tr.selected').forEach(row => row.classList.remove('selected'));
 
         btn.classList.add("active");
-        document.getElementById(target).classList.add("active");
+        const targetSection = document.getElementById(target);
+        if (targetSection) {
+            targetSection.classList.add("active");
+        }
         
         const searchInput = document.getElementById('user-search');
-        const isSearchVisible = target === 'all-users';
-        searchInput.style.display = isSearchVisible ? 'block' : 'none';
+        if (searchInput) {
+            const isSearchVisible = target === 'all-users' && USER_ROLE === 'admin';
+            searchInput.style.display = isSearchVisible ? 'block' : 'none';
+        }
         
-        if (target === 'staffs') document.getElementById('staff-add-section').classList.remove('hidden');
-        else if (target === 'officers') document.getElementById('officer-add-section').classList.remove('hidden');
-        else if (target === 'admins') document.getElementById('admin-add-section').classList.remove('hidden');
-        else if (target === 'all-users') {
-            document.getElementById('all-users-section').classList.remove('hidden');
-            renderAllUsersTable(allUsersData);
+        // Show appropriate add section based on permissions
+        if (target === 'staffs' && hasAccessToAccountType('staff')) {
+            const staffAddSection = document.getElementById('staff-add-section');
+            if (staffAddSection) staffAddSection.classList.remove('hidden');
+        } else if (target === 'officers' && hasAccessToAccountType('officer')) {
+            const officerAddSection = document.getElementById('officer-add-section');
+            if (officerAddSection) officerAddSection.classList.remove('hidden');
+        } else if (target === 'admins' && hasAccessToAccountType('admin')) {
+            const adminAddSection = document.getElementById('admin-add-section');
+            if (adminAddSection) adminAddSection.classList.remove('hidden');
+        } else if (target === 'all-users' && USER_ROLE === 'admin') {
+            const allUsersSection = document.getElementById('all-users-section');
+            if (allUsersSection) {
+                allUsersSection.classList.remove('hidden');
+                renderAllUsersTable(allUsersData);
+            }
         }
         
         selectedRowData.element = null;
@@ -610,22 +712,31 @@
         const type = row.dataset.type;
         const name = row.cells[1].textContent;
 
+        // Check access permissions
+        if (!hasAccessToAccountType(type.toLowerCase())) {
+            showNotification('You do not have permission to manage this account type.', 'error');
+            return;
+        }
+
         const currentTableSection = row.closest('.table-section');
         const actionButtons = currentTableSection.querySelector('.action-buttons');
         
         if (selectedRowData.element === row) {
             row.classList.remove('selected');
-            actionButtons.style.display = 'none';
+            if (actionButtons) actionButtons.style.display = 'none';
             selectedRowData.element = null;
         } else {
             if (selectedRowData.element) {
                 selectedRowData.element.classList.remove('selected');
                 const prevTable = selectedRowData.element.closest('.table-section');
-                if (prevTable) prevTable.querySelector('.action-buttons').style.display = 'none';
+                if (prevTable) {
+                    const prevActionButtons = prevTable.querySelector('.action-buttons');
+                    if (prevActionButtons) prevActionButtons.style.display = 'none';
+                }
             }
             
             row.classList.add('selected');
-            actionButtons.style.display = 'flex';
+            if (actionButtons) actionButtons.style.display = 'flex';
             selectedRowData = { element: row, userId, profileId, type, name };
         }
         
@@ -634,8 +745,15 @@
 
     function handleAddButtonClick(btn, el) {
         console.log('Add button clicked:', btn.id);
-        isEditMode = false;
         const accountType = btn.getAttribute('data-account-type');
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to add this account type.', 'error');
+            return;
+        }
+        
+        isEditMode = false;
         
         setupFormForType(accountType, [], el);
 
@@ -672,6 +790,13 @@
         console.log('Form submitted');
         
         const accountType = el.onboardForm.getAttribute('data-account-type');
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to manage this account type.', 'error');
+            return;
+        }
+        
         const isOfficer = accountType === 'officer';
         const isStaff = accountType === 'staff';
 
@@ -740,28 +865,34 @@
                 const newUserData = data.user;
                 addNewRowToTable(newUserData);
                 
-                allUsersData.push({
-                    user_id: newUserData.user_id,
-                    profile_id: newUserData.profile_id,
-                    name: newUserData.name,
-                    email: newUserData.email,
-                    contact: newUserData.contact,
-                    role: newUserData.position || '-',
-                    coop: newUserData.coop_name || '-',
-                    type: capitalize(newUserData.role)
-                });
+                if (USER_ROLE === 'admin') {
+                    allUsersData.push({
+                        user_id: newUserData.user_id,
+                        profile_id: newUserData.profile_id,
+                        name: newUserData.name,
+                        email: newUserData.email,
+                        contact: newUserData.contact,
+                        role: newUserData.position || '-',
+                        coop: newUserData.coop_name || '-',
+                        type: capitalize(newUserData.role)
+                    });
+                    
+                    const allUserCountSpan = document.getElementById('all-user-count');
+                    if (allUserCountSpan) {
+                        allUserCountSpan.textContent = allUsersData.length;
+                    }
+                }
                 
-                document.getElementById('all-user-count').textContent = allUsersData.length;
                 closeModal(el.sendCredModal);
                 el.onboardForm.reset();
-                alert(`New ${newUserData.role} account created and credentials sent!`);
+                showNotification(`New ${newUserData.role} account created and credentials sent!`, 'success');
             } else {
-                alert(`Failed to send credentials. Error: ${data.message}`);
+                showNotification(`Failed to send credentials. Error: ${data.message}`, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert(`An error occurred: ${error.message}`);
+            showNotification(`An error occurred: ${error.message}`, 'error');
         })
         .finally(() => {
             sendButton.disabled = false;
@@ -775,7 +906,16 @@
             console.log('No user selected');
             return;
         }
-        openEditModal(selectedRowData.userId, selectedRowData.type.toLowerCase(), el);
+        
+        const accountType = selectedRowData.type.toLowerCase();
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to edit this account type.', 'error');
+            return;
+        }
+        
+        openEditModal(selectedRowData.userId, accountType, el);
     }
 
     function handleDeleteClick(el) {
@@ -784,6 +924,15 @@
             console.log('No user selected');
             return;
         }
+        
+        const accountType = selectedRowData.type.toLowerCase();
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to delete this account type.', 'error');
+            return;
+        }
+        
         document.getElementById('deactivate-confirm-text').textContent = 
             `Are you sure you want to deactivate ${selectedRowData.name}'s account?`;
         openModal(el.deactivateModal);
@@ -801,14 +950,14 @@
         .then(data => {
             if (data.status === 'success') {
                 removeRowFromTable(userId);
-                alert('Account deactivated successfully.');
+                showNotification('Account deactivated successfully.', 'success');
             } else {
-                alert(`Error: ${data.message}`);
+                showNotification(`Error: ${data.message}`, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert(`An error occurred: ${error.message}`);
+            showNotification(`An error occurred: ${error.message}`, 'error');
         })
         .finally(() => closeModal(el.deactivateModal));
     }
@@ -840,12 +989,12 @@
 
                 openModal(el.onboardModal);
             } else {
-                alert(`Error: ${data.message}`);
+                showNotification(`Error: ${data.message}`, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert(`An error occurred: ${error.message}`);
+            showNotification(`An error occurred: ${error.message}`, 'error');
         });
     }
 
@@ -864,15 +1013,15 @@
         .then(data => {
             if (data.status === 'success') {
                 updateRowInTable(userId, submittedData);
-                alert('Account updated successfully.');
+                showNotification('Account updated successfully.', 'success');
                 closeModal(el.onboardModal);
             } else {
-                alert(`Error: ${data.message}`);
+                showNotification(`Error: ${data.message}`, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert(`An error occurred: ${error.message}`);
+            showNotification(`An error occurred: ${error.message}`, 'error');
         });
     }
 
@@ -918,6 +1067,8 @@
             `;
         }
         
+        if (!targetTableBody) return;
+        
         newRow.innerHTML = html;
         
         const emptyRow = targetTableBody.querySelector('td[colspan]');
@@ -926,8 +1077,10 @@
         targetTableBody.appendChild(newRow);
         renumberTable(targetTableBody);
 
-        let currentCount = parseInt(targetCountSpan.textContent, 10);
-        targetCountSpan.textContent = currentCount + 1;
+        if (targetCountSpan) {
+            let currentCount = parseInt(targetCountSpan.textContent, 10);
+            targetCountSpan.textContent = currentCount + 1;
+        }
     }
 
     function updateRowInTable(userId, data) {
@@ -952,17 +1105,20 @@
             row.cells[4].textContent = data.position;
         }
         
-        const allUserEntry = allUsersData.find(u => u.user_id == userId);
-        if (allUserEntry) {
-            allUserEntry.name = data.name;
-            allUserEntry.email = data.email;
-            allUserEntry.contact = data.contact;
-            allUserEntry.role = data.position || '-';
-            allUserEntry.coop = Array.isArray(data.coop_text) ? data.coop_text.join(', ') : (data.coop_text || '-');
-        }
-        
-        if (document.getElementById('all-users').classList.contains('active')) {
-            renderAllUsersTable(allUsersData);
+        if (USER_ROLE === 'admin') {
+            const allUserEntry = allUsersData.find(u => u.user_id == userId);
+            if (allUserEntry) {
+                allUserEntry.name = data.name;
+                allUserEntry.email = data.email;
+                allUserEntry.contact = data.contact;
+                allUserEntry.role = data.position || '-';
+                allUserEntry.coop = Array.isArray(data.coop_text) ? data.coop_text.join(', ') : (data.coop_text || '-');
+            }
+            
+            const allUsersSection = document.getElementById('all-users');
+            if (allUsersSection && allUsersSection.classList.contains('active')) {
+                renderAllUsersTable(allUsersData);
+            }
         }
     }
 
@@ -985,11 +1141,17 @@
             }
         }
         
-        allUsersData = allUsersData.filter(u => u.user_id != userId);
-        document.getElementById('all-user-count').textContent = allUsersData.length;
-        
-        if (document.getElementById('all-users').classList.contains('active')) {
-            renderAllUsersTable(allUsersData);
+        if (USER_ROLE === 'admin') {
+            allUsersData = allUsersData.filter(u => u.user_id != userId);
+            const allUserCountSpan = document.getElementById('all-user-count');
+            if (allUserCountSpan) {
+                allUserCountSpan.textContent = allUsersData.length;
+            }
+            
+            const allUsersSection = document.getElementById('all-users');
+            if (allUsersSection && allUsersSection.classList.contains('active')) {
+                renderAllUsersTable(allUsersData);
+            }
         }
         
         document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');

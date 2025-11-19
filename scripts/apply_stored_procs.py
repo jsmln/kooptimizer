@@ -16,6 +16,8 @@ SQL_FILES = [
     os.path.join(BASE_DIR, 'stored_procedures', 'alter_messages_add_attachment.sql'),
     os.path.join(BASE_DIR, 'stored_procedures', 'sp_send_message.sql'),
     os.path.join(BASE_DIR, 'stored_procedures', 'sp_get_conversation.sql'),
+    os.path.join(BASE_DIR, 'stored_procedures', 'sp_get_announcement_details.sql'),
+    os.path.join(BASE_DIR, 'stored_procedures', 'sp_save_announcement.sql'),
 ]
 
 def apply_sql_file(path):
