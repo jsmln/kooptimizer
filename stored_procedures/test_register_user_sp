@@ -19,7 +19,7 @@ def register_user(username: str, password: str, role: str):
         # --- Connect to your PostgreSQL database ---
         conn = psycopg2.connect(
             host="127.0.0.1",
-            database="kooptimizer_db",
+            database="kooptimizer_db2",
             user="postgres",
             password="postgres"
         )

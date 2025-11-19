@@ -14,6 +14,20 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+
+        # ============================================================
+        # 🛠️ HARDCODED TEST ACCOUNT (Remove in Production)
+        # ============================================================
+        # if username == 'testadmin' and password == '12345':
+        #     # Set dummy session data required by your Dashboard
+        #     request.session['user_id'] = 9999 
+        #     request.session['username'] = 'Administrator' 
+        #     request.session['role'] = 'admin'  # Change to 'staff' or 'officer' to test other views
+            
+        #     messages.success(request, 'Welcome back, Administrator! (Bypassed)')
+        #     return redirect('dashboard:admin_dashboard')
+        # # ============================================================
+
         recaptcha_response = request.POST.get('g-recaptcha-response')
 
         # Verify reCAPTCHA

@@ -1,4 +1,3 @@
-
 {% load static %}
 
 <!DOCTYPE html>
@@ -10,8 +9,11 @@
     <title>{% block title %}KoopTimizer{% endblock %}</title>
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="apple-mobile-web-app-status-bar-style" content="#3367D6">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <link href="{% static 'frontend/base.css' %}" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
 
     {% block extra_head %}{% endblock %}
@@ -21,10 +23,9 @@
 
     <script src="{% static 'main.js' %}"></script>
 
+    {% block header %}
     <header>
-
         <div class="logo-title">
-
             {% if request.session.user_id %}
                 <button id="sidebar-toggle-btn" class="sidebar-toggle">
                     <i class="bi bi-list"></i>
@@ -39,9 +40,7 @@
                 {% if request.session.user_id %}
                 {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'officer'%}
                     <li class="logout-button">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
-                            Logout
-                        </a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
                     </li>
                 {% endif %}
                 {% else %}
@@ -52,14 +51,16 @@
                 {% endif %}
             </ul>
         </nav>
-</header>
+    </header>
+    {% endblock %}
 
+    {% block main_body %}
     <main>
         {% block content %}
         {% endblock %}
     </main>
+    {% endblock %}
 
-    <!-- Global Django messages (bottom-right, styled) -->
     <div id="django-messages" aria-live="polite" aria-atomic="true">
         {% if messages %}
             {% for message in messages %}
@@ -76,40 +77,40 @@
         {% endif %}
     </div>
 
+    {% block footer %}
+    <footer>
+        <p>&copy; {% now "Y" %} KoopTimizer. All rights reserved.</p>
+    </footer>
+    {% endblock %}
+
     <script>
-        // Floating message behavior: auto-dismiss and manual close with animation
+        // Floating message behavior
         (function () {
             const container = document.getElementById('django-messages');
             if (!container) return;
-
             function dismiss(el) {
                 el.style.transition = 'opacity 240ms ease, transform 240ms ease';
                 el.style.opacity = '0';
                 el.style.transform = 'translateX(18px)';
                 setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 260);
             }
-
             container.querySelectorAll('.dj-message').forEach((el) => {
-                // close button
                 const btn = el.querySelector('.dj-message-close');
                 if (btn) btn.addEventListener('click', () => dismiss(el));
-
-                // auto-dismiss after 5s
                 setTimeout(() => { if (document.body.contains(el)) dismiss(el); }, 5000);
             });
         })();
     </script>
-  {% if request.session.user_id %}
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+
+    {% if request.session.user_id %}
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered"> 
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Logout</h5>
+                    <h5 class="modal-title">Logout</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    Are you sure you want to log out?
-                </div>
+                <div class="modal-body">Are you sure you want to log out?</div>
                 <div class="modal-footer">
                     <button id="btn-logout-cancel" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <a id="btn-logout-confirm" href="{% url 'logout' %}" class="btn btn-primary">Continue Logout</a>
@@ -119,66 +120,18 @@
     </div>
     {% endif %}
 
-    <footer>
-        <p>&copy; {% now "Y" %} KoopTimizer. All rights reserved.</p>
-    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
 
     <script>
-        window.deferredPrompt = null; 
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            
-            // 2. Assign the event to the global 'window' variable
-            window.deferredPrompt = e; 
-            
-            const installButton = document.getElementById('install-pwa-button');
-            if (installButton) {
-                installButton.style.display = 'block';
-                {% comment %} document.getElementById('install-instructions').style.display = 'none'; {% endcomment %}
-            }
-        });
-
-        NProgress.configure({ 
-            showSpinner: true, 
-            easing: 'ease',    
-            speed: 500        
-        });
-        // Find all links and forms
+        // NProgress Logic
+        NProgress.configure({ showSpinner: true, easing: 'ease', speed: 500 });
         const allLinks = document.querySelectorAll('a[href]:not([data-bs-toggle])');
         const allForms = document.querySelectorAll('form');
-
-        // Add click listener to links
-        allLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                NProgress.start();
-            });
-        });
-
-        // Add submit listener to forms
-        allForms.forEach(form => {
-            form.addEventListener('submit', () => {
-                NProgress.start();
-            });
-        });
-
-        // This handles stopping NProgress if a user hits the back button
-        window.addEventListener('pageshow', (e) => {
-            if (e.persisted) { 
-                NProgress.done();
-            }
-        });
-
-        const logoutModal = document.getElementById('logoutModal');
-        if (logoutModal) {
-            logoutModal.addEventListener('hidden.bs.modal', () => {
-                NProgress.done(); // Stop and remove the bar
-            });
-        }
+        allLinks.forEach(link => link.addEventListener('click', () => NProgress.start()));
+        allForms.forEach(form => form.addEventListener('submit', () => NProgress.start()));
+        window.addEventListener('pageshow', (e) => { if (e.persisted) NProgress.done(); });
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
-
