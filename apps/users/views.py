@@ -22,10 +22,10 @@ def login_view(request):
             # Set dummy session data required by your Dashboard
             request.session['user_id'] = 9999 
             request.session['username'] = 'Administrator' 
-            request.session['role'] = 'admin'  # Change to 'staff' or 'officer' to test other views
+            request.session['role'] = 'officer'  # Change to 'staff' or 'officer' to test other views
             
             messages.success(request, 'Welcome back, Administrator! (Bypassed)')
-            return redirect('dashboard:admin_dashboard')
+            return redirect('dashboard:cooperative_dashboard')
         # ============================================================
 
         recaptcha_response = request.POST.get('g-recaptcha-response')
