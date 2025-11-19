@@ -13,6 +13,11 @@ urlpatterns = [
     path('api/message/attachment/<int:message_id>/convert-pdf/', views.convert_attachment_to_pdf, name='convert_attachment_to_pdf'),
     
     # Announcements
-    path('announcement/send', views.handle_announcement, name='handle_announcement'),
     path('announcement/', views.announcement_view, name='announcement_form'),
+    path('announcement/send/', views.handle_announcement, name='handle_announcement'),  # Added trailing slash
+    path('api/announcement/draft/<int:announcement_id>/', views.get_draft_announcement, name='get_draft_announcement'),
+    path('api/announcement/<int:announcement_id>/', views.get_announcement_details, name='get_announcement_details'),
+    path('api/announcement/<int:announcement_id>/attachment/', views.download_announcement_attachment, name='download_announcement_attachment'),
+    path('api/announcement/<int:announcement_id>/attachment/convert-pdf/', views.convert_announcement_attachment_to_pdf, name='convert_announcement_to_pdf'),
+    path('api/announcement/cancel-schedule/<int:announcement_id>/', views.cancel_scheduled_announcement, name='cancel_scheduled_announcement'),
 ]

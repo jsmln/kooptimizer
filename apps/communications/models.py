@@ -49,7 +49,8 @@ class Cooperative(models.Model):
     coop_id = models.AutoField(primary_key=True, db_column='coop_id')
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, db_column='staff_id', blank=True, null=True)
     cooperative_name = models.CharField(max_length=200, unique=True, db_column='cooperative_name')
-    mobile_number = models.CharField(max_length=20, blank=True, null=True, db_column='mobile_number')
+    category = models.CharField(max_length=255, blank=True, null=True, db_column='category')
+    district = models.CharField(max_length=255, blank=True, null=True, db_column='district')
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
     updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
 
@@ -151,8 +152,13 @@ class Announcement(models.Model):
     description = models.TextField(blank=True, null=True)
     type = models.CharField(max_length=10, blank=True, null=True) # Mapped from 'announcement_type_enum'
     attachment = models.BinaryField(blank=True, null=True)
-    sent_at = models.DateTimeField(auto_now_add=True, db_column='sent_at')
+    attachment_filename = models.CharField(max_length=255, blank=True, null=True, db_column='attachment_filename')
+    attachment_content_type = models.CharField(max_length=255, blank=True, null=True, db_column='attachment_content_type')
+    attachment_size = models.BigIntegerField(blank=True, null=True, db_column='attachment_size')
+    sent_at = models.DateTimeField(blank=True, null=True, db_column='sent_at')
     scope = models.CharField(max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
+    updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
     
     # This M2M field is for 'COOPERATIVE' scope
     coop_recipients = models.ManyToManyField(
@@ -179,11 +185,11 @@ class Announcement(models.Model):
     @classmethod
     def get_by_status(cls, status):
         """
-        Calls the sp_get_announcements_by_status stored procedure.
+        Calls the sp_get_announcements_by_statuses stored procedure.
         """
         try:
             with connection.cursor() as cursor:
-                cursor.execute("SELECT * FROM sp_get_announcements_by_status(%s)", [status])
+                cursor.execute("SELECT * FROM sp_get_announcements_by_statuses(%s)", [status])
                 # Convert the list of tuples into a list of dictionaries
                 columns = [col[0] for col in cursor.description]
                 return [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -220,6 +226,99 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+    
+    @classmethod
+    def get_draft_by_id(cls, announcement_id):
+        """
+        Retrieves a single draft announcement with all its recipients.
+        """
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        a.announcement_id,
+                        a.title,
+                        a.description,
+                        a.type,
+                        a.status_classification,
+                        a.scope, 
+                        a.sent_at,
+                        a.attachment_filename,
+                        a.attachment_content_type,
+                        a.attachment_size,
+                        CASE WHEN a.attachment IS NOT NULL THEN TRUE ELSE FALSE END as has_attachment,
+                        -- Cooperative recipients
+                        COALESCE(
+                            json_agg(
+                                DISTINCT jsonb_build_object(
+                                    'coop_id', ar.coop_id
+                                )
+                            ) FILTER (WHERE ar.coop_id IS NOT NULL),
+                            '[]'::json
+                        ) as coop_recipients,
+                        -- Officer recipients
+                        COALESCE(
+                            json_agg(
+                                DISTINCT jsonb_build_object(
+                                    'officer_id', aor.officer_id,
+                                    'coop_id', o.coop_id
+                                )
+                            ) FILTER (WHERE aor.officer_id IS NOT NULL),
+                            '[]'::json
+                        ) as officer_recipients
+                    FROM announcements a
+                    LEFT JOIN announcement_recipients ar ON a.announcement_id = ar.announcement_id
+                    LEFT JOIN announcement_officer_recipients aor ON a.announcement_id = aor.announcement_id
+                    LEFT JOIN officers o ON aor.officer_id = o.officer_id
+                    WHERE a.announcement_id = %s
+                    GROUP BY a.announcement_id
+                """, [announcement_id])
+                
+                row = cursor.fetchone()
+                if row:
+                    columns = [col[0] for col in cursor.description]
+                    return dict(zip(columns, row))
+                return None
+        except DatabaseError as e:
+            print(f"Database error in get_draft_by_id: {e}")
+            return None
+    
+    @classmethod
+    def get_recipients_for_announcement(cls, announcement_id):
+        """
+        Get recipient names and cooperative names for an announcement.
+        Returns a dict with lists of officer names and cooperative names.
+        """
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 
+                        COALESCE(
+                            json_agg(DISTINCT c.cooperative_name) FILTER (WHERE c.cooperative_name IS NOT NULL),
+                            '[]'::json
+                        ) as coop_names,
+                        COALESCE(
+                            json_agg(DISTINCT o.fullname) FILTER (WHERE o.fullname IS NOT NULL),
+                            '[]'::json
+                        ) as officer_names
+                    FROM announcements a
+                    LEFT JOIN announcement_recipients ar ON a.announcement_id = ar.announcement_id
+                    LEFT JOIN cooperatives c ON ar.coop_id = c.coop_id
+                    LEFT JOIN announcement_officer_recipients aor ON a.announcement_id = aor.announcement_id
+                    LEFT JOIN officers o ON aor.officer_id = o.officer_id
+                    WHERE a.announcement_id = %s
+                """, [announcement_id])
+                
+                row = cursor.fetchone()
+                if row:
+                    return {
+                        'coop_names': row[0] if row[0] else [],
+                        'officer_names': row[1] if row[1] else []
+                    }
+                return {'coop_names': [], 'officer_names': []}
+        except DatabaseError as e:
+            print(f"Database error in get_recipients_for_announcement: {e}")
+            return {'coop_names': [], 'officer_names': []}
 
 # ======================================================
 # 10.1) ANNOUNCEMENT RECIPIENTS

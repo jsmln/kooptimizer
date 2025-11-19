@@ -10,6 +10,8 @@ from django.utils import timezone
 # Import services and utils
 from apps.core.services.sms_service import SmsService
 from .utils import process_attachment, MAX_ATTACHMENT_SIZE
+# from apps.core.services.email_service import EmailService
+from datetime import datetime
 
 # Import your models
 from .models import Cooperative, Officer, Announcement, Message, MessageRecipient
@@ -20,21 +22,202 @@ from django.db.models import Q
 # ======================================================
 # ANNOUNCEMENT VIEWS
 # ======================================================
+@csrf_exempt
+@require_POST
+def cancel_scheduled_announcement(request, announcement_id):
+    """
+    Cancels a scheduled announcement and reverts it to draft status.
+    Only admin can cancel any scheduled announcement.
+    Staff can only cancel their own.
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+    
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    try:
+        # Get the announcement
+        try:
+            announcement = Announcement.objects.get(announcement_id=announcement_id)
+        except Announcement.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
+        
+        # Check if it's actually scheduled
+        if announcement.status_classification != 'scheduled':
+            return JsonResponse({
+                'status': 'error',
+                'message': f'This announcement is {announcement.status_classification}, not scheduled.'
+            }, status=400)
+        
+        # Permission check: Admin can cancel any, Staff can only cancel own
+        if role == 'staff':
+            try:
+                staff_profile = Staff.objects.get(user_id=user_id)
+                if announcement.staff_id != staff_profile.staff_id:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'You do not have permission to cancel this scheduled announcement.'
+                    }, status=403)
+            except Staff.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Staff profile not found'}, status=403)
+        
+        # Check if it's too late (already past scheduled time)
+        if announcement.sent_at and announcement.sent_at <= timezone.now():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'This announcement is past its scheduled time and may have already been sent.'
+            }, status=400)
+        
+        # Revert to draft
+        announcement.status_classification = 'draft'
+        announcement.sent_at = None
+        announcement.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Schedule cancelled successfully. Announcement reverted to draft.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_announcement_details(request, announcement_id):
+    """
+    Retrieves full announcement details for viewing (sent or scheduled).
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+    
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM sp_get_announcement_details(%s);", [announcement_id])
+            row = cursor.fetchone()
+            
+            if not row:
+                return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
+            
+            # Parse the row data
+            (ann_id, title, description, ann_type, status, scope, sent_at, created_at,
+             attachment_size, attachment_filename, sender_name, sender_role,
+             coop_recipients_json, officer_recipients_json) = row
+            
+            # Parse JSON strings
+            import json
+            coop_recipients = json.loads(coop_recipients_json) if coop_recipients_json else []
+            officer_recipients = json.loads(officer_recipients_json) if officer_recipients_json else []
+            
+            return JsonResponse({
+                'status': 'success',
+                'data': {
+                    'announcement_id': ann_id,
+                    'title': title,
+                    'description': description,
+                    'type': ann_type,
+                    'status': status,
+                    'scope': scope,
+                    'sent_at': sent_at.isoformat() if sent_at else None,
+                    'created_at': created_at.isoformat() if created_at else None,
+                    'has_attachment': attachment_size is not None and attachment_size > 0,
+                    'attachment_size': attachment_size,
+                    'attachment_filename': attachment_filename,
+                    'sender_name': sender_name,
+                    'sender_role': sender_role,
+                    'coop_recipients': coop_recipients,
+                    'officer_recipients': officer_recipients
+                }
+            })
+            
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_draft_announcement(request, announcement_id):
+    """
+    Retrieves a draft announcement by ID for editing.
+    Admin can edit any draft (will become sender when sent).
+    Staff can only edit their own drafts.
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+    
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    try:
+        draft_data = Announcement.get_draft_by_id(announcement_id)
+        
+        if not draft_data:
+            return JsonResponse({'status': 'error', 'message': 'Draft not found'}, status=404)
+        
+        # Get announcement object
+        ann = Announcement.objects.get(announcement_id=announcement_id)
+        
+        # Permission check: Admin can edit any draft, Staff can only edit own
+        if role == 'admin':
+            # Admin can edit any draft - no ownership check needed
+            pass
+        elif role == 'staff':
+            # Staff can only edit their own drafts
+            try:
+                staff_profile = Staff.objects.get(user_id=user_id)
+                if ann.staff_id != staff_profile.staff_id:
+                    return JsonResponse({
+                        'status': 'error', 
+                        'message': 'You do not have permission to edit this draft. Only the admin or the creator can edit drafts.'
+                    }, status=403)
+            except Staff.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Staff profile not found'}, status=403)
+        
+        return JsonResponse({
+            'status': 'success',
+            'data': draft_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
 
 @csrf_exempt
 @require_POST
 def handle_announcement(request):
+    """
+    Handles creating, updating, and sending announcements.
+    Supports: save_draft, send_sms, send_email, schedule_send
+    """
     try:
-        data = json.loads(request.body)
+        # Check if it's FormData (multipart) or JSON
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle FormData (with file uploads)
+            data = request.POST
+            title = data.get('title')
+            content = data.get('content')
+            ann_type = data.get('type')
+            action = data.get('action')
+            recipients = json.loads(data.get('recipients', '[]'))
+            scheduled_time = data.get('scheduled_time')
+            announcement_id = data.get('announcement_id')
+            attachments = request.FILES.getlist('attachments')
+        else:
+            # Handle JSON (backward compatibility)
+            data = json.loads(request.body)
+            title = data.get('title')
+            content = data.get('content')
+            ann_type = data.get('type')
+            action = data.get('action')
+            recipients = data.get('recipients', [])
+            scheduled_time = data.get('scheduled_time')
+            announcement_id = data.get('announcement_id')
+            attachments = []
 
-        # --- 1. Extract data from frontend ---
-        title = data.get('title')
-        content = data.get('content')
-        ann_type = data.get('type')  # 'sms' or 'email'
-        action = data.get('action')  # 'save_draft' or 'send_sms'
-        recipients = data.get('recipients', [])
-        scheduled_time = data.get('scheduled_time')
-        
         # --- 2. Get creator info from session ---
         creator_id = request.session.get('user_id') 
         creator_role = request.session.get('role')
@@ -45,7 +228,27 @@ def handle_announcement(request):
         if creator_role not in ['admin', 'staff']:
              return JsonResponse({'status': 'error', 'message': 'Invalid user role.'}, status=403)
         
-        # --- 3. Process recipients ---
+        # --- 3. Validate scheduled time if scheduling ---
+        if action == 'schedule_send':
+            if not scheduled_time:
+                return JsonResponse({'status': 'error', 'message': 'Scheduled time is required.'}, status=400)
+            
+            try:
+                # Parse the datetime string and make it timezone-aware
+                scheduled_dt = datetime.fromisoformat(scheduled_time)
+                # Make timezone-aware if it's naive
+                if scheduled_dt.tzinfo is None:
+                    scheduled_dt = timezone.make_aware(scheduled_dt)
+                
+                if scheduled_dt <= timezone.now():
+                    return JsonResponse({
+                        'status': 'error', 
+                        'message': 'Scheduled time must be in the future.'
+                    }, status=400)
+            except ValueError:
+                return JsonResponse({'status': 'error', 'message': 'Invalid date format.'}, status=400)
+        
+        # --- 4. Process recipients ---
         coop_ids = []
         officer_ids = []
         scope = 'none'
@@ -62,45 +265,96 @@ def handle_announcement(request):
                     officer_ids.append(int(officer_id))
                     scope = 'officer'
 
-        # --- 4. Determine status ---
+        # --- 5. Determine status ---
         status = 'draft'
-        if action == 'send_sms':
+        if action in ['send_sms', 'send_email']:
             status = 'sent'
         elif action == 'schedule_send':
             status = 'scheduled'
         
-        # --- 5. Call Model Method to save to DB ---
-        announcement_id = Announcement.save_announcement(
-            title=title, content=content, ann_type=ann_type, status=status,
-            scope=scope, creator_id=creator_id, creator_role=creator_role,
-            coop_ids=coop_ids, officer_ids=officer_ids,
-            announcement_id=data.get('announcement_id'),
+        # --- 6. Call Model Method to save to DB ---
+        saved_announcement_id = Announcement.save_announcement(
+            title=title, 
+            content=content, 
+            ann_type=ann_type, 
+            status=status,
+            scope=scope, 
+            creator_id=creator_id, 
+            creator_role=creator_role,
+            coop_ids=coop_ids, 
+            officer_ids=officer_ids,
+            announcement_id=announcement_id,  # Pass existing ID for updates
             scheduled_time=scheduled_time
         )
 
-        if not announcement_id:
+        if not saved_announcement_id:
              return JsonResponse({'status': 'error', 'message': 'Failed to save announcement.'}, status=500)
 
-        # --- 6. If action is "Send", call the SMS Service ---
+        # --- 6.5. Handle attachments for email announcements ---
+        if ann_type == 'e-mail' and attachments:
+            try:
+                from .utils import process_attachment
+                
+                # Process and combine all attachments
+                combined_data = b''
+                combined_filenames = []
+                total_size = 0
+                
+                for uploaded_file in attachments:
+                    # Process each file
+                    file_data, content_type, final_filename, file_size = process_attachment(
+                        uploaded_file, 
+                        uploaded_file.name
+                    )
+                    
+                    combined_data += file_data
+                    combined_filenames.append(final_filename)
+                    total_size += file_size
+                
+                # Update the announcement with attachments
+                Announcement.objects.filter(announcement_id=saved_announcement_id).update(
+                    attachment=combined_data,
+                    attachment_filename='; '.join(combined_filenames),  # Multiple filenames separated by semicolon
+                    attachment_content_type='application/mixed',  # Indicate multiple files
+                    attachment_size=total_size
+                )
+                
+            except ValueError as ve:
+                return JsonResponse({'status': 'error', 'message': str(ve)}, status=400)
+            except Exception as e:
+                print(f"Error processing attachments: {e}")
+                return JsonResponse({'status': 'error', 'message': f'Error processing attachments: {str(e)}'}, status=500)
+
+        # --- 7. Send via appropriate service ---
         if action == 'send_sms' and ann_type == 'sms':
             sms_service = SmsService()
-            success, message = sms_service.send_bulk_announcement(announcement_id, content)
+            success, message = sms_service.send_bulk_announcement(saved_announcement_id, content)
             
             if not success:
                 return JsonResponse({'status': 'error', 'message': f"SMS API Error: {message}"}, status=500)
         
+        elif action == 'send_email' and ann_type == 'e-mail':
+            from apps.core.services.email_service import EmailService
+            email_service = EmailService()
+            success, message = email_service.send_bulk_announcement(
+                saved_announcement_id, 
+                content
+            )
+            
+            if not success:
+                return JsonResponse({'status': 'error', 'message': f"Email API Error: {message}"}, status=500)
+        
         return JsonResponse({
             'status': 'success', 
             'message': f'Announcement successfully {status}!',
-            'announcement_id': announcement_id
+            'announcement_id': saved_announcement_id
         })
 
     except json.JSONDecodeError:
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': f'An unexpected error occurred: {e}'}, status=500)
-
-
+    
 def announcement_view(request):
     """
     Renders the announcement form, passing all cooperative, officer,
@@ -130,6 +384,18 @@ def announcement_view(request):
     sent_list = Announcement.get_by_status('sent')
     draft_list = Announcement.get_by_status('draft')
     scheduled_list = Announcement.get_by_status('scheduled')
+    
+    # 4. Add recipient information to each announcement for filtering
+    def add_recipients_info(announcements):
+        """Add recipient names to announcements for search/filter"""
+        for announcement in announcements:
+            recipients_data = Announcement.get_recipients_for_announcement(announcement['announcement_id'])
+            announcement['recipients_info'] = recipients_data
+        return announcements
+    
+    sent_list = add_recipients_info(sent_list)
+    draft_list = add_recipients_info(draft_list)
+    scheduled_list = add_recipients_info(scheduled_list)
     
     context = {
         'cooperatives_json': json.dumps(cooperatives_list),
@@ -563,5 +829,94 @@ def convert_attachment_to_pdf(request, message_id):
         response['Content-Length'] = str(len(pdf_bytes))
         return response
 
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def download_announcement_attachment(request, announcement_id):
+    """
+    Download or preview attachment from an announcement.
+    Note: Since multiple files are combined, this returns the combined blob.
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+    
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    try:
+        announcement = Announcement.objects.get(announcement_id=announcement_id)
+        
+        if not announcement.attachment:
+            return JsonResponse({'status': 'error', 'message': 'No attachment found'}, status=404)
+        
+        # Parse filenames (semicolon-separated for multiple files)
+        filenames = announcement.attachment_filename.split(';') if announcement.attachment_filename else ['attachment']
+        
+        # For combined files, use first filename or generic name
+        filename = filenames[0].strip() if filenames else 'attachments.bin'
+        content_type = announcement.attachment_content_type or 'application/octet-stream'
+        
+        # Check if preview mode (open in browser) or download
+        preview = request.GET.get('preview', 'false').lower() == 'true'
+        
+        response = HttpResponse(announcement.attachment, content_type=content_type)
+        if preview:
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+        else:
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Length'] = str(announcement.attachment_size or len(announcement.attachment))
+        
+        return response
+        
+    except Announcement.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def convert_announcement_attachment_to_pdf(request, announcement_id):
+    """
+    Convert announcement attachment to PDF for preview.
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+    
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+    
+    try:
+        announcement = Announcement.objects.get(announcement_id=announcement_id)
+        
+        if not announcement.attachment:
+            return JsonResponse({'status': 'error', 'message': 'No attachment found'}, status=404)
+        
+        content_type = announcement.attachment_content_type or 'application/octet-stream'
+        
+        # If already PDF, just return it
+        if content_type == 'application/pdf':
+            response = HttpResponse(announcement.attachment, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline'
+            return response
+        
+        # Convert to PDF
+        from apps.communications.utils import convert_to_pdf
+        filenames = announcement.attachment_filename.split(';') if announcement.attachment_filename else ['attachment']
+        filename = filenames[0].strip() if filenames else 'attachment'
+        
+        pdf_bytes, success = convert_to_pdf(announcement.attachment, filename, content_type)
+        
+        if not success:
+            return JsonResponse({'status': 'error', 'message': 'Conversion failed'}, status=400)
+        
+        stream = BytesIO(pdf_bytes)
+        response = FileResponse(stream, as_attachment=False, filename=filename.rsplit('.', 1)[0] + '.pdf', content_type='application/pdf')
+        response['Content-Length'] = str(len(pdf_bytes))
+        return response
+        
+    except Announcement.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

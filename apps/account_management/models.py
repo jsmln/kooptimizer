@@ -68,7 +68,8 @@ class Cooperatives(models.Model):
     coop_id = models.AutoField(primary_key=True)
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, db_column='staff_id', blank=True, null=True)
     cooperative_name = models.CharField(max_length=200, unique=True, null=False)
-    mobile_number = models.CharField(max_length=20, blank=True, null=True)
+    category = models.CharField(max_length=255, blank=True, null=True)
+    district = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

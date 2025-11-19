@@ -7,8 +7,8 @@ import subprocess
 import tempfile
 import os
 
-# Max attachment size per send (25 MB)
-MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024
+# Max attachment size per send (4 MB - Brevo API limit for attachments)
+MAX_ATTACHMENT_SIZE = 4 * 1024 * 1024
 
 def convert_docx_to_pdf(docx_bytes):
     """

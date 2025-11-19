@@ -26,6 +26,9 @@ SECRET_KEY = os.environ.get(
     'SECRET_KEY', 'django-insecure-eu6tra#vaqwuxk4z4((zawbf8h6wxi$@=+*)39(wpdwa0ll8(y'
 )
 
+# Optiic OCR API Configuration
+OPTIIC_API_KEY = os.environ.get('OPTIIC_API_KEY', 'test_api_key')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
@@ -41,7 +44,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '127.0.0.1:8000'
     '.ngrok-free.dev',
-    'platinoid-sandra-endocentric.ngrok-free.dev'
+    'platinoid-sandra-endocentric.ngrok-free.dev',
+    '.dev'
 ]
 
 # Get extra hosts from the environment variable (for production, etc.)
@@ -51,7 +55,7 @@ if raw_allowed:
     ALLOWED_HOSTS.extend([h.strip() for h in raw_allowed.split(',') if h.strip()])
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://platinoid-sandra-endocentric.ngrok-free.dev' 
+    'https://platinoid-sandra-endocentric.ngrok-free.dev'
 ]
 
 # Application definition
@@ -68,7 +72,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.users',
     'apps.cooperatives',
-    'apps.communications',
+    'apps.communications.apps.CommunicationsConfig',  # Use AppConfig to enable scheduler
     'apps.home',
     'apps.account_management',
     'apps.databank',
@@ -143,7 +147,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 
@@ -163,6 +167,39 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ====================================================================
+#  LOGGING CONFIGURATION
+# ====================================================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'scheduler.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'apps.communications.scheduler': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
 
 # ====================================================================
 #  RECAPTCHA TEST KEYS (FOR DEVELOPMENT)
@@ -181,8 +218,6 @@ IPROG_SMS = {
 }
 
 #Here pls 
-
-
 
 
 
