@@ -9,197 +9,227 @@
 {% endblock %}
 
 {% block dashboard_content %}
-<style>
-    .dashboard-main-content {
-        padding: 0;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
-
-<div class="databank-layout">
+<div class="databank-container">
     
     <div class="databank-header">
-        <h2>Cooperative Databank Management</h2>
-        <div class="coop-count">Total No. of Cooperatives: 6</div>
-    </div>
-
-    <div class="databank-toolbar">
-        <button class="filter-btn" title="Filter">
-            <i class="bi bi-filter"></i>
-        </button>
-        <div class="search-bar">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Search">
+        <div class="header-left">
+            <h2>Cooperative Databank</h2>
+            <p class="subtitle">Manage and view registered cooperative profiles.</p>
+        </div>
+        <div class="header-right">
+            <div class="stat-card">
+                <span class="stat-label">Total Cooperatives</span>
+                <span class="stat-value" id="total-count">6</span>
+            </div>
         </div>
     </div>
 
-    <div class="table-container">
-        <div class="table-subtitle">Cooperative Profile Informations</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Cooperative Name</th>
-                    <th>Cooperative Address</th>
-                    <th>Email Address</th>
-                    <th>Contact Number</th>
-                    <th>CDA Registration Number</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr data-modal-target="profile-modal">
-                    <td>Plaridel Multipurpose Cooperative</td>
-                    <td>Balintawak, Lipa, Batangas</td>
-                    <td>plaridelmulticoop@gmail.com</td>
-                    <td>09178064570</td>
-                    <td>1414-06140255</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Agriculture Cooperative</td>
-                    <td>Sabang, Lipa, Batangas</td>
-                    <td>lipaagriculture@gmail.com</td>
-                    <td>09929380946</td>
-                    <td>1414-06140256</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Consumer Cooperative</td>
-                    <td>Dagatan, Lipa, Batangas</td>
-                    <td>coopconsumer@gmail.com</td>
-                    <td>09272739984</td>
-                    <td>1414-06140257</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Housing Cooperative</td>
-                    <td>Inosluban, Lipa, Batangas</td>
-                    <td>housingcooplipa@gmail.com</td>
-                    <td>09935239653</td>
-                    <td>1414-06140258</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Workers Cooperative</td>
-                    <td>Maraouy, Lipa, Batangas</td>
-                    <td>workerscooplipa@gmail.com</td>
-                    <td>09154937568</td>
-                    <td>1414-06140259</td>
-                </tr>
-                <tr><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td></td><td></td><td></td><td></td></tr>
-            </tbody>
-        </table>
+    <div class="databank-toolbar">
+        <button class="filter-btn" title="Filter Options">
+            <i class="bi bi-filter"></i> Filter
+        </button>
+    </div>
+
+    <div class="table-section">
+        <div class="table-wrapper">
+            <table id="coop-table">
+                <thead>
+                    <tr>
+                        <th>Cooperative Name</th>
+                        <th>Address</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>CDA Registration No.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-modal-target="profile-modal">
+                        <td>Plaridel Multipurpose Cooperative</td>
+                        <td>Balintawak, Lipa, Batangas</td>
+                        <td>plaridelmulticoop@gmail.com</td>
+                        <td>09178064570</td>
+                        <td>1414-06140255</td>
+                    </tr>
+                    <tr data-modal-target="profile-modal">
+                        <td>Agriculture Cooperative</td>
+                        <td>Sabang, Lipa, Batangas</td>
+                        <td>lipaagriculture@gmail.com</td>
+                        <td>09929380946</td>
+                        <td>1414-06140256</td>
+                    </tr>
+                    <tr data-modal-target="profile-modal">
+                        <td>Consumer Cooperative</td>
+                        <td>Dagatan, Lipa, Batangas</td>
+                        <td>coopconsumer@gmail.com</td>
+                        <td>09272739984</td>
+                        <td>1414-06140257</td>
+                    </tr>
+                    <tr data-modal-target="profile-modal">
+                        <td>Housing Cooperative</td>
+                        <td>Inosluban, Lipa, Batangas</td>
+                        <td>housingcooplipa@gmail.com</td>
+                        <td>09935239653</td>
+                        <td>1414-06140258</td>
+                    </tr>
+                    <tr data-modal-target="profile-modal">
+                        <td>Workers Cooperative</td>
+                        <td>Maraouy, Lipa, Batangas</td>
+                        <td>workerscooplipa@gmail.com</td>
+                        <td>09154937568</td>
+                        <td>1414-06140259</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer">
+            <span id="showing-text">Showing all entries</span>
+        </div>
     </div>
 
 </div>
 
 <div id="profile-modal" class="modal-overlay">
     <div class="modal-content">
-        <button class="modal-close-btn">&times;</button>
+        <div class="modal-top-bar">
+            <h3>Cooperative Profile</h3>
+            <button class="modal-close-btn">&times;</button>
+        </div>
         
-        <div class="modal-header">
-            <h3>Consumer Cooperative Profile Information</h3>
-            <div class="modal-meta">
-                Last Updated: Tuesday, September 30, 2025<br>
-                by: Isabel Delacion, Chairperson
+        <div class="modal-scroll-area">
+            <div class="modal-header-section">
+                <div class="coop-avatar">C</div>
+                <div class="coop-title-info">
+                    <h4 id="modal-coop-name">Consumer Cooperative</h4>
+                    <span class="badge-cda">CDA: 1414-060923055</span>
+                    <div class="update-info">Last Updated: Sept 30, 2025 by Isabel Delacion</div>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <section class="info-section">
+                    <h5 class="section-title">General Information</h5>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Address</label>
+                            <p>Sabang, Lipa City, Batangas</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Email Address</label>
+                            <p>consumercoop@gmail.com</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Contact Number</label>
+                            <p>09929380925</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Area of Operation</label>
+                            <p>Consumer</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Business Activity</label>
+                            <p>Supply and demand</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Registration Date</label>
+                            <p>09-06-2005</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Compliance Cert.</label>
+                            <p><span class="status-yes">Yes</span></p>
+                        </div>
+                        <div class="info-item">
+                            <label>Tax Exemption</label>
+                            <p><span class="status-yes">Yes</span></p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-section">
+                    <h5 class="section-title">Financial Overview (2024)</h5>
+                    <div class="info-grid three-col">
+                        <div class="info-item">
+                            <label>Assets</label>
+                            <p>₱ 356,964.68</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Paid Up Capital</label>
+                            <p>₱ 108,243.78</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Net Surplus</label>
+                            <p>₱ 10,653.54</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="info-section">
+                    <h5 class="section-title">Key Officers</h5>
+                    <div class="officers-list">
+                        <div class="officer-item">
+                            <span class="role">Chairperson</span>
+                            <span class="name">Isabel Delacion</span>
+                        </div>
+                        <div class="officer-item">
+                            <span class="role">Vice Chairperson</span>
+                            <span class="name">Jasmin Esperida</span>
+                        </div>
+                        <div class="officer-item">
+                            <span class="role">Secretary</span>
+                            <span class="name">Maria Lopez</span>
+                        </div>
+                        <div class="officer-item">
+                            <span class="role">Treasurer</span>
+                            <span class="name">Ramon Santos</span>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
 
-        <div class="modal-body">
-            <section class="modal-section">
-                <h4>COOPERATIVE GENERAL INFORMATION</h4>
-                <div class="info-grid">
-                    <span>Cooperative Name:</span> <span>Consumer Cooperative</span>
-                    <span>Cooperative Address:</span> <span>Sabang, Lipa City, Batangas</span>
-                    <span>Cooperative Contact Number:</span> <span>09929380925</span>
-                    <span>Cooperative Email Address:</span> <span>consumercoop@gmail.com</span>
-                    <span>CDA Registration Number:</span> <span>1414-060923055</span>
-                    <span>CDA Registration Date:</span> <span>09-06-2005</span>
-                    <span>LCCDC Membership:</span> <span>09-14-2014</span>
-                    <span>Area of Operation:</span> <span>Consumer</span>
-                    <span>Business Activity:</span> <span>Supply and demand</span>
-                    <span>Number of Board Directors:</span> <span>3</span>
-                    <span>Number of Salaried Employees:</span> <span>14</span>
-                    <span>Certificate of Compliance:</span> <span>Yes</span>
-                    <span>Certificate of Tax Exemption:</span> <span>Yes</span>
-                </div>
-            </section>
-
-            <section class="modal-section">
-                <h4>FINANCIAL RECORDS</h4>
-                <div class="info-grid">
-                    <span>2022 Assets:</span> <span>142,657.00</span>
-                    <span>2023 Assets:</span> <span>258,843.00</span>
-                    <span>2024 Assets:</span> <span>356,964.68</span>
-                    <span>Total Paid Up Capital:</span> <span>108,243.78</span>
-                    <span>Total Subscribed Capital:</span> <span>50,876.75</span>
-                    <span>Net Surplus/Loss:</span> <span>10,653.54</span>
-                    <span>Total Statutory Fund:</span> <span>14,785.90</span>
-                </div>
-            </section>
-
-            <section class="modal-section">
-                <h4>COOPERATIVE OFFICERS</h4>
-                <div class="info-grid">
-                    <span>CHAIRPERSON:</span> <span>Isabel Delacion</span>
-                    <span>VICE CHAIRPERSON:</span> <span>Jasmin Esperida</span>
-                    <span>MEMBERS (BOD):</span> <span>Art Delos Reyes, Noe Gonzales</span>\
-                    <span>SECRETARY:</span> <span>Maria Lopez</span>
-                    <span>TREASURER:</span> <span>Ramon Santos</span>
-                </div>
-            </section>
-
-            <section class="modal-section">
-                <h4>COOPERATIVE COMMITTEE MEMBERS</h4>
-                <div class="info-grid">
-                    <span>Audit Committee:</span> <span>Isabel Delacion</span>
-                    <span>Election Committee:</span> <span>Jasmin Esperida</span>
-                    <span>Ethics Committee:</span> <span>Art Delos Reyes, Noe Gonzales</span>
-                    <span>Mediation & Cociliation Committe:</span> <span>Maria Lopez</span>
-                    <span>GAD Committee:</span> <span>Ramon Santos</span>
-                    <span>Credit Committee:</span> <span>Luis Fernando</span>
-                    <span>Education & Training Committee</span> <span>Anna Cruz</span>
-                    <span>Manager:</span> <span>Pedro Tan</span>
-                    <span>Bookkeeper:</span> <span>Luisa Moreno</span>
-                    <span>Store Clerk 1:</span> <span>Mandy Rivera</span>
-                    <span>Store Clerk 2:</span> <span>Rey Avilla</span>
-                </div>
-            </section>
-        </div>
-
         <div class="modal-footer">
-            <button class="edit-btn">Edit</button>
+            <button class="secondary-btn close-modal-trigger">Close</button>
+            <button class="primary-btn edit-btn"><i class="bi bi-pencil-square"></i> Edit Profile</button>
         </div>
     </div>
 </div>
+
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const tableRows = document.querySelectorAll('.table-container tbody tr[data-modal-target]');
+        console.log("Databank Script Loaded");
+
         const modal = document.getElementById('profile-modal');
-        if (!modal) return;
-
-        const closeBtn = modal.querySelector('.modal-close-btn');
-
-        // Open modal
-        tableRows.forEach(row => {
-            // Only add click listener to rows with data
-            if (row.cells[0].textContent.trim() !== "") {
-                row.addEventListener('click', () => {
+        const tableRows = document.querySelectorAll('tr[data-modal-target]');
+        const closeButtons = document.querySelectorAll('.modal-close-btn, .close-modal-trigger');
+        
+        if (modal) {
+            // Open Modal on Row Click
+            tableRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    // You can add logic here to fetch specific row data if needed
                     modal.classList.add('visible');
                 });
-            }
-        });
+            });
 
-        // Close modal via 'X' button
-        closeBtn.addEventListener('click', () => {
-            modal.classList.remove('visible');
-        });
-
-        // Close modal by clicking overlay
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+            // Close Modal Function
+            const closeModal = () => {
                 modal.classList.remove('visible');
-            }
-        });
+            };
+
+            // Attach Close Event to buttons
+            closeButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); 
+                    closeModal();
+                });
+            });
+
+            // Close when clicking the overlay background
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
     });
 </script>
 {% endblock %}
