@@ -335,85 +335,147 @@
 {% endblock %}
 
 {% block dashboard_content %}
-<style>
-    .dashboard-main-content {
-        padding: 0;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-</style>
 
-<div class="databank-layout">
+<div class="databank-container">
     
     <div class="databank-header">
-        <h2>Cooperative Databank Management</h2>
-        <div class="coop-count">Total No. of Cooperatives: 6</div>
-    </div>
-
-    <div class="databank-toolbar">
-        <button class="filter-btn" title="Filter">
-            <i class="bi bi-filter"></i>
-        </button>
-        <div class="search-bar">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Search">
+        <div class="header-left">
+            <h2>Cooperative Data Bank</h2>
+            <p class="subtitle">Manage and monitor cooperative information</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Total Cooperatives</span>
+            <span class="stat-value">{{ total_count|default:0 }}</span>
         </div>
     </div>
 
-    <div class="table-container">
-        <div class="table-subtitle">Cooperative Profile Informations</div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Cooperative Name</th>
-                    <th>Cooperative Address</th>
-                    <th>Email Address</th>
-                    <th>Contact Number</th>
-                    <th>CDA Registration Number</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr data-modal-target="profile-modal">
-                    <td>Plaridel Multipurpose Cooperative</td>
-                    <td>Balintawak, Lipa, Batangas</td>
-                    <td>plaridelmulticoop@gmail.com</td>
-                    <td>09178064570</td>
-                    <td>1414-06140255</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Agriculture Cooperative</td>
-                    <td>Sabang, Lipa, Batangas</td>
-                    <td>lipaagriculture@gmail.com</td>
-                    <td>09929380946</td>
-                    <td>1414-06140256</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Consumer Cooperative</td>
-                    <td>Dagatan, Lipa, Batangas</td>
-                    <td>coopconsumer@gmail.com</td>
-                    <td>09272739984</td>
-                    <td>1414-06140257</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Housing Cooperative</td>
-                    <td>Inosluban, Lipa, Batangas</td>
-                    <td>housingcooplipa@gmail.com</td>
-                    <td>09935239653</td>
-                    <td>1414-06140258</td>
-                </tr>
-                <tr data-modal-target="profile-modal">
-                    <td>Workers Cooperative</td>
-                    <td>Maraouy, Lipa, Batangas</td>
-                    <td>workerscooplipa@gmail.com</td>
-                    <td>09154937568</td>
-                    <td>1414-06140259</td>
-                </tr>
-                <tr><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td></td><td></td><td></td><td></td><td></td></tr>
-            </tbody>
-        </table>
+    <div class="databank-toolbar">
+        <div class="toolbar-left">
+            <button class="add-btn" id="addCoopBtn">
+                <i class="bi bi-plus-circle"></i>
+                Add Cooperative
+            </button>
+            <button class="filter-btn" title="Filter">
+                <i class="bi bi-funnel"></i>
+                Filter
+            </button>
+        </div>
+        <div class="search-bar">
+            <i class="bi bi-search"></i>
+            <input type="text" id="searchInput" placeholder="Search cooperatives...">
+        </div>
+    </div>
+
+    <div class="table-section">
+        <div class="table-wrapper">
+            <table id="coop-table">
+                <thead>
+                    <tr>
+                        <th>Cooperative Name</th>
+                        <th>Category</th>
+                        <th>District</th>
+                        <th>Address</th>
+                        <th>Contact</th>
+                        <th>CDA Registration</th>
+                        <th>Assets (₱)</th>
+                        <th>Capital (₱)</th>
+                        <th>Members</th>
+                        <th>Officers</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coop in cooperatives %}
+                    <tr data-coop-id="{{ coop.coop_id }}">
+                        <td><strong>{{ coop.cooperative_name }}</strong></td>
+                        <td>
+                            {% if coop.category %}
+                                <span class="badge-category">{{ coop.category }}</span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ coop.district|default:"N/A" }}</td>
+                        <td class="text-truncate" style="max-width: 200px;" title="{{ coop.address }}">
+                            {{ coop.address|default:"N/A" }}
+                        </td>
+                        <td>
+                            <div class="contact-info">
+                                {% if coop.email_address %}
+                                    <div><i class="bi bi-envelope"></i> {{ coop.email_address }}</div>
+                                {% endif %}
+                                {% if coop.mobile_number %}
+                                    <div><i class="bi bi-phone"></i> {{ coop.mobile_number }}</div>
+                                {% endif %}
+                                {% if not coop.email_address and not coop.mobile_number %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if coop.cda_registration_number %}
+                                <div>{{ coop.cda_registration_number }}</div>
+                                {% if coop.cda_registration_date %}
+                                    <small class="text-muted">{{ coop.cda_registration_date }}</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if coop.assets %}
+                                {{ coop.assets|floatformat:2 }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if coop.paid_up_capital %}
+                                {{ coop.paid_up_capital|floatformat:2 }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-count">{{ coop.members_count|default:0 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-count">{{ coop.officers_count|default:0 }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="viewCooperativeDetails({{ coop.coop_id }})" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn-action btn-edit" onclick="editCooperative({{ coop.coop_id }})" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-action btn-delete" onclick="deleteCooperative({{ coop.coop_id }})" title="Mark Inactive">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 60px; color: #A3AED0;">
+                            <i class="bi bi-inbox" style="font-size: 56px; display: block; margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h4 style="color: #2B3674; margin-bottom: 8px;">No cooperatives found</h4>
+                            <p style="margin: 0;">Click "Add Cooperative" to get started.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer">
+            <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
+            {% if cooperatives %}
+            <div class="pagination">
+                <!-- Pagination will be added here if needed -->
+            </div>
+            {% endif %}
+        </div>
     </div>
 
 </div>
@@ -898,6 +960,166 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         return cookieValue;
+    }
+    
+    // ========== COOPERATIVE CRUD FUNCTIONS ==========
+    
+    // View cooperative details
+    window.viewCooperativeDetails = async function(coopId) {
+        try {
+            const response = await fetch(`/databank/api/cooperative/${coopId}/`);
+            const data = await response.json();
+            
+            if (data.success) {
+                showCooperativeModal(data.data);
+            } else {
+                alert('Failed to load cooperative details: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching cooperative:', error);
+            alert('Failed to load cooperative details.');
+        }
+    };
+    
+    // Show cooperative details modal
+    function showCooperativeModal(coop) {
+        // Create and show modal with cooperative data
+        const modalHTML = `
+            <div class="modal-overlay visible" id="coopModal">
+                <div class="modal-content">
+                    <div class="modal-top-bar">
+                        <h3>${coop.cooperative_name}</h3>
+                        <div class="modal-actions">
+                            <button class="pdf-btn" onclick="exportToPDF(${coop.coop_id})">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                <span>Export PDF</span>
+                            </button>
+                            <button class="modal-close-btn" onclick="closeModal()">&times;</button>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-scroll-area">
+                        <div class="modal-header-section">
+                            <div class="coop-avatar">${coop.cooperative_name.charAt(0)}</div>
+                            <div class="coop-title-info">
+                                <h4>${coop.cooperative_name}</h4>
+                                <span class="badge-cda">${coop.cda_registration_number || 'No CDA'}</span>
+                                <p class="update-info">Last updated: ${new Date(coop.updated_at).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3 class="section-title">Contact Information</h3>
+                            <div class="info-grid two-col">
+                                <div class="info-item">
+                                    <label>Address</label>
+                                    <p>${coop.address || 'N/A'}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Mobile Number</label>
+                                    <p>${coop.mobile_number || 'N/A'}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Email</label>
+                                    <p>${coop.email_address || 'N/A'}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Category</label>
+                                    <p>${coop.category || 'N/A'}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>District</label>
+                                    <p>${coop.district || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3 class="section-title">Registration Details</h3>
+                            <div class="info-grid three-col">
+                                <div class="info-item">
+                                    <label>CDA Registration</label>
+                                    <p>${coop.cda_registration_number || 'N/A'}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>Registration Date</label>
+                                    <p>${coop.cda_registration_date || 'N/A'}</p>
+                                </div>
+                                <div class="info-item">
+                                    <label>LCCDC Member</label>
+                                    <p>${coop.lccdc_membership ? '<span class="status-yes">Yes</span>' : 'No'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button class="secondary-btn" onclick="closeModal()">Close</button>
+                        <button class="primary-btn" onclick="editCooperative(${coop.coop_id})">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                        <button class="primary-btn" style="background: #dc3545;" onclick="deleteCooperative(${coop.coop_id})">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Close modal
+    window.closeModal = function() {
+        const modal = document.getElementById('coopModal');
+        if (modal) {
+            modal.classList.remove('visible');
+            setTimeout(() => modal.remove(), 300);
+        }
+    };
+    
+    // Delete cooperative (soft delete)
+    window.deleteCooperative = async function(coopId) {
+        if (!confirm('Are you sure you want to mark this cooperative as inactive?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/databank/api/cooperative/${coopId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Cooperative marked as inactive successfully');
+                closeModal();
+                location.reload();
+            } else {
+                alert('Failed to delete: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error deleting cooperative:', error);
+            alert('Failed to delete cooperative.');
+        }
+    };
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#coop-table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
     }
 });
 </script>
