@@ -158,14 +158,30 @@
     flex-direction: column;
     overflow: hidden;
     padding: 0 32px 28px 32px;
+    position: relative;
+}
+
+/* Scroll indicator hint */
+.table-section::after {
+    content: '';
+    position: absolute;
+    right: 32px;
+    top: 0;
+    bottom: 28px;
+    width: 40px;
+    background: linear-gradient(to left, rgba(248, 249, 252, 0.9), transparent);
+    pointer-events: none;
+    z-index: 1;
 }
 
 .table-wrapper {
     flex: 1;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
     border: 1px solid #edf2f7;
     border-radius: 12px;
     background: #fff;
+    scroll-behavior: smooth;
 }
 
 .table-wrapper::-webkit-scrollbar {
@@ -178,8 +194,13 @@
     border-radius: 10px;
 }
 
+.table-wrapper::-webkit-scrollbar-track {
+    background: #f8f9fc;
+}
+
 table {
     width: 100%;
+    min-width: 1400px; /* Ensures horizontal scroll on smaller screens */
     border-collapse: collapse;
     white-space: nowrap;
 }
@@ -198,6 +219,7 @@ table {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 2px solid #771520;
+    white-space: nowrap;
 }
 
 /* Main Dashboard Table Cells */
@@ -207,7 +229,32 @@ table {
     color: #2B3674;
     font-size: 0.9rem;
     font-weight: 500;
+    vertical-align: middle;
 }
+
+/* Specific column widths for better readability */
+#coop-table th:nth-child(1),
+#coop-table td:nth-child(1) { min-width: 200px; } /* Cooperative Name */
+#coop-table th:nth-child(2),
+#coop-table td:nth-child(2) { min-width: 120px; } /* Category */
+#coop-table th:nth-child(3),
+#coop-table td:nth-child(3) { min-width: 100px; } /* District */
+#coop-table th:nth-child(4),
+#coop-table td:nth-child(4) { min-width: 180px; } /* Address */
+#coop-table th:nth-child(5),
+#coop-table td:nth-child(5) { min-width: 220px; } /* Contact */
+#coop-table th:nth-child(6),
+#coop-table td:nth-child(6) { min-width: 160px; } /* CDA Registration */
+#coop-table th:nth-child(7),
+#coop-table td:nth-child(7) { min-width: 120px; } /* Assets */
+#coop-table th:nth-child(8),
+#coop-table td:nth-child(8) { min-width: 120px; } /* Capital */
+#coop-table th:nth-child(9),
+#coop-table td:nth-child(9) { min-width: 90px; } /* Members */
+#coop-table th:nth-child(10),
+#coop-table td:nth-child(10) { min-width: 90px; } /* Officers */
+#coop-table th:nth-child(11),
+#coop-table td:nth-child(11) { min-width: 140px; } /* Actions */
 
 /* --- ENHANCED HOVER BEHAVIOR --- */
 #coop-table tbody tr[data-modal-target] {
@@ -560,12 +607,6 @@ table {
 .contact-info i {
     color: #a91e2c;
     font-size: 0.9rem;
-}
-
-.text-truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .text-end {
