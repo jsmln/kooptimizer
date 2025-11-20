@@ -48,3 +48,18 @@ INFO 2025-11-20 05:09:09,468 scheduler Announcement scheduler started
 INFO 2025-11-20 05:09:38,487 scheduler Announcement scheduler started
 INFO 2025-11-20 05:09:56,013 scheduler Announcement scheduler started
 INFO 2025-11-20 07:50:38,630 scheduler Announcement scheduler started
+INFO 2025-11-20 13:14:01,298 scheduler Announcement scheduler started
+INFO 2025-11-20 14:00:08,344 scheduler Processing scheduled announcement: This is a test announcement. (ID: 38)
+INFO 2025-11-20 15:02:59,602 scheduler Announcement scheduler started
+INFO 2025-11-20 15:06:40,821 scheduler Announcement scheduler started
+INFO 2025-11-20 15:07:50,782 scheduler Announcement scheduler started
+INFO 2025-11-20 15:09:54,761 scheduler Announcement scheduler started
+INFO 2025-11-20 15:10:04,134 scheduler Announcement scheduler started
+INFO 2025-11-20 15:11:52,146 scheduler Announcement scheduler started
+INFO 2025-11-20 15:13:22,346 scheduler Announcement scheduler started
+INFO 2025-11-20 15:13:32,001 scheduler Announcement scheduler started
+INFO 2025-11-20 15:15:12,157 scheduler Announcement scheduler started
+INFO 2025-11-20 15:15:51,978 scheduler Announcement scheduler started
+INFO 2025-11-20 15:16:03,744 scheduler Announcement scheduler started
+INFO 2025-11-20 15:16:13,276 scheduler Announcement scheduler started
+INFO 2025-11-20 15:19:17,509 scheduler Announcement scheduler started
