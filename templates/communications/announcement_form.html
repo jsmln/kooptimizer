@@ -11,6 +11,210 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
 
     <link rel="stylesheet" href="{% static 'frontend/announcement.css' %}">
+    
+    <style>
+    /* 1. Force Dashboard Center to be a Flex Container */
+    .content-scrollable {
+        padding: 0 !important; 
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden !important;
+        background-color: #F4F7FE;
+    }
+
+    /* --- 1. LAYOUT WRAPPER --- */
+    .announcement-layout {
+        display: flex;
+        width: 96%;  
+        height: 92%; 
+        max-width: 1400px;
+        gap: 20px;
+        background: transparent;
+        overflow: hidden;
+    }
+
+    /* --- 2. LEFT CARD: NAVIGATION SIDEBAR --- */
+    .announcement-sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Create New Button */
+    #create-new-btn {
+        background-color: #b71c1c;
+        border: none;
+        font-weight: 600;
+        border-radius: 12px;
+        padding: 12px;
+        transition: 0.2s;
+    }
+    #create-new-btn:hover { background-color: #8a1515; }
+
+    /* Navigation Links (Gmail Style) */
+    .sidebar-nav .nav-item {
+        margin-bottom: 4px;
+        padding-right: 15px;
+    }
+
+    .sidebar-nav .nav-link {
+        color: #555;
+        font-weight: 500;
+        padding: 10px 20px;
+        border-radius: 0 25px 25px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+    }
+
+    .sidebar-nav .nav-link i { font-size: 1.1rem; color: #888; }
+
+    .sidebar-nav .nav-link:hover {
+        background-color: #f5f5f5;
+        color: #000;
+    }
+
+    .sidebar-nav .nav-link.active {
+        background-color: #fff0f2;
+        color: #b71c1c;
+    }
+    .sidebar-nav .nav-link.active i { color: #b71c1c; }
+
+    .sidebar-nav .badge {
+        background-color: #f0f0f0;
+        color: #333;
+        font-weight: 600;
+        border-radius: 10px;
+    }
+    .sidebar-nav .nav-link.active .badge {
+        background-color: #b71c1c;
+        color: #fff;
+    }
+
+    /* --- 3. RIGHT CARD: CONTENT AREA --- */
+    .announcement-content {
+        flex: 1;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Content Header */
+    .content-header {
+        height: 70px;
+        padding: 0 25px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        background: #fff;
+    }
+
+    /* Search Input */
+    .search-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+    }
+    .search-wrapper input {
+        width: 100%;
+        padding: 10px 15px 10px 40px;
+        background: #f9f9f9;
+        border: 1px solid transparent;
+        border-radius: 20px;
+        color: #000;
+    }
+    .search-wrapper input:focus {
+        background: #fff;
+        border-color: #b71c1c;
+        outline: none;
+    }
+    .search-wrapper i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #999;
+    }
+
+    /* Scrollable List Area */
+    .list-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        background: #fff;
+    }
+
+    /* List Items */
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f9f9f9;
+        padding: 18px 25px;
+        transition: background 0.1s;
+    }
+    .list-group-item:hover {
+        background-color: #fafafa;
+        cursor: pointer;
+    }
+
+    /* Badges in List */
+    .badge-type {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .badge-type.badge-sms { background-color: #e3f2fd; color: #0d47a1; }
+    .badge-type.badge-email { background-color: #e8f5e9; color: #1b5e20; }
+    .badge-type.badge-attachment { background-color: #fff3e0; color: #e65100; }
+
+    /* Empty State */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #999;
+        padding: 40px;
+    }
+    .empty-state i { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
+
+    /* --- FORM STYLES --- */
+    .form-label { font-size: 0.9rem; color: #333; }
+    .form-control, .form-select {
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+        background: #fcfcfc;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #b71c1c;
+        box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1);
+        background: #fff;
+    }
+
+    /* Tom Select Customization */
+    .ts-control {
+        border-radius: 8px;
+        border: 1px solid #eee;
+        padding: 10px;
+    }
+    .ts-control.focus { border-color: #b71c1c; box-shadow: none; }
+    </style>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -26,170 +230,56 @@
     const currentUserId = {{ request.session.user_id|default:'null' }};
 </script>
 
-<style>
-    .dashboard-main-content {
-        padding: 0;
-        overflow: hidden; /* Prevent parent from scrolling */
-    }
-    
-    /* Notification Styles */
-    .dj-message {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        background: #fff;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        min-width: 320px;
-        max-width: 420px;
-        opacity: 1;
-        transform: translateX(0);
-        transition: opacity 240ms ease, transform 240ms ease;
-    }
-    
-    .dj-message-left {
-        flex-shrink: 0;
-    }
-    
-    .dj-message-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 14px;
-        color: #fff;
-    }
-    
-    .dj-success .dj-message-icon { background-color: #28a745; }
-    .dj-error .dj-message-icon { background-color: #dc3545; }
-    .dj-warning .dj-message-icon { background-color: #ffc107; color: #000; }
-    .dj-info .dj-message-icon { background-color: #17a2b8; }
-    
-    .dj-message-body {
-        flex: 1;
-        padding-top: 2px;
-    }
-    
-    .dj-message-text {
-        color: #333;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-    
-    .dj-message-close {
-        background: none;
-        border: none;
-        color: #999;
-        font-size: 24px;
-        line-height: 1;
-        cursor: pointer;
-        padding: 0;
-        width: 24px;
-        height: 24px;
-        flex-shrink: 0;
-    }
-    
-    .dj-message-close:hover {
-        color: #333;
-    }
-</style>
-
 <div class="announcement-layout">
-    <div class="row g-0 h-100">
-        <div class="col-md-3 border-end d-flex flex-column p-3 bg-light">
-            <div class="list-header">
-                <h2>Announcements</h2>
-                </a>
-            </div>
-            <hr id="announcement-title-header">
-            <button id="create-new-btn" class="btn btn-danger btn-lg w-100 mb-3">
-                <i class="bi bi-plus-circle-fill me-2"></i> Create New
+    
+    <div class="announcement-sidebar">
+        <div class="p-3">
+            <h2 class="h5 fw-bold mb-4 px-2" style="color:#000;">Announcements</h2>
+            
+            <button id="create-new-btn" class="btn btn-danger w-100 mb-4 d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                <i class="bi bi-plus-lg"></i> <span>Create New</span>
             </button>
             
-            <ul class="nav nav-pills flex-column sidebar-nav mt-2" id="announcement-nav">
+            <ul class="nav nav-pills flex-column sidebar-nav" id="announcement-nav">
                 <li class="nav-item">
                     <a class="nav-link active" href="#" data-bs-toggle="pill" data-bs-target="#sent-view">
-                        <span><i class="bi bi-send-fill me-2"></i> Sent</span>
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-send"></i> <span>Sent</span>
+                        </div>
                         <span class="badge">{{ sent_announcements|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-bs-toggle="pill" data-bs-target="#draft-view">
-                        <span><i class="bi bi-pencil-square me-2"></i> Draft</span>
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-file-earmark"></i> <span>Drafts</span>
+                        </div>
                         <span class="badge">{{ draft_announcements|length }}</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#" data-bs-toggle="pill" data-bs-target="#scheduled-view">
-                        <span><i class="bi bi-clock-history me-2"></i> Scheduled</span>
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-clock"></i> <span>Scheduled</span>
+                        </div>
                         <span class="badge">{{ scheduled_announcements|length }}</span>
                     </a>
                 </li>
             </ul>
         </div>
+    </div>
 
-        <div class="col-md-9 d-flex flex-column h-100">
-
-            <div id="list-view-container" class="d-flex flex-column h-100">
-                <div class="p-3 border-bottom">
-                    <!-- Search and Filter Row -->
-                    <div class="d-flex gap-2 mb-3">
-                        <input type="text" id="search-input" class="form-control" placeholder="Search by title, content, recipients, or cooperative name...">
-                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filter-options" aria-expanded="false" style="white-space: nowrap;">
-                            <i class="bi bi-funnel"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Filter indicators -->
-                    <div class="d-flex gap-2 align-items-center flex-wrap mb-2">
-                        <span id="active-filters-badge" class="badge bg-primary d-none">0 filters</span>
-                        <button id="clear-filters-btn" class="btn btn-sm btn-link text-danger d-none p-0" type="button" style="text-decoration: none;">Clear All</button>
-                    </div>
-                    
-                    <!-- Collapsible Filter Options -->
-                    <div class="collapse" id="filter-options">
-                        <div class="card card-body">
-                            <div class="row g-3">
-                                <!-- Type Filter -->
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold small">Message Type</label>
-                                    <div class="form-check">
-                                        <input class="form-check-input filter-type" type="checkbox" value="sms" id="filter-sms">
-                                        <label class="form-check-label" for="filter-sms">
-                                            <i class="bi bi-phone text-primary"></i> SMS
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input filter-type" type="checkbox" value="e-mail" id="filter-email">
-                                        <label class="form-check-label" for="filter-email">
-                                            <i class="bi bi-envelope text-success"></i> Email
-                                        </label>
-                                    </div>
-                                </div>
-                                
-                                <!-- Date Range Filter -->
-                                <div class="col-md-8">
-                                    <label class="form-label fw-bold small">Date Range</label>
-                                    <div class="row g-2">
-                                        <div class="col-md-6">
-                                            <input type="date" id="filter-date-from" class="form-control form-control-sm" placeholder="From">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <input type="date" id="filter-date-to" class="form-control form-control-sm" placeholder="To">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="announcement-content">
+        
+        <div id="list-view-container" class="d-flex flex-column h-100">
+            <div class="content-header">
+                <div class="search-wrapper">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="search-input" placeholder="Search announcements...">
                 </div>
+            </div>
 
-                <div class="tab-content list-scroll-area">
+            <div class="tab-content list-scroll-area">
                     
                     <div class="tab-pane fade show active" id="sent-view">
                         <div class="list-group list-group-flush">
@@ -211,12 +301,12 @@
                                 <p class="mb-1 text-truncate">{{ item.description }}</p>
                                 <small>
                                     {% if item.type == 'sms' %}
-                                        <span class="badge bg-primary"><i class="bi bi-phone me-1"></i>SMS</span>
+                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
                                     {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge bg-success"><i class="bi bi-envelope me-1"></i>Email</span>
+                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
                                     {% endif %}
                                     {% if item.has_attachment %}
-                                        <span class="badge bg-info ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
                                     {% endif %}
                                 </small>
                             </a>
@@ -247,14 +337,14 @@
                                 <p class="mb-1 text-truncate">{{ item.description|default:"No content yet..." }}</p>
                                 <small>
                                     {% if item.type == 'sms' %}
-                                        <span class="badge bg-primary"><i class="bi bi-phone me-1"></i>SMS</span>
+                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
                                     {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge bg-success"><i class="bi bi-envelope me-1"></i>Email</span>
+                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">No Type</span>
+                                        <span class="badge-type" style="background-color: #6c757d; color: white;">No Type</span>
                                     {% endif %}
                                     {% if item.has_attachment %}
-                                        <span class="badge bg-info ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
                                     {% endif %}
                                 </small>
                             </a>
@@ -289,12 +379,12 @@
                                 <p class="mb-1 text-truncate">{{ item.description }}</p>
                                 <small>
                                     {% if item.type == 'sms' %}
-                                        <span class="badge bg-primary"><i class="bi bi-phone me-1"></i>SMS</span>
+                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
                                     {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge bg-success"><i class="bi bi-envelope me-1"></i>Email</span>
+                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
                                     {% endif %}
                                     {% if item.has_attachment %}
-                                        <span class="badge bg-info ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
                                     {% endif %}
                                 </small>
                             </a>
@@ -310,7 +400,7 @@
             </div>
 
             <div id="create-view-container" class="d-none flex-column h-100">
-                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                <div class="content-header">
                     <h2 class="h4 m-0">New Announcement</h2>
                     <button id="cancel-create-btn" class="btn btn-outline-secondary">
                         <i class="bi bi-x-lg"></i> Cancel
@@ -1967,6 +2057,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch("{% url 'communications:handle_announcement' %}", {
                 method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCsrfToken()
+                },
                 // Don't set Content-Type header - browser will set it automatically with boundary for FormData
                 body: data
             });

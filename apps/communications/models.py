@@ -129,6 +129,8 @@ class MessageRecipient(models.Model):
         managed = False
         db_table = 'message_recipients'
         unique_together = (('message', 'receiver'),)
+        # Disable Django's automatic primary key creation
+        # The table uses a composite PK (message_id, receiver_id)
 # ======================================================
 # 9) ANNOUNCEMENTS MODEL (Updated)
 # ======================================================
