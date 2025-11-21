@@ -41,7 +41,9 @@
             {% endif %}
 
             <li><a href="{% url 'communications:message' %}" class="nav-item"><i class="bi bi-chat-dots-fill"></i> Messages</a></li>
+            {% if request.session.role == 'admin' or request.session.role == 'staff' %}
             <li><a href="{% url 'communications:announcement_form' %}" class="nav-item"><i class="bi bi-megaphone-fill"></i> Announcements</a></li>
+            {% endif %}
         </ul>
 
         <div class="sidebar-widgets">
@@ -49,8 +51,9 @@
             <div class="mini-widget">
                 <h4>Calendar <i class="bi bi-calendar4-week"></i></h4>
                 <div class="mini-calendar-box">
-                    <div class="mini-date">{% now "M d" %}</div>
-                    <div class="mini-day">{% now "l" %}</div>
+                    <div class="mini-date" id="current-date">{% now "M d" %}</div>
+                    <div class="mini-day" id="current-day">{% now "l" %}</div>
+                    <div class="mini-time" id="current-time" style="font-size: 14px; font-weight: 600; color: #a91e2c; margin-top: 8px;"></div>
                 </div>
             </div>
 
@@ -137,6 +140,27 @@
         if(toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
         if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
         if(overlay) overlay.addEventListener('click', toggleSidebar);
+        
+        // Real-time clock
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+            
+            const timeString = `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+            
+            const timeElement = document.getElementById('current-time');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+        
+        // Update clock immediately and then every second
+        updateClock();
+        setInterval(updateClock, 1000);
     });
 </script>
 {% endblock %}

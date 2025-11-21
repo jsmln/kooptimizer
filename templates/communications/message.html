@@ -9,6 +9,204 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
     <style>
+    /* --- HIDE DASHBOARD HEADER ELEMENTS --- */
+    .top-bar .page-title,
+    .top-bar .search-box {
+        display: none !important;
+    }
+    
+    .top-bar .user-menu {
+        display: none !important;
+    }
+    
+    .top-bar #sidebar-toggle-btn {
+        display: none !important;
+    }
+    
+    .top-bar .top-left {
+        display: none !important;
+    }
+    
+    /* --- CUSTOM MESSAGES HEADER --- */
+    .messages-header {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 60px;
+        background: white;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        z-index: 50;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    
+    .messages-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .messages-header h1 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2B3674;
+    }
+    
+    /* Profile Dropdown */
+    .profile-dropdown {
+        position: relative;
+    }
+    
+    .profile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 12px;
+        transition: background 0.2s;
+    }
+    
+    .profile-trigger:hover {
+        background: #f7f9fc;
+    }
+    
+    .profile-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #a91e2c;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        line-height: 1.2;
+    }
+    
+    .profile-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2B3674;
+    }
+    
+    .profile-role {
+        font-size: 0.75rem;
+        color: #A3AED0;
+    }
+    
+    .dropdown-arrow {
+        color: #A3AED0;
+        font-size: 0.8rem;
+        transition: transform 0.2s;
+    }
+    
+    .profile-dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+    
+    /* Dropdown Menu */
+    .dropdown-menu-custom {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        min-width: 200px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        z-index: 1000;
+    }
+    
+    .profile-dropdown.active .dropdown-menu-custom {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    .dropdown-item-custom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        color: #2B3674;
+        text-decoration: none;
+        transition: background 0.2s;
+        border-radius: 8px;
+        margin: 4px;
+    }
+    
+    .dropdown-item-custom:first-child {
+        margin-top: 8px;
+    }
+    
+    .dropdown-item-custom:last-child {
+        margin-bottom: 8px;
+    }
+    
+    .dropdown-item-custom:hover {
+        background: #f7f9fc;
+        color: #2B3674;
+    }
+    
+    .dropdown-item-custom i {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .dropdown-item-custom.logout {
+        color: #a91e2c;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 4px;
+    }
+    
+    .dropdown-item-custom.logout:hover {
+        background: #fff0f2;
+        color: #a91e2c;
+    }
+    
+    /* Adjust content area for fixed header */
+    .content-scrollable {
+        margin-top: 60px !important;
+        height: calc(100% - 60px) !important;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 992px) {
+        .messages-header {
+            left: 0;
+            padding: 0 15px;
+        }
+        
+        .profile-info {
+            display: none;
+        }
+        
+        .dropdown-arrow {
+            display: none;
+        }
+        
+        .content-scrollable {
+            margin-top: 60px !important;
+        }
+    }
+    
     /* --- 1. PARENT CONTAINER (Dashboard Center Panel) --- */
     /* We turn this into a Flex container to perfectly center the message box */
     .content-scrollable {
@@ -20,6 +218,7 @@
         justify-content: center; /* Center Horizontally */
         overflow: hidden !important;
         background-color: #F4F7FE; /* Ensure it matches dashboard bg */
+        position: relative;
     }
 
     /* --- 2. THE LAYOUT WRAPPER (The "Container") --- */
@@ -31,7 +230,10 @@
         max-width: 1400px; /* Prevent it from getting too wide on huge screens */
         
         gap: 20px; /* Space between Contact List and Chat */
-        background: transparent; 
+        background: transparent;
+        position: relative;
+        z-index: 10;
+        min-height: 0;
     }
 
     /* --- LEFT CARD: CONVERSATION LIST --- */
@@ -48,6 +250,10 @@
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03); /* Very subtle shadow */
         overflow: hidden; 
         border: none;
+        position: relative;
+        z-index: 11;
+        min-height: 0;
+        height: 100%;
     }
 
     /* --- RIGHT CARD: CHAT WINDOW --- */
@@ -62,6 +268,8 @@
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
         overflow: hidden;
         border: none;
+        min-height: 0;
+        height: 100%;
     }
 
     /* --- INNER CONTENT SCROLLING --- */
@@ -72,12 +280,33 @@
 
     .message-area { 
         flex: 1; 
-        overflow-y: auto; 
+        overflow-y: auto !important;
+        overflow-x: hidden;
         padding: 20px; 
         background: #fff; 
         display: flex;
         flex-direction: column;
         gap: 12px;
+        min-height: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .message-area::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .message-area::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .message-area::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+    }
+    
+    .message-area::-webkit-scrollbar-thumb:hover {
+        background: #999;
     }
 
     /* --- HEADER & FOOTER STYLING --- */
@@ -87,8 +316,39 @@
         height: 60px; /* Reduced height slightly for a cleaner look */
         display: flex;
         align-items: center;
-        justify-content: space-between;
         background: #fff;
+        flex-shrink: 0;
+    }
+    
+    .list-header {
+        justify-content: space-between;
+    }
+    
+    .chat-header {
+        justify-content: flex-start;
+        gap: 12px;
+    }
+    
+    .chat-header h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        color: #000;
+        line-height: 1.4;
+    }
+    
+    .chat-header .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #555;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.1rem;
+        flex-shrink: 0;
     }
 
     .list-header h2, .chat-header h3 {
@@ -96,6 +356,16 @@
         font-weight: 700;
         margin: 0;
         color: #000;
+        text-align: left;
+    }
+    
+    .list-header {
+        background: #fff;
+        z-index: 2;
+    }
+    
+    .list-header h2 {
+        font-size: 1.2rem;
     }
 
     .message-input { 
@@ -105,6 +375,9 @@
         padding: 15px 20px; 
         border-top: 1px solid #f5f5f5; 
         background: #fff;
+        flex-shrink: 0;
+        z-index: 10;
+        position: relative;
     }
 
     .message-input input[type="text"] { 
@@ -116,6 +389,7 @@
         outline: none;
         color: #000;
         font-size: 0.9rem;
+        min-width: 0;
     }
     
     .message-input input[type="text"]:focus {
@@ -128,6 +402,8 @@
         padding: 15px 20px;
         border-bottom: 1px solid #f5f5f5;
         position: relative;
+        background: #fff;
+        z-index: 1;
     }
     .search-bar input {
         width: 100%;
@@ -146,6 +422,7 @@
         transform: translateY(-50%);
         color: #888;
         font-size: 0.9rem;
+        pointer-events: none;
     }
 
     /* --- Contact Items --- */
@@ -161,6 +438,38 @@
     .contact-item.active { 
         background-color: #fff5f5; /* Very light red */
         border-left: 3px solid #a91e2c;
+    }
+    
+    /* Contact name and details styling */
+    .contact-name {
+        color: #000 !important;
+        font-weight: 500;
+    }
+    .contact-item.unread .contact-name {
+        font-weight: 700 !important;
+    }
+    .contact-item.unread .message-preview {
+        font-weight: 600 !important;
+        color: #000 !important;
+    }
+    .contact-item.unread .timestamp {
+        font-weight: 700 !important;
+        color: #000 !important;
+    }
+    .contact-role {
+        display: block;
+        font-size: 11px !important;
+        color: #888 !important;
+        margin-top: 2px !important;
+        margin-bottom: 4px !important;
+        line-height: 1.2;
+    }
+    .contact-item.unread .contact-role {
+        font-weight: 700 !important;
+        color: #000 !important;
+    }
+    .message-preview {
+        color: #666 !important;
     }
 
     /* --- Chat Bubbles --- */
@@ -196,18 +505,39 @@
         background: #a91e2c;
         border: none;
         color: #fff;
-        width: 40px; height: 40px;
+        width: 40px; 
+        height: 40px;
         border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
         cursor: pointer;
         transition: 0.2s;
+        flex-shrink: 0;
+        z-index: 10;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
     .send-btn:hover { background: #8a1824; }
+    .send-btn:active { background: #6d1420; transform: scale(0.95); }
+    .send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
 
     .attach-btn {
-        background: none; border: none;
-        color: #666; font-size: 1.3rem;
-        cursor: pointer; padding: 0 5px;
+        background: none; 
+        border: none;
+        color: #666; 
+        font-size: 1.3rem;
+        cursor: pointer; 
+        padding: 0 5px;
+        flex-shrink: 0;
+        z-index: 10;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
     .attach-btn:hover { color: #a91e2c; }
 
@@ -220,17 +550,148 @@
     .preview-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1200; }
     .preview-content { background:#fff; width:85vw; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
 
-    /* --- Responsive --- */
+    /* --- Back Button (Mobile Only) --- */
+    .back-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: #000;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        margin-right: 10px;
+        align-items: center;
+        justify-content: center;
+    }
+    .back-btn:hover {
+        color: #a91e2c;
+    }
+
+    /* --- Responsive Messenger-like Behavior --- */
     @media (max-width: 900px) {
-        .message-layout { flex-direction: column; gap: 10px; width: 95%; height: 95%; }
-        .conversation-list { width: 100%; max-width: none; height: 35%; }
-        .chat-window { height: 65%; }
+        /* Stack layout vertically, full width/height */
+        .message-layout { 
+            flex-direction: column; 
+            gap: 0; 
+            width: 100%; 
+            height: 100%; 
+            max-height: 100%;
+        }
+        
+        /* Sidebar takes full width and height initially */
+        .conversation-list { 
+            width: 100%; 
+            max-width: none; 
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 2;
+            transition: transform 0.3s ease;
+            border-radius: 0;
+        }
+        
+        /* Chat window takes full width and height, positioned behind sidebar */
+        .chat-window { 
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+            border-radius: 0;
+        }
+        
+        /* When chat is active, slide sidebar to the left (hide it) */
+        .conversation-list.slide-left {
+            transform: translateX(-100%);
+        }
+        
+        /* Show back button in chat header on mobile */
+        .back-btn {
+            display: flex;
+        }
+        
+        /* Adjust header spacing for back button */
+        .chat-header {
+            padding: 15px 20px;
+            flex-shrink: 0;
+        }
+        
+        /* Ensure message area scrolls properly on mobile */
+        .message-area {
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        /* Message input stays at bottom on mobile */
+        .message-input {
+            padding: 12px 15px;
+            gap: 8px;
+            position: relative;
+            z-index: 20;
+        }
+        
+        /* Ensure buttons are clickable on mobile */
+        .send-btn,
+        .attach-btn {
+            pointer-events: auto;
+            touch-action: manipulation;
+        }
+        
+        .send-btn {
+            min-width: 40px;
+            min-height: 40px;
+        }
+    }
+    
+    /* Desktop: hide back button, show normal layout */
+    @media (min-width: 901px) {
+        .back-btn {
+            display: none !important;
+        }
     }
 </style>
 
 {% endblock %}
 
 {% block dashboard_content %}
+
+<!-- Custom Messages Header -->
+<div class="messages-header">
+    <div class="messages-header-left">
+        <button id="messages-sidebar-toggle" class="d-md-none" style="background: white; border: none; color: #2B3674; font-size: 1.5rem; padding: 8px 12px; border-radius: 10px; cursor: pointer;">
+            <i class="bi bi-list"></i>
+        </button>
+        <h1>Messages</h1>
+    </div>
+    
+    <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-trigger">
+            <div class="profile-avatar">{{ request.session.username|first|upper }}</div>
+            <div class="profile-info">
+                <span class="profile-name">{{ request.session.username }}</span>
+                <span class="profile-role">{{ request.session.role|capfirst }}</span>
+            </div>
+            <i class="bi bi-chevron-down dropdown-arrow"></i>
+        </div>
+        
+        <div class="dropdown-menu-custom">
+            <a href="{% url 'users:profile_settings' %}" class="dropdown-item-custom">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal" class="dropdown-item-custom logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</div>
 
 <div class="message-layout">
 
@@ -252,18 +713,22 @@
 
     <div class="chat-window">
         
-        <div class="chat-header">
+        <div class="chat-header" id="chat-header-section">
+            <button class="back-btn" id="back-btn" title="Back to contacts">
+                <i class="bi bi-arrow-left"></i>
+            </button>
             <div class="avatar" id="chat-avatar">-</div>
-            <h3 id="chat-name">Select a contact</h3>
+            <h3 id="chat-name"></h3>
         </div>
 
         <div class="message-area" id="message-area">
-            <div class="empty-state">
-                <p>No messages yet. Select a contact to start messaging.</p>
+            <div class="empty-state" id="empty-state-message" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #888;">
+                <i class="bi bi-chat-dots" style="font-size: 64px; color: #ccc; margin-bottom: 16px;"></i>
+                <p style="font-size: 16px; margin: 0;">Click the <i class="bi bi-pencil-square"></i> button to start a new conversation.</p>
             </div>
         </div>
 
-        <div class="message-input">
+        <div class="message-input" id="message-input-section">
             <!-- keep input in DOM but move offscreen to avoid display:none browser quirks -->
             <input type="file" id="file-input" style="position: absolute; left: -9999px;" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">
             
@@ -358,6 +823,30 @@
     const newMsgModal = document.getElementById('new-message-modal');
     const modalCloseBtn = newMsgModal.querySelector('.modal-close-btn');
     const modalContactList = document.getElementById('modal-contact-list');
+    const backBtn = document.getElementById('back-btn');
+    const conversationListEl = document.querySelector('.conversation-list');
+
+    // ========================================
+    // Mobile Responsive Behavior
+    // ========================================
+    function showChatWindow() {
+        // On mobile, slide the sidebar to the left to reveal chat
+        if (window.innerWidth <= 900) {
+            conversationListEl.classList.add('slide-left');
+        }
+    }
+
+    function showContactList() {
+        // On mobile, slide the sidebar back to show contacts
+        if (window.innerWidth <= 900) {
+            conversationListEl.classList.remove('slide-left');
+        }
+    }
+
+    // Back button handler
+    backBtn.addEventListener('click', () => {
+        showContactList();
+    });
 
     // ========================================
     // Utility Functions
@@ -448,13 +937,19 @@
         // Use data directly from the backend object
         const messagePreview = contact.last_message ? contact.last_message : 'No messages yet';
         const timestamp = contact.last_time ? timeAgo(contact.last_time) : '';
+        const hasUnread = contact.unread_count && contact.unread_count > 0;
+        
+        // Add unread class if there are unread messages
+        if (hasUnread) {
+            contactDiv.classList.add('unread');
+        }
 
         // Added Cooperative Name below the contact name
         contactDiv.innerHTML = `
             <div class="avatar">${getInitials(contact.name)}</div>
             <div class="contact-details">
                 <span class="contact-name">${contact.name}</span>
-                <span class="contact-role" style="font-size: 11px; color: #888; margin-bottom: 2px;">${contact.coop}</span>
+                <span class="contact-role">${contact.coop}</span>
                 <span class="message-preview">${escapeHtml(messagePreview)}</span>
             </div>
             <span class="timestamp" data-timestamp="${contact.last_time}">${timestamp}</span>
@@ -507,22 +1002,39 @@
     async function selectContact(contact) {
         currentConversationReceiverId = contact.user_id;
         
+        // Save last opened contact to localStorage
+        localStorage.setItem('lastOpenedContact', JSON.stringify({
+            user_id: contact.user_id,
+            name: contact.name,
+            coop: contact.coop
+        }));
+        
         // Update UI
         document.querySelectorAll('.contact-item').forEach(item => {
             item.classList.remove('active');
         });
         document.querySelector(`[data-user-id="${contact.user_id}"]`)?.classList.add('active');
 
+        // Hide empty state
+        const emptyState = document.getElementById('empty-state-message');
+        if (emptyState) emptyState.style.display = 'none';
+
+        // Update chat header
         chatHeaderAvatar.textContent = getInitials(contact.name);
-        // Show name and coop in header
         chatHeaderName.innerHTML = `${contact.name} <br><span style="font-size:12px;font-weight:normal;color:#ccc">${contact.coop}</span>`;
 
         // Enable input
         textInput.disabled = false;
         sendBtn.disabled = false;
 
+        // Show chat window on mobile
+        showChatWindow();
+
         // Load conversation
         await loadConversation(contact.user_id);
+        
+        // Start auto-refresh for this conversation
+        startMessagePolling();
     }
 
     // ========================================
@@ -553,7 +1065,8 @@
             messageArea.innerHTML = '';
             
             if (data.messages.length === 0) {
-                messageArea.innerHTML = '<div class="empty-state"><p>No messages yet. Start the conversation!</p></div>';
+                messageArea.innerHTML = '<div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #888;"><i class="bi bi-chat-dots" style="font-size: 64px; color: #ccc; margin-bottom: 16px;"></i><p style="font-size: 16px; margin: 0;">No messages yet. Start the conversation!</p></div>';
+                lastMessageCount = 0;
                 return;
             }
 
@@ -562,6 +1075,9 @@
             });
 
             messageArea.scrollTop = messageArea.scrollHeight;
+            
+            // Initialize message count for polling
+            lastMessageCount = data.messages.length;
         } catch (error) {
             console.error('Error loading conversation:', error);
             messageArea.innerHTML = `<div class="empty-state">Error loading messages</div>`;
@@ -702,8 +1218,16 @@
     // Event Listeners
     // ========================================
     sendBtn.addEventListener('click', sendMessage);
+    
+    // Add touch support for mobile
+    sendBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        sendMessage();
+    });
+    
     textInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
+            e.preventDefault();
             sendMessage();
         }
     });
@@ -781,8 +1305,26 @@
     // ========================================
     // Initialize
     // ========================================
-    document.addEventListener('DOMContentLoaded', () => {
-        loadContacts();
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadContacts();
+        
+        // Auto-open last conversation if exists (but only on desktop)
+        const lastContact = localStorage.getItem('lastOpenedContact');
+        if (lastContact && window.innerWidth > 900) {
+            try {
+                const contact = JSON.parse(lastContact);
+                // Find the contact in the loaded contacts list
+                const foundContact = allContacts.find(c => c.user_id === contact.user_id);
+                if (foundContact) {
+                    await selectContact(foundContact);
+                }
+            } catch (e) {
+                console.error('Error loading last contact:', e);
+            }
+        } else if (window.innerWidth <= 900) {
+            // On mobile, ensure we start with contact list visible
+            showContactList();
+        }
     });
 
     // ========================================
@@ -1080,6 +1622,134 @@
     previewClose.addEventListener('click', closePreview);
     previewModal.addEventListener('click', (e) => { if (e.target === previewModal) closePreview(); });
 
+    // ========================================
+    // Auto-Refresh Messages & Contacts
+    // ========================================
+    let lastMessageCount = 0;
+    let isPolling = false;
+
+    // Poll for new messages in the current conversation
+    async function pollMessages() {
+        if (isPolling || !currentConversationReceiverId) return;
+        
+        isPolling = true;
+        try {
+            const response = await fetch(`/communications/api/message/conversation/${currentConversationReceiverId}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                clearInterval(messagePollingInterval);
+                clearInterval(contactPollingInterval);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Check if there are new messages
+                if (data.messages.length !== lastMessageCount) {
+                    // Save scroll position
+                    const wasAtBottom = messageArea.scrollHeight - messageArea.scrollTop <= messageArea.clientHeight + 100;
+                    
+                    // Clear and re-render messages
+                    messageArea.innerHTML = '';
+                    
+                    if (data.messages.length === 0) {
+                        messageArea.innerHTML = '<div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #888;"><i class="bi bi-chat-dots" style="font-size: 64px; color: #ccc; margin-bottom: 16px;"></i><p style="font-size: 16px; margin: 0;">No messages yet. Start the conversation!</p></div>';
+                    } else {
+                        data.messages.forEach(msg => {
+                            appendMessageElement(msg);
+                        });
+                    }
+                    
+                    // Auto-scroll to bottom if user was already at bottom
+                    if (wasAtBottom) {
+                        messageArea.scrollTop = messageArea.scrollHeight;
+                    }
+                    
+                    lastMessageCount = data.messages.length;
+                }
+            }
+        } catch (error) {
+            console.error('Error polling messages:', error);
+        } finally {
+            isPolling = false;
+        }
+    }
+
+    // Poll for updated contact list (new messages from others)
+    async function pollContacts() {
+        try {
+            const response = await fetch('/communications/api/message/contacts/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                clearInterval(messagePollingInterval);
+                clearInterval(contactPollingInterval);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Check if contacts have changed
+                const contactsChanged = JSON.stringify(data.contacts) !== JSON.stringify(allContacts);
+                
+                if (contactsChanged) {
+                    allContacts = data.contacts;
+                    
+                    // Save currently selected contact
+                    const selectedUserId = currentConversationReceiverId;
+                    
+                    // Re-render contacts
+                    renderContacts();
+                    renderModalContacts();
+                    
+                    // Re-highlight the selected contact if any
+                    if (selectedUserId) {
+                        document.querySelector(`[data-user-id="${selectedUserId}"]`)?.classList.add('active');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error polling contacts:', error);
+        }
+    }
+
+    // Set up polling intervals
+    let messagePollingInterval = null;
+    let contactPollingInterval = null;
+
+    // Start polling when a conversation is selected
+    function startMessagePolling() {
+        if (messagePollingInterval) {
+            clearInterval(messagePollingInterval);
+        }
+        messagePollingInterval = setInterval(pollMessages, 3000); // Poll every 3 seconds
+    }
+
+    // Stop message polling when no conversation is selected
+    function stopMessagePolling() {
+        if (messagePollingInterval) {
+            clearInterval(messagePollingInterval);
+            messagePollingInterval = null;
+        }
+        lastMessageCount = 0;
+    }
+
+    // Start contact polling on page load
+    contactPollingInterval = setInterval(pollContacts, 5000); // Poll contacts every 5 seconds
+
     // Refresh timestamps every 10 seconds
     setInterval(() => {
         document.querySelectorAll('[data-timestamp]').forEach(el => {
@@ -1087,4 +1757,54 @@
             el.textContent = timeAgo(isoString);
         });
     }, 10000);
+
+    // Clean up intervals when page unloads
+    window.addEventListener('beforeunload', () => {
+        stopMessagePolling();
+        clearInterval(contactPollingInterval);
+    });
+
+    // Handle window resize to reset mobile state
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 900) {
+                // Reset to desktop view - show both panels
+                conversationListEl.classList.remove('slide-left');
+            } else if (!currentConversationReceiverId) {
+                // On mobile with no conversation, ensure contact list is visible
+                showContactList();
+            }
+        }, 250);
+    });
+
+    // ========================================
+    // Profile Dropdown Functionality
+    // ========================================
+    const profileDropdown = document.getElementById('profileDropdown');
+    const profileTrigger = profileDropdown?.querySelector('.profile-trigger');
+    
+    if (profileTrigger) {
+        profileTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('active');
+        });
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (profileDropdown && !profileDropdown.contains(e.target)) {
+            profileDropdown.classList.remove('active');
+        }
+    });
+    
+    // Messages sidebar toggle for mobile
+    const messagesSidebarToggle = document.getElementById('messages-sidebar-toggle');
+    if (messagesSidebarToggle) {
+        messagesSidebarToggle.addEventListener('click', () => {
+            document.body.classList.toggle('sidebar-open');
+        });
+    }
+
 </script>{% endblock %}

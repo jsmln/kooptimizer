@@ -516,6 +516,19 @@ def get_message_contacts(request):
                 (Q(sender_id=contact_id) & Q(messagerecipient__receiver_id=user_id))
             ).order_by('-sent_at').first()
             
+            # Count unread messages (messages sent TO me that I haven't read)
+            # Use raw SQL to avoid Django ORM composite key issues
+            with connection.cursor() as cur:
+                cur.execute("""
+                    SELECT COUNT(*) 
+                    FROM message_recipients mr
+                    JOIN messages m ON mr.message_id = m.message_id
+                    WHERE mr.receiver_id = %s 
+                    AND m.sender_id = %s 
+                    AND (mr.status IS NULL OR mr.status = 'sent')
+                """, [user_id, contact_id])
+                unread_count = cur.fetchone()[0]
+            
             if last_msg:
                 contact['last_message'] = "Attachment" if last_msg.attachment else last_msg.message
                 if last_msg.sender_id == user_id:
@@ -528,6 +541,7 @@ def get_message_contacts(request):
                 contact['last_time'] = ""
                 contact['sort_time'] = 0 # No messages go to bottom
             
+            contact['unread_count'] = unread_count
             final_contacts.append(contact)
 
         # 3. Sort by time descending (newest on top)
@@ -538,6 +552,8 @@ def get_message_contacts(request):
     except Exception as e:
         print(f"Error in get_message_contacts: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
 def get_conversation(request, receiver_id):
     """
     Fetches conversation between current user and a specific receiver.
@@ -584,6 +600,19 @@ def get_conversation(request, receiver_id):
 
         if not allowed:
             return JsonResponse({'status': 'error', 'message': 'You do not have permission to view this conversation'}, status=403)
+
+        # Mark messages as read (messages sent TO me FROM the other person)
+        # Use raw SQL to handle composite primary key properly
+        with connection.cursor() as cur:
+            cur.execute("""
+                UPDATE message_recipients mr
+                SET status = 'seen', seen_at = %s
+                FROM messages m
+                WHERE mr.message_id = m.message_id
+                AND mr.receiver_id = %s
+                AND m.sender_id = %s
+                AND (mr.status IS NULL OR mr.status = 'sent')
+            """, [timezone.now(), sender_id, receiver_id])
 
         # Call stored procedure
         with connection.cursor() as cursor:
