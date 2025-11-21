@@ -15,4 +15,5 @@ media/
 static/css/output.css
 
 # Logs
+logs/scheduler.log
 gcm-diagnose.log
