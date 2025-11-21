@@ -268,3 +268,6 @@ INFO 2025-11-21 09:01:00,793 scheduler Processing scheduled announcement: This i
 INFO 2025-11-21 09:02:00,932 scheduler Processing scheduled announcement: This is a test announcement. (ID: 39)
 INFO 2025-11-21 09:03:01,063 scheduler Processing scheduled announcement: This is a test announcement. (ID: 39)
 INFO 2025-11-21 09:04:01,190 scheduler Processing scheduled announcement: This is a test announcement. (ID: 39)
+INFO 2025-11-21 09:05:01,318 scheduler Processing scheduled announcement: This is a test announcement. (ID: 39)
+INFO 2025-11-21 09:06:01,456 scheduler Processing scheduled announcement: This is a test announcement. (ID: 39)
+INFO 2025-11-21 09:07:01,595 scheduler Processing scheduled announcement: This is a test announcement. (ID: 39)
