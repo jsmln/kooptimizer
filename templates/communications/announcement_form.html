@@ -12,6 +12,9 @@
 
     <link rel="stylesheet" href="{% static 'frontend/announcement.css' %}">
     
+    <!-- PDF.js library for document preview -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    
     <style>
     /* 1. Force Dashboard Center to be a Flex Container */
     .content-scrollable {
@@ -214,6 +217,289 @@
         padding: 10px;
     }
     .ts-control.focus { border-color: #b71c1c; box-shadow: none; }
+
+    /* ========================================
+       PREVIEW MODAL STYLES (from message.html)
+       ======================================== */
+    
+    /* Preview Modal - Meta Messenger style */
+    .preview-overlay { 
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .preview-overlay.show {
+        opacity: 1;
+    }
+    .preview-content { 
+        background: #fff;
+        width: 90vw;
+        max-width: 1200px;
+        height: 85vh;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    }
+    .preview-main-container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+    .preview-sidebar {
+        width: 180px;
+        background: #2b2b2b;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-right: 1px solid #444;
+        flex-shrink: 0;
+    }
+    .preview-sidebar-header {
+        padding: 10px;
+        background: #1a1a1a;
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 1px solid #444;
+    }
+    .preview-thumbnails {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+    }
+    .preview-thumbnail {
+        margin-bottom: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #333;
+        transition: border-color 0.2s;
+        position: relative;
+    }
+    .preview-thumbnail:hover {
+        border-color: #666;
+    }
+    .preview-thumbnail.active {
+        border-color: #d32f2f;
+    }
+    .preview-thumbnail canvas {
+        width: 100%;
+        display: block;
+    }
+    .preview-thumbnail-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        text-align: center;
+        font-size: 0.7rem;
+        padding: 2px 4px;
+    }
+    .preview-content-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .preview-header {
+        background: #f8f9fa;
+        padding: 12px 16px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .preview-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #2B3674;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 15px;
+    }
+    .preview-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .preview-controls button,
+    .preview-controls .btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 8px;
+        background: #6c757d;
+        color: white;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+    .preview-controls button[title] {
+        padding: 6px 10px;
+        font-size: 1rem;
+    }
+    .preview-controls button:hover,
+    .preview-controls .btn:hover {
+        background: #5a6268;
+    }
+    
+    /* Download button group */
+    .preview-download-group {
+        display: inline-flex;
+        position: relative;
+    }
+    .preview-download-group .btn-download-main {
+        background: #d32f2f;
+        border-radius: 8px 0 0 8px;
+        padding: 6px 12px;
+        border: none;
+        color: white;
+        text-decoration: none;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .preview-download-group .btn-download-main:hover {
+        background: #b71c1c;
+    }
+    .preview-download-group .btn-download-toggle {
+        background: #d32f2f;
+        border-radius: 0 8px 8px 0;
+        border-left: 1px solid rgba(255,255,255,0.2);
+        padding: 6px 8px;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .preview-download-group .btn-download-toggle:hover {
+        background: #b71c1c;
+    }
+    .preview-download-group .btn-download-toggle::after {
+        content: '';
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        display: inline-block;
+        padding: 3px;
+        transform: rotate(45deg);
+        transition: transform 0.2s;
+    }
+    .preview-download-group .btn-download-toggle[aria-expanded="true"]::after {
+        transform: rotate(-135deg);
+        margin-bottom: -3px;
+    }
+    .preview-download-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 160px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        z-index: 1000;
+        overflow: hidden;
+    }
+    .preview-download-dropdown.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    .preview-download-dropdown a {
+        display: block;
+        padding: 10px 16px;
+        color: #2B3674;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: background 0.2s;
+    }
+    .preview-download-dropdown a:hover {
+        background: #f7f9fc;
+    }
+    .preview-download-dropdown a i {
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
+    }
+    .preview-zoom-level {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 500;
+        min-width: 45px;
+        text-align: center;
+    }
+    .preview-body {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        background: #f8f9fa;
+        padding: 20px;
+    }
+    .preview-body img {
+        max-width: none;
+        max-height: none;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        transition: width 0.2s, height 0.2s;
+        margin: auto;
+    }
+    .preview-body canvas {
+        display: block;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Loading overlay */
+    .loading-spinner-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1300;
+    }
+    .loading-content {
+        text-align: center;
+        color: white;
+    }
+    .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
     </style>
 {% endblock %}
 
@@ -597,28 +883,64 @@
     </div>
 </div>
 
-<!-- Attachment Preview Modal -->
-<div id="attachment-preview-modal" class="modal fade" tabindex="-1" style="z-index: 1060;">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" style="height: 90vh;">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="attachment-preview-title">Attachment Preview</h5>
-                <div class="d-flex gap-2 align-items-center">
-                    <button type="button" class="btn btn-sm btn-outline-light" id="preview-zoom-out">
-                        <i class="bi bi-dash"></i>
-                    </button>
-                    <span class="text-white" id="preview-zoom-level">100%</span>
-                    <button type="button" class="btn btn-sm btn-outline-light" id="preview-zoom-in">
-                        <i class="bi bi-plus"></i>
-                    </button>
-                    <a id="preview-download-link" class="btn btn-sm btn-danger" href="#" download>
-                        <i class="bi bi-download"></i> Download
-                    </a>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- Loading Overlay for PDF Conversion -->
+<div id="loading-overlay" class="loading-spinner-overlay" style="display:none;">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p id="loading-text">Converting document to PDF...</p>
+    </div>
+</div>
+
+<!-- Advanced Preview Modal (from message.html) -->
+<div id="preview-modal" class="preview-overlay" style="display:none;">
+    <div class="preview-content" role="dialog" aria-modal="true">
+        <div class="preview-header">
+            <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                <button id="toggleSidebar" title="Toggle thumbnails" style="border:none;"><i class="bi bi-layout-sidebar" style="font-size:1.25rem;"></i></button>
+                <div class="preview-title" id="preview-title">Preview</div>
+            </div>
+            <div class="preview-controls">
+                <button id="rotateLeft" title="Rotate left"><i class="bi bi-arrow-counterclockwise"></i></button>
+                <button id="rotateRight" title="Rotate right"><i class="bi bi-arrow-clockwise"></i></button>
+                <button id="fitWidth" title="Fit to width"><i class="bi bi-arrows-expand"></i></button>
+                <button id="fitHeight" title="Fit to height"><i class="bi bi-arrows-expand-vertical"></i></button>
+                <button id="zoomOut">−</button>
+                <span class="preview-zoom-level" id="zoomLevel">100%</span>
+                <button id="zoomIn">+</button>
+                <div id="page-controls" style="display:none; gap:8px; align-items:center;">
+                    <button id="prevPage" style="background:#666;">‹</button>
+                    <input type="number" id="pageInput" min="1" style="width:50px; padding:4px 6px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:0.85rem;" />
+                    <span class="preview-zoom-level" style="min-width:auto;">of <span id="totalPages">1</span></span>
+                    <button id="nextPage" style="background:#666;">›</button>
+                </div>
+                
+                <div class="preview-download-group">
+                    <a id="preview-download-main" class="btn-download-main" href="#" download>Download</a>
+                    <button id="preview-download-toggle" class="btn-download-toggle" type="button" aria-expanded="false"></button>
+                    <div id="preview-download-dropdown" class="preview-download-dropdown">
+                        <a id="preview-download-original" href="#" download>
+                            <i class="bi bi-file-earmark"></i>Original File
+                        </a>
+                        <a id="preview-download-pdf" href="#" download style="display:none;">
+                            <i class="bi bi-file-earmark-pdf"></i>As PDF
+                        </a>
+                    </div>
+                </div>
+                
+                <button id="preview-close" style="background:#666;">✕</button>
+            </div>
+        </div>
+        <div class="preview-main-container">
+            <div class="preview-sidebar" id="preview-sidebar" style="display:none;">
+                <div class="preview-sidebar-header">Pages</div>
+                <div class="preview-thumbnails" id="preview-thumbnails">
+                    <!-- Thumbnails will be generated here -->
                 </div>
             </div>
-            <div class="modal-body p-0 bg-dark d-flex align-items-center justify-content-center" style="overflow: auto;">
-                <div id="attachment-preview-content" style="transform-origin: center center;"></div>
+            <div class="preview-content-wrapper">
+                <div class="preview-body" id="preview-body">
+                    <!-- content injected dynamically: <img> or <canvas> for PDF -->
+                </div>
             </div>
         </div>
     </div>
@@ -682,6 +1004,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0rPoDGiZ5JvBDDGa6hXoVl7kwkxa6UYTRzC8iYhFdaYh0lH4PfPmUAmkG" crossorigin="anonymous"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+<!-- PDF.js Library for Advanced Preview -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 {% comment %} // Replace the ENTIRE <script> section at the bottom of announcement_form.html
 // Everything from <script> to </script> {% endcomment %}
@@ -1002,7 +1327,24 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadAnnouncementDetails(announcementId, modalType) {
         try {
             const response = await fetch(`/communications/api/announcement/${announcementId}/`);
+            
+            // Log response for debugging
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+            console.log('Response headers:', response.headers.get('content-type'));
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Response is not JSON. Content type:', contentType);
+                console.error('Response text (first 500 chars):', text.substring(0, 500));
+                showNotification('Server returned an invalid response (not JSON)', 'error');
+                return;
+            }
+            
             const result = await response.json();
+            console.log('Response data:', result);
             
             if (result.status === 'success') {
                 const data = result.data;
@@ -1048,7 +1390,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     filenames.forEach((filename, index) => {
                         const iconClass = getFileIcon(filename);
                         const fileExt = filename.split('.').pop().toLowerCase();
-                        const canPreview = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg'].includes(fileExt);
+                        // All file types can be previewed now (images, PDFs, and convertible documents)
+                        const canPreview = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 
+                                           'docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt', 'csv'].includes(fileExt);
                         
                         contentHTML += `
                             <div class="d-flex align-items-center gap-3 p-2 bg-white rounded border mb-2">
@@ -1151,77 +1495,884 @@ document.addEventListener('DOMContentLoaded', () => {
                     handleScheduledAnnouncementButtons(data);
                 }
             } else {
-                console.error('Failed to load announcement:', result.message);
-                showNotification('Failed to load announcement details', 'error');
+                console.error('Failed to load announcement:', result);
+                showNotification(result.message || 'Failed to load announcement details', 'error');
             }
         } catch (error) {
             console.error('Error loading announcement:', error);
-            showNotification('An error occurred while loading announcement details', 'error');
+            console.error('Error stack:', error.stack);
+            showNotification('An error occurred while loading announcement details: ' + error.message, 'error');
         }
     }
     
-    // Preview announcement attachment
-    let currentZoom = 1;
-    const attachmentPreviewModal = new bootstrap.Modal(document.getElementById('attachment-preview-modal'));
-    
-    async function previewAnnouncementAttachment(announcementId, filename) {
-        const previewContent = document.getElementById('attachment-preview-content');
-        const previewTitle = document.getElementById('attachment-preview-title');
-        const downloadLink = document.getElementById('preview-download-link');
+    // ========================================
+    // ADVANCED PREVIEW & PDF LOGIC (from message.html)
+    // ========================================
+    const previewModal = document.getElementById('preview-modal');
+    const previewBody = document.getElementById('preview-body');
+    const previewCloseBtn = document.getElementById('preview-close');
+    const previewSidebar = document.getElementById('preview-sidebar');
+    const previewThumbnails = document.getElementById('preview-thumbnails');
+
+    let currentZoom = 100;
+    let pdfDoc = null;
+    let currentPage = 1;
+    let isPdfOpen = false;
+    let totalPages = 0;
+    let previewAnnouncementId = null;
+    let isConvertibleDocument = false;
+    let currentRotation = 0;  // Track rotation state (0, 90, 180, 270)
+    let continuousScrollMode = true;  // Render all pages continuously
+    let pageCache = new Map();  // Cache rendered pages
+
+    const CONVERTIBLE_TYPES = [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  // .docx
+        'application/msword',  // .doc
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',  // .xlsx
+        'application/vnd.ms-excel',  // .xls
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',  // .pptx
+        'application/vnd.ms-powerpoint',  // .ppt
+        'text/plain',  // .txt
+        'text/csv',  // .csv
+    ];
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Setup preview control buttons
+    const downloadToggle = document.getElementById('preview-download-toggle');
+    const downloadDropdown = document.getElementById('preview-download-dropdown');
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageInput = document.getElementById('pageInput');
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    const rotateLeftBtn = document.getElementById('rotateLeft');
+    const rotateRightBtn = document.getElementById('rotateRight');
+    const fitWidthBtn = document.getElementById('fitWidth');
+    const fitHeightBtn = document.getElementById('fitHeight');
+
+    if (downloadToggle && downloadDropdown) {
+        downloadToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = downloadToggle.getAttribute('aria-expanded') === 'true';
+            downloadToggle.setAttribute('aria-expanded', !isExpanded);
+            downloadDropdown.classList.toggle('show');
+        });
         
-        previewTitle.textContent = filename;
-        previewContent.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading...</span></div>';
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.preview-download-group')) {
+                downloadToggle.setAttribute('aria-expanded', 'false');
+                downloadDropdown.classList.remove('show');
+            }
+        });
         
-        currentZoom = 1;
-        document.getElementById('preview-zoom-level').textContent = '100%';
+        downloadDropdown.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                downloadToggle.setAttribute('aria-expanded', 'false');
+                downloadDropdown.classList.remove('show');
+            });
+        });
+    }
+
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            currentZoom = Math.min(currentZoom + 10, 300);
+            applyZoom();
+        });
+    }
+
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            currentZoom = Math.max(currentZoom - 10, 10);
+            applyZoom();
+        });
+    }
+
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            const icon = toggleSidebarBtn.querySelector('i');
+            if (previewSidebar.style.display === 'none') {
+                previewSidebar.style.display = 'flex';
+                icon.className = 'bi bi-layout-sidebar-inset';
+            } else {
+                previewSidebar.style.display = 'none';
+                icon.className = 'bi bi-layout-sidebar';
+            }
+        });
+    }
+
+    if (rotateLeftBtn) {
+        rotateLeftBtn.addEventListener('click', () => {
+            currentRotation = (currentRotation - 90 + 360) % 360;
+            applyZoom();
+        });
+    }
+
+    if (rotateRightBtn) {
+        rotateRightBtn.addEventListener('click', () => {
+            currentRotation = (currentRotation + 90) % 360;
+            applyZoom();
+        });
+    }
+
+    if (fitWidthBtn) {
+        fitWidthBtn.addEventListener('click', () => {
+            fitToWidth();
+        });
+    }
+
+    if (fitHeightBtn) {
+        fitHeightBtn.addEventListener('click', () => {
+            fitToHeight();
+        });
+    }
+
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPage);
+                updatePageInput();
+                updateThumbnailActive();
+            }
+        });
+    }
+
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPdfPage(currentPage);
+                updatePageInput();
+                updateThumbnailActive();
+            }
+        });
+    }
+
+    if (pageInput) {
+        pageInput.addEventListener('change', () => {
+            let page = parseInt(pageInput.value);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderPdfPage(currentPage);
+                updateThumbnailActive();
+            } else {
+                pageInput.value = currentPage;
+            }
+        });
+    }
+
+    function updatePageInput() {
+        if (pageInput) {
+            pageInput.value = currentPage;
+            pageInput.max = totalPages;
+        }
+        document.getElementById('totalPages').textContent = totalPages;
+    }
+
+    function applyZoom() {
+        document.getElementById('zoomLevel').textContent = currentZoom + '%';
+        const img = previewBody.querySelector('img');
+        if (img) {
+            applyRotation(img);
+            const naturalWidth = img.naturalWidth;
+            const naturalHeight = img.naturalHeight;
+            
+            if (currentZoom === 100) {
+                img.style.width = 'auto';
+                img.style.height = 'auto';
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                img.style.margin = 'auto';
+            } else {
+                const containerWidth = previewBody.clientWidth - 40;
+                const containerHeight = previewBody.clientHeight - 40;
+                const scaleToFit = Math.min(
+                    containerWidth / naturalWidth,
+                    containerHeight / naturalHeight
+                );
+                const finalWidth = naturalWidth * scaleToFit * (currentZoom / 100);
+                const finalHeight = naturalHeight * scaleToFit * (currentZoom / 100);
+                
+                img.style.width = finalWidth + 'px';
+                img.style.height = finalHeight + 'px';
+                img.style.maxWidth = 'none';
+                img.style.maxHeight = 'none';
+                
+                if (finalWidth < previewBody.clientWidth && finalHeight < previewBody.clientHeight) {
+                    img.style.margin = 'auto';
+                } else {
+                    img.style.margin = '0';
+                }
+            }
+        }
+        if (isPdfOpen && pdfDoc) {
+            if (continuousScrollMode) {
+                renderAllPages();
+            } else {
+                renderPdfPage(currentPage);
+            }
+        }
+    }
+
+    function applyRotation(element) {
+        if (element) {
+            element.style.transform = `rotate(${currentRotation}deg)`;
+        }
+    }
+
+    async function fitToWidth() {
+        const img = previewBody.querySelector('img');
         
-        const fileExt = filename.split('.').pop().toLowerCase();
-        const isImage = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg'].includes(fileExt);
-        const isPdf = fileExt === 'pdf';
+        if (img) {
+            const containerWidth = previewBody.clientWidth - 40;
+            let elementWidth = img.naturalWidth;
+            
+            if (currentRotation === 90 || currentRotation === 270) {
+                elementWidth = img.naturalHeight;
+            }
+            
+            const scaleToFit = containerWidth / elementWidth;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            applyZoom();
+        } else if (isPdfOpen && pdfDoc) {
+            const page = await pdfDoc.getPage(1);
+            const viewport = page.getViewport({ scale: 1, rotation: currentRotation });
+            const containerWidth = previewBody.clientWidth - 40;
+            
+            const scaleToFit = containerWidth / viewport.width;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            
+            if (continuousScrollMode) {
+                renderAllPages();
+            } else {
+                applyZoom();
+            }
+        }
+    }
+
+    async function fitToHeight() {
+        const img = previewBody.querySelector('img');
         
-        // Set download link
-        downloadLink.href = `/communications/api/announcement/${announcementId}/attachment/`;
-        downloadLink.download = filename;
-        
-        attachmentPreviewModal.show();
+        if (img) {
+            const containerHeight = previewBody.clientHeight - 40;
+            let elementHeight = img.naturalHeight;
+            
+            if (currentRotation === 90 || currentRotation === 270) {
+                elementHeight = img.naturalWidth;
+            }
+            
+            const scaleToFit = containerHeight / elementHeight;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            applyZoom();
+        } else if (isPdfOpen && pdfDoc) {
+            const page = await pdfDoc.getPage(1);
+            const viewport = page.getViewport({ scale: 1, rotation: currentRotation });
+            const containerHeight = previewBody.clientHeight - 40;
+            
+            const scaleToFit = containerHeight / viewport.height;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            
+            if (continuousScrollMode) {
+                renderAllPages();
+            } else {
+                applyZoom();
+            }
+        }
+    }
+
+    async function renderPdfPage(pageNum) {
+        if (continuousScrollMode) {
+            scrollToPage(pageNum);
+            return;
+        }
         
         try {
-            if (isImage || isPdf) {
-                // Preview image or PDF directly
-                const previewUrl = `/communications/api/announcement/${announcementId}/attachment/?preview=true`;
-                
-                if (isImage) {
-                    previewContent.innerHTML = `<img src="${previewUrl}" alt="${filename}" style="max-width: 100%; height: auto;" id="preview-img">`;
-                } else if (isPdf) {
-                    previewContent.innerHTML = `<iframe src="${previewUrl}" style="width: 100%; height: 80vh; border: none;"></iframe>`;
-                }
-            } else {
-                // Try to convert to PDF
-                const convertUrl = `/communications/api/announcement/${announcementId}/attachment/convert-pdf/`;
-                previewContent.innerHTML = `<iframe src="${convertUrl}" style="width: 100%; height: 80vh; border: none;"></iframe>`;
+            const page = await pdfDoc.getPage(pageNum);
+            const finalScale = (currentZoom / 100);
+            const viewport = page.getViewport({ scale: finalScale, rotation: currentRotation });
+            
+            let canvas = previewBody.querySelector('canvas');
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                previewBody.innerHTML = '';
+                previewBody.appendChild(canvas);
             }
-        } catch (error) {
-            previewContent.innerHTML = `<div class="text-light p-4">Failed to load preview: ${error.message}</div>`;
+            
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.display = 'block';
+            canvas.style.maxWidth = 'none';
+            canvas.style.maxHeight = 'none';
+            
+            const renderContext = {
+                canvasContext: canvas.getContext('2d'),
+                viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+            previewBody.scrollTop = 0;
+            previewBody.scrollLeft = 0;
+            updatePageInput();
+            updateThumbnailActive();
+        } catch (e) {
+            console.error('PDF render error:', e);
         }
     }
-    
-    // Zoom controls
-    document.getElementById('preview-zoom-in').addEventListener('click', () => {
-        currentZoom = Math.min(currentZoom + 0.25, 3);
-        updateZoom();
-    });
-    
-    document.getElementById('preview-zoom-out').addEventListener('click', () => {
-        currentZoom = Math.max(currentZoom - 0.25, 0.5);
-        updateZoom();
-    });
-    
-    function updateZoom() {
-        const img = document.getElementById('preview-img');
-        if (img) {
-            img.style.transform = `scale(${currentZoom})`;
+
+    async function renderAllPages() {
+        if (!pdfDoc) return;
+        
+        const scrollRatio = previewBody.scrollHeight > 0 
+            ? previewBody.scrollTop / previewBody.scrollHeight 
+            : 0;
+        
+        previewBody.innerHTML = '';
+        const finalScale = (currentZoom / 100);
+        
+        const pagesContainer = document.createElement('div');
+        pagesContainer.style.width = '100%';
+        pagesContainer.style.display = 'flex';
+        pagesContainer.style.flexDirection = 'column';
+        pagesContainer.style.alignItems = 'center';
+        pagesContainer.style.gap = '10px';
+        pagesContainer.style.padding = '20px 0';
+        
+        previewBody.appendChild(pagesContainer);
+        
+        for (let i = 1; i <= totalPages; i++) {
+            const pageWrapper = document.createElement('div');
+            pageWrapper.className = 'pdf-page-wrapper';
+            pageWrapper.dataset.pageNum = i;
+            pageWrapper.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+            pageWrapper.style.marginBottom = '10px';
+            pageWrapper.style.background = '#fff';
+            
+            const canvas = document.createElement('canvas');
+            canvas.style.display = 'block';
+            pageWrapper.appendChild(canvas);
+            pagesContainer.appendChild(pageWrapper);
+            
+            try {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: finalScale, rotation: currentRotation });
+                
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+            } catch (e) {
+                console.error('Error rendering page', i, e);
+            }
         }
-        document.getElementById('preview-zoom-level').textContent = Math.round(currentZoom * 100) + '%';
+        
+        if (scrollRatio > 0) {
+            setTimeout(() => {
+                previewBody.scrollTop = previewBody.scrollHeight * scrollRatio;
+            }, 50);
+        } else {
+            previewBody.scrollTop = 0;
+            previewBody.scrollLeft = 0;
+        }
+        
+        if (!currentPage || currentPage < 1) {
+            currentPage = 1;
+        }
+        updatePageInput();
+        setupScrollTracking();
+    }
+
+    function scrollToPage(pageNum) {
+        const pageWrapper = previewBody.querySelector(`[data-page-num="${pageNum}"]`);
+        if (pageWrapper) {
+            pageWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function setupScrollTracking() {
+        let scrollTimeout;
+        previewBody.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const pageWrappers = previewBody.querySelectorAll('.pdf-page-wrapper');
+                const scrollTop = previewBody.scrollTop;
+                const containerTop = previewBody.getBoundingClientRect().top;
+                
+                for (let i = 0; i < pageWrappers.length; i++) {
+                    const wrapper = pageWrappers[i];
+                    const rect = wrapper.getBoundingClientRect();
+                    const wrapperTop = rect.top - containerTop + scrollTop;
+                    const wrapperBottom = wrapperTop + rect.height;
+                    
+                    if (wrapperTop <= scrollTop + 100 && wrapperBottom > scrollTop + 100) {
+                        const newPage = parseInt(wrapper.dataset.pageNum);
+                        if (newPage !== currentPage) {
+                            currentPage = newPage;
+                            updatePageInput();
+                            updateThumbnailActive();
+                        }
+                        break;
+                    }
+                }
+            }, 100);
+        });
+    }
+
+    async function generateThumbnails() {
+        if (!pdfDoc) return;
+        
+        previewThumbnails.innerHTML = '';
+        
+        for (let i = 1; i <= totalPages; i++) {
+            try {
+                const page = await pdfDoc.getPage(i);
+                const scale = 0.3;
+                const viewport = page.getViewport({ scale });
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                const thumbDiv = document.createElement('div');
+                thumbDiv.className = 'preview-thumbnail';
+                thumbDiv.dataset.page = i;
+                if (i === currentPage) {
+                    thumbDiv.classList.add('active');
+                }
+                
+                thumbDiv.appendChild(canvas);
+                
+                const label = document.createElement('div');
+                label.className = 'preview-thumbnail-label';
+                label.textContent = i;
+                thumbDiv.appendChild(label);
+                
+                thumbDiv.addEventListener('click', () => {
+                    currentPage = i;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                });
+                
+                previewThumbnails.appendChild(thumbDiv);
+            } catch (e) {
+                console.error('Thumbnail generation error for page', i, e);
+            }
+        }
+    }
+
+    function updateThumbnailActive() {
+        const thumbnails = previewThumbnails.querySelectorAll('.preview-thumbnail');
+        thumbnails.forEach(thumb => {
+            const pageNum = parseInt(thumb.dataset.page);
+            if (pageNum === currentPage) {
+                thumb.classList.add('active');
+                thumb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else {
+                thumb.classList.remove('active');
+            }
+        });
+    }
+
+    function setupPdfNavigation() {
+        document.removeEventListener('keydown', handlePdfKeyboard);
+        previewBody.removeEventListener('wheel', handlePdfScroll);
+        
+        document.addEventListener('keydown', handlePdfKeyboard);
+        previewBody.addEventListener('wheel', handlePdfScroll, { passive: false });
+    }
+
+    function handlePdfKeyboard(e) {
+        if (!isPdfOpen || !pdfDoc || previewModal.style.display === 'none') return;
+        
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPdfPage(currentPage);
+                updateThumbnailActive();
+            }
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPage);
+                updateThumbnailActive();
+            }
+        }
+    }
+
+    function handlePdfScroll(e) {
+        if (continuousScrollMode) return;
+        if (!isPdfOpen || !pdfDoc || previewModal.style.display === 'none') return;
+        
+        const hasVerticalScroll = previewBody.scrollHeight > previewBody.clientHeight;
+        const hasHorizontalScroll = previewBody.scrollWidth > previewBody.clientWidth;
+        
+        if (hasVerticalScroll || hasHorizontalScroll) {
+            const atBottom = previewBody.scrollTop + previewBody.clientHeight >= previewBody.scrollHeight - 5;
+            const atTop = previewBody.scrollTop <= 5;
+            
+            if (e.deltaY > 0 && atBottom && currentPage < totalPages) {
+                e.preventDefault();
+                currentPage++;
+                renderPdfPage(currentPage);
+            } else if (e.deltaY < 0 && atTop && currentPage > 1) {
+                e.preventDefault();
+                currentPage--;
+                renderPdfPage(currentPage);
+            }
+        } else {
+            e.preventDefault();
+            if (e.deltaY > 0 && currentPage < totalPages) {
+                currentPage++;
+                renderPdfPage(currentPage);
+            } else if (e.deltaY < 0 && currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPage);
+            }
+        }
+    }
+
+    function openPreviewImage(src, title, announcementId) {
+        currentZoom = 100;
+        currentRotation = 0;
+        isPdfOpen = false;
+        isConvertibleDocument = false;
+        
+        previewSidebar.style.display = 'none';
+        document.getElementById('toggleSidebar').style.display = 'none';
+        document.getElementById('fitWidth').style.display = 'none';
+        document.getElementById('fitHeight').style.display = 'none';
+        
+        previewBody.innerHTML = `
+            <img src="${src}" 
+                 alt="${escapeHtml(title)}" 
+                 style="max-width:100%; max-height:100%; object-fit:contain; cursor: zoom-in;" 
+                 id="preview-image" />`;
+        
+        document.getElementById('preview-title').textContent = title || 'Image';
+        document.getElementById('zoomLevel').textContent = '100%';
+        document.getElementById('page-controls').style.display = 'none';
+        document.getElementById('preview-download-pdf').style.display = 'none';
+        document.getElementById('preview-download-toggle').style.display = 'none';
+        document.getElementById('preview-download-main').style.borderRadius = '6px';
+        
+        previewModal.style.display = 'flex';
+        setTimeout(() => previewModal.classList.add('show'), 10);
+        
+        try {
+            const url = new URL(src, window.location.origin);
+            url.searchParams.set('download', '1');
+            const downloadUrl = url.toString();
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title || 'image';
+            document.getElementById('preview-download-main').textContent = 'Download';
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title || 'image';
+        } catch (e) {
+            const downloadUrl = src + '?download=1';
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title || 'image';
+            document.getElementById('preview-download-main').textContent = 'Download';
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title || 'image';
+        }
+        
+        const img = document.getElementById('preview-image');
+        if (img) {
+            img.addEventListener('load', () => {
+                fitToHeight();
+            });
+            
+            img.addEventListener('click', () => {
+                if (currentZoom === 100) {
+                    currentZoom = 150;
+                    img.style.cursor = 'zoom-out';
+                } else {
+                    currentZoom = 100;
+                    img.style.cursor = 'zoom-in';
+                }
+                applyZoom();
+            });
+        }
+    }
+
+    function openPreviewDocument(src, title, contentType) {
+        currentZoom = 100;
+        currentRotation = 0;
+        isPdfOpen = true;
+        isConvertibleDocument = CONVERTIBLE_TYPES.includes(contentType);
+        document.getElementById('preview-title').textContent = title;
+        document.getElementById('zoomLevel').textContent = '100%';
+        
+        document.getElementById('toggleSidebar').style.display = 'inline-flex';
+        document.getElementById('fitWidth').style.display = 'inline-flex';
+        document.getElementById('fitHeight').style.display = 'inline-flex';
+        
+        let announcementId = null;
+        try {
+            const url = new URL(src, window.location.origin);
+            const pathParts = url.pathname.split('/');
+            announcementId = pathParts[pathParts.length - 2];
+            url.searchParams.set('download', '1');
+            const downloadUrl = url.toString();
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title;
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title;
+        } catch (e) {
+            const downloadUrl = src + '?download=1';
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title;
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title;
+        }
+
+        previewAnnouncementId = announcementId;
+
+        if (contentType === 'application/pdf' || contentType.startsWith('image')) {
+            loadPdfPreview(src, title, contentType);
+            document.getElementById('preview-download-pdf').style.display = 'none';
+            document.getElementById('preview-download-toggle').style.display = 'none';
+            document.getElementById('preview-download-main').style.borderRadius = '6px';
+            document.getElementById('preview-download-main').textContent = 'Download';
+        } 
+        else if (isConvertibleDocument && announcementId) {
+            document.getElementById('preview-download-toggle').style.display = 'flex';
+            document.getElementById('preview-download-main').style.borderRadius = '6px 0 0 6px';
+            showLoadingOverlay('Converting document to PDF...');
+            convertAndPreviewAnnouncement(announcementId, src, title);
+        } 
+        else {
+            loadPdfPreview(src, title, contentType);
+            document.getElementById('preview-download-pdf').style.display = 'none';
+            document.getElementById('preview-download-toggle').style.display = 'none';
+            document.getElementById('preview-download-main').style.borderRadius = '6px';
+            document.getElementById('preview-download-main').textContent = 'Download';
+        }
+    }
+
+    async function convertAndPreviewAnnouncement(announcementId, originalSrc, title) {
+        try {
+            const response = await fetch(`/communications/api/announcement/${announcementId}/attachment/convert-pdf/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({ message: 'Conversion failed' }));
+                throw new Error(data.message || 'Conversion failed');
+            }
+
+            const blob = await response.blob();
+            const pdfUrl = URL.createObjectURL(blob);
+
+            hideLoadingOverlay();
+            previewModal.classList.add('show');
+            previewModal.style.display = 'flex';
+
+            const pdfFilename = title.split('.').slice(0, -1).join('.') + '.pdf';
+            
+            document.getElementById('preview-download-main').href = pdfUrl;
+            document.getElementById('preview-download-main').download = pdfFilename;
+            document.getElementById('preview-download-main').textContent = 'Download PDF';
+            
+            document.getElementById('preview-download-pdf').href = pdfUrl;
+            document.getElementById('preview-download-pdf').download = pdfFilename;
+            document.getElementById('preview-download-pdf').style.display = 'block';
+
+            loadPdfFromBlob(pdfUrl, title);
+        } catch (error) {
+            hideLoadingOverlay();
+            previewModal.classList.add('show');
+            previewModal.style.display = 'flex';
+            previewBody.innerHTML = `<p style="color:#d32f2f;">Error converting document: ${error.message}</p>`;
+            console.error('Conversion error:', error);
+        }
+    }
+
+    async function loadPdfPreview(src, title, contentType) {
+        previewModal.style.display = 'flex';
+        setTimeout(() => previewModal.classList.add('show'), 10);
+        
+        previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
+
+        if (isConvertibleDocument) {
+            const pdfUrl = new URL(src, window.location.origin);
+            pdfUrl.searchParams.set('format', 'pdf');
+            pdfUrl.searchParams.set('download', '1');
+            document.getElementById('preview-download-pdf').href = pdfUrl.toString();
+            document.getElementById('preview-download-pdf').style.display = 'inline-block';
+        } else {
+            document.getElementById('preview-download-pdf').style.display = 'none';
+        }
+
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            try {
+                const doc = await window.pdfjsLib.getDocument(src).promise;
+                pdfDoc = doc;
+                currentPage = 1;
+                totalPages = doc.numPages;
+                document.getElementById('page-controls').style.display = totalPages > 1 ? 'flex' : 'none';
+                
+                if (totalPages > 1) {
+                    previewSidebar.style.display = 'flex';
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar-inset';
+                    generateThumbnails();
+                } else {
+                    previewSidebar.style.display = 'none';
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar';
+                }
+                
+                await fitToHeight();
+                setupPdfNavigation();
+            } catch (err) {
+                previewBody.innerHTML = `<p style="color:#d32f2f; font-size:0.95rem;">Error loading document: ${err.message}</p>`;
+                console.error('PDF load error:', err);
+            }
+        } else {
+            previewBody.innerHTML = `<iframe src="${src}" title="${escapeHtml(title)}" style="width:100%; height:100%; border:0;"></iframe>`;
+            document.getElementById('page-controls').style.display = 'none';
+            previewSidebar.style.display = 'none';
+        }
+    }
+
+    async function loadPdfFromBlob(blobUrl, title) {
+        previewBody.innerHTML = '<p style="color:#aaa;">Rendering PDF...</p>';
+
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            try {
+                const doc = await window.pdfjsLib.getDocument(blobUrl).promise;
+                pdfDoc = doc;
+                currentPage = 1;
+                totalPages = doc.numPages;
+                document.getElementById('page-controls').style.display = totalPages > 1 ? 'flex' : 'none';
+                
+                if (totalPages > 1) {
+                    previewSidebar.style.display = 'flex';
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar-inset';
+                    generateThumbnails();
+                } else {
+                    previewSidebar.style.display = 'none';
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar';
+                }
+                
+                await fitToHeight();
+                setupPdfNavigation();
+            } catch (err) {
+                previewBody.innerHTML = `<p style="color:#d32f2f;">Error rendering PDF: ${err.message}</p>`;
+                console.error('PDF render error:', err);
+            }
+        }
+    }
+
+    function showLoadingOverlay(message = 'Converting document to PDF...') {
+        document.getElementById('loading-text').textContent = message;
+        document.getElementById('loading-overlay').style.display = 'flex';
+    }
+
+    function hideLoadingOverlay() {
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+
+    function closePreview() {
+        previewModal.classList.remove('show');
+        setTimeout(() => {
+            previewModal.style.display = 'none';
+            previewBody.innerHTML = '';
+            previewThumbnails.innerHTML = '';
+        }, 300);
+        
+        pdfDoc = null;
+        isPdfOpen = false;
+        currentZoom = 100;
+        currentRotation = 0;
+        previewAnnouncementId = null;
+        
+        document.removeEventListener('keydown', handlePdfKeyboard);
+        previewBody.removeEventListener('wheel', handlePdfScroll);
+    }
+
+    if (previewCloseBtn) {
+        previewCloseBtn.addEventListener('click', closePreview);
+    }
+    if (previewModal) {
+        previewModal.addEventListener('click', (e) => { if (e.target === previewModal) closePreview(); });
+    }
+
+    // Updated preview function for announcements
+    async function previewAnnouncementAttachment(announcementId, filename) {
+        const fileExt = filename.split('.').pop().toLowerCase();
+        const isImage = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp'].includes(fileExt);
+        const isPdf = fileExt === 'pdf';
+        
+        const baseUrl = `/communications/api/announcement/${announcementId}/attachment/`;
+        const previewUrl = baseUrl + '?preview=true';
+        
+        // Determine content type
+        let contentType = 'application/octet-stream';
+        if (isImage) {
+            contentType = `image/${fileExt === 'svg' ? 'svg+xml' : fileExt}`;
+        } else if (isPdf) {
+            contentType = 'application/pdf';
+        } else if (fileExt === 'docx') {
+            contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        } else if (fileExt === 'doc') {
+            contentType = 'application/msword';
+        } else if (fileExt === 'xlsx') {
+            contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+        } else if (fileExt === 'xls') {
+            contentType = 'application/vnd.ms-excel';
+        } else if (fileExt === 'pptx') {
+            contentType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+        } else if (fileExt === 'ppt') {
+            contentType = 'application/vnd.ms-powerpoint';
+        } else if (fileExt === 'txt') {
+            contentType = 'text/plain';
+        } else if (fileExt === 'csv') {
+            contentType = 'text/csv';
+        }
+        
+        if (isImage) {
+            openPreviewImage(previewUrl, filename, announcementId);
+        } else {
+            openPreviewDocument(previewUrl, filename, contentType);
+        }
     }
     
     // Handle scheduled announcement edit/cancel functionality
@@ -1617,19 +2768,39 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             const draftId = btn.getAttribute('data-id');
             
+            console.log('Loading draft:', draftId);
+            
             try {
                 const response = await fetch(`/communications/api/announcement/draft/${draftId}/`);
+                
+                console.log('Draft response status:', response.status);
+                console.log('Draft response ok:', response.ok);
+                console.log('Draft response headers:', response.headers.get('content-type'));
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Draft response is not JSON. Content type:', contentType);
+                    console.error('Draft response text (first 500 chars):', text.substring(0, 500));
+                    showNotification('Server returned an invalid response for draft (not JSON)', 'error');
+                    return;
+                }
+                
                 const result = await response.json();
+                console.log('Draft response data:', result);
                 
                 if (result.status === 'success') {
                     loadDraftData(result.data);
                     showCreateView();
                 } else {
+                    console.error('Draft load failed:', result);
                     showNotification(result.message || 'Failed to load draft', 'error');
                 }
             } catch (error) {
                 console.error('Error loading draft:', error);
-                showNotification('An error occurred while loading the draft', 'error');
+                console.error('Error stack:', error.stack);
+                showNotification('An error occurred while loading the draft: ' + error.message, 'error');
             }
         });
     });
@@ -2075,8 +3246,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentDraftId = null;
                 currentScheduledTime = null;
                 isEditingScheduled = false;
-                showListView();
-                setTimeout(() => location.reload(), 1500);
+                
+                // Clear form data to prevent "unsaved changes" warning
+                const titleInput = document.getElementById('announcement-title');
+                const contentInput = document.getElementById('announcement-content');
+                const fileInput = document.getElementById('announcement-files');
+                
+                if (titleInput) titleInput.value = '';
+                if (contentInput) contentInput.value = '';
+                if (fileInput) fileInput.value = '';
+                
+                // Clear recipient selections
+                document.querySelectorAll('.recipient-row').forEach(row => row.remove());
+                
+                // Mark as navigating to prevent beforeunload warning
+                window.isNavigating = true;
+                
+                // Use replace instead of reload to avoid confirmation dialog
+                setTimeout(() => {
+                    window.location.replace(window.location.href);
+                }, 1500);
             } else {
                 showNotification(result.message || 'Failed to process announcement', 'error');
             }

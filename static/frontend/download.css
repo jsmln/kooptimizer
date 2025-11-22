@@ -3,7 +3,6 @@
 #download-page {
     width: 100%;
     max-width: 800px;
-    /* Increased max-width for 3 columns */
     padding: 20px;
     margin-top: 40px;
     margin-bottom: 40px;
@@ -18,19 +17,19 @@
 }
 
 .download-card h2 {
-    font-size: 2.5rem;
+    font-size: clamp(2rem, 5vw, 2.5rem);
     font-weight: 700;
     color: #a91e2c;
-    /* Match login title red */
     text-align: center;
     margin-bottom: 10px;
 }
 
 .download-card .subtitle {
-    font-size: 1.1rem;
+    font-size: clamp(1rem, 2.5vw, 1.1rem);
     text-align: center;
     color: #555;
     margin-bottom: 30px;
+    line-height: 1.5;
 }
 
 /* --- Install Button Styles --- */
@@ -38,7 +37,7 @@
     display: block;
     width: 100%;
     padding: 15px 20px;
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
     font-weight: 600;
     color: #fff;
     background-color: #a91e2c;
@@ -66,33 +65,27 @@
 }
 
 .subtitle-note {
-    font-size: 0.95rem;
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
     text-align: center;
     color: #777;
     margin-bottom: 25px;
     padding-top: 15px;
     border-top: 1px solid #eee;
-
-    /* === THIS IS THE FIX === */
     grid-column: 1 / -1;
-    /* Makes this element span all 3 columns */
+    line-height: 1.6;
 }
-
 
 /* This is the new grid container for the cards */
 .instructions-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    /* 3 equal columns */
     gap: 20px;
-    /* Space between cards */
 }
 
 .instruction-set {
     border: 1px solid #eee;
     border-radius: 8px;
     overflow: hidden;
-    /* New styles to make cards equal height */
     display: flex;
     flex-direction: column;
 }
@@ -107,13 +100,12 @@
 }
 
 .instruction-header i {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 4vw, 2rem);
     color: #a91e2c;
-    /* Theme red */
 }
 
 .instruction-header h3 {
-    font-size: 1.4rem;
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
     font-weight: 600;
     color: #333;
     margin: 0;
@@ -121,12 +113,10 @@
 
 .instruction-set ol {
     padding: 20px 20px 20px 50px;
-    /* Indent list */
     margin: 0;
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2vw, 1rem);
     line-height: 1.6;
     flex-grow: 1;
-    /* This makes the list fill the card height */
 }
 
 .instruction-set li {
@@ -137,36 +127,96 @@
     margin-bottom: 0;
 }
 
-
-@media (max-width: 900px) {
-
+/* Large Tablet Responsiveness */
+@media (max-width: 1024px) {
     #download-page {
-        max-width: 95%;
+        max-width: 90%;
+    }
+    
+    .download-card {
+        padding: 25px 30px;
     }
 }
 
+/* Tablet Responsiveness */
+@media (max-width: 900px) {
+    #download-page {
+        max-width: 95%;
+    }
+    
+    .instructions-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
 
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
     #download-page {
         margin-top: 20px;
         margin-bottom: 20px;
-        padding: 10px;
+        padding: 15px 10px;
         max-width: 100%;
     }
 
     .download-card {
-        padding: 20px;
+        padding: 25px 20px;
     }
 
-    .download-card h2 {
-        font-size: 2rem;
+    .btn-install {
+        padding: 14px 18px;
     }
-
-    .download-card .subtitle {
-        font-size: 1rem;
+    
+    .instruction-set ol {
+        padding: 15px 15px 15px 35px;
     }
+}
 
-    .instructions-container {
-        grid-template-columns: 1fr;
+/* Small Mobile Responsiveness */
+@media (max-width: 480px) {
+    #download-page {
+        padding: 10px 5px;
+        margin-top: 10px;
+    }
+    
+    .download-card {
+        padding: 20px 15px;
+        border-radius: 8px;
+    }
+    
+    .btn-install {
+        padding: 12px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .instruction-header {
+        padding: 12px 15px;
+        gap: 10px;
+    }
+    
+    .instruction-set ol {
+        padding: 12px 12px 12px 30px;
+    }
+    
+    .instruction-set li {
+        margin-bottom: 8px;
+    }
+}
+
+/* Extra Small Mobile */
+@media (max-width: 360px) {
+    .download-card {
+        padding: 15px 10px;
+    }
+    
+    .instruction-header {
+        padding: 10px 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .instruction-set ol {
+        padding: 10px 10px 10px 25px;
     }
 }

@@ -87,7 +87,7 @@ BEGIN
     -- Get attachment size
     SELECT 
         CASE 
-            WHEN a.attachment IS NOT NULL THEN COALESCE(a.attachment_size, octet_length(a.attachment))
+            WHEN a.attachment IS NOT NULL THEN COALESCE(a.attachment_size, octet_length(a.attachment))::INTEGER
             ELSE NULL
         END
     INTO v_attachment_size
@@ -105,7 +105,7 @@ BEGIN
         a.scope,
         a.sent_at,
         a.created_at,
-        COALESCE(a.attachment_size, v_attachment_size) AS attachment_size,
+        COALESCE(a.attachment_size::INTEGER, v_attachment_size) AS attachment_size,
         a.attachment_filename,
         v_sender_name,
         v_sender_role,

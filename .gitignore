@@ -2,7 +2,13 @@
 __pycache__/
 *.pyc
 venv/
+.venv/
+
+# Environment Variables (CRITICAL - DO NOT COMMIT)
 *.env
+.env
+.env.local
+.env.production
 
 # Django
 db.sqlite3
@@ -16,4 +22,15 @@ static/css/output.css
 
 # Logs
 logs/scheduler.log
+logs/*.log
 gcm-diagnose.log
+
+# Database Backups & Dumps (SENSITIVE DATA)
+*.sql
+database/backups/*.sql
+database/dumps/*.sql
+*.dump
+
+# Test Results (can be regenerated)
+test_results/
+*.test.log
