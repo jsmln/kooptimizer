@@ -1,26 +1,48 @@
 /* --- Main Layout Container --- */
 .databank-container {
+    /* Fixed desktop size for consistent layout even when zooming */
+    box-sizing: border-box;
+    width: 1100px;
+    max-width: 1100px;
+    height: 530px;
+    max-height: 600px;
+    margin: 24px auto;
+    padding: 24px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: #222;
+    overflow: hidden; /* keep internal scrollbars inside component */
     display: flex;
     flex-direction: column;
-    height: 100%;
-    width: 100%;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(43, 54, 116, 0.08);
-    overflow: hidden;
-    margin: 24px;
+    align-items: stretch;
 }
 
-/* --- Header Area --- */
-.databank-header {
-    padding: 28px 32px;
+/* Responsive fallback for smaller viewports / mobile */
+@media (max-width: 1200px) {
+    .databank-container {
+        width: calc(100% - 40px);
+        max-width: none;
+        height: calc(100vh - 80px);
+        max-height: calc(100vh - 80px);
+        margin: 16px auto;
+    }
+}
+
+/* Ensure page can use full viewport height when calculating container height */
+html, body {
+    height: 100%;
+}
+
+/* keep header styling but ensure neutral tones for text */
+/* .databank-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #edf2f7;
     background: linear-gradient(135deg, #fff 0%, #f8f9fc 100%);
     flex-shrink: 0;
-}
+} */
 
 .header-left h2 {
     margin: 0;
@@ -35,23 +57,25 @@
     font-size: 0.9rem;
     font-weight: 500;
 }
-
+/* 
 .stat-card {
     background: linear-gradient(135deg, #fff5f6 0%, #ffffff 100%);
-    padding: 14px 24px;
+    padding: 14px 20px;
     border-radius: 12px;
     text-align: right;
     border-left: 4px solid #a91e2c;
     box-shadow: 0 2px 8px rgba(169, 30, 44, 0.08);
-}
+} */
 
-.stat-label {
+/* .stat-label {
     display: block;
     font-size: 0.75rem;
     color: #A3AED0;
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: right;
 }
 
 .stat-value {
@@ -60,17 +84,17 @@
     font-weight: 700;
     color: #a91e2c;
     margin-top: 4px;
-}
+} */
 
 /* --- Toolbar --- */
 .databank-toolbar {
-    padding: 20px 32px;
+    padding: 2px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
+    background: transparent;
     flex-shrink: 0;
-    gap: 16px;
+    gap: 5px;
 }
 
 .toolbar-left {
@@ -161,88 +185,77 @@
     position: relative;
 }
 
-/* Scroll indicator hint */
-.table-section::after {
-    content: '';
-    position: absolute;
-    right: 32px;
-    top: 0;
-    bottom: 28px;
-    width: 40px;
-    background: linear-gradient(to left, rgba(248, 249, 252, 0.9), transparent);
-    pointer-events: none;
-    z-index: 1;
-}
-
 .table-wrapper {
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: auto;
+    height: 420px; /* fixed height similar to account management */
     border: 1px solid #edf2f7;
     border-radius: 12px;
     background: #fff;
-    scroll-behavior: smooth;
+    position: relative;
+    overflow: hidden; /* outer container hides extra; scrollbars live in .table-scroll */
 }
 
-.table-wrapper::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 10px;
-}
-
-.table-wrapper::-webkit-scrollbar-track {
-    background: #f8f9fc;
-}
-
-table {
+/* inner scrolling area that contains the actual table and shows scrollbars inside the card */
+.table-scroll {
+    height: 100%;
     width: 100%;
-    min-width: 1400px; /* Ensures horizontal scroll on smaller screens */
+    overflow: auto; /* both horizontal and vertical scrollbars inside this element */
+    -webkit-overflow-scrolling: touch;
+    padding: 12px; /* inner padding so content has breathing room */
+    box-sizing: border-box;
+    /* ensure scrollbars appear above any background and are usable */
+    position: relative;
+}
+
+/* table should size to its content (min-width) so horizontal scroll will appear when needed */
+.table-scroll table {
+    width: auto; /* don't force 100% to allow natural width and scrolling */
+    min-width: 1100px; /* ensures many columns require horizontal scroll on smaller viewports */
+    table-layout: fixed; /* keep column sizes stable and truncate overflow via ellipsis */
     border-collapse: collapse;
     white-space: nowrap;
 }
 
-/* Main Dashboard Table Headers */
+/* restore the table header display with strong contrast (red gradient + white text) */
 #coop-table thead th {
-    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
-    color: #fff;
-    padding: 16px 18px;
+    background: #860000;
+    color: #ffffff;
+    padding: 12px 14px;
     text-align: left;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 0.85rem;
     position: sticky;
     top: 0;
-    z-index: 10;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid #771520;
+    z-index: 12;
+    text-transform: none;
+    letter-spacing: 0.2px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
     white-space: nowrap;
 }
 
-/* Main Dashboard Table Cells */
+/* normal, readable table cells (plain text) */
 #coop-table tbody td {
-    padding: 14px 18px;
-    border-bottom: 1px solid #f0f0f0;
-    color: #2B3674;
-    font-size: 0.9rem;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f1f1;
+    color: #111827; /* plain dark text, no red accents */
+    font-size: 0.95rem;
     font-weight: 500;
     vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Specific column widths for better readability */
+/* adjust specific column min-widths (contact is cellphone only so smaller) */
 #coop-table th:nth-child(1),
-#coop-table td:nth-child(1) { min-width: 200px; } /* Cooperative Name */
+#coop-table td:nth-child(1) { min-width: 220px; } /* Cooperative Name */
 #coop-table th:nth-child(2),
 #coop-table td:nth-child(2) { min-width: 120px; } /* Category */
 #coop-table th:nth-child(3),
-#coop-table td:nth-child(3) { min-width: 100px; } /* District */
+#coop-table td:nth-child(3) { min-width: 120px; } /* District */
 #coop-table th:nth-child(4),
 #coop-table td:nth-child(4) { min-width: 180px; } /* Address */
 #coop-table th:nth-child(5),
-#coop-table td:nth-child(5) { min-width: 220px; } /* Contact */
+#coop-table td:nth-child(5) { min-width: 120px; } /* Contact (cellphone) */
 #coop-table th:nth-child(6),
 #coop-table td:nth-child(6) { min-width: 160px; } /* CDA Registration */
 #coop-table th:nth-child(7),
@@ -253,457 +266,311 @@ table {
 #coop-table td:nth-child(9) { min-width: 90px; } /* Members */
 #coop-table th:nth-child(10),
 #coop-table td:nth-child(10) { min-width: 90px; } /* Officers */
-#coop-table th:nth-child(11),
-#coop-table td:nth-child(11) { min-width: 140px; } /* Actions */
 
-/* --- ENHANCED HOVER BEHAVIOR --- */
-#coop-table tbody tr[data-modal-target] {
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+/* keep hover behavior subtle and neutral */
 #coop-table tbody tr[data-modal-target]:hover {
-    background-color: #fff5f6;
-    transform: scale(1.002);
-    box-shadow: 0 4px 12px rgba(169, 30, 44, 0.1);
-    z-index: 5;
-    border-left: 4px solid #a91e2c;
+    background-color: #fbfbfc;
 }
 
-#coop-table tbody tr[data-modal-target]:hover td:first-child {
-    padding-left: 14px;
-}
-
-.table-footer {
-    padding: 14px 0;
-    color: #A3AED0;
-    font-size: 0.85rem;
-    text-align: right;
-    flex-shrink: 0;
-    font-weight: 500;
-}
-
-/* --- Modal Styling --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.modal-overlay.visible {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.modal-content {
-    background: #fff;
-    width: 90%;
-    max-width: 900px; /* Wider for tables */
-    max-height: 85vh;
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    transform: translateY(20px);
-    transition: transform 0.3s ease;
-}
-
-.modal-overlay.visible .modal-content {
-    transform: translateY(0);
-}
-
-/* Modal Header */
-.modal-top-bar {
-    padding: 15px 25px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-top-bar h3 {
-    margin: 0;
-    color: #2B3674;
-    font-size: 1.1rem;
-}
-
-.modal-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.pdf-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #fff;
-    border: 1px solid #a91e2c;
-    color: #a91e2c;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.pdf-btn:hover {
-    background: #a91e2c;
-    color: #fff;
-}
-
-.modal-close-btn {
-    background: none;
-    border: none;
-    font-size: 1.8rem;
-    color: #A3AED0;
-    cursor: pointer;
-    line-height: 1;
-}
-
-.modal-close-btn:hover { color: #a91e2c; }
-
-/* Modal Body */
-.modal-scroll-area {
-    flex: 1;
-    overflow-y: auto;
-    padding: 25px;
-}
-
-.modal-header-section {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.coop-avatar {
-    width: 60px;
-    height: 60px;
-    background: #a91e2c;
-    color: #fff;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    font-weight: bold;
-}
-
-.coop-title-info h4 {
-    margin: 0 0 5px 0;
-    font-size: 1.2rem;
-    color: #2B3674;
-}
-
-.badge-cda {
-    background: #e3f2fd;
-    color: #1976d2;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.update-info {
-    margin-top: 5px;
-    font-size: 0.75rem;
-    color: #A3AED0;
-}
-
-/* Info Sections */
-.info-section {
-    margin-bottom: 25px;
-}
-
-.section-title {
-    margin: 0 0 15px 0;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: #A3AED0;
-    letter-spacing: 0.5px;
-    border-left: 4px solid #a91e2c;
-    padding-left: 10px;
-    font-weight: 700;
-}
-
-/* Grids for General Info */
-.info-grid {
-    display: grid;
-    gap: 15px;
-}
-.info-grid.two-col { grid-template-columns: 1fr 1fr; }
-.info-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
-
-.info-item label {
-    display: block;
-    font-size: 0.75rem;
-    color: #A3AED0;
-    margin-bottom: 4px;
-    font-weight: 600;
-}
-
-.info-item p {
-    margin: 0;
-    color: #2B3674;
-    font-weight: 500;
-    font-size: 0.95rem;
-}
-
-.status-yes {
-    color: #2e7d32;
-    font-weight: bold;
-    background: #e8f5e9;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-}
-
-.status-inactive {
-    color: #d32f2f;
-    font-weight: bold;
-    background: #ffebee;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-}
-
-/* --- NEW STYLES FOR MODAL TABLES (Officers & Members) --- */
-.modal-table-container {
-    overflow-x: auto;
-    border: 1px solid #eee;
-    border-radius: 8px;
-}
-
-.modal-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-
-.modal-table th {
-    background: #f8f9fa;
-    color: #A3AED0;
-    font-weight: 600;
-    text-align: left;
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-}
-
-.modal-table td {
-    padding: 10px 15px;
-    border-bottom: 1px solid #f9f9f9;
-    color: #2B3674;
-}
-
-.modal-table tr:last-child td {
-    border-bottom: none;
-}
-
-.modal-table tr:hover {
-    background: #fafafa;
-}
-
-/* Modal Footer */
-.modal-footer {
-    padding: 15px 25px;
-    border-top: 1px solid #eee;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.primary-btn {
-    background: #a91e2c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.2s;
-}
-.primary-btn:hover { background: #8a1824; }
-
-.secondary-btn {
-    background: #f0f0f0;
-    color: #555;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-}
-.secondary-btn:hover { background: #e0e0e0; }
-
-/* Responsive */
-@media (max-width: 768px) {
-    .info-grid.two-col, .info-grid.three-col {
-        grid-template-columns: 1fr;
-    }
-    .modal-actions {
-        gap: 10px;
-    }
-    .pdf-btn span {
-        display: none;
-    }
-}
-/* --- New Table Styles for Combined Data --- */
-.badge-category {
-    display: inline-block;
-    padding: 5px 12px;
-    background: linear-gradient(135deg, #fff5f6 0%, #ffffff 100%);
-    color: #a91e2c;
-    border: 1px solid #ffebee;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: capitalize;
-}
-
+/* make badge-count less aggressive (dark background ok) */
 .badge-count {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px;
-    height: 32px;
-    padding: 0 10px;
-    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+    min-width: 36px;
+    height: 28px;
+    padding: 0 8px;
+    background: #374151;
     color: #fff;
-    border-radius: 20px;
+    border-radius: 14px;
     font-size: 0.85rem;
     font-weight: 700;
 }
 
-.contact-info {
-    font-size: 0.85rem;
-    line-height: 1.6;
+/* contact-info simplified styling (no icons) */
+.contact-info { font-size: 0.92rem; color: #111827; }
+
+/* remove any inline style reliance for min-width on specific td cells */
+#coop-table td.address-cell { min-width: 180px; }
+#coop-table td.contact-cell { min-width: 120px; }
+
+/* ensure scrollbars are visible inside the card for both axes */
+.table-scroll::-webkit-scrollbar { height: 12px; width: 12px; }
+.table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+.table-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .databank-container {
+        padding: 16px;
+    }
+    .search-bar input {
+        width: 100%;
+        max-width: none;
+    }
+    .table-wrapper {
+        height: 360px;
+    }
+    .table-scroll {
+        padding: 8px;
+    }
+    .table-scroll table { min-width: 900px; }
+    @supports (overflow-scrolling: touch) {
+        .table-scroll { -webkit-overflow-scrolling: touch; }
+    }
 }
 
-.contact-info div {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 2px 0;
+/* --- OCR Drawer & Toggle Button styles moved from template (all styles kept here) --- */
+/* OCR Drawer wrapper and drawer */
+.ocr-drawer-wrapper {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1050;
+    pointer-events: none;
 }
 
-.contact-info i {
-    color: #a91e2c;
-    font-size: 0.9rem;
+.ocr-drawer {
+    position: absolute;
+    right: -380px;
+    top: 0;
+    width: 380px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -8px 0 24px rgba(43, 54, 116, 0.12);
+    transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: all;
+    overflow-y: auto;
+    border-left: 1px solid #edf2f7;
 }
 
-.text-end {
-    text-align: right !important;
-}
+.ocr-drawer.open { right: 0; }
 
-.text-center {
-    text-align: center !important;
-}
-
-.text-muted {
-    color: #A3AED0 !important;
-}
-
-/* Action Buttons in Table */
-.action-buttons {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-}
-
-.btn-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid #edf2f7;
-    background: #fff;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 1rem;
-}
-
-.btn-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.btn-view {
-    color: #4299e1;
-}
-
-.btn-view:hover {
-    background: #ebf8ff;
-    border-color: #4299e1;
-}
-
-.btn-edit {
-    color: #48bb78;
-}
-
-.btn-edit:hover {
-    background: #f0fff4;
-    border-color: #48bb78;
-}
-
-.btn-delete {
-    color: #f56565;
-}
-
-.btn-delete:hover {
-    background: #fff5f5;
-    border-color: #f56565;
-}
-
-/* Table Footer Enhancements */
-.table-footer {
+.ocr-drawer-header {
+    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+    color: #ffffff;
+    padding: 28px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 3px solid #771520;
 }
 
-.pagination {
-    display: flex;
-    gap: 4px;
-}
-
-.pagination button {
-    padding: 6px 12px;
-    border: 1px solid #edf2f7;
-    background: #fff;
-    border-radius: 6px;
+.ocr-drawer-header h3 { margin: 0; font-size: 19px; font-weight: 700; display:flex; gap:12px; }
+.ocr-drawer-close {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #ffffff;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
+    font-size: 20px;
+    display:flex; align-items:center; justify-content:center;
 }
 
-.pagination button:hover {
-    background: #f8f9fc;
+/* body */
+.ocr-drawer-body { padding: 28px 24px; background: #f8f9fc; }
+.ocr-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 16px;
+    padding: 40px 28px;
+    text-align: center;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.ocr-upload-area:hover, .ocr-upload-area.dragover {
     border-color: #a91e2c;
-    color: #a91e2c;
+    background: #fff5f6;
+    box-shadow: 0 6px 16px rgba(169,30,44,0.12);
+    transform: translateY(-2px);
+}
+.ocr-upload-area i { font-size:56px; color:#a91e2c; margin-bottom:16px; display:block; }
+.ocr-upload-area h5 { color: #2B3674; font-weight:700; margin:12px 0 8px; font-size:17px; }
+.ocr-upload-area p { color:#A3AED0; font-size:14px; margin:0; }
+
+/* buttons in drawer */
+.ocr-btn-group { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+.ocr-action-btn {
+    padding: 16px 12px;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: pointer;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+}
+.ocr-action-btn:hover { border-color:#a91e2c; background:#fff5f6; transform:translateY(-3px); box-shadow:0 6px 14px rgba(169,30,44,0.12); }
+.ocr-action-btn i { font-size:30px; color:#a91e2c; }
+.ocr-action-btn span { font-size:12px; color:#2B3674; font-weight:600; }
+
+/* loading & result */
+.ocr-loading { display:none; text-align:center; padding:36px 24px; background:#ffffff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+.ocr-loading.active { display:block; }
+.ocr-result-area { margin-top:24px; background:#ffffff; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #edf2f7; display:none; }
+.ocr-result-text { width:100%; min-height:220px; padding:14px; border:1px solid #edf2f7; border-radius:10px; font-family:'Courier New', monospace; font-size:13px; background:#f8f9fc; color:#2B3674; resize:vertical; }
+.ocr-result-text:focus { outline:none; border-color:#a91e2c; background:#ffffff; box-shadow:0 0 0 3px rgba(169,30,44,0.08); }
+.ocr-result-actions { margin-top:14px; display:flex; gap:12px; }
+.btn-apply { background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%); color:#ffffff; box-shadow:0 4px 10px rgba(169,30,44,0.25); padding:12px; border-radius:10px; }
+.btn-clear { background:#f8f9fc; color:#2B3674; border:1px solid #edf2f7; padding:12px; border-radius:10px; }
+
+/* OCR toggle button */
+.ocr-toggle-btn {
+    position: fixed;
+    right: 24px;
+    bottom: 90px;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 8px 24px rgba(169,30,44,0.4);
+    cursor: pointer;
+    z-index: 1040;
+    display:flex; align-items:center; justify-content:center;
+}
+.ocr-toggle-btn:hover { transform:scale(1.1) translateY(-3px); }
+
+/* --- HOVER & SELECTION (use account_management styles) --- */
+
+/* remove actions column rules (no actions column now) */
+
+/* Table row hover & selection - mirror account_management.css */
+.table-scroll table tbody tr {
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.08s ease;
 }
 
-.pagination button.active {
-    background: #a91e2c;
+.table-scroll table tbody tr:hover {
+    background: #f0f0f0;
+}
+
+/* Selected row styling (same look/behavior as account management) */
+.table-scroll table tbody tr.selected {
+    background: #e3f2fd !important;
+    border-left: 4px solid #a91e2c;
+}
+
+/* Replace fixed-position card with layout-friendly card that does NOT overlap sidebar.
+   Table area gets an inner scroll only when rows overflow. */
+.databank-container {
+    position: relative;              /* keep in normal document flow */
+    width: 90%;
+    max-width: 1100px;               /* same visual width as account management */
+    margin: 20px auto;               /* centers inside main content area */
+    padding: 25px 30px;
+    box-sizing: border-box;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;               /* allow page scrolling, not card overlay */
+    animation: fadeIn 0.4s ease-in-out;
+    z-index: 1;                       /* low z-index so sidebar/header are unaffected */
+}
+
+/* keep header/toolbar fixed height inside the card so table area fills the rest */
+.databank-header,
+.databank-toolbar {
+    flex: 0 0 auto;
+}
+
+/* Table wrapper fills available card area. Use max-height so it doesn't overflow page.
+   Inner .table-scroll will create scrollbars when table rows overflow. */
+.table-wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;                /* outer container hides overflow */
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    background: #fff;
+    padding: 0;
+    margin-top: 12px;
+    /* Keep the table within viewport but not fixed; adjust 260px if you have a taller header */
+    max-height: calc(100vh - 220px);
+}
+
+/* Inner scrolling area where overflow occurs (rows only) */
+.table-scroll {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Table and thead sticky rules remain same as before */
+.table-scroll table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    background: #fafafa;
+}
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    background: #860000;
     color: #fff;
-    border-color: #a91e2c;
+}
+
+/* Cells behavior matches account_management: truncation, paddings */
+.table-scroll th,
+.table-scroll td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #f1f1f1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hover and selected row behavior */
+.table-scroll tbody tr {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.table-scroll tbody tr:hover { background: #f0f0f0; }
+.table-scroll tbody tr.selected {
+    background: #e3f2fd !important;
+    border-left: 4px solid #860000;
+}
+
+/* scrollbar styling kept consistent */
+.table-scroll::-webkit-scrollbar { height: 12px; width: 12px; }
+.table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+.table-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* Responsive fallback: convert fixed card to fluid on small screens */
+@media (max-width: 768px) {
+    .databank-container {
+        position: static;
+        transform: none;
+        width: auto;
+        max-width: none;
+        height: auto;
+        max-height: none;
+        margin: 16px;
+    }
+    .table-wrapper { height: 360px; }
+ 
+
+    table tbody tr:hover {
+        background: #f0f0f0;
+    }
+
+    /* Selected row styling */
+    table tbody tr.selected {
+        background: #e3f2fd !important;
+        border-left: 4px solid #860000;
+    }
 }
