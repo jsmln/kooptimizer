@@ -17,6 +17,238 @@
     <link rel="stylesheet" href="{% static 'frontend/login.css' %}">
     <link rel="stylesheet" href="{% static 'path/to/bootstrap-icons.css' %}">
 
+    {% if show_verification_flow %}
+    <!-- VERIFICATION FLOW SECTION -->
+    <section id="verification-flow" class="verification-container">
+        <div class="verification-header">
+            <h2>Account Verification</h2>
+            <button type="button" class="btn-back" onclick="window.location.href='{% url 'login' %}'">
+                <i class="bi bi-arrow-left"></i> Back to Login
+            </button>
+            
+            <!-- Progress Bar -->
+            {% if verification_step != 'success' %}
+            <div class="progress-section">
+                <div class="step-indicator">
+                    {% if verification_step == 'start' %}
+                    <span class="step-label">Step 1 of 3</span>
+                    {% elif verification_step == 'otp' %}
+                    <span class="step-label">Step 2 of 3</span>
+                    {% elif verification_step == 'password' %}
+                    <span class="step-label">Step 3 of 3</span>
+                    {% endif %}
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="
+                        {% if verification_step == 'start' %}width: 33.33%;
+                        {% elif verification_step == 'otp' %}width: 66.66%;
+                        {% elif verification_step == 'password' %}width: 100%;
+                        {% endif %}
+                    "></div>
+                </div>
+                <div class="step-dots">
+                    <span class="dot {% if verification_step == 'start' or verification_step == 'otp' or verification_step == 'password' %}active{% endif %}" data-step="1">
+                        <i class="bi bi-shield-lock"></i>
+                    </span>
+                    <span class="dot {% if verification_step == 'otp' or verification_step == 'password' %}active{% endif %}" data-step="2">
+                        <i class="bi bi-phone"></i>
+                    </span>
+                    <span class="dot {% if verification_step == 'password' %}active{% endif %}" data-step="3">
+                        <i class="bi bi-key"></i>
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if verification_step == 'start' %}
+        <!-- Step 1: Send OTP -->
+        <div class="verification-step">
+            <div class="step-title">Verify Your Phone Number</div>
+            <div class="step-icon">
+                <i class="bi bi-shield-lock"></i>
+            </div>
+            <p>To secure your account and comply with the <strong>Data Privacy Act of 2012 (Republic Act No. 10173)</strong>, we need to verify your phone number.</p>
+            <p class="phone-number"><strong>Phone: {{ masked_mobile_number }}</strong></p>
+            <form method="post" action="{% url 'users:first_login_setup' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_otp">
+                <button type="submit" class="btn-primary">Send Verification Code</button>
+            </form>
+        </div>
+        {% elif verification_step == 'otp' %}
+        <!-- Step 2: Verify OTP -->
+        <div class="verification-step">
+            <div class="step-title">Enter Verification Code</div>
+            <div class="step-icon">
+                <i class="bi bi-phone"></i>
+            </div>
+            <p>Enter the 4-digit code sent to <strong>{{ masked_mobile_number }}</strong></p>
+            <form method="post" action="{% url 'users:first_login_setup' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="verify_otp">
+                <div class="otp-inputs">
+                    <input type="text" name="otp_1" maxlength="1" pattern="[0-9]" required autofocus>
+                    <input type="text" name="otp_2" maxlength="1" pattern="[0-9]" required>
+                    <input type="text" name="otp_3" maxlength="1" pattern="[0-9]" required>
+                    <input type="text" name="otp_4" maxlength="1" pattern="[0-9]" required>
+                </div>
+                <button type="submit" class="btn-primary">Verify Code</button>
+            </form>
+            <form method="post" action="{% url 'users:first_login_setup' %}" style="margin-top: 15px;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="send_otp">
+                <button type="submit" class="btn-secondary">Resend Code</button>
+            </form>
+        </div>
+        {% elif verification_step == 'password' %}
+        <!-- Step 3: Set Password & Accept Terms -->
+        <div class="verification-step">
+            <div class="step-title">Create Your Password</div>
+            <div class="step-icon">
+                <i class="bi bi-key"></i>
+            </div>
+            <p>Set a strong password for your account (minimum 8 characters)</p>
+            <form method="post" action="{% url 'users:first_login_setup' %}" id="password-form">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" name="new_password" id="new_password" required minlength="8" class="form-control">
+                        <i class="bi bi-eye-slash toggle-password" data-target="new_password"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" name="confirm_password" id="confirm_password" required minlength="8" class="form-control">
+                        <i class="bi bi-eye-slash toggle-password" data-target="confirm_password"></i>
+                    </div>
+                </div>
+
+                <!-- Terms & Privacy Policy Checkbox -->
+                <div class="form-group terms-acceptance">
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="accept_terms" id="accept_terms" required>
+                        <span class="checkmark"></span>
+                        <span class="terms-text">
+                            I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" onclick="event.preventDefault()" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a> 
+                            and <a href="#" onclick="event.preventDefault()" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a> 
+                            in accordance with the <strong>Data Privacy Act of 2012</strong> (Republic Act No. 10173)
+                        </span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submit-btn">Complete Setup</button>
+            </form>
+        </div>
+        
+        <!-- Footer -->
+        <div class="verification-footer">
+            <p>Need help? <a href="#">Contact Support</a></p>
+        </div>
+        {% elif verification_step == 'success' %}
+        <!-- Step 4: Success - Redirect to Login -->
+        <div class="verification-step success-step">
+            <div class="step-icon success-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h3>Account Verified Successfully!</h3>
+            <p>Your account has been set up and is ready to use.</p>
+            <p class="redirect-message">You will be redirected to login in <span id="countdown">5</span> seconds...</p>
+            
+            <button type="button" class="btn-primary" onclick="window.location.href='{% url 'login' %}'">
+                <i class="bi bi-box-arrow-in-right"></i> Login Now
+            </button>
+        </div>
+        
+        <!-- Footer -->
+        <div class="verification-footer">
+            <p>Successfully verified! Welcome to KoopTimizer</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- Terms & Conditions Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms & Conditions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Acceptance of Terms</h6>
+                    <p>By accessing and using KoopTimizer, you accept and agree to be bound by these Terms & Conditions.</p>
+                    
+                    <h6>2. User Responsibilities</h6>
+                    <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.</p>
+                    
+                    <h6>3. Data Usage</h6>
+                    <p>Your data will be used solely for the purposes of cooperative management and compliance with applicable Philippine laws.</p>
+                    
+                    <!-- Add more terms as needed -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div class="modal fade" id="privacyModal" tabindex="-1" aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="privacyModalLabel">Privacy Policy - Data Privacy Act of 2012</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Data Privacy Act of 2012 Compliance</h6>
+                    <p>KoopTimizer is committed to protecting your personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).</p>
+                    
+                    <h6>Information We Collect</h6>
+                    <ul>
+                        <li>Personal identification information (name, contact details)</li>
+                        <li>Cooperative membership information</li>
+                        <li>Transaction and communication records</li>
+                    </ul>
+                    
+                    <h6>How We Use Your Information</h6>
+                    <ul>
+                        <li>To provide cooperative management services</li>
+                        <li>To communicate important announcements</li>
+                        <li>To comply with legal and regulatory requirements</li>
+                    </ul>
+                    
+                    <h6>Your Rights</h6>
+                    <p>Under the Data Privacy Act, you have the right to:</p>
+                    <ul>
+                        <li>Access your personal data</li>
+                        <li>Correct inaccurate data</li>
+                        <li>Request data portability</li>
+                        <li>Object to processing</li>
+                        <li>Request erasure (subject to legal requirements)</li>
+                    </ul>
+                    
+                    <h6>Data Security</h6>
+                    <p>We implement appropriate technical and organizational measures to protect your personal information.</p>
+                    
+                    <!-- Add more privacy policy content as needed -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- NORMAL LOGIN SECTION -->
     <section id="login">
         <h2>Login</h2>
         <form id="login-form" method="POST">
@@ -41,6 +273,7 @@
 
         </form>
     </section>
+    {% endif %}
 
        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -48,12 +281,79 @@
         const togglePassword = document.querySelector('#togglePassword');
         const password = document.querySelector('#password');
 
-        togglePassword.addEventListener('click', function (e) {
-        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-        password.setAttribute('type', type);
-        this.classList.toggle('bi-eye');
-        this.classList.toggle('bi-eye-slash');
-});
+        if (togglePassword && password) {
+            togglePassword.addEventListener('click', function (e) {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                this.classList.toggle('bi-eye');
+                this.classList.toggle('bi-eye-slash');
+            });
+        }
+
+        // OTP input auto-focus
+        const otpInputs = document.querySelectorAll('.otp-inputs input');
+        if (otpInputs.length > 0) {
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        // Password form validation - prevent submission without terms acceptance
+        const passwordForm = document.getElementById('password-form');
+        const acceptTermsCheckbox = document.getElementById('accept_terms');
+        const submitBtn = document.getElementById('submit-btn');
+
+        if (passwordForm && acceptTermsCheckbox) {
+            passwordForm.addEventListener('submit', function(e) {
+                if (!acceptTermsCheckbox.checked) {
+                    e.preventDefault();
+                    alert('You must accept the Terms & Conditions and Privacy Policy to continue.');
+                    acceptTermsCheckbox.focus();
+                    return false;
+                }
+            });
+        }
+
+        // Toggle password visibility for verification flow
+        const togglePasswordBtns = document.querySelectorAll('.toggle-password');
+        togglePasswordBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const targetInput = document.getElementById(targetId);
+                
+                if (targetInput) {
+                    const type = targetInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    targetInput.setAttribute('type', type);
+                    this.classList.toggle('bi-eye');
+                    this.classList.toggle('bi-eye-slash');
+                }
+            });
+        });
+
+        // Success page countdown and auto-redirect
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            let seconds = 5;
+            const countdownInterval = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+                
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '{% url "login" %}';
+                }
+            }, 1000);
+        }
     </script>
 
 {% endblock %}
