@@ -7,347 +7,18 @@
 {% block extra_head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'frontend/databank_management.css' %}">
-    <style>
-        /* OCR Assistant Drawer - Redesigned for Modern UI */
-        .ocr-drawer-wrapper {
-            position: fixed;
-            right: 0;
-            top: 0;
-            height: 100vh;
-            z-index: 1050;
-            pointer-events: none;
-        }
-        
-        .ocr-drawer {
-            position: absolute;
-            right: -380px;
-            top: 0;
-            width: 380px;
-            height: 100%;
-            background: #ffffff;
-            box-shadow: -8px 0 24px rgba(43, 54, 116, 0.12);
-            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: all;
-            overflow-y: auto;
-            border-left: 1px solid #edf2f7;
-        }
-        
-        .ocr-drawer.open {
-            right: 0;
-        }
-        
-        .ocr-drawer-header {
-            background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
-            color: #ffffff;
-            padding: 28px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #771520;
-        }
-        
-        .ocr-drawer-header h3 {
-            margin: 0;
-            font-size: 19px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            letter-spacing: 0.3px;
-        }
-        
-        .ocr-drawer-header h3 i {
-            font-size: 22px;
-        }
-        
-        .ocr-drawer-close {
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #ffffff;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .ocr-drawer-close:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: rotate(90deg);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        .ocr-drawer-body {
-            padding: 28px 24px;
-            background: #f8f9fc;
-        }
-        
-        .ocr-toggle-btn {
-            position: fixed;
-            right: 24px;
-            bottom: 90px;
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
-            color: #ffffff;
-            border: none;
-            box-shadow: 0 8px 24px rgba(169, 30, 44, 0.4);
-            cursor: pointer;
-            z-index: 1040;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: all;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .ocr-toggle-btn:hover {
-            transform: scale(1.1) translateY(-3px);
-            box-shadow: 0 12px 32px rgba(169, 30, 44, 0.5);
-        }
-        
-        .ocr-toggle-btn:active {
-            transform: scale(1.04);
-        }
-        
-        .ocr-toggle-btn i {
-            font-size: 28px;
-        }
-        
-        .ocr-upload-area {
-            border: 2px dashed #d1d5db;
-            border-radius: 16px;
-            padding: 40px 28px;
-            text-align: center;
-            background: #ffffff;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
-        
-        .ocr-upload-area:hover,
-        .ocr-upload-area.dragover {
-            border-color: #a91e2c;
-            background: #fff5f6;
-            box-shadow: 0 6px 16px rgba(169, 30, 44, 0.12);
-            transform: translateY(-2px);
-        }
-        
-        .ocr-upload-area i {
-            font-size: 56px;
-            color: #a91e2c;
-            margin-bottom: 16px;
-            display: block;
-        }
-        
-        .ocr-upload-area h5 {
-            color: #2B3674;
-            font-weight: 700;
-            margin: 12px 0 8px;
-            font-size: 17px;
-        }
-        
-        .ocr-upload-area p {
-            color: #A3AED0;
-            font-size: 14px;
-            margin: 0;
-        }
-        
-        .ocr-btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        
-        .ocr-action-btn {
-            padding: 16px 12px;
-            border: 1px solid #edf2f7;
-            border-radius: 12px;
-            background: #ffffff;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        }
-        
-        .ocr-action-btn:hover {
-            border-color: #a91e2c;
-            background: #fff5f6;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 14px rgba(169, 30, 44, 0.12);
-        }
-        
-        .ocr-action-btn:active {
-            transform: translateY(-1px);
-        }
-        
-        .ocr-action-btn i {
-            font-size: 30px;
-            color: #a91e2c;
-        }
-        
-        .ocr-action-btn span {
-            font-size: 12px;
-            color: #2B3674;
-            font-weight: 600;
-        }
-        
-        .ocr-result-area {
-            margin-top: 24px;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            border: 1px solid #edf2f7;
-        }
-        
-        .ocr-result-area label {
-            color: #2B3674;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            display: block;
-        }
-        
-        .ocr-result-text {
-            width: 100%;
-            min-height: 220px;
-            padding: 14px;
-            border: 1px solid #edf2f7;
-            border-radius: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            resize: vertical;
-            background: #f8f9fc;
-            color: #2B3674;
-            transition: all 0.2s;
-        }
-        
-        .ocr-result-text:focus {
-            outline: none;
-            border-color: #a91e2c;
-            background: #ffffff;
-            box-shadow: 0 0 0 3px rgba(169, 30, 44, 0.08);
-        }
-        
-        .ocr-result-actions {
-            margin-top: 14px;
-            display: flex;
-            gap: 12px;
-        }
-        
-        .ocr-result-actions button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13.5px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-apply {
-            background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 10px rgba(169, 30, 44, 0.25);
-        }
-        
-        .btn-apply:hover {
-            background: linear-gradient(135deg, #8a1824 0%, #771520 100%);
-            box-shadow: 0 6px 16px rgba(169, 30, 44, 0.35);
-            transform: translateY(-2px);
-        }
-        
-        .btn-apply:active {
-            transform: translateY(0);
-        }
-        
-        .btn-clear {
-            background: #f8f9fc;
-            color: #2B3674;
-            border: 1px solid #edf2f7;
-        }
-        
-        .btn-clear:hover {
-            background: #edf2f7;
-            border-color: #d1d5db;
-        }
-        
-        .ocr-loading {
-            display: none;
-            text-align: center;
-            padding: 36px 24px;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-        }
-        
-        .ocr-loading.active {
-            display: block;
-        }
-        
-        .ocr-loading .spinner-border {
-            color: #b71c1c;
-            width: 3rem;
-            height: 3rem;
-            border-width: 0.3em;
-        }
-        
-        .ocr-loading p {
-            color: #555;
-            margin-top: 16px;
-            font-weight: 500;
-        }
-        
-        /* Main content shift when drawer is open */
-        .databank-layout.drawer-open {
-            margin-right: 350px;
-            transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        /* Info text styling */
-        .ocr-drawer-body > p {
-            background: rgba(183, 28, 28, 0.05);
-            border-left: 3px solid #b71c1c;
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-bottom: 18px;
-            color: #555;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-    </style>
 {% endblock %}
 
 {% block dashboard_content %}
 
 <div class="databank-container">
     
-    <div class="databank-header">
-        <div class="header-left">
-            <h2>Cooperative Data Bank</h2>
-            <p class="subtitle">Manage and monitor cooperative information</p>
-        </div>
+    <!-- <div class="databank-header">
         <div class="stat-card">
             <span class="stat-label">Total Cooperatives</span>
             <span class="stat-value">{{ total_count|default:0 }}</span>
         </div>
-    </div>
+    </div> -->
 
     <div class="databank-toolbar">
         <div class="toolbar-left">
@@ -368,106 +39,62 @@
 
     <div class="table-section">
         <div class="table-wrapper">
-            <table id="coop-table">
-                <thead>
-                    <tr>
-                        <th>Cooperative Name</th>
-                        <th>Category</th>
-                        <th>District</th>
-                        <th>Address</th>
-                        <th>Contact</th>
-                        <th>CDA Registration</th>
-                        <th>Assets (₱)</th>
-                        <th>Capital (₱)</th>
-                        <th>Members</th>
-                        <th>Officers</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for coop in cooperatives %}
-                    <tr data-coop-id="{{ coop.coop_id }}">
-                        <td><strong>{{ coop.cooperative_name }}</strong></td>
-                        <td>
-                            {% if coop.category %}
-                                <span class="badge-category">{{ coop.category }}</span>
-                            {% else %}
-                                <span class="text-muted">N/A</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ coop.district|default:"N/A" }}</td>
-                        <td style="min-width: 180px;">
-                            {{ coop.address|default:"N/A" }}
-                        </td>
-                        <td style="min-width: 200px;">
-                            <div class="contact-info">
-                                {% if coop.email_address %}
-                                    <div><i class="bi bi-envelope"></i> {{ coop.email_address }}</div>
-                                {% endif %}
-                                {% if coop.mobile_number %}
-                                    <div><i class="bi bi-phone"></i> {{ coop.mobile_number }}</div>
-                                {% endif %}
-                                {% if not coop.email_address and not coop.mobile_number %}
+            <div class="table-scroll">
+                <table id="coop-table" role="table" aria-label="Cooperative list">
+                    <thead>
+                        <tr>
+                            <th>Cooperative Name</th>
+                            <th>Category</th>
+                            <th>District</th>
+                            <th>Address</th>
+                            <th>Contact No.</th>
+                            <th>CDA Registration</th>
+                            <th>Assets (₱)</th>
+                            <th>Capital (₱)</th>
+                            <th>Members</th>
+                            <th>Officers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for coop in cooperatives %}
+                        <tr data-coop-id="{{ coop.coop_id }}" data-detail-url="{% url 'databank:coop_detail' coop.coop_id %}">
+                            <td><strong>{{ coop.cooperative_name }}</strong></td>
+                            <td>{% if coop.category %}<span class="badge-category">{{ coop.category }}</span>{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
+                            <td>{{ coop.district|default:"N/A" }}</td>
+                            <td class="address-cell">{{ coop.address|default:"N/A" }}</td>
+                            <td class="contact-cell">{{ coop.mobile_number|default:"N/A" }}</td>
+                            <td>
+                                {% if coop.cda_registration_number %}
+                                    {{ coop.cda_registration_number }}
+                                    {% if coop.cda_registration_date %}<div class="text-muted">{{ coop.cda_registration_date }}</div>{% endif %}
+                                {% else %}
                                     <span class="text-muted">N/A</span>
                                 {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            {% if coop.cda_registration_number %}
-                                <div>{{ coop.cda_registration_number }}</div>
-                                {% if coop.cda_registration_date %}
-                                    <small class="text-muted">{{ coop.cda_registration_date }}</small>
-                                {% endif %}
-                            {% else %}
-                                <span class="text-muted">N/A</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            {% if coop.assets %}
-                                {{ coop.assets|floatformat:2 }}
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-end">
-                            {% if coop.paid_up_capital %}
-                                {{ coop.paid_up_capital|floatformat:2 }}
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            <span class="badge-count">{{ coop.members_count|default:0 }}</span>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge-count">{{ coop.officers_count|default:0 }}</span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-action btn-view" onclick="viewCooperativeDetails({{ coop.coop_id }})" title="View Details">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                                <button class="btn-action btn-edit" onclick="editCooperative({{ coop.coop_id }})" title="Edit">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn-action btn-delete" onclick="deleteCooperative({{ coop.coop_id }})" title="Mark Inactive">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="11" style="text-align: center; padding: 60px; color: #A3AED0;">
-                            <i class="bi bi-inbox" style="font-size: 56px; display: block; margin-bottom: 20px; opacity: 0.5;"></i>
-                            <h4 style="color: #2B3674; margin-bottom: 8px;">No cooperatives found</h4>
-                            <p style="margin: 0;">Click "Add Cooperative" to get started.</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                            <td class="text-end">{{ coop.assets|default:"-" }}</td>
+                            <td class="text-end">{{ coop.paid_up_capital|default:"-" }}</td>
+                            <td class="text-center">{{ coop.members_count|default:0 }}</td>
+                            <td class="text-center">{{ coop.officers_count|default:0 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr data-coop-id="sample-001">
+                            <td><strong>Sample Cooperative</strong></td>
+                            <td><span class="badge-category">consumer</span></td>
+                            <td>Sample District</td>
+                            <td class="address-cell">123 Sample St., Sample City</td>
+                            <td class="contact-cell">0917-000-0000</td>
+                            <td>1414-060923055 <div class="text-muted">09-06-2005</div></td>
+                            <td class="text-end">356,964.68</td>
+                            <td class="text-end">108,243.78</td>
+                            <td class="text-center">128</td>
+                            <td class="text-center">8</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+
         <div class="table-footer">
             <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
             {% if cooperatives %}
@@ -480,12 +107,11 @@
 
 </div>
 
-<!-- OCR Assistant Toggle Button -->
+<!-- OCR Toggle button and drawer markup unchanged -->
 <button class="ocr-toggle-btn" id="ocrToggleBtn" title="Open OCR Assistant">
     <i class="bi bi-upc-scan"></i>
 </button>
 
-<!-- OCR Assistant Drawer -->
 <div class="ocr-drawer-wrapper">
     <div class="ocr-drawer" id="ocrDrawer">
         <div class="ocr-drawer-header">
@@ -498,15 +124,13 @@
                 Upload images or screenshots to extract text automatically
             </p>
             
-            <!-- Drag & Drop Upload Area -->
-            <div class="ocr-upload-area" id="ocrUploadArea">
+            <div class="ocr-upload-area" id="ocrUploadArea" data-ocr-endpoint="">
                 <i class="bi bi-cloud-upload"></i>
                 <h5>Drag & Drop Image</h5>
                 <p class="text-muted small mb-0">or click to browse</p>
                 <input type="file" id="ocrFileInput" accept="image/*" style="display: none;">
             </div>
             
-            <!-- Action Buttons -->
             <div class="ocr-btn-group">
                 <button class="ocr-action-btn" id="ocrUploadBtn">
                     <i class="bi bi-upload"></i>
@@ -529,16 +153,14 @@
                 </button>
             </div>
             
-            <!-- Loading Indicator -->
-            <div class="ocr-loading" id="ocrLoading">
+            <div class="ocr-loading" id="ocrLoading" aria-hidden="true">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Processing...</span>
                 </div>
                 <p class="mt-2 text-muted">Extracting text from image...</p>
             </div>
             
-            <!-- Result Area -->
-            <div class="ocr-result-area" id="ocrResultArea" style="display: none;">
+            <div class="ocr-result-area" id="ocrResultArea">
                 <label class="form-label fw-bold">Extracted Text:</label>
                 <textarea class="ocr-result-text" id="ocrResultText" placeholder="Extracted text will appear here..."></textarea>
                 
@@ -555,572 +177,216 @@
     </div>
 </div>
 
-<div id="profile-modal" class="modal-overlay">
-    <div class="modal-content">
-        <button class="modal-close-btn">&times;</button>
-        
-        <div class="modal-header">
-            <h3>Consumer Cooperative Profile Information</h3>
-            <div class="modal-meta">
-                Last Updated: Tuesday, September 30, 2025<br>
-                by: Isabel Delacion, Chairperson
-            </div>
-        </div>
-
-        <div class="modal-body">
-            <section class="modal-section">
-                <h4>COOPERATIVE GENERAL INFORMATION</h4>
-                <div class="info-grid">
-                    <span>Cooperative Name:</span> <span>Consumer Cooperative</span>
-                    <span>Cooperative Address:</span> <span>Sabang, Lipa City, Batangas</span>
-                    <span>Cooperative Contact Number:</span> <span>09929380925</span>
-                    <span>Cooperative Email Address:</span> <span>consumercoop@gmail.com</span>
-                    <span>CDA Registration Number:</span> <span>1414-060923055</span>
-                    <span>CDA Registration Date:</span> <span>09-06-2005</span>
-                    <span>LCCDC Membership:</span> <span>09-14-2014</span>
-                    <span>Area of Operation:</span> <span>Consumer</span>
-                    <span>Business Activity:</span> <span>Supply and demand</span>
-                    <span>Number of Board Directors:</span> <span>3</span>
-                    <span>Number of Salaried Employees:</span> <span>14</span>
-                    <span>Certificate of Compliance:</span> <span>Yes</span>
-                    <span>Certificate of Tax Exemption:</span> <span>Yes</span>
-                </div>
-            </section>
-
-            <section class="modal-section">
-                <h4>FINANCIAL RECORDS</h4>
-                <div class="info-grid">
-                    <span>2022 Assets:</span> <span>142,657.00</span>
-                    <span>2023 Assets:</span> <span>258,843.00</span>
-                    <span>2024 Assets:</span> <span>356,964.68</span>
-                    <span>Total Paid Up Capital:</span> <span>108,243.78</span>
-                    <span>Total Subscribed Capital:</span> <span>50,876.75</span>
-                    <span>Net Surplus/Loss:</span> <span>10,653.54</span>
-                    <span>Total Statutory Fund:</span> <span>14,785.90</span>
-                </div>
-            </section>
-
-            <section class="modal-section">
-                <h4>COOPERATIVE OFFICERS</h4>
-                <div class="info-grid">
-                    <span>CHAIRPERSON:</span> <span>Isabel Delacion</span>
-                    <span>VICE CHAIRPERSON:</span> <span>Jasmin Esperida</span>
-                    <span>MEMBERS (BOD):</span> <span>Art Delos Reyes, Noe Gonzales</span>\
-                    <span>SECRETARY:</span> <span>Maria Lopez</span>
-                    <span>TREASURER:</span> <span>Ramon Santos</span>
-                </div>
-            </section>
-
-            <section class="modal-section">
-                <h4>COOPERATIVE COMMITTEE MEMBERS</h4>
-                <div class="info-grid">
-                    <span>Audit Committee:</span> <span>Isabel Delacion</span>
-                    <span>Election Committee:</span> <span>Jasmin Esperida</span>
-                    <span>Ethics Committee:</span> <span>Art Delos Reyes, Noe Gonzales</span>
-                    <span>Mediation & Cociliation Committe:</span> <span>Maria Lopez</span>
-                    <span>GAD Committee:</span> <span>Ramon Santos</span>
-                    <span>Credit Committee:</span> <span>Luis Fernando</span>
-                    <span>Education & Training Committee</span> <span>Anna Cruz</span>
-                    <span>Manager:</span> <span>Pedro Tan</span>
-                    <span>Bookkeeper:</span> <span>Luisa Moreno</span>
-                    <span>Store Clerk 1:</span> <span>Mandy Rivera</span>
-                    <span>Store Clerk 2:</span> <span>Rey Avilla</span>
-                </div>
-            </section>
-        </div>
-
-        <div class="modal-footer">
-            <button class="edit-btn">Edit</button>
-        </div>
-    </div>
-</div>
+<!-- Restore OCR behavior: toggles + drag/drop + file upload + clipboard paste + screenshot + client-side OCR via Tesseract.js fallback to backend if configured -->
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const tableRows = document.querySelectorAll('.table-container tbody tr[data-modal-target]');
-        const modal = document.getElementById('profile-modal');
-        if (!modal) return;
+(function () {
+  const toggleBtn = document.getElementById('ocrToggleBtn');
+  const drawer = document.getElementById('ocrDrawer');
+  const drawerClose = document.getElementById('ocrDrawerClose');
+  const uploadArea = document.getElementById('ocrUploadArea');
+  const fileInput = document.getElementById('ocrFileInput');
+  const uploadBtn = document.getElementById('ocrUploadBtn');
+  const screenshotBtn = document.getElementById('ocrScreenshotBtn');
+  const pasteBtn = document.getElementById('ocrPasteBtn');
+  const loading = document.getElementById('ocrLoading');
+  const resultArea = document.getElementById('ocrResultArea');
+  const resultText = document.getElementById('ocrResultText');
+  const applyBtn = document.getElementById('ocrApplyBtn');
+  const clearBtn = document.getElementById('ocrClearBtn');
 
-        const closeBtn = modal.querySelector('.modal-close-btn');
+  const ocrEndpoint = uploadArea.dataset.ocrEndpoint || ''; // set a backend endpoint by adding data-ocr-endpoint attr to .ocr-upload-area
 
-        // Open modal
-        tableRows.forEach(row => {
-            // Only add click listener to rows with data
-            if (row.cells[0].textContent.trim() !== "") {
-                row.addEventListener('click', () => {
-                    modal.classList.add('visible');
-                });
-            }
-        });
+  function openDrawer() { drawer.classList.add('open'); }
+  function closeDrawer() { drawer.classList.remove('open'); }
 
-        // Close modal via 'X' button
-        closeBtn.addEventListener('click', () => {
-            modal.classList.remove('visible');
-        });
+  toggleBtn.addEventListener('click', openDrawer);
+  drawerClose.addEventListener('click', closeDrawer);
 
-        // Close modal by clicking overlay
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('visible');
-            }
-        });
+  // Drag & drop
+  ['dragenter','dragover'].forEach(evt => {
+    uploadArea.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); uploadArea.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt => {
+    uploadArea.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); uploadArea.classList.remove('dragover'); });
+  });
+  uploadArea.addEventListener('drop', function (e) {
+    const f = (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+    if (f) processFile(f);
+  });
+
+  // Click to browse
+  uploadArea.addEventListener('click', () => fileInput.click());
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (f) processFile(f);
+    fileInput.value = '';
+  });
+
+  // Clipboard paste - listen globally while drawer open
+  pasteBtn.addEventListener('click', () => {
+    // Focus hint for paste
+    resultText.focus();
+    resultText.value = 'Press Ctrl+V (Cmd+V on Mac) to paste image from clipboard...';
+    document.addEventListener('paste', handlePasteOnce, { once: true });
+  });
+
+  function handlePasteOnce(e) {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (const it of items) {
+      if (it.type && it.type.indexOf('image') !== -1) {
+        const blob = it.getAsFile();
+        processFile(blob);
+        return;
+      }
+    }
+    alert('No image found in clipboard.');
+  }
+
+  // Screenshot using Screen Capture API (user will be prompted)
+  screenshotBtn.addEventListener('click', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      const track = stream.getVideoTracks()[0];
+      const img = await captureFrameFromStream(stream);
+      track.stop();
+      processBlob(img);
+    } catch (err) {
+      console.error(err);
+      alert('Unable to capture screen. Check permissions or try another method.');
+    }
+  });
+
+  async function captureFrameFromStream(stream) {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      video.addEventListener('loadeddata', async () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        canvas.toBlob(blob => resolve(blob), 'image/png');
+      }, { once: true });
     });
+  }
+
+  function processBlob(blob) {
+    if (!blob) return;
+    // convert Blob to File with a name to keep same processing path
+    const file = new File([blob], 'screenshot.png', { type: blob.type });
+    processFile(file);
+  }
+
+  // Core: try backend OCR if endpoint provided; otherwise use Tesseract client-side
+  async function processFile(file) {
+    resultArea.style.display = 'none';
+    loading.classList.add('active');
+    loading.setAttribute('aria-hidden', 'false');
+
+    // If backend endpoint is configured, try that first
+    if (ocrEndpoint) {
+      try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const resp = await fetch(ocrEndpoint, { method: 'POST', body: fd });
+        if (resp.ok) {
+          const data = await resp.json();
+          const text = data.text || data.result || '';
+          showResult(text || '(no text detected)');
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend OCR failed, falling back to client-side Tesseract', err);
+        // fallthrough to client-side
+      }
+    }
+
+    // Client-side: load Tesseract if not present
+    try {
+      await loadTesseract();
+      const { createWorker } = window.Tesseract;
+      const worker = createWorker({
+        logger: m => {
+          // Optionally: show progress in loading area
+          // console.log(m);
+        }
+      });
+      await worker.load();
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+      const { data: { text } } = await worker.recognize(file);
+      await worker.terminate();
+      showResult(text || '(no text detected)');
+    } catch (err) {
+      console.error('Client OCR failed', err);
+      showResult('(OCR failed — check backend or network).');
+    }
+  }
+
+  function showResult(text) {
+    loading.classList.remove('active');
+    loading.setAttribute('aria-hidden', 'true');
+    resultArea.style.display = 'block';
+    resultText.value = text;
+  }
+
+  function loadTesseract() {
+    return new Promise((resolve, reject) => {
+      if (window.Tesseract) return resolve();
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@v4.1.1/dist/tesseract.min.js';
+      s.onload = () => setTimeout(resolve, 50);
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  // Apply: copy to clipboard and dispatch custom event for app-level handlers
+  applyBtn.addEventListener('click', async () => {
+    const text = resultText.value || '';
+    if (!text.trim()) return alert('Nothing to apply.');
+    // copy to clipboard
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      // ignore
+    }
+    // dispatch event so other scripts can listen and populate forms
+    const ev = new CustomEvent('ocr:applied', { detail: { text } });
+    document.dispatchEvent(ev);
+    alert('Extracted text copied to clipboard. Use Paste or listen for ocr:applied event to insert into form.');
+  });
+
+  clearBtn.addEventListener('click', () => {
+    resultText.value = '';
+    resultArea.style.display = 'none';
+  });
+
+  // close drawer when clicking outside (optional)
+  document.addEventListener('click', (e) => {
+    if (!drawer.classList.contains('open')) return;
+    if (!drawer.contains(e.target) && !toggleBtn.contains(e.target)) {
+      closeDrawer();
+    }
+  });
+
+  // accessibility: close drawer with Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDrawer();
+  });
+
+  // allow other parts of app to set a backend endpoint dynamically:
+  window.setOcrEndpoint = function(url) {
+    uploadArea.dataset.ocrEndpoint = url;
+  };
+
+  // expose for debug/testing
+  window._ocr = { processFile, processBlob, openDrawer, closeDrawer };
+
+})();
 </script>
 
-<script>
-// ============================================
-// OCR ASSISTANT FUNCTIONALITY
-// ============================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    const ocrToggleBtn = document.getElementById('ocrToggleBtn');
-    const ocrDrawer = document.getElementById('ocrDrawer');
-    const ocrDrawerClose = document.getElementById('ocrDrawerClose');
-    const databankLayout = document.querySelector('.databank-layout');
-    const ocrUploadArea = document.getElementById('ocrUploadArea');
-    const ocrFileInput = document.getElementById('ocrFileInput');
-    const ocrUploadBtn = document.getElementById('ocrUploadBtn');
-    const ocrScreenshotBtn = document.getElementById('ocrScreenshotBtn');
-    const ocrPasteBtn = document.getElementById('ocrPasteBtn');
-    const ocrLoading = document.getElementById('ocrLoading');
-    const ocrResultArea = document.getElementById('ocrResultArea');
-    const ocrResultText = document.getElementById('ocrResultText');
-    const ocrApplyBtn = document.getElementById('ocrApplyBtn');
-    const ocrClearBtn = document.getElementById('ocrClearBtn');
-    
-    // Toggle drawer
-    function toggleDrawer(open) {
-        if (open) {
-            ocrDrawer.classList.add('open');
-            databankLayout.classList.add('drawer-open');
-        } else {
-            ocrDrawer.classList.remove('open');
-            databankLayout.classList.remove('drawer-open');
-        }
-    }
-    
-    ocrToggleBtn.addEventListener('click', () => toggleDrawer(true));
-    ocrDrawerClose.addEventListener('click', () => toggleDrawer(false));
-    
-    // Upload area click
-    ocrUploadArea.addEventListener('click', () => ocrFileInput.click());
-    ocrUploadBtn.addEventListener('click', () => ocrFileInput.click());
-    
-    // Drag and drop
-    ocrUploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        ocrUploadArea.classList.add('dragover');
-    });
-    
-    ocrUploadArea.addEventListener('dragleave', () => {
-        ocrUploadArea.classList.remove('dragover');
-    });
-    
-    ocrUploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        ocrUploadArea.classList.remove('dragover');
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            processImageFile(files[0]);
-        }
-    });
-    
-    // File input change
-    ocrFileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        if (files.length > 0) {
-            processImageFile(files[0]);
-        }
-    });
-    
-    // Screenshot button
-    ocrScreenshotBtn.addEventListener('click', async () => {
-        try {
-            // Modern browsers support the Screen Capture API
-            if ('mediaDevices' in navigator && 'getDisplayMedia' in navigator.mediaDevices) {
-                const stream = await navigator.mediaDevices.getDisplayMedia({ 
-                    video: { mediaSource: 'screen' } 
-                });
-                
-                const track = stream.getVideoTracks()[0];
-                const imageCapture = new ImageCapture(track);
-                const bitmap = await imageCapture.grabFrame();
-                
-                // Convert to canvas
-                const canvas = document.createElement('canvas');
-                canvas.width = bitmap.width;
-                canvas.height = bitmap.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(bitmap, 0, 0);
-                
-                // Convert to base64
-                const base64 = canvas.toDataURL('image/png');
-                
-                // Stop the stream
-                track.stop();
-                
-                // Process the image
-                processBase64Image(base64);
-            } else {
-                alert('Screen capture is not supported in this browser. Please use Upload or Paste instead.');
-            }
-        } catch (error) {
-            console.error('Screenshot error:', error);
-            alert('Screenshot cancelled or failed. Please use Upload or Paste instead.');
-        }
-    });
-    
-    // Paste from clipboard
-    ocrPasteBtn.addEventListener('click', async () => {
-        try {
-            const clipboardItems = await navigator.clipboard.read();
-            for (const item of clipboardItems) {
-                for (const type of item.types) {
-                    if (type.startsWith('image/')) {
-                        const blob = await item.getType(type);
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            processBase64Image(e.target.result);
-                        };
-                        reader.readAsDataURL(blob);
-                        return;
-                    }
-                }
-            }
-            alert('No image found in clipboard. Please copy an image first.');
-        } catch (error) {
-            console.error('Clipboard error:', error);
-            alert('Unable to access clipboard. Please use Upload instead.');
-        }
-    });
-    
-    // Clear button
-    ocrClearBtn.addEventListener('click', () => {
-        ocrResultText.value = '';
-        ocrResultArea.style.display = 'none';
-        ocrFileInput.value = '';
-    });
-    
-    // Apply to form button
-    ocrApplyBtn.addEventListener('click', () => {
-        const extractedText = ocrResultText.value.trim();
-        if (!extractedText) {
-            alert('No text to apply');
-            return;
-        }
-        
-        // Parse and populate form fields
-        parseAndPopulateForm(extractedText);
-        
-        // Show success message
-        alert('Text applied to form fields. Please review and adjust as needed.');
-    });
-    
-    // Process image file
-    async function processImageFile(file) {
-        if (!file.type.startsWith('image/')) {
-            alert('Please select an image file');
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        showLoading(true);
-        
-        try {
-            const response = await fetch('{% url "databank:process_ocr" %}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                displayResult(data.text, data.language);
-            } else {
-                alert('OCR processing failed: ' + (data.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('OCR error:', error);
-            alert('Failed to process image. Please try again.');
-        } finally {
-            showLoading(false);
-        }
-    }
-    
-    // Process base64 image
-    async function processBase64Image(base64Data) {
-        showLoading(true);
-        
-        try {
-            const response = await fetch('{% url "databank:process_ocr" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ base64: base64Data })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                displayResult(data.text, data.language);
-            } else {
-                alert('OCR processing failed: ' + (data.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('OCR error:', error);
-            alert('Failed to process image. Please try again.');
-        } finally {
-            showLoading(false);
-        }
-    }
-    
-    // Show/hide loading
-    function showLoading(show) {
-        if (show) {
-            ocrLoading.classList.add('active');
-            ocrResultArea.style.display = 'none';
-        } else {
-            ocrLoading.classList.remove('active');
-        }
-    }
-    
-    // Display result
-    function displayResult(text, language) {
-        ocrResultText.value = text;
-        ocrResultArea.style.display = 'block';
-        
-        if (language && language !== 'unknown') {
-            console.log('Detected language:', language);
-        }
-    }
-    
-    // Parse and populate form (basic implementation)
-    function parseAndPopulateForm(text) {
-        // This is a basic parser - enhance based on your form structure
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-        
-        // Try to find patterns like "Field Name: Value"
-        lines.forEach(line => {
-            // Example patterns to match
-            if (line.match(/cooperative name[:\s]+(.+)/i)) {
-                const name = line.match(/cooperative name[:\s]+(.+)/i)[1];
-                console.log('Found cooperative name:', name);
-                // Set to form field if it exists
-                const nameField = document.querySelector('[name="cooperative_name"]');
-                if (nameField) nameField.value = name;
-            }
-            
-            if (line.match(/address[:\s]+(.+)/i)) {
-                const address = line.match(/address[:\s]+(.+)/i)[1];
-                console.log('Found address:', address);
-                const addressField = document.querySelector('[name="address"]');
-                if (addressField) addressField.value = address;
-            }
-            
-            if (line.match(/email[:\s]+(.+)/i)) {
-                const email = line.match(/email[:\s]+(.+)/i)[1];
-                console.log('Found email:', email);
-                const emailField = document.querySelector('[name="email"]');
-                if (emailField) emailField.value = email;
-            }
-            
-            if (line.match(/contact|phone|mobile[:\s]+(.+)/i)) {
-                const phone = line.match(/contact|phone|mobile[:\s]+(.+)/i)[1];
-                console.log('Found phone:', phone);
-                const phoneField = document.querySelector('[name="mobile_number"]');
-                if (phoneField) phoneField.value = phone;
-            }
-            
-            if (line.match(/cda[:\s]+(.+)/i)) {
-                const cda = line.match(/cda[:\s]+(.+)/i)[1];
-                console.log('Found CDA:', cda);
-                const cdaField = document.querySelector('[name="cda_registration_number"]');
-                if (cdaField) cdaField.value = cda;
-            }
-        });
-    }
-    
-    // Get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    
-    // ========== COOPERATIVE CRUD FUNCTIONS ==========
-    
-    // View cooperative details
-    window.viewCooperativeDetails = async function(coopId) {
-        try {
-            const response = await fetch(`/databank/api/cooperative/${coopId}/`);
-            const data = await response.json();
-            
-            if (data.success) {
-                showCooperativeModal(data.data);
-            } else {
-                alert('Failed to load cooperative details: ' + data.error);
-            }
-        } catch (error) {
-            console.error('Error fetching cooperative:', error);
-            alert('Failed to load cooperative details.');
-        }
-    };
-    
-    // Show cooperative details modal
-    function showCooperativeModal(coop) {
-        // Create and show modal with cooperative data
-        const modalHTML = `
-            <div class="modal-overlay visible" id="coopModal">
-                <div class="modal-content">
-                    <div class="modal-top-bar">
-                        <h3>${coop.cooperative_name}</h3>
-                        <div class="modal-actions">
-                            <button class="pdf-btn" onclick="exportToPDF(${coop.coop_id})">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                                <span>Export PDF</span>
-                            </button>
-                            <button class="modal-close-btn" onclick="closeModal()">&times;</button>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-scroll-area">
-                        <div class="modal-header-section">
-                            <div class="coop-avatar">${coop.cooperative_name.charAt(0)}</div>
-                            <div class="coop-title-info">
-                                <h4>${coop.cooperative_name}</h4>
-                                <span class="badge-cda">${coop.cda_registration_number || 'No CDA'}</span>
-                                <p class="update-info">Last updated: ${new Date(coop.updated_at).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                        
-                        <div class="info-section">
-                            <h3 class="section-title">Contact Information</h3>
-                            <div class="info-grid two-col">
-                                <div class="info-item">
-                                    <label>Address</label>
-                                    <p>${coop.address || 'N/A'}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Mobile Number</label>
-                                    <p>${coop.mobile_number || 'N/A'}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Email</label>
-                                    <p>${coop.email_address || 'N/A'}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Category</label>
-                                    <p>${coop.category || 'N/A'}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>District</label>
-                                    <p>${coop.district || 'N/A'}</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="info-section">
-                            <h3 class="section-title">Registration Details</h3>
-                            <div class="info-grid three-col">
-                                <div class="info-item">
-                                    <label>CDA Registration</label>
-                                    <p>${coop.cda_registration_number || 'N/A'}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>Registration Date</label>
-                                    <p>${coop.cda_registration_date || 'N/A'}</p>
-                                </div>
-                                <div class="info-item">
-                                    <label>LCCDC Member</label>
-                                    <p>${coop.lccdc_membership ? '<span class="status-yes">Yes</span>' : 'No'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="modal-footer">
-                        <button class="secondary-btn" onclick="closeModal()">Close</button>
-                        <button class="primary-btn" onclick="editCooperative(${coop.coop_id})">
-                            <i class="bi bi-pencil"></i> Edit
-                        </button>
-                        <button class="primary-btn" style="background: #dc3545;" onclick="deleteCooperative(${coop.coop_id})">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    }
-    
-    // Close modal
-    window.closeModal = function() {
-        const modal = document.getElementById('coopModal');
-        if (modal) {
-            modal.classList.remove('visible');
-            setTimeout(() => modal.remove(), 300);
-        }
-    };
-    
-    // Delete cooperative (soft delete)
-    window.deleteCooperative = async function(coopId) {
-        if (!confirm('Are you sure you want to mark this cooperative as inactive?')) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/databank/api/cooperative/${coopId}/delete/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                alert('Cooperative marked as inactive successfully');
-                closeModal();
-                location.reload();
-            } else {
-                alert('Failed to delete: ' + data.error);
-            }
-        } catch (error) {
-            console.error('Error deleting cooperative:', error);
-            alert('Failed to delete cooperative.');
-        }
-    };
-    
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#coop-table tbody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
-        });
-    }
-});
-</script>
 {% endblock %}
