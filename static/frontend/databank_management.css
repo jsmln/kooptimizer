@@ -439,20 +439,27 @@ html, body {
 
 /* remove actions column rules (no actions column now) */
 
-/* Table row hover & selection - mirror account_management.css */
-.table-scroll table tbody tr {
+/* Scope hover/selection strictly to the main table (#coop-table) so modal tables are not affected */
+
+/* Hover only for main table rows */
+#coop-table tbody tr {
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.08s ease;
+    transition: background 0.12s ease, outline 0.12s ease;
 }
-
-.table-scroll table tbody tr:hover {
-    background: #f0f0f0;
+#coop-table tbody tr:hover {
+    background: #fff5f5; /* light tint matching theme */
+    color: #a91e2c;
 }
-
-/* Selected row styling (same look/behavior as account management) */
-.table-scroll table tbody tr.selected {
-    background: #e3f2fd !important;
+#coop-table tbody tr.selected {
+    background: #fff1f2 !important;
+    outline: 3px solid rgba(169,30,44,0.08);
     border-left: 4px solid #a91e2c;
+}
+
+/* Keep sticky cell appearance when row hovered/selected */
+#coop-table tbody tr.selected td:first-child,
+#coop-table tbody tr:hover td:first-child {
+    background: #fff5f5;
 }
 
 /* Replace fixed-position card with layout-friendly card that does NOT overlap sidebar.
@@ -574,3 +581,196 @@ html, body {
         border-left: 4px solid #860000;
     }
 }
+
+/* --- Modal overlay styles (ensure it does NOT render in flow; only shown when .visible) --- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.48);
+    display: none;           /* <-- hide by default so it won't appear at bottom of table */
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+}
+
+.modal-overlay.visible {
+    display: flex;           /* <-- only show when visible class is added */
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    width: 92%;
+    max-width: 980px;
+    max-height: 88vh;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 18px 50px rgba(11,24,50,0.38);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(18px);
+    transition: transform 0.28s ease;
+    overflow: hidden;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: translateY(0);
+}
+
+/* Header / top bar */
+.modal-top-bar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f1f1f1;
+    background: #fff;
+}
+
+.modal-top-bar h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #2B3674;
+    font-weight: 700;
+}
+
+.modal-actions { display:flex; gap:12px; align-items:center; }
+
+/* Buttons */
+.pdf-btn {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border:1px solid #a91e2c;
+    color:#a91e2c;
+    background:#fff;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+}
+.pdf-btn:hover { background:#a91e2c; color:#fff; }
+
+.modal-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.6rem;
+    color: #A3AED0;
+    cursor: pointer;
+}
+.modal-close-btn:hover { color: #a91e2c; }
+
+/* Scrollable body */
+.modal-scroll-area {
+    overflow-y: auto;
+    padding: 20px;
+    flex: 1 1 auto;
+    background: #fbfcfe;
+}
+
+/* Header section inside modal */
+.modal-header-section {
+    display:flex;
+    gap:16px;
+    align-items:center;
+    padding-bottom:12px;
+    border-bottom:1px solid #f0f0f0;
+    margin-bottom:16px;
+}
+
+.coop-avatar {
+    width:56px;
+    height:56px;
+    background:#a91e2c;
+    color:#fff;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.4rem;
+    font-weight:800;
+}
+
+.coop-title-info h4 { margin:0; color:#2B3674; font-size:1.1rem; }
+.badge-cda { background:#e8f1ff; color:#2366b3; padding:4px 8px; border-radius:5px; font-weight:600; margin-top:6px; display:inline-block; }
+.update-info { color:#9aa6c8; font-size:0.82rem; margin-top:6px; }
+
+/* Info grids */
+.info-grid { display:grid; gap:12px; }
+.info-grid.two-col { grid-template-columns: 1fr 1fr; }
+.info-grid.three-col { grid-template-columns: repeat(3,1fr); }
+
+.info-item label { display:block; font-size:0.75rem; color:#9aa6c8; font-weight:700; margin-bottom:4px; }
+.info-item p { margin:0; color:#2B3674; font-weight:600; }
+
+/* Modal tables */
+.modal-table-container {
+    overflow-x: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.modal-table th {
+    background: #f8f9fa;
+    color: #A3AED0;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.modal-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #f9f9f9;
+    color: #2B3674;
+    font-weight: 500;
+}
+
+.modal-table tr:last-child td {
+    border-bottom: none;
+}
+
+.modal-table tr:hover {
+    background: #fafafa;
+}
+
+/* Footer */
+.modal-footer {
+    padding:12px 18px;
+    border-top:1px solid #f1f1f1;
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    background:#fff;
+}
+.primary-btn { background:#a91e2c; color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:700; }
+.secondary-btn { background:#f3f4f6; color:#374151; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:700; }
+
+/* Row selection visual (ensure table untouched) */
+.table-scroll table tbody tr.selected,
+#coop-table tbody tr.selected {
+    background: rgba(41, 121, 255, 0.06) !important;
+    outline: 3px solid rgba(168, 25, 36, 0.08);
+}
+
+/* Keep modal responsive */
+@media (max-width: 720px) {
+    .modal-content { width: 96%; max-width: 720px; }
+    .info-grid.two-col, .info-grid.three-col { grid-template-columns: 1fr; }
+    .modal-top-bar { padding: 12px; }
+}
+
+#coop-table tbody tr[data-modal-target] { cursor:pointer; }
