@@ -1,6 +1,4 @@
-/* --- Main Layout Container --- */
 .databank-container {
-    /* Fixed desktop size for consistent layout even when zooming */
     box-sizing: border-box;
     width: 1100px;
     max-width: 1100px;
@@ -12,13 +10,12 @@
     background: #fff;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     color: #222;
-    overflow: hidden; /* keep internal scrollbars inside component */
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: stretch;
 }
 
-/* Responsive fallback for smaller viewports / mobile */
 @media (max-width: 1200px) {
     .databank-container {
         width: calc(100% - 40px);
@@ -29,20 +26,9 @@
     }
 }
 
-/* Ensure page can use full viewport height when calculating container height */
 html, body {
     height: 100%;
 }
-
-/* keep header styling but ensure neutral tones for text */
-/* .databank-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #edf2f7;
-    background: linear-gradient(135deg, #fff 0%, #f8f9fc 100%);
-    flex-shrink: 0;
-} */
 
 .header-left h2 {
     margin: 0;
@@ -57,36 +43,7 @@ html, body {
     font-size: 0.9rem;
     font-weight: 500;
 }
-/* 
-.stat-card {
-    background: linear-gradient(135deg, #fff5f6 0%, #ffffff 100%);
-    padding: 14px 20px;
-    border-radius: 12px;
-    text-align: right;
-    border-left: 4px solid #a91e2c;
-    box-shadow: 0 2px 8px rgba(169, 30, 44, 0.08);
-} */
 
-/* .stat-label {
-    display: block;
-    font-size: 0.75rem;
-    color: #A3AED0;
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: right;
-}
-
-.stat-value {
-    display: block;
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #a91e2c;
-    margin-top: 4px;
-} */
-
-/* --- Toolbar --- */
 .databank-toolbar {
     padding: 2px 0;
     display: flex;
@@ -175,7 +132,6 @@ html, body {
     box-shadow: 0 0 0 3px rgba(169, 30, 44, 0.08);
 }
 
-/* --- Table Section --- */
 .table-section {
     flex: 1;
     display: flex;
@@ -186,36 +142,32 @@ html, body {
 }
 
 .table-wrapper {
-    height: 420px; /* fixed height similar to account management */
+    height: 420px;
     border: 1px solid #edf2f7;
     border-radius: 12px;
     background: #fff;
     position: relative;
-    overflow: hidden; /* outer container hides extra; scrollbars live in .table-scroll */
+    overflow: hidden;
 }
 
-/* inner scrolling area that contains the actual table and shows scrollbars inside the card */
 .table-scroll {
     height: 100%;
     width: 100%;
-    overflow: auto; /* both horizontal and vertical scrollbars inside this element */
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 12px; /* inner padding so content has breathing room */
+    padding: 12px;
     box-sizing: border-box;
-    /* ensure scrollbars appear above any background and are usable */
     position: relative;
 }
 
-/* table should size to its content (min-width) so horizontal scroll will appear when needed */
 .table-scroll table {
-    width: auto; /* don't force 100% to allow natural width and scrolling */
-    min-width: 1100px; /* ensures many columns require horizontal scroll on smaller viewports */
-    table-layout: fixed; /* keep column sizes stable and truncate overflow via ellipsis */
+    width: auto;
+    min-width: 1100px;
+    table-layout: fixed;
     border-collapse: collapse;
     white-space: nowrap;
 }
 
-/* restore the table header display with strong contrast (red gradient + white text) */
 #coop-table thead th {
     background: #860000;
     color: #ffffff;
@@ -232,11 +184,10 @@ html, body {
     white-space: nowrap;
 }
 
-/* normal, readable table cells (plain text) */
 #coop-table tbody td {
     padding: 10px 12px;
     border-bottom: 1px solid #f1f1f1;
-    color: #111827; /* plain dark text, no red accents */
+    color: #111827;
     font-size: 0.95rem;
     font-weight: 500;
     vertical-align: middle;
@@ -245,34 +196,31 @@ html, body {
     white-space: nowrap;
 }
 
-/* adjust specific column min-widths (contact is cellphone only so smaller) */
 #coop-table th:nth-child(1),
-#coop-table td:nth-child(1) { min-width: 220px; } /* Cooperative Name */
+#coop-table td:nth-child(1) { min-width: 220px; }
 #coop-table th:nth-child(2),
-#coop-table td:nth-child(2) { min-width: 120px; } /* Category */
+#coop-table td:nth-child(2) { min-width: 120px; }
 #coop-table th:nth-child(3),
-#coop-table td:nth-child(3) { min-width: 120px; } /* District */
+#coop-table td:nth-child(3) { min-width: 120px; }
 #coop-table th:nth-child(4),
-#coop-table td:nth-child(4) { min-width: 180px; } /* Address */
+#coop-table td:nth-child(4) { min-width: 180px; }
 #coop-table th:nth-child(5),
-#coop-table td:nth-child(5) { min-width: 120px; } /* Contact (cellphone) */
+#coop-table td:nth-child(5) { min-width: 120px; }
 #coop-table th:nth-child(6),
-#coop-table td:nth-child(6) { min-width: 160px; } /* CDA Registration */
+#coop-table td:nth-child(6) { min-width: 160px; }
 #coop-table th:nth-child(7),
-#coop-table td:nth-child(7) { min-width: 120px; } /* Assets */
+#coop-table td:nth-child(7) { min-width: 120px; }
 #coop-table th:nth-child(8),
-#coop-table td:nth-child(8) { min-width: 120px; } /* Capital */
+#coop-table td:nth-child(8) { min-width: 120px; }
 #coop-table th:nth-child(9),
-#coop-table td:nth-child(9) { min-width: 90px; } /* Members */
+#coop-table td:nth-child(9) { min-width: 90px; }
 #coop-table th:nth-child(10),
-#coop-table td:nth-child(10) { min-width: 90px; } /* Officers */
+#coop-table td:nth-child(10) { min-width: 90px; }
 
-/* keep hover behavior subtle and neutral */
 #coop-table tbody tr[data-modal-target]:hover {
     background-color: #fbfbfc;
 }
 
-/* make badge-count less aggressive (dark background ok) */
 .badge-count {
     display: inline-flex;
     align-items: center;
@@ -287,19 +235,15 @@ html, body {
     font-weight: 700;
 }
 
-/* contact-info simplified styling (no icons) */
 .contact-info { font-size: 0.92rem; color: #111827; }
 
-/* remove any inline style reliance for min-width on specific td cells */
 #coop-table td.address-cell { min-width: 180px; }
 #coop-table td.contact-cell { min-width: 120px; }
 
-/* ensure scrollbars are visible inside the card for both axes */
 .table-scroll::-webkit-scrollbar { height: 12px; width: 12px; }
 .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
 .table-scroll::-webkit-scrollbar-track { background: transparent; }
 
-/* Responsive */
 @media (max-width: 768px) {
     .databank-container {
         padding: 16px;
@@ -320,8 +264,6 @@ html, body {
     }
 }
 
-/* --- OCR Drawer & Toggle Button styles moved from template (all styles kept here) --- */
-/* OCR Drawer wrapper and drawer */
 .ocr-drawer-wrapper {
     position: fixed;
     right: 0;
@@ -370,7 +312,6 @@ html, body {
     display:flex; align-items:center; justify-content:center;
 }
 
-/* body */
 .ocr-drawer-body { padding: 28px 24px; background: #f8f9fc; }
 .ocr-upload-area {
     border: 2px dashed #d1d5db;
@@ -393,7 +334,6 @@ html, body {
 .ocr-upload-area h5 { color: #2B3674; font-weight:700; margin:12px 0 8px; font-size:17px; }
 .ocr-upload-area p { color:#A3AED0; font-size:14px; margin:0; }
 
-/* buttons in drawer */
 .ocr-btn-group { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
 .ocr-action-btn {
     padding: 16px 12px;
@@ -407,7 +347,6 @@ html, body {
 .ocr-action-btn i { font-size:30px; color:#a91e2c; }
 .ocr-action-btn span { font-size:12px; color:#2B3674; font-weight:600; }
 
-/* loading & result */
 .ocr-loading { display:none; text-align:center; padding:36px 24px; background:#ffffff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
 .ocr-loading.active { display:block; }
 .ocr-result-area { margin-top:24px; background:#ffffff; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #edf2f7; display:none; }
@@ -417,7 +356,6 @@ html, body {
 .btn-apply { background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%); color:#ffffff; box-shadow:0 4px 10px rgba(169,30,44,0.25); padding:12px; border-radius:10px; }
 .btn-clear { background:#f8f9fc; color:#2B3674; border:1px solid #edf2f7; padding:12px; border-radius:10px; }
 
-/* OCR toggle button */
 .ocr-toggle-btn {
     position: fixed;
     right: 24px;
@@ -435,19 +373,12 @@ html, body {
 }
 .ocr-toggle-btn:hover { transform:scale(1.1) translateY(-3px); }
 
-/* --- HOVER & SELECTION (use account_management styles) --- */
-
-/* remove actions column rules (no actions column now) */
-
-/* Scope hover/selection strictly to the main table (#coop-table) so modal tables are not affected */
-
-/* Hover only for main table rows */
 #coop-table tbody tr {
     cursor: pointer;
     transition: background 0.12s ease, outline 0.12s ease;
 }
 #coop-table tbody tr:hover {
-    background: #fff5f5; /* light tint matching theme */
+    background: #fff5f5;
     color: #a91e2c;
 }
 #coop-table tbody tr.selected {
@@ -456,19 +387,16 @@ html, body {
     border-left: 4px solid #a91e2c;
 }
 
-/* Keep sticky cell appearance when row hovered/selected */
 #coop-table tbody tr.selected td:first-child,
 #coop-table tbody tr:hover td:first-child {
     background: #fff5f5;
 }
 
-/* Replace fixed-position card with layout-friendly card that does NOT overlap sidebar.
-   Table area gets an inner scroll only when rows overflow. */
 .databank-container {
-    position: relative;              /* keep in normal document flow */
+    position: relative;
     width: 90%;
-    max-width: 1100px;               /* same visual width as account management */
-    margin: 20px auto;               /* centers inside main content area */
+    max-width: 1100px;
+    margin: 20px auto;
     padding: 25px 30px;
     box-sizing: border-box;
     background: #fff;
@@ -477,34 +405,29 @@ html, body {
     color: #222;
     display: flex;
     flex-direction: column;
-    overflow: visible;               /* allow page scrolling, not card overlay */
+    overflow: visible;
     animation: fadeIn 0.4s ease-in-out;
-    z-index: 1;                       /* low z-index so sidebar/header are unaffected */
+    z-index: 1;
 }
 
-/* keep header/toolbar fixed height inside the card so table area fills the rest */
 .databank-header,
 .databank-toolbar {
     flex: 0 0 auto;
 }
 
-/* Table wrapper fills available card area. Use max-height so it doesn't overflow page.
-   Inner .table-scroll will create scrollbars when table rows overflow. */
 .table-wrapper {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    overflow: hidden;                /* outer container hides overflow */
+    overflow: hidden;
     border: 1px solid #edf2f7;
     border-radius: 12px;
     background: #fff;
     padding: 0;
     margin-top: 12px;
-    /* Keep the table within viewport but not fixed; adjust 260px if you have a taller header */
     max-height: calc(100vh - 220px);
 }
 
-/* Inner scrolling area where overflow occurs (rows only) */
 .table-scroll {
     width: 100%;
     height: 100%;
@@ -515,7 +438,6 @@ html, body {
     position: relative;
 }
 
-/* Table and thead sticky rules remain same as before */
 .table-scroll table {
     width: 100%;
     border-collapse: collapse;
@@ -530,7 +452,6 @@ html, body {
     color: #fff;
 }
 
-/* Cells behavior matches account_management: truncation, paddings */
 .table-scroll th,
 .table-scroll td {
     padding: 12px 16px;
@@ -541,7 +462,6 @@ html, body {
     text-overflow: ellipsis;
 }
 
-/* Hover and selected row behavior */
 .table-scroll tbody tr {
     cursor: pointer;
     transition: background 0.2s;
@@ -552,12 +472,10 @@ html, body {
     border-left: 4px solid #860000;
 }
 
-/* scrollbar styling kept consistent */
 .table-scroll::-webkit-scrollbar { height: 12px; width: 12px; }
 .table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
 .table-scroll::-webkit-scrollbar-track { background: transparent; }
 
-/* Responsive fallback: convert fixed card to fluid on small screens */
 @media (max-width: 768px) {
     .databank-container {
         position: static;
@@ -569,25 +487,22 @@ html, body {
         margin: 16px;
     }
     .table-wrapper { height: 360px; }
- 
 
     table tbody tr:hover {
         background: #f0f0f0;
     }
 
-    /* Selected row styling */
     table tbody tr.selected {
         background: #e3f2fd !important;
         border-left: 4px solid #860000;
     }
 }
 
-/* --- Modal overlay styles (ensure it does NOT render in flow; only shown when .visible) --- */
 .modal-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.48);
-    display: none;           /* <-- hide by default so it won't appear at bottom of table */
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 9999;
@@ -595,9 +510,8 @@ html, body {
     pointer-events: none;
     transition: opacity 0.28s ease;
 }
-
 .modal-overlay.visible {
-    display: flex;           /* <-- only show when visible class is added */
+    display: flex;
     opacity: 1;
     pointer-events: auto;
 }
@@ -615,12 +529,8 @@ html, body {
     transition: transform 0.28s ease;
     overflow: hidden;
 }
+.modal-overlay.visible .modal-content { transform: translateY(0); }
 
-.modal-overlay.visible .modal-content {
-    transform: translateY(0);
-}
-
-/* Header / top bar */
 .modal-top-bar {
     display:flex;
     justify-content:space-between;
@@ -629,7 +539,6 @@ html, body {
     border-bottom: 1px solid #f1f1f1;
     background: #fff;
 }
-
 .modal-top-bar h3 {
     margin: 0;
     font-size: 1.05rem;
@@ -639,7 +548,6 @@ html, body {
 
 .modal-actions { display:flex; gap:12px; align-items:center; }
 
-/* Buttons */
 .pdf-btn {
     display:inline-flex;
     align-items:center;
@@ -663,7 +571,6 @@ html, body {
 }
 .modal-close-btn:hover { color: #a91e2c; }
 
-/* Scrollable body */
 .modal-scroll-area {
     overflow-y: auto;
     padding: 20px;
@@ -671,7 +578,6 @@ html, body {
     background: #fbfcfe;
 }
 
-/* Header section inside modal */
 .modal-header-section {
     display:flex;
     gap:16px;
@@ -698,7 +604,6 @@ html, body {
 .badge-cda { background:#e8f1ff; color:#2366b3; padding:4px 8px; border-radius:5px; font-weight:600; margin-top:6px; display:inline-block; }
 .update-info { color:#9aa6c8; font-size:0.82rem; margin-top:6px; }
 
-/* Info grids */
 .info-grid { display:grid; gap:12px; }
 .info-grid.two-col { grid-template-columns: 1fr 1fr; }
 .info-grid.three-col { grid-template-columns: repeat(3,1fr); }
@@ -706,21 +611,18 @@ html, body {
 .info-item label { display:block; font-size:0.75rem; color:#9aa6c8; font-weight:700; margin-bottom:4px; }
 .info-item p { margin:0; color:#2B3674; font-weight:600; }
 
-/* Modal tables */
 .modal-table-container {
     overflow-x: auto;
     border: 1px solid #eee;
     border-radius: 8px;
     margin-bottom: 12px;
 }
-
 .modal-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.9rem;
     white-space: nowrap;
 }
-
 .modal-table th {
     background: #f8f9fa;
     color: #A3AED0;
@@ -731,23 +633,15 @@ html, body {
     font-size: 0.8rem;
     text-transform: uppercase;
 }
-
 .modal-table td {
     padding: 10px 15px;
     border-bottom: 1px solid #f9f9f9;
     color: #2B3674;
     font-weight: 500;
 }
+.modal-table tr:last-child td { border-bottom: none; }
+.modal-table tr:hover { background: #fafafa; }
 
-.modal-table tr:last-child td {
-    border-bottom: none;
-}
-
-.modal-table tr:hover {
-    background: #fafafa;
-}
-
-/* Footer */
 .modal-footer {
     padding:12px 18px;
     border-top:1px solid #f1f1f1;
@@ -757,20 +651,23 @@ html, body {
     background:#fff;
 }
 .primary-btn { background:#a91e2c; color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:700; }
+.primary-btn:hover { background:#8a1824; }
 .secondary-btn { background:#f3f4f6; color:#374151; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:700; }
+.secondary-btn:hover { background:#e6e9ef; }
 
-/* Row selection visual (ensure table untouched) */
-.table-scroll table tbody tr.selected,
-#coop-table tbody tr.selected {
-    background: rgba(41, 121, 255, 0.06) !important;
-    outline: 3px solid rgba(168, 25, 36, 0.08);
-}
-
-/* Keep modal responsive */
 @media (max-width: 720px) {
     .modal-content { width: 96%; max-width: 720px; }
     .info-grid.two-col, .info-grid.three-col { grid-template-columns: 1fr; }
     .modal-top-bar { padding: 12px; }
 }
 
-#coop-table tbody tr[data-modal-target] { cursor:pointer; }
+.section-title {
+    margin: 0 0 15px 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #A3AED0;
+    letter-spacing: 0.5px;
+    border-left: 4px solid #a91e2c;
+    padding-left: 10px;
+    font-weight: 700;
+}
