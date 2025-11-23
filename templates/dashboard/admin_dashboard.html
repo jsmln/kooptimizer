@@ -1,7 +1,449 @@
 {% extends 'dashboard/dashboard.html' %}
+{% load static %}
+
+{% block dashboard_title %}Admin Dashboard{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{% static 'frontend/admin_dashboard.css' %}">
+{% endblock %}
 
 {% block dashboard_content %}
-<div class="dashboard admin-dashboard">
-    <!-- <h1>{{ page_title }}</h1> -->
+<div class="admin-dashboard-container">
+    
+    <div class="dashboard-header">
+        <div>
+            <h4 class="subtitle">Lipa City Cooperatives Office</h4>
+            <h1>Welcome back, Admin!</h1>
+        </div>
+
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#adminListModal">
+            <div class="icon-box red-box">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>System Admins</p>
+                <h3>3</h3>
+                <span class="link-text">View Details <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#staffListModal">
+            <div class="icon-box blue-box">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Office Staff</p>
+                <h3>12</h3>
+                <span class="link-text">View Details <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box green-box">
+                <i class="bi bi-building"></i>
+            </div>
+            <div class="stat-info">
+                <p>Total Cooperatives</p>
+                <h3>58</h3>
+                <small class="text-muted">Registered in Lipa City</small>
+            </div>
+        </div>
+
+        <div class="stat-card highlight-card">
+            <div class="stat-info text-white">
+                <p>LCCDC Members</p>
+                <h3>42</h3>
+                <small>Active Member Coops</small>
+            </div>
+            <div class="icon-bg">
+                <i class="bi bi-award"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        
+        <div class="chart-card main-chart">
+            <div class="card-header-custom">
+                <h3>Business Activity Analytics</h3>
+                <select class="form-select-sm">
+                    <option>2025</option>
+                    <option>2024</option>
+                    <option>2023</option>
+                    <option>2022</option>
+                </select>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="businessActivityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card ranking-card">
+            <div class="card-header-custom">
+                <h3>Top 20 Ranking</h3>
+                <span class="badge-red">By Assets</span>
+            </div>
+            <div class="ranking-list">
+                <div class="rank-item">
+                    <span class="rank-num">1</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Multi-Purpose Coop</span>
+                        <span class="coop-asset">₱ 520M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">2</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Batangas Health Care MPC</span>
+                        <span class="coop-asset">₱ 480M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">3</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Metro Lipa Water District Ecoop</span>
+                        <span class="coop-asset">₱ 350M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">4</span>
+                    <div class="rank-info">
+                        <span class="coop-name">De La Salle Lipa Coop</span>
+                        <span class="coop-asset">₱ 210M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">5</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Feed Millers Cooperative</span>
+                        <span class="coop-asset">₱ 180M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">6</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Agricultural Cooperative</span>
+                        <span class="coop-asset">₱ 150M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">7</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Credit Cooperative</span>
+                        <span class="coop-asset">₱ 140M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">8</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Transport Cooperative</span>
+                        <span class="coop-asset">₱ 130M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">9</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Fishermen's Cooperative</span>
+                        <span class="coop-asset">₱ 120M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">10</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Women's Cooperative</span>
+                        <span class="coop-asset">₱ 110M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">11</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Consumer Cooperative</span>
+                        <span class="coop-asset">₱ 100M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">12</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Livestock Cooperative</span>
+                        <span class="coop-asset">₱ 90M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">13</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Handicraft Cooperative</span>
+                        <span class="coop-asset">₱ 80M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">14</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Marketing Cooperative</span>
+                        <span class="coop-asset">₱ 70M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">15</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Housing Cooperative</span>
+                        <span class="coop-asset">₱ 60M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">16</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Bakery Cooperative</span>
+                        <span class="coop-asset">₱ 50M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">17</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Eco-Tourism Cooperative</span>
+                        <span class="coop-asset">₱ 40M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">18</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Renewable Energy Cooperative</span>
+                        <span class="coop-asset">₱ 30M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">19</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Youth Cooperative</span>
+                        <span class="coop-asset">₱ 20M</span>
+                    </div>
+                </div>
+                <div class="rank-item">
+                    <span class="rank-num">20</span>
+                    <div class="rank-info">
+                        <span class="coop-name">Lipa City Organic Farming Cooperative</span>
+                        <span class="coop-asset">₱ 10M</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <div class="card-header-custom">
+            <h3>Filter Cooperatives</h3>
+
+            <div class="header-actions" style="display:flex;align-items:center;gap:0.5rem;">
+                <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters">
+                    <i class="bi bi-funnel"></i>
+                    <span class="visually-hidden">Toggle filters</span>
+                </button>
+
+                <div class="filter-controls">
+                    <select class="form-select-sm" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Micro">Micro</option>
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                    </select>
+                    <select class="form-select-sm" id="districtFilter">
+                        <option value="">All Districts</option>
+                        <option value="East">East</option>
+                        <option value="West">West</option>
+                        <option value="North">North</option>
+                        <option value="South">South</option>
+                        <option value="Urban">Urban</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="coop-list-table">
+                <thead>
+                    <tr>
+                        <th>Cooperative Name</th>
+                        <th>Category</th>
+                        <th>District</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="coopTableBody">
+                    <tr data-category="Micro" data-district="East">
+                        <td><span class="fw-bold text-dark">Consumer Cooperative</span></td>
+                        <td><span class="badge-category">Micro</span></td>
+                        <td>East</td>
+                        <td><button class="btn-view-profile" data-bs-toggle="modal" data-bs-target="#coopProfileModal">View Profile</button></td>
+                    </tr>
+                    <tr data-category="Large" data-district="West">
+                        <td><span class="fw-bold text-dark">Plaridel MPC</span></td>
+                        <td><span class="badge-category">Large</span></td>
+                        <td>West</td>
+                        <td><button class="btn-view-profile">View Profile</button></td>
+                    </tr>
+                    <tr data-category="Small" data-district="Urban">
+                        <td><span class="fw-bold text-dark">Agriculture Cooperative</span></td>
+                        <td><span class="badge-category">Small</span></td>
+                        <td>Urban</td>
+                        <td><button class="btn-view-profile">View Profile</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="noResultsMessage" style="display: none;">No cooperatives found matching the selected filters.</div>
+        </div>
+    </div>
+
 </div>
+
+<div class="modal fade" id="adminListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">System Administrators</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <table class="modal-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Gender</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Juan Dela Cruz</td><td>Head Admin</td><td>Male</td><td>juan.admin@lipa.gov.ph</td></tr>
+                        <tr><td>Maria Santos</td><td>System Maintainer</td><td>Female</td><td>maria.s@lipa.gov.ph</td></tr>
+                        <tr><td>Pedro Penduko</td><td>IT Support</td><td>Male</td><td>pedro.p@lipa.gov.ph</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="staffListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Office Staff</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <table class="modal-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Gender</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Ana Reyes</td><td>Encoder</td><td>Female</td><td>ana.reyes@lipa.gov.ph</td></tr>
+                        <tr><td>Jose Rizal</td><td>Clerk</td><td>Male</td><td>jose.r@lipa.gov.ph</td></tr>
+                        <tr><td>Clara Recto</td><td>Secretary</td><td>Female</td><td>clara.recto@lipa.gov.ph</td></tr>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="coopProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cooperative Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-circle mb-2">C</div>
+                    <h4>Consumer Cooperative</h4>
+                    <p class="text-muted">Sabang, Lipa City, Batangas</p>
+                </div>
+                <div class="info-grid">
+                    <div><strong>CDA No:</strong> 1414-060923055</div>
+                    <div><strong>Category:</strong> Micro</div>
+                    <div><strong>Assets:</strong> ₱ 356,964.68</div>
+                    <div><strong>Members:</strong> 120</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Chart.js Implementation
+    const ctx = document.getElementById('businessActivityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Lending', 'Service', 'Consumer', 'Producers', 'Marketing', 'Multi-Purpose'],
+            datasets: [{
+                label: 'Number of Cooperatives',
+                data: [12, 19, 8, 5, 4, 10],
+                backgroundColor: [
+                             // darkest red
+                    '#a71b20',
+                    '#7f0f12',
+                    '#d8443a',
+                    '#e95b4b',
+                    '#f27a6a',
+                    '#c62828'  // lightest red
+                ],
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Filter functionality
+    document.getElementById('categoryFilter').addEventListener('change', filterTable);
+    document.getElementById('districtFilter').addEventListener('change', filterTable);
+
+    // Toggle filter controls visibility when clicking the icon
+    document.getElementById('filterToggle').addEventListener('click', function(){
+        document.querySelector('.filter-controls').classList.toggle('hidden');
+    });
+
+    function filterTable() {
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const districtFilter = document.getElementById('districtFilter').value;
+        const rows = document.querySelectorAll('#coopTableBody tr');
+        let hasResults = false;
+
+        rows.forEach(row => {
+            const category = row.getAttribute('data-category');
+            const district = row.getAttribute('data-district');
+
+            if ((categoryFilter === '' || category === categoryFilter) &&
+                (districtFilter === '' || district === districtFilter)) {
+                row.style.display = '';
+                hasResults = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('noResultsMessage').style.display = hasResults ? 'none' : 'block';
+    }
+</script>
 {% endblock %}
