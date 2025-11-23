@@ -1,0 +1,337 @@
+-- Current Database Schema Export
+-- Generated: 2025-11-22T18:38:45.478793
+-- Database: kooptimizer_db2
+
+
+-- ========================================
+-- ENUM TYPES
+-- ========================================
+
+-- ENUM: announcement_status_enum
+-- Values: sent, draft, scheduled
+
+-- ENUM: announcement_type_enum
+-- Values: sms, e-mail
+
+-- ENUM: approval_status_enum
+-- Values: pending, approved
+
+-- ENUM: gender_enum
+-- Values: male, female, other
+
+-- ENUM: user_role_enum
+-- Values: admin, staff, officer
+
+-- ENUM: verification_status_enum
+-- Values: pending, verified
+
+-- ========================================
+-- TABLES
+-- ========================================
+
+-- TABLE: admin
+--   admin_id: integer NOT NULL
+--   user_id: integer NOT NULL
+--   fullname: character varying(100)
+--   position: character varying(50)
+--   gender: USER-DEFINED
+--   mobile_number: character varying(20)
+--   email: character varying(100)
+
+-- TABLE: announcement_attachments
+--   attachment_id: integer NOT NULL
+--   announcement_id: integer NOT NULL
+--   filename: character varying(255) NOT NULL
+--   original_filename: character varying(255) NOT NULL
+--   content_type: character varying(100) NOT NULL
+--   file_size: bigint NOT NULL
+--   file_data: bytea NOT NULL
+--   uploaded_at: timestamp without time zone
+--   uploaded_by: integer
+--   display_order: integer
+
+-- TABLE: announcement_officer_recipients
+--   announcement_id: integer NOT NULL
+--   officer_id: integer NOT NULL
+
+-- TABLE: announcement_recipients
+--   announcement_id: integer NOT NULL
+--   coop_id: integer NOT NULL
+
+-- TABLE: announcements
+--   announcement_id: integer NOT NULL
+--   staff_id: integer
+--   admin_id: integer
+--   description: text
+--   type: USER-DEFINED
+--   attachment: bytea
+--   sent_at: timestamp with time zone
+--   scope: character varying(50)
+--   title: character varying(200)
+--   status_classification: USER-DEFINED NOT NULL
+--   created_at: timestamp with time zone NOT NULL
+--   updated_at: timestamp with time zone NOT NULL
+--   attachment_filename: character varying(255)
+--   attachment_content_type: character varying(255)
+--   attachment_size: bigint
+
+-- TABLE: auth_group
+--   id: integer NOT NULL
+--   name: character varying(150) NOT NULL
+
+-- TABLE: auth_group_permissions
+--   id: bigint NOT NULL
+--   group_id: integer NOT NULL
+--   permission_id: integer NOT NULL
+
+-- TABLE: auth_permission
+--   id: integer NOT NULL
+--   name: character varying(255) NOT NULL
+--   content_type_id: integer NOT NULL
+--   codename: character varying(100) NOT NULL
+
+-- TABLE: auth_user
+--   id: integer NOT NULL
+--   password: character varying(128) NOT NULL
+--   last_login: timestamp with time zone
+--   is_superuser: boolean NOT NULL
+--   username: character varying(150) NOT NULL
+--   first_name: character varying(150) NOT NULL
+--   last_name: character varying(150) NOT NULL
+--   email: character varying(254) NOT NULL
+--   is_staff: boolean NOT NULL
+--   is_active: boolean NOT NULL
+--   date_joined: timestamp with time zone NOT NULL
+
+-- TABLE: auth_user_groups
+--   id: bigint NOT NULL
+--   user_id: integer NOT NULL
+--   group_id: integer NOT NULL
+
+-- TABLE: auth_user_user_permissions
+--   id: bigint NOT NULL
+--   user_id: integer NOT NULL
+--   permission_id: integer NOT NULL
+
+-- TABLE: cooperatives
+--   coop_id: integer NOT NULL
+--   staff_id: integer
+--   cooperative_name: character varying(200) NOT NULL
+--   created_at: timestamp with time zone NOT NULL
+--   updated_at: timestamp with time zone NOT NULL
+--   category: character varying(255)
+--   district: character varying(255)
+
+-- TABLE: django_admin_log
+--   id: integer NOT NULL
+--   action_time: timestamp with time zone NOT NULL
+--   object_id: text
+--   object_repr: character varying(200) NOT NULL
+--   action_flag: smallint NOT NULL
+--   change_message: text NOT NULL
+--   content_type_id: integer
+--   user_id: integer NOT NULL
+
+-- TABLE: django_content_type
+--   id: integer NOT NULL
+--   app_label: character varying(100) NOT NULL
+--   model: character varying(100) NOT NULL
+
+-- TABLE: django_migrations
+--   id: bigint NOT NULL
+--   app: character varying(255) NOT NULL
+--   name: character varying(255) NOT NULL
+--   applied: timestamp with time zone NOT NULL
+
+-- TABLE: django_session
+--   session_key: character varying(40) NOT NULL
+--   session_data: text NOT NULL
+--   expire_date: timestamp with time zone NOT NULL
+
+-- TABLE: financial_data
+--   financial_id: integer NOT NULL
+--   coop_id: integer NOT NULL
+--   assets: numeric
+--   paid_up_capital: numeric
+--   net_surplus: numeric
+--   attachments: bytea
+--   approval_status: USER-DEFINED
+--   report_year: integer
+--   created_at: timestamp with time zone NOT NULL
+--   updated_at: timestamp with time zone NOT NULL
+
+-- TABLE: members
+--   member_id: integer NOT NULL
+--   coop_id: integer NOT NULL
+--   fullname: character varying(100) NOT NULL
+--   gender: USER-DEFINED
+--   created_at: timestamp with time zone NOT NULL
+
+-- TABLE: message_recipients
+--   message_id: integer NOT NULL
+--   receiver_id: integer NOT NULL
+--   received_at: timestamp with time zone
+--   status: character varying(20)
+--   seen_at: timestamp with time zone
+
+-- TABLE: messages
+--   message_id: integer NOT NULL
+--   sender_id: integer
+--   message: text NOT NULL
+--   sent_at: timestamp with time zone NOT NULL
+--   attachment: bytea
+--   attachment_filename: character varying(255)
+--   attachment_content_type: character varying(255)
+--   attachment_size: bigint
+
+-- TABLE: messenger_conversations
+--   conversation_id: integer NOT NULL
+--   created_at: timestamp with time zone
+--   updated_at: timestamp with time zone
+
+-- TABLE: messenger_messages
+--   message_id: integer NOT NULL
+--   conversation_id: integer NOT NULL
+--   sender_id: integer NOT NULL
+--   message_text: text
+--   attachment: bytea
+--   attachment_filename: character varying(255)
+--   attachment_content_type: character varying(255)
+--   attachment_size: bigint
+--   sent_at: timestamp with time zone
+
+-- TABLE: messenger_participants
+--   participant_id: integer NOT NULL
+--   conversation_id: integer NOT NULL
+--   user_id: integer NOT NULL
+--   last_read_at: timestamp with time zone
+
+-- TABLE: officers
+--   officer_id: integer NOT NULL
+--   user_id: integer
+--   coop_id: integer NOT NULL
+--   fullname: character varying(100)
+--   position: character varying(50)
+--   gender: USER-DEFINED
+--   mobile_number: character varying(20)
+--   created_at: timestamp with time zone NOT NULL
+--   updated_at: timestamp with time zone NOT NULL
+--   email: character varying(100)
+
+-- TABLE: profile_data
+--   profile_id: integer NOT NULL
+--   coop_id: integer NOT NULL
+--   address: character varying(255)
+--   mobile_number: character varying(20)
+--   email_address: character varying(100)
+--   cda_registration_number: character varying(100)
+--   cda_registration_date: date
+--   lccdc_membership: boolean
+--   lccdc_membership_date: date
+--   operation_area: character varying(100)
+--   business_activity: character varying(100)
+--   board_of_directors_count: integer
+--   salaried_employees_count: integer
+--   coc_renewal: boolean
+--   cote_renewal: boolean
+--   coc_attachment: bytea
+--   cote_attachment: bytea
+--   approval_status: USER-DEFINED
+--   created_at: timestamp with time zone NOT NULL
+--   updated_at: timestamp with time zone NOT NULL
+
+-- TABLE: staff
+--   staff_id: integer NOT NULL
+--   user_id: integer NOT NULL
+--   fullname: character varying(100)
+--   position: character varying(50)
+--   gender: USER-DEFINED
+--   mobile_number: character varying(20)
+--   email: character varying(100)
+
+-- TABLE: users
+--   user_id: integer NOT NULL
+--   username: character varying(50) NOT NULL
+--   password_hash: character varying(128) NOT NULL
+--   role: USER-DEFINED NOT NULL
+--   verification_status: USER-DEFINED
+--   is_first_login: boolean
+--   created_at: timestamp with time zone NOT NULL
+--   updated_at: timestamp with time zone NOT NULL
+--   is_online: boolean
+--   last_active: timestamp with time zone
+--   is_active: boolean
+
+-- ========================================
+-- FUNCTIONS AND PROCEDURES
+-- ========================================
+
+-- FUNCTION: armor
+-- FUNCTION: armor
+-- FUNCTION: crypt
+-- FUNCTION: dearmor
+-- FUNCTION: decrypt
+-- FUNCTION: decrypt_iv
+-- FUNCTION: digest
+-- FUNCTION: digest
+-- FUNCTION: encrypt
+-- FUNCTION: encrypt_iv
+-- FUNCTION: fips_mode
+-- FUNCTION: fn_trigger_set_timestamp
+-- FUNCTION: fn_update_messenger_timestamp
+-- FUNCTION: gen_random_bytes
+-- FUNCTION: gen_random_uuid
+-- FUNCTION: gen_salt
+-- FUNCTION: gen_salt
+-- FUNCTION: get_all_user_accounts
+-- FUNCTION: hmac
+-- FUNCTION: hmac
+-- FUNCTION: pgp_armor_headers
+-- FUNCTION: pgp_key_id
+-- FUNCTION: pgp_pub_decrypt
+-- FUNCTION: pgp_pub_decrypt
+-- FUNCTION: pgp_pub_decrypt
+-- FUNCTION: pgp_pub_decrypt_bytea
+-- FUNCTION: pgp_pub_decrypt_bytea
+-- FUNCTION: pgp_pub_decrypt_bytea
+-- FUNCTION: pgp_pub_encrypt
+-- FUNCTION: pgp_pub_encrypt
+-- FUNCTION: pgp_pub_encrypt_bytea
+-- FUNCTION: pgp_pub_encrypt_bytea
+-- FUNCTION: pgp_sym_decrypt
+-- FUNCTION: pgp_sym_decrypt
+-- FUNCTION: pgp_sym_decrypt_bytea
+-- FUNCTION: pgp_sym_decrypt_bytea
+-- FUNCTION: pgp_sym_encrypt
+-- FUNCTION: pgp_sym_encrypt
+-- FUNCTION: pgp_sym_encrypt_bytea
+-- FUNCTION: pgp_sym_encrypt_bytea
+-- FUNCTION: sp_complete_first_login
+-- FUNCTION: sp_complete_first_login
+-- FUNCTION: sp_complete_first_login
+-- PROCEDURE: sp_create_admin_account
+-- PROCEDURE: sp_create_officer_account
+-- PROCEDURE: sp_create_staff_account
+-- FUNCTION: sp_create_user_profile
+-- PROCEDURE: sp_deactivate_user
+-- FUNCTION: sp_get_account_management_data
+-- FUNCTION: sp_get_all_user_accounts
+-- FUNCTION: sp_get_announcement_details
+-- FUNCTION: sp_get_announcements_by_status
+-- FUNCTION: sp_get_announcements_by_statuses
+-- FUNCTION: sp_get_available_coops
+-- FUNCTION: sp_get_conversation
+-- FUNCTION: sp_get_mobile_by_userid
+-- FUNCTION: sp_get_sms_recipients
+-- FUNCTION: sp_get_staff_coops
+-- FUNCTION: sp_get_user_details
+-- FUNCTION: sp_login_user
+-- FUNCTION: sp_register_user
+-- FUNCTION: sp_save_announcement
+-- FUNCTION: sp_save_announcement
+-- FUNCTION: sp_send_message
+-- PROCEDURE: sp_update_account_details
+-- PROCEDURE: sp_update_user_profile
+-- FUNCTION: sp_update_user_profile
+-- FUNCTION: trg_update_first_login_status
+-- FUNCTION: verify_pbkdf2_sha256
