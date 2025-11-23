@@ -1,0 +1,1193 @@
+{% extends "dashboard/dashboard.html" %}
+{% load static %}
+
+{% block title %}Account Management - KoopTimizer{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'frontend/account_management.css' %}">
+<style>
+    /* Ensure action buttons are hidden by default */
+    .action-buttons {
+        display: none;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    /* Selected row highlighting */
+    tbody tr.selected {
+        background-color: #e3f2fd !important;
+    }
+    
+    /* Modal overlay */
+    .modal-overlay {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    
+    .modal-overlay.hidden {
+        display: none;
+    }
+    
+    /* Cursor pointer for clickable rows */
+    tbody tr {
+        cursor: pointer;
+    }
+    
+    tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="account-management-container">
+    <div class="account-header">
+        <div class="tab-buttons">
+            {% if request.session.role == 'admin' %}
+            <button class="tab-btn" data-target="all-users">ALL</button> 
+            <button class="tab-btn" data-target="admins">Admins</button>
+            <button class="tab-btn active" data-target="staffs">Staffs</button>
+            <button class="tab-btn" data-target="officers">Officers</button>
+            {% elif request.session.role == 'staff' %}
+            <button class="tab-btn active" data-target="officers">Officers</button>
+            {% endif %}
+        </div>
+
+        <div id="table-controls" class="table-controls">
+            <input type="text" id="user-search" class="search-input" placeholder="Search users...">
+        </div>
+        
+        {% if request.session.role == 'admin' %}
+        <div class="add-section" id="staff-add-section">
+            <p class="total-label">Total Staffs: <span class="count" id="staff-count">{{ staffs|length }}</span></p> 
+            <button class="add-btn" data-account-type="staff" id="onboard-staff-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        <div class="add-section hidden" id="admin-add-section">
+            <p class="total-label">Total Admins: <span class="count" id="admin-count">{{ admins|length }}</span></p>
+            <button class="add-btn" data-account-type="admin" id="onboard-admin-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        <div class="add-section hidden" id="all-users-section">
+            <p class="total-label">Total Users: <span class="count" id="all-user-count">0</span></p>
+        </div>
+        <div class="add-section hidden" id="officer-add-section">
+            <p class="total-label">Total Officers: <span class="count" id="officer-count">{{ officers|length }}</span></p>
+            <button class="add-btn" data-account-type="officer" id="onboard-officer-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        {% elif request.session.role == 'staff' %}
+        <div class="add-section" id="officer-add-section">
+            <p class="total-label">Total Officers: <span class="count" id="officer-count">{{ officers|length }}</span></p>
+            <button class="add-btn" data-account-type="officer" id="onboard-officer-btn"><i class="bi bi-plus-circle"></i> Add</button> 
+        </div>
+        {% endif %}
+    </div>
+
+    {% if request.session.role == 'admin' %}
+    <!-- ALL USERS TABLE (Admin Only) -->
+    <div class="table-section" id="all-users">
+        <h2>All User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Full Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Role/Perm.</th>
+                        <th>Cooperative</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody id="all-users-table-body"></tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
+
+    <!-- ADMINS TABLE (Admin Only) -->
+    <div class="table-section" id="admins">
+        <h2>Admin User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Admin Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                    {% for admin in admins %}
+                    <tr data-type="admin" data-user-id="{{ admin.user_id }}" data-profile-id="{{ admin.profile_id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ admin.fullname }}</td>
+                        <td>{{ admin.email }}</td>
+                        <td>{{ admin.contact }}</td>
+                        <td>{{ admin.position }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center;">No admin accounts found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
+
+    <!-- STAFFS TABLE (Admin Only) -->
+    <div class="table-section active" id="staffs">
+        <h2>Staff User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Staff Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Cooperative Assigned</th>
+                    </tr>
+                </thead>
+                <tbody id="staff-table-body">
+                    {% for staff in staffs %}
+                    <tr data-type="staff" data-user-id="{{ staff.user_id }}" data-profile-id="{{ staff.profile_id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ staff.fullname }}</td>
+                        <td>{{ staff.email }}</td>
+                        <td>{{ staff.contact }}</td>
+                        <td>{{ staff.coop_name }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" style="text-align:center;">No staff accounts found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- OFFICERS TABLE (Admin and Staff) -->
+    <div class="table-section {% if request.session.role == 'staff' %}active{% endif %}" id="officers">
+        <h2>Officer User Accounts</h2>
+        <div class="table-wrapper"> 
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Officer-in-charge</th>
+                        <th>Cooperative Name</th>
+                        <th>Email Address</th>
+                        <th>Contact Number</th>
+                        <th>Position</th>
+                    </tr>
+                </thead>
+                <tbody id="officer-table-body">
+                    {% for officer in officers %}
+                    <tr data-type="officer" data-user-id="{{ officer.user_id }}" data-profile-id="{{ officer.profile_id }}">
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ officer.fullname }}</td>
+                        <td>{{ officer.coop_name }}</td>
+                        <td>{{ officer.email }}</td>
+                        <td>{{ officer.contact }}</td>
+                        <td>{{ officer.position }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="text-align:center;">No officer accounts found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="action-buttons">
+            <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ONBOARD/EDIT MODAL -->
+<div class="modal-overlay hidden" id="onboard-staff-modal">
+    <div class="onboard-form-container">
+        <div class="form-scroll-wrapper"> 
+            <span class="close-btn modal-close">&times;</span> 
+            <h3 class="modal-title" id="onboard-modal-title">Onboard Staff Account</h3>
+            <p class="input-instruction">Please input information</p>
+
+            <form id="onboard-form" action="#" method="POST" class="onboard-form" data-account-type="staff">
+                {% csrf_token %}
+                <input type="hidden" id="edit-user-id" name="edit_user_id" value="">
+                
+                <div class="form-group">
+                    <label for="staff-full-name">Full Name</label>
+                    <input type="text" id="staff-full-name" name="full_name" placeholder="Firstname M.I. Lastname" required>
+                </div>
+                
+                <div class="form-group" id="gender-group">
+                    <label for="staff-gender">Gender</label>
+                    <select id="staff-gender" name="gender" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="position-group">
+                    <label for="staff-position" id="position-label">Position/Role</label>
+                    <input type="text" id="staff-position" name="position" placeholder="Enter position" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="staff-email">Email Address</label>
+                    <input type="email" id="staff-email" name="email" placeholder="sample@gmail.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="staff-contact">Contact Number</label>
+                    <input type="tel" id="staff-contact" name="contact" placeholder="09**********" pattern="[0-9]{11}" title="Contact number must be 11 digits" required>
+                </div>
+                
+                <div class="form-group" id="coop-group">
+                    <label for="coop-assigned">Cooperative Assigned</label>
+                    <select id="coop-assigned" name="coop_assigned" required>
+                        <option value="" disabled selected>Choose Cooperatives</option>
+                        {% for coop in cooperatives %}
+                            <option value="{{ coop.coop_id }}">{{ coop.cooperative_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="form-buttons-add">
+                    <button type="submit" class="submit-btn">Create Account</button>
+                </div>
+                <div id="form-buttons-edit" style="display: none;">
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                    <button type="button" id="edit-cancel-btn" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM MODAL (FOR ADD) -->
+<div class="modal-overlay hidden" id="confirm-modal">
+  <div class="confirm-modal-container">
+    <p class="confirm-instruction">Please confirm if all details are correct</p>
+    
+    <div class="confirm-data-group">
+      <label>Full Name</label>
+      <input type="text" id="confirm-name" readonly>
+    </div>
+    <div class="confirm-data-group">
+      <label id="confirm-role-label">Position/Role</label>
+      <input type="text" id="confirm-position" readonly>
+    </div>
+    <div class="confirm-data-group">
+      <label>Email Address</label>
+      <input type="text" id="confirm-email" readonly>
+    </div>
+    <div class="confirm-data-group">
+      <label>Contact Number</label>
+      <input type="text" id="confirm-contact" readonly>
+    </div>
+    <div class="confirm-data-group hidden" id="confirm-coop-group">
+      <label>Cooperative Assigned</label>
+      <textarea id="confirm-coop" readonly></textarea>
+    </div>
+    <div class="confirm-data-group hidden" id="confirm-gender-group">
+      <label>Gender</label>
+      <input type="text" id="confirm-gender" readonly>
+    </div>
+
+    <div class="confirm-actions">
+      <button id="confirm-btn" class="modal-button primary-btn">Confirm</button>
+      <button id="confirm-edit-btn" class="modal-button secondary-btn">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND CREDENTIALS MODAL -->
+<div class="modal-overlay hidden" id="send-credentials-modal">
+  <div class="send-cred-modal-container">
+    <div class="modal-header">
+      <h4>Send Credentials</h4>
+      <span class="close-btn modal-close-send">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p><span id="account-type-text">Staff user</span> credentials will be sent through Email Address, confirm if the informations are correct before sending.</p>
+      <div class="email-display-box">
+        <span id="send-name-display"></span>
+        <span id="send-email-display"></span>
+      </div>
+      <button id="send-final-btn" class="modal-button primary-btn full-width-btn">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEACTIVATE CONFIRMATION MODAL -->
+<div class="modal-overlay hidden" id="deactivate-confirm-modal">
+  <div class="confirm-modal-container">
+    <h3>Deactivate Account</h3>
+    <p id="deactivate-confirm-text">Are you sure you want to deactivate this account?</p>
+    <div class="confirm-actions">
+      <button id="deactivate-confirm-btn" class="modal-button primary-btn">Continue</button>
+      <button id="deactivate-cancel-btn" class="modal-button secondary-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL EDIT MODAL -->
+<div class="modal-overlay hidden" id="cancel-edit-modal">
+  <div class="confirm-modal-container">
+    <h3>Cancel Editing</h3>
+    <p>Are you sure you want to cancel editing? Unsaved changes will be lost.</p>
+    <div class="confirm-actions">
+      <button id="cancel-edit-confirm-btn" class="modal-button primary-btn">Continue</button>
+      <button id="cancel-edit-cancel-btn" class="modal-button secondary-btn">Go Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Container (styled like base.html) -->
+<div id="account-notifications" aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; max-width: 400px;"></div>
+
+<script>
+(function() {
+    'use strict';
+    
+    console.log('Account Management Script Loaded');
+    
+    // Get user role from session
+    const USER_ROLE = '{{ request.session.role }}';
+    console.log('Current user role:', USER_ROLE);
+    
+    let allUsersData = [];
+    let selectedRowData = { element: null, userId: null, profileId: null, type: null, name: null };
+    let submittedData = {}; 
+    let isEditMode = false;
+
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    function hasAccessToAccountType(accountType) {
+        if (USER_ROLE === 'admin') {
+            return true; // Admin has access to everything
+        }
+        if (USER_ROLE === 'staff') {
+            return accountType === 'officer'; // Staff can only access officers
+        }
+        return false;
+    }
+
+    // Notification system (styled like base.html)
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('account-notifications');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        notification.className = `dj-message dj-${type}`;
+        notification.setAttribute('role', 'status');
+        notification.style.marginBottom = '10px';
+        
+        notification.innerHTML = `
+            <div class="dj-message-left">
+                <div class="dj-message-icon" aria-hidden="true">!</div>
+            </div>
+            <div class="dj-message-body">
+                <div class="dj-message-text">${message}</div>
+            </div>
+            <button class="dj-message-close" aria-label="Close message">×</button>
+        `;
+
+        container.appendChild(notification);
+
+        // Close button functionality
+        const closeBtn = notification.querySelector('.dj-message-close');
+        closeBtn.addEventListener('click', () => dismissNotification(notification));
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                dismissNotification(notification);
+            }
+        }, 5000);
+    }
+
+    function dismissNotification(el) {
+        el.style.transition = 'opacity 240ms ease, transform 240ms ease';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(18px)';
+        setTimeout(() => {
+            if (el.parentNode) el.parentNode.removeChild(el);
+        }, 260);
+    }
+
+    function initialize() {
+        console.log('Initializing...');
+        
+        // Get all DOM elements
+        const elements = {
+            onboardStaffBtn: document.getElementById('onboard-staff-btn'),
+            onboardAdminBtn: document.getElementById('onboard-admin-btn'),
+            onboardOfficerBtn: document.getElementById('onboard-officer-btn'),
+            onboardModal: document.getElementById('onboard-staff-modal'),
+            onboardForm: document.getElementById('onboard-form'),
+            confirmModal: document.getElementById('confirm-modal'),
+            sendCredModal: document.getElementById('send-credentials-modal'),
+            deactivateModal: document.getElementById('deactivate-confirm-modal'),
+            cancelEditModal: document.getElementById('cancel-edit-modal'),
+            staffTableBody: document.getElementById('staff-table-body'),
+            officerTableBody: document.getElementById('officer-table-body'),
+            adminTableBody: document.getElementById('admin-table-body'),
+            allUsersTableBody: document.getElementById('all-users-table-body'),
+            staffCountSpan: document.getElementById('staff-count'),
+            adminCountSpan: document.getElementById('admin-count'),
+            officerCountSpan: document.getElementById('officer-count'),
+            allUserCountSpan: document.getElementById('all-user-count'),
+            searchInput: document.getElementById('user-search'),
+            coopGroup: document.getElementById('coop-group'),
+            coopSelectEl: document.getElementById('coop-assigned'),
+            positionLabel: document.getElementById('position-label'),
+            formFullName: document.getElementById('staff-full-name'),
+            formGender: document.getElementById('staff-gender'),
+            formPosition: document.getElementById('staff-position'),
+            formEmail: document.getElementById('staff-email'),
+            formContact: document.getElementById('staff-contact'),
+            formEditUserId: document.getElementById('edit-user-id'),
+            formButtonsAdd: document.getElementById('form-buttons-add'),
+            formButtonsEdit: document.getElementById('form-buttons-edit'),
+            confirmRoleLabel: document.getElementById('confirm-role-label'),
+            confirmCoopGroup: document.getElementById('confirm-coop-group'),
+            confirmCoopTextarea: document.getElementById('confirm-coop')
+        };
+        
+        console.log('Elements loaded:', elements);
+        
+        // Collect initial data (only for admin)
+        if (USER_ROLE === 'admin') {
+            collectInitialData();
+            renderAllUsersTable(allUsersData);
+        }
+        
+        setupEventListeners(elements);
+        
+        console.log('Initialization complete');
+    }
+
+    function collectInitialData() {
+        allUsersData = [];
+        
+        const staffTableBody = document.getElementById('staff-table-body');
+        const officerTableBody = document.getElementById('officer-table-body');
+        const adminTableBody = document.getElementById('admin-table-body');
+        const allUserCountSpan = document.getElementById('all-user-count');
+        
+        const tables = [
+            { body: staffTableBody, type: 'Staff', indices: [1, 2, 3, 4], roleIndex: -1, coopIndex: 4 },
+            { body: officerTableBody, type: 'Officer', indices: [1, 2, 3, 4, 5], roleIndex: 5, coopIndex: 2 },
+            { body: adminTableBody, type: 'Admin', indices: [1, 2, 3, 4], roleIndex: 4, coopIndex: -1 }
+        ];
+
+        tables.forEach(table => {
+            if (table.body) {
+                table.body.querySelectorAll('tr').forEach(row => {
+                    if (row.cells.length <= 1) return;
+                    
+                    const cells = Array.from(row.cells).map(cell => cell.textContent);
+                    
+                    allUsersData.push({
+                        user_id: row.dataset.userId,
+                        profile_id: row.dataset.profileId,
+                        name: cells[1],
+                        email: table.type === 'Officer' ? cells[3] : cells[2],
+                        contact: table.type === 'Officer' ? cells[4] : cells[3],
+                        role: table.roleIndex !== -1 ? cells[table.roleIndex] : '-',
+                        coop: table.coopIndex !== -1 ? cells[table.coopIndex] : '-',
+                        type: table.type
+                    });
+                });
+            }
+        });
+        
+        if (allUserCountSpan) {
+            allUserCountSpan.textContent = allUsersData.length;
+        }
+        console.log('Collected user data:', allUsersData.length, 'users');
+    }
+
+    function renderAllUsersTable(data) {
+        const allUsersTableBody = document.getElementById('all-users-table-body');
+        if (!allUsersTableBody) return;
+        
+        allUsersTableBody.innerHTML = '';
+        
+        if (data.length === 0) {
+             allUsersTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
+             return;
+        }
+
+        data.forEach((user, index) => {
+            const newRow = document.createElement('tr');
+            newRow.dataset.userId = user.user_id;
+            newRow.dataset.profileId = user.profile_id;
+            newRow.dataset.type = user.type;
+
+            newRow.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${user.name}</td>
+                <td>${user.email}</td>
+                <td>${user.contact}</td>
+                <td>${user.role}</td>
+                <td>${user.coop}</td>
+                <td>${user.type}</td>
+            `;
+            allUsersTableBody.appendChild(newRow);
+        });
+    }
+
+    function setupEventListeners(el) {
+        console.log('Setting up event listeners...');
+        
+        // Tab switching
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => handleTabClick(btn));
+        });
+        
+        // Search functionality (only for admin)
+        if (USER_ROLE === 'admin' && el.searchInput) {
+            el.searchInput.style.display = 'none';
+            el.searchInput.addEventListener('keyup', handleSearch);
+        }
+        
+        // Row selection
+        document.querySelectorAll('tbody').forEach(tbody => {
+            tbody.addEventListener('click', handleRowClick);
+        });
+        
+        // Add buttons (check permissions)
+        if (el.onboardStaffBtn && hasAccessToAccountType('staff')) {
+            el.onboardStaffBtn.addEventListener('click', () => handleAddButtonClick(el.onboardStaffBtn, el));
+        }
+        if (el.onboardAdminBtn && hasAccessToAccountType('admin')) {
+            el.onboardAdminBtn.addEventListener('click', () => handleAddButtonClick(el.onboardAdminBtn, el));
+        }
+        if (el.onboardOfficerBtn && hasAccessToAccountType('officer')) {
+            el.onboardOfficerBtn.addEventListener('click', () => handleAddButtonClick(el.onboardOfficerBtn, el));
+        }
+        
+        // Form submission
+        el.onboardForm.addEventListener('submit', (e) => handleFormSubmit(e, el));
+        
+        // Confirmation buttons
+        document.getElementById('confirm-edit-btn').addEventListener('click', () => {
+            closeModal(el.confirmModal);
+            openModal(el.onboardModal);
+        });
+        
+        document.getElementById('confirm-btn').addEventListener('click', () => handleConfirmButton(el));
+        
+        // Send credentials
+        document.getElementById('send-final-btn').addEventListener('click', function() {
+            handleSendCredentials(this, el);
+        });
+        
+        // Edit/Delete buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleEditClick(el));
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleDeleteClick(el));
+        });
+        
+        // Deactivate modal buttons
+        document.getElementById('deactivate-cancel-btn').addEventListener('click', () => closeModal(el.deactivateModal));
+        document.getElementById('deactivate-confirm-btn').addEventListener('click', () => handleDeactivateConfirm(el));
+        
+        // Cancel edit modal buttons
+        document.getElementById('edit-cancel-btn').addEventListener('click', () => openModal(el.cancelEditModal));
+        document.getElementById('cancel-edit-cancel-btn').addEventListener('click', () => closeModal(el.cancelEditModal));
+        document.getElementById('cancel-edit-confirm-btn').addEventListener('click', () => {
+            closeModal(el.cancelEditModal);
+            closeModal(el.onboardModal);
+        });
+        
+        // Close buttons
+        document.querySelectorAll('.modal-close, .modal-close-send').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeModal(el.onboardModal);
+                closeModal(el.confirmModal);
+                closeModal(el.sendCredModal);
+            });
+        });
+        
+        console.log('Event listeners setup complete');
+    }
+
+    function handleTabClick(btn) {
+        const target = btn.dataset.target;
+        
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".table-section").forEach(t => {
+            t.classList.remove("active");
+            const actionButtons = t.querySelector('.action-buttons');
+            if (actionButtons) actionButtons.style.display = 'none';
+        });
+        document.querySelectorAll(".add-section").forEach(s => s.classList.add("hidden"));
+        document.querySelectorAll('tbody tr.selected').forEach(row => row.classList.remove('selected'));
+
+        btn.classList.add("active");
+        const targetSection = document.getElementById(target);
+        if (targetSection) {
+            targetSection.classList.add("active");
+        }
+        
+        const searchInput = document.getElementById('user-search');
+        if (searchInput) {
+            const isSearchVisible = target === 'all-users' && USER_ROLE === 'admin';
+            searchInput.style.display = isSearchVisible ? 'block' : 'none';
+        }
+        
+        // Show appropriate add section based on permissions
+        if (target === 'staffs' && hasAccessToAccountType('staff')) {
+            const staffAddSection = document.getElementById('staff-add-section');
+            if (staffAddSection) staffAddSection.classList.remove('hidden');
+        } else if (target === 'officers' && hasAccessToAccountType('officer')) {
+            const officerAddSection = document.getElementById('officer-add-section');
+            if (officerAddSection) officerAddSection.classList.remove('hidden');
+        } else if (target === 'admins' && hasAccessToAccountType('admin')) {
+            const adminAddSection = document.getElementById('admin-add-section');
+            if (adminAddSection) adminAddSection.classList.remove('hidden');
+        } else if (target === 'all-users' && USER_ROLE === 'admin') {
+            const allUsersSection = document.getElementById('all-users-section');
+            if (allUsersSection) {
+                allUsersSection.classList.remove('hidden');
+                renderAllUsersTable(allUsersData);
+            }
+        }
+        
+        selectedRowData.element = null;
+    }
+
+    function handleSearch(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const filteredData = allUsersData.filter(user => {
+            return user.name.toLowerCase().includes(searchTerm) ||
+                   user.email.toLowerCase().includes(searchTerm) ||
+                   user.contact.toLowerCase().includes(searchTerm) ||
+                   user.role.toLowerCase().includes(searchTerm) ||
+                   user.coop.toLowerCase().includes(searchTerm) ||
+                   user.type.toLowerCase().includes(searchTerm);
+        });
+        renderAllUsersTable(filteredData);
+    }
+
+    function handleRowClick(e) {
+        const row = e.target.closest('tr');
+        if (!row || row.cells.length <= 1) return;
+        
+        const userId = row.dataset.userId;
+        const profileId = row.dataset.profileId;
+        const type = row.dataset.type;
+        const name = row.cells[1].textContent;
+
+        // Check access permissions
+        if (!hasAccessToAccountType(type.toLowerCase())) {
+            showNotification('You do not have permission to manage this account type.', 'error');
+            return;
+        }
+
+        const currentTableSection = row.closest('.table-section');
+        const actionButtons = currentTableSection.querySelector('.action-buttons');
+        
+        if (selectedRowData.element === row) {
+            row.classList.remove('selected');
+            if (actionButtons) actionButtons.style.display = 'none';
+            selectedRowData.element = null;
+        } else {
+            if (selectedRowData.element) {
+                selectedRowData.element.classList.remove('selected');
+                const prevTable = selectedRowData.element.closest('.table-section');
+                if (prevTable) {
+                    const prevActionButtons = prevTable.querySelector('.action-buttons');
+                    if (prevActionButtons) prevActionButtons.style.display = 'none';
+                }
+            }
+            
+            row.classList.add('selected');
+            if (actionButtons) actionButtons.style.display = 'flex';
+            selectedRowData = { element: row, userId, profileId, type, name };
+        }
+        
+        console.log('Row selected:', selectedRowData);
+    }
+
+    function handleAddButtonClick(btn, el) {
+        console.log('Add button clicked:', btn.id);
+        const accountType = btn.getAttribute('data-account-type');
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to add this account type.', 'error');
+            return;
+        }
+        
+        isEditMode = false;
+        
+        setupFormForType(accountType, [], el);
+
+        el.onboardForm.reset();
+        el.formEditUserId.value = '';
+        document.getElementById('onboard-modal-title').textContent = `Onboard ${capitalize(accountType)} Account`;
+        
+        el.formButtonsAdd.style.display = 'block';
+        el.formButtonsEdit.style.display = 'none';
+        
+        openModal(el.onboardModal);
+    }
+
+    function setupFormForType(accountType, assignedCoops, el) {
+        const isOfficer = accountType === 'officer';
+        const isStaff = accountType === 'staff';
+        
+        el.onboardForm.setAttribute('data-account-type', accountType);
+
+        el.coopSelectEl.multiple = isStaff;
+        el.coopSelectEl.required = isOfficer || isStaff;
+        el.coopGroup.style.display = (isOfficer || isStaff) ? 'block' : 'none';
+        
+        el.positionLabel.textContent = (isStaff || isOfficer) ? 'Position/Role' : 'Position';
+
+        const options = Array.from(el.coopSelectEl.options);
+        options.forEach(opt => {
+            opt.selected = assignedCoops.includes(parseInt(opt.value));
+        });
+    }
+
+    function handleFormSubmit(e, el) {
+        e.preventDefault();
+        console.log('Form submitted');
+        
+        const accountType = el.onboardForm.getAttribute('data-account-type');
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to manage this account type.', 'error');
+            return;
+        }
+        
+        const isOfficer = accountType === 'officer';
+        const isStaff = accountType === 'staff';
+
+        let coopId, coopText, coopIds = [], coopTexts = [];
+        
+        if (isOfficer) {
+            coopId = el.coopSelectEl.value;
+            coopText = el.coopSelectEl.options[el.coopSelectEl.selectedIndex].text;
+        } else if (isStaff) {
+            coopIds = Array.from(el.coopSelectEl.selectedOptions).map(opt => opt.value);
+            coopTexts = Array.from(el.coopSelectEl.selectedOptions).map(opt => opt.text);
+        }
+
+        submittedData = {
+            type: accountType,
+            name: el.formFullName.value,
+            position: el.formPosition.value,
+            email: el.formEmail.value,
+            contact: el.formContact.value,
+            gender: el.formGender.value,
+            coop: isStaff ? coopIds : (isOfficer ? coopId : null),
+            coop_text: isStaff ? coopTexts : (isOfficer ? coopText : null)
+        };
+
+        if (isEditMode) {
+            saveChanges(el);
+        } else {
+            document.getElementById('confirm-name').value = submittedData.name;
+            document.getElementById('confirm-position').value = submittedData.position;
+            document.getElementById('confirm-email').value = submittedData.email;
+            document.getElementById('confirm-contact').value = submittedData.contact;
+            el.confirmRoleLabel.textContent = (isStaff || isOfficer) ? 'Position/Role' : 'Position';
+
+            if (isStaff || isOfficer) {
+                el.confirmCoopTextarea.value = isStaff ? submittedData.coop_text.join('\n') : submittedData.coop_text;
+                el.confirmCoopGroup.classList.remove('hidden');
+            } else {
+                el.confirmCoopGroup.classList.add('hidden');
+            }
+            
+            closeModal(el.onboardModal);
+            openModal(el.confirmModal);
+        }
+    }
+
+    function handleConfirmButton(el) {
+        document.getElementById('send-name-display').textContent = submittedData.name;
+        document.getElementById('send-email-display').textContent = submittedData.email;
+        document.getElementById('account-type-text').textContent = `${capitalize(submittedData.type)} user`;
+        closeModal(el.confirmModal);
+        openModal(el.sendCredModal);
+    }
+
+    function handleSendCredentials(sendButton, el) {
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<span class="spinner"></span> Sending...';
+
+        fetch('/account_management/api/send-credentials/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+            body: JSON.stringify(submittedData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const newUserData = data.user;
+                addNewRowToTable(newUserData);
+                
+                if (USER_ROLE === 'admin') {
+                    allUsersData.push({
+                        user_id: newUserData.user_id,
+                        profile_id: newUserData.profile_id,
+                        name: newUserData.name,
+                        email: newUserData.email,
+                        contact: newUserData.contact,
+                        role: newUserData.position || '-',
+                        coop: newUserData.coop_name || '-',
+                        type: capitalize(newUserData.role)
+                    });
+                    
+                    const allUserCountSpan = document.getElementById('all-user-count');
+                    if (allUserCountSpan) {
+                        allUserCountSpan.textContent = allUsersData.length;
+                    }
+                }
+                
+                closeModal(el.sendCredModal);
+                el.onboardForm.reset();
+                showNotification(`New ${newUserData.role} account created and credentials sent!`, 'success');
+            } else {
+                showNotification(`Failed to send credentials. Error: ${data.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification(`An error occurred: ${error.message}`, 'error');
+        })
+        .finally(() => {
+            sendButton.disabled = false;
+            sendButton.innerHTML = "Send";
+        });
+    }
+
+    function handleEditClick(el) {
+        console.log('Edit button clicked');
+        if (!selectedRowData.userId) {
+            console.log('No user selected');
+            return;
+        }
+        
+        const accountType = selectedRowData.type.toLowerCase();
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to edit this account type.', 'error');
+            return;
+        }
+        
+        openEditModal(selectedRowData.userId, accountType, el);
+    }
+
+    function handleDeleteClick(el) {
+        console.log('Delete button clicked');
+        if (!selectedRowData.name) {
+            console.log('No user selected');
+            return;
+        }
+        
+        const accountType = selectedRowData.type.toLowerCase();
+        
+        // Check access permissions
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to delete this account type.', 'error');
+            return;
+        }
+        
+        document.getElementById('deactivate-confirm-text').textContent = 
+            `Are you sure you want to deactivate ${selectedRowData.name}'s account?`;
+        openModal(el.deactivateModal);
+    }
+
+    function handleDeactivateConfirm(el) {
+        const userId = selectedRowData.userId;
+        if (!userId) return;
+
+        fetch(`/account_management/api/deactivate-user/${userId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                removeRowFromTable(userId);
+                showNotification('Account deactivated successfully.', 'success');
+            } else {
+                showNotification(`Error: ${data.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification(`An error occurred: ${error.message}`, 'error');
+        })
+        .finally(() => closeModal(el.deactivateModal));
+    }
+
+    function openEditModal(userId, type, el) {
+        isEditMode = true;
+        console.log('Opening edit modal for user:', userId, 'type:', type);
+        
+        fetch(`/account_management/api/get-user-details/${userId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const details = data.details;
+                console.log('User details:', details);
+                
+                const assignedCoops = details.assigned_coops || (details.coop_id ? [details.coop_id] : []);
+                setupFormForType(type, assignedCoops, el);
+
+                el.formFullName.value = details.fullname || '';
+                el.formGender.value = details.gender || '';
+                el.formPosition.value = details.position || '';
+                el.formEmail.value = details.email || '';
+                el.formContact.value = details.mobile_number || '';
+                el.formEditUserId.value = userId;
+
+                document.getElementById('onboard-modal-title').textContent = `Edit ${capitalize(type)} Account`;
+                el.formButtonsAdd.style.display = 'none';
+                el.formButtonsEdit.style.display = 'block';
+
+                openModal(el.onboardModal);
+            } else {
+                showNotification(`Error: ${data.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification(`An error occurred: ${error.message}`, 'error');
+        });
+    }
+
+    function saveChanges(el) {
+        const userId = el.formEditUserId.value;
+        if (!userId) return;
+
+        console.log('Saving changes for user:', userId);
+
+        fetch(`/account_management/api/update-user/${userId}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+            body: JSON.stringify(submittedData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateRowInTable(userId, submittedData);
+                showNotification('Account updated successfully.', 'success');
+                closeModal(el.onboardModal);
+            } else {
+                showNotification(`Error: ${data.message}`, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification(`An error occurred: ${error.message}`, 'error');
+        });
+    }
+
+    function addNewRowToTable(userData) {
+        const type = userData.role;
+        const newRow = document.createElement('tr');
+        newRow.dataset.userId = userData.user_id;
+        newRow.dataset.profileId = userData.profile_id;
+        newRow.dataset.type = type;
+
+        let targetTableBody, targetCountSpan, html;
+        
+        if (type === 'staff') {
+            targetTableBody = document.getElementById('staff-table-body');
+            targetCountSpan = document.getElementById('staff-count');
+            html = `
+                <td>...</td>
+                <td>${userData.name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.contact}</td>
+                <td>${userData.coop_name}</td>
+            `;
+        } else if (type === 'admin') {
+            targetTableBody = document.getElementById('admin-table-body');
+            targetCountSpan = document.getElementById('admin-count');
+            html = `
+                <td>...</td>
+                <td>${userData.name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.contact}</td>
+                <td>${userData.position}</td>
+            `;
+        } else if (type === 'officer') {
+            targetTableBody = document.getElementById('officer-table-body');
+            targetCountSpan = document.getElementById('officer-count');
+            html = `
+                <td>...</td>
+                <td>${userData.name}</td>
+                <td>${userData.coop_name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.contact}</td>
+                <td>${userData.position}</td>
+            `;
+        }
+        
+        if (!targetTableBody) return;
+        
+        newRow.innerHTML = html;
+        
+        const emptyRow = targetTableBody.querySelector('td[colspan]');
+        if (emptyRow) emptyRow.parentElement.remove();
+
+        targetTableBody.appendChild(newRow);
+        renumberTable(targetTableBody);
+
+        if (targetCountSpan) {
+            let currentCount = parseInt(targetCountSpan.textContent, 10);
+            targetCountSpan.textContent = currentCount + 1;
+        }
+    }
+
+    function updateRowInTable(userId, data) {
+        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+        if (!row) return;
+
+        if (data.type === 'staff') {
+            row.cells[1].textContent = data.name;
+            row.cells[2].textContent = data.email;
+            row.cells[3].textContent = data.contact;
+            row.cells[4].textContent = Array.isArray(data.coop_text) ? data.coop_text.join(', ') : data.coop_text;
+        } else if (data.type === 'officer') {
+            row.cells[1].textContent = data.name;
+            row.cells[2].textContent = data.coop_text;
+            row.cells[3].textContent = data.email;
+            row.cells[4].textContent = data.contact;
+            row.cells[5].textContent = data.position;
+        } else if (data.type === 'admin') {
+            row.cells[1].textContent = data.name;
+            row.cells[2].textContent = data.email;
+            row.cells[3].textContent = data.contact;
+            row.cells[4].textContent = data.position;
+        }
+        
+        if (USER_ROLE === 'admin') {
+            const allUserEntry = allUsersData.find(u => u.user_id == userId);
+            if (allUserEntry) {
+                allUserEntry.name = data.name;
+                allUserEntry.email = data.email;
+                allUserEntry.contact = data.contact;
+                allUserEntry.role = data.position || '-';
+                allUserEntry.coop = Array.isArray(data.coop_text) ? data.coop_text.join(', ') : (data.coop_text || '-');
+            }
+            
+            const allUsersSection = document.getElementById('all-users');
+            if (allUsersSection && allUsersSection.classList.contains('active')) {
+                renderAllUsersTable(allUsersData);
+            }
+        }
+    }
+
+    function removeRowFromTable(userId) {
+        const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+        if (row) {
+            const tbody = row.closest('tbody');
+            row.remove();
+            renumberTable(tbody);
+            
+            const type = selectedRowData.type;
+            let targetCountSpan;
+            if (type === 'Staff') targetCountSpan = document.getElementById('staff-count');
+            else if (type === 'Officer') targetCountSpan = document.getElementById('officer-count');
+            else if (type === 'Admin') targetCountSpan = document.getElementById('admin-count');
+            
+            if (targetCountSpan) {
+                let currentCount = parseInt(targetCountSpan.textContent, 10);
+                targetCountSpan.textContent = currentCount - 1;
+            }
+        }
+        
+        if (USER_ROLE === 'admin') {
+            allUsersData = allUsersData.filter(u => u.user_id != userId);
+            const allUserCountSpan = document.getElementById('all-user-count');
+            if (allUserCountSpan) {
+                allUserCountSpan.textContent = allUsersData.length;
+            }
+            
+            const allUsersSection = document.getElementById('all-users');
+            if (allUsersSection && allUsersSection.classList.contains('active')) {
+                renderAllUsersTable(allUsersData);
+            }
+        }
+        
+        document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');
+        selectedRowData.element = null;
+    }
+
+    function renumberTable(tbody) {
+        if (!tbody) return;
+        tbody.querySelectorAll('tr').forEach((row, index) => {
+            if (row.cells.length > 1) {
+                row.cells[0].textContent = index + 1;
+            }
+        });
+    }
+
+    function openModal(modal) {
+        modal.classList.remove('hidden');
+        console.log('Modal opened:', modal.id);
+    }
+
+    function closeModal(modal) {
+        modal.classList.add('hidden');
+        console.log('Modal closed:', modal.id);
+    }
+
+    function capitalize(s) {
+        if (typeof s !== 'string') return '';
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+        initialize();
+    }
+})();
+</script>
+{% endblock %}
