@@ -1,0 +1,188 @@
+{
+  "timestamp": "2025-11-22T18:38:43.630455",
+  "tables": {
+    "admin": {
+      "column_count": 7
+    },
+    "announcement_attachments": {
+      "column_count": 10
+    },
+    "announcement_officer_recipients": {
+      "column_count": 2
+    },
+    "announcement_recipients": {
+      "column_count": 2
+    },
+    "announcements": {
+      "column_count": 15
+    },
+    "auth_group": {
+      "column_count": 2
+    },
+    "auth_group_permissions": {
+      "column_count": 3
+    },
+    "auth_permission": {
+      "column_count": 4
+    },
+    "auth_user": {
+      "column_count": 11
+    },
+    "auth_user_groups": {
+      "column_count": 3
+    },
+    "auth_user_user_permissions": {
+      "column_count": 3
+    },
+    "cooperatives": {
+      "column_count": 7
+    },
+    "django_admin_log": {
+      "column_count": 8
+    },
+    "django_content_type": {
+      "column_count": 3
+    },
+    "django_migrations": {
+      "column_count": 4
+    },
+    "django_session": {
+      "column_count": 3
+    },
+    "financial_data": {
+      "column_count": 10
+    },
+    "members": {
+      "column_count": 5
+    },
+    "message_recipients": {
+      "column_count": 5
+    },
+    "messages": {
+      "column_count": 8
+    },
+    "messenger_conversations": {
+      "column_count": 3
+    },
+    "messenger_messages": {
+      "column_count": 9
+    },
+    "messenger_participants": {
+      "column_count": 4
+    },
+    "officers": {
+      "column_count": 10
+    },
+    "profile_data": {
+      "column_count": 20
+    },
+    "staff": {
+      "column_count": 7
+    },
+    "users": {
+      "column_count": 11
+    }
+  },
+  "enums": {
+    "announcement_status_enum": [
+      "sent",
+      "draft",
+      "scheduled"
+    ],
+    "announcement_type_enum": [
+      "sms",
+      "e-mail"
+    ],
+    "approval_status_enum": [
+      "pending",
+      "approved"
+    ],
+    "gender_enum": [
+      "male",
+      "female",
+      "other"
+    ],
+    "user_role_enum": [
+      "admin",
+      "staff",
+      "officer"
+    ],
+    "verification_status_enum": [
+      "pending",
+      "verified"
+    ]
+  },
+  "functions": [
+    "armor",
+    "armor",
+    "crypt",
+    "dearmor",
+    "decrypt",
+    "decrypt_iv",
+    "digest",
+    "digest",
+    "encrypt",
+    "encrypt_iv",
+    "fips_mode",
+    "fn_trigger_set_timestamp",
+    "fn_update_messenger_timestamp",
+    "gen_random_bytes",
+    "gen_random_uuid",
+    "gen_salt",
+    "gen_salt",
+    "get_all_user_accounts",
+    "hmac",
+    "hmac",
+    "pgp_armor_headers",
+    "pgp_key_id",
+    "pgp_pub_decrypt",
+    "pgp_pub_decrypt",
+    "pgp_pub_decrypt",
+    "pgp_pub_decrypt_bytea",
+    "pgp_pub_decrypt_bytea",
+    "pgp_pub_decrypt_bytea",
+    "pgp_pub_encrypt",
+    "pgp_pub_encrypt",
+    "pgp_pub_encrypt_bytea",
+    "pgp_pub_encrypt_bytea",
+    "pgp_sym_decrypt",
+    "pgp_sym_decrypt",
+    "pgp_sym_decrypt_bytea",
+    "pgp_sym_decrypt_bytea",
+    "pgp_sym_encrypt",
+    "pgp_sym_encrypt",
+    "pgp_sym_encrypt_bytea",
+    "pgp_sym_encrypt_bytea",
+    "sp_complete_first_login",
+    "sp_complete_first_login",
+    "sp_complete_first_login",
+    "sp_create_user_profile",
+    "sp_get_account_management_data",
+    "sp_get_all_user_accounts",
+    "sp_get_announcement_details",
+    "sp_get_announcements_by_status",
+    "sp_get_announcements_by_statuses",
+    "sp_get_available_coops",
+    "sp_get_conversation",
+    "sp_get_mobile_by_userid",
+    "sp_get_sms_recipients",
+    "sp_get_staff_coops",
+    "sp_get_user_details",
+    "sp_login_user",
+    "sp_register_user",
+    "sp_save_announcement",
+    "sp_save_announcement",
+    "sp_send_message",
+    "sp_update_user_profile",
+    "trg_update_first_login_status",
+    "verify_pbkdf2_sha256"
+  ],
+  "procedures": [
+    "sp_create_admin_account",
+    "sp_create_officer_account",
+    "sp_create_staff_account",
+    "sp_deactivate_user",
+    "sp_update_account_details",
+    "sp_update_user_profile"
+  ]
+}
