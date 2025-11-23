@@ -12,7 +12,7 @@ from apps.core.services.otp_service import OTPService
 # This is the user login view
 def login_view(request):
     # If user is already logged in, redirect to their dashboard
-    if request.session.get('user_id'):
+    if request.session.get('user_id') and request.session.get('is_active', True):
         role = request.session.get('role')
         if role == 'admin':
             return redirect('dashboard:admin_dashboard')
@@ -82,6 +82,20 @@ def login_view(request):
         is_first_login = login_result['is_first_login']
 
         if status_code == 'SUCCESS':
+
+            try:
+                user_check = User.objects.get(pk=user_id)
+                
+                if not user_check.is_active:
+                    # User is deactivated - Block access immediately
+                    messages.error(request, 'Your account has been deactivated. Please contact the administrator.')
+                    return redirect('access_denied')
+                    
+            except User.DoesNotExist:
+                messages.error(request, 'Please check your credentials and try again.')
+                return render(request, 'login.html')
+            
+
             # Reset failed attempts on successful login
             request.session['failed_login_attempts'] = 0
             request.session['login_lockout_until'] = None

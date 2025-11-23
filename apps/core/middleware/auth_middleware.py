@@ -1,18 +1,16 @@
-"""
-Authentication Middleware
-Protects all URLs except public ones from unauthorized access
-"""
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.urls import resolve
 from django.http import HttpResponseRedirect, JsonResponse
-
+from django.apps import apps
+from django.core.exceptions import ObjectDoesNotExist
 
 class AuthenticationMiddleware:
     """
     Middleware to ensure users are authenticated before accessing protected pages.
     Shows access denied page for unauthenticated users.
     Prevents manual URL typing by keeping users on their current page.
+    Checks strictly for Account Deactivation status.
     """
     
     # URLs that don't require authentication
@@ -65,6 +63,9 @@ class AuthenticationMiddleware:
         # Check session validity and freshness
         user_id = request.session.get('user_id')
         
+        # ---------------------------------------------------------
+        # 1. SESSION FRESHNESS CHECK
+        # ---------------------------------------------------------
         if request.session.session_key and user_id:
             # Check if session has last_activity timestamp
             last_activity = request.session.get('last_activity')
@@ -72,7 +73,6 @@ class AuthenticationMiddleware:
             
             # Validate session freshness
             if last_activity:
-                # Check if session has been inactive for more than SESSION_COOKIE_AGE
                 from django.conf import settings
                 session_age = getattr(settings, 'SESSION_COOKIE_AGE', 900)
                 
@@ -84,8 +84,6 @@ class AuthenticationMiddleware:
                         return redirect('login')
             else:
                 # No last_activity means this is a stale/restored session
-                # Browser might have restored the cookie after close
-                # Force re-authentication
                 request.session.flush()
                 if request.path_info not in ['/login/', '/', '/about/', '/download/']:
                     messages.warning(request, 'Your session has expired. Please log in again.')
@@ -93,6 +91,29 @@ class AuthenticationMiddleware:
             
             # Update last activity timestamp
             request.session['last_activity'] = current_time
+
+            # ---------------------------------------------------------
+            # 2. ACCOUNT STATUS CHECK (NEW LOGIC)
+            # ---------------------------------------------------------
+            try:
+                UserModel = apps.get_model('users', 'Users') 
+                user = UserModel.objects.get(pk=user_id)
+
+                if not user.is_active: 
+                    request.session.flush()
+                    messages.error(request, 'Your account has been deactivated. Access denied.')
+                    return redirect('access_denied')
+            
+            except (LookupError, ImportError):
+                pass
+                
+            except ObjectDoesNotExist: 
+                request.session.flush()
+                return redirect('login')
+
+        # ---------------------------------------------------------
+        # 3. URL ACCESS CONTROL
+        # ---------------------------------------------------------
         
         # Get the current URL name
         try:
@@ -145,7 +166,7 @@ class AuthenticationMiddleware:
             full_url_name in self.PENDING_VERIFICATION_URLS
         )
         
-        # Check if user is authenticated
+        # Check if user is authenticated (variable might have been cleared by flush above)
         user_id = request.session.get('user_id')
         pending_verification_user_id = request.session.get('pending_verification_user_id')
         
