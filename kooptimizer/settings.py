@@ -159,10 +159,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #  SESSION SECURITY SETTINGS
 # ====================================================================
 
-# Session expires when browser closes (unless user explicitly logs out)
+# Session expires when browser/tab closes (session cookie, not persistent)
+# This provides automatic logout on browser close without unreliable beforeunload detection
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Session timeout after 15 minutes (900 seconds) of inactivity
+# Shorter timeout to ensure sessions don't persist long after browser close
 SESSION_COOKIE_AGE = 900  # 15 minutes in seconds
 
 # Update session on every request (resets timeout on activity)
@@ -172,6 +174,10 @@ SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)  # Enable in production with HTTPS
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
 SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+
+# Force session expiration on browser close by not persisting cookies
+SESSION_COOKIE_NAME = 'sessionid'  # Default name
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Use database sessions
 CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)  # Enable in production with HTTPS
 
 # HTTPS/SSL Settings (for production)

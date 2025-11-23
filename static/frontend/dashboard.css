@@ -71,6 +71,7 @@ a { text-decoration: none; }
     flex-direction: column !important;
     gap: 5px;
     flex-shrink: 0;
+    z-index: 100000;
 }
 
 .nav-section-title {

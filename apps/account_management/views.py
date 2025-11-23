@@ -11,20 +11,29 @@ import requests
 from django.template.loader import render_to_string
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.db import connection, DatabaseError
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from .models import Cooperatives, Users, Admin, Staff, Officers
 from django.views.decorators.http import require_http_methods
 from psycopg2.extras import Json
 
 @ensure_csrf_cookie
 def account_management(request):
+    # Get filter parameter from query string (default: 'active')
+    account_filter = request.GET.get('filter', 'active')
+    
+    # Validate filter parameter
+    if account_filter not in ['active', 'deactivated', 'all']:
+        account_filter = 'active'
+    
     staff_list = []
     officer_list = []
     admin_list = []
+    deactivated_list = []
 
     with connection.cursor() as cursor:
         try:
-            cursor.callproc('sp_get_all_user_accounts')
+            # Call stored procedure with filter parameter
+            cursor.execute("SELECT * FROM sp_get_all_user_accounts(%s)", [account_filter])
             results = cursor.fetchall()
             
             for row in results:
@@ -37,14 +46,19 @@ def account_management(request):
                     'position': row[6],
                     'coop_name': row[7],
                     'account_type': row[8],
+                    'is_active': row[9],
                 }
 
-                if row[8] == 'Staff':
-                    staff_list.append(user_data)
-                elif row[8] == 'Officer':
-                    officer_list.append(user_data)
-                elif row[8] == 'Admin':
-                    admin_list.append(user_data)
+                # Separate active and deactivated accounts
+                if row[9]:  # is_active = true
+                    if row[8] == 'Staff':
+                        staff_list.append(user_data)
+                    elif row[8] == 'Officer':
+                        officer_list.append(user_data)
+                    elif row[8] == 'Admin':
+                        admin_list.append(user_data)
+                else:  # is_active = false
+                    deactivated_list.append(user_data)
         
         except DatabaseError as e:
             print(f"DatabaseError: {e}") 
@@ -55,7 +69,9 @@ def account_management(request):
         'staffs': staff_list,
         'officers': officer_list,
         'admins': admin_list,
+        'deactivated_accounts': deactivated_list,
         'cooperatives': cooperatives_list,
+        'current_filter': account_filter,
     }
     
     return render(request, 'account_management/account_management.html', context)
@@ -274,7 +290,18 @@ def update_user_view(request, user_id):
             staff_coop_ids = data.get('coop', [])
 
         with connection.cursor() as cursor:
-            cursor.callproc('sp_update_user_profile', [
+            cursor.execute("""
+                CALL sp_update_user_profile(
+                    %s::integer,
+                    %s::varchar,
+                    %s::varchar,
+                    %s::varchar,
+                    %s::varchar,
+                    %s::varchar,
+                    %s::integer,
+                    %s::integer[]
+                )
+            """, [
                 user_id,
                 data.get('name'),
                 data.get('email'),
@@ -296,9 +323,93 @@ def update_user_view(request, user_id):
 def deactivate_user_view(request, user_id):
     try:
         with connection.cursor() as cursor:
-            cursor.callproc('sp_deactivate_user', [user_id])
+            cursor.execute("CALL sp_deactivate_user(%s::integer)", [user_id])
         
         return JsonResponse({'status': 'success', 'message': 'User deactivated successfully.'})
     except Exception as e:
         print(f"Error deactivating user: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def verify_password_view(request):
+    """
+    Verify the current user's password for sensitive operations like deactivating accounts.
+    """
+    try:
+        data = json.loads(request.body)
+        password = data.get('password')
+        
+        if not password:
+            return JsonResponse({'valid': False, 'message': 'Password is required.'}, status=400)
+        
+        # Get current user's ID from session
+        user_id = request.session.get('user_id')
+        
+        if not user_id:
+            return JsonResponse({'valid': False, 'message': 'User not authenticated.'}, status=401)
+        
+        # Get user's password hash from database
+        try:
+            user = Users.objects.get(user_id=user_id)
+            is_valid = check_password(password, user.password_hash)
+            
+            return JsonResponse({'valid': is_valid})
+            
+        except Users.DoesNotExist:
+            return JsonResponse({'valid': False, 'message': 'User not found.'}, status=404)
+            
+    except Exception as e:
+        print(f"Error verifying password: {e}")
+        return JsonResponse({'valid': False, 'message': str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def reactivate_user_view(request, user_id):
+    """
+    Reactivate a deactivated user account.
+    Only admin users can reactivate accounts, and password verification is required.
+    """
+    try:
+        user_role = request.session.get('role')
+        if user_role != 'admin':
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Only administrators can reactivate user accounts.'
+            }, status=403)
+
+        # Require password in POST body
+        try:
+            data = json.loads(request.body)
+            password = data.get('password')
+        except Exception:
+            password = None
+
+        if not password:
+            return JsonResponse({'status': 'error', 'message': 'Password is required.'}, status=400)
+
+        # Get current user's ID from session
+        current_user_id = request.session.get('user_id')
+        if not current_user_id:
+            return JsonResponse({'status': 'error', 'message': 'User not authenticated.'}, status=401)
+
+        # Get user's password hash from database
+        try:
+            user = Users.objects.get(user_id=current_user_id)
+            is_valid = check_password(password, user.password_hash)
+        except Users.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'User not found.'}, status=404)
+
+        if not is_valid:
+            return JsonResponse({'status': 'error', 'message': 'Incorrect password.'}, status=403)
+
+        # Call the stored procedure to reactivate user
+        with connection.cursor() as cursor:
+            cursor.execute("CALL sp_reactivate_user(%s::integer)", [user_id])
+
+        return JsonResponse({'status': 'success', 'message': 'User reactivated successfully.'})
+    except Exception as e:
+        print(f"Error reactivating user: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
