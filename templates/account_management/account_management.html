@@ -59,6 +59,10 @@
         border-radius: 3px;
     }
 
+    .ts-dropdown .option.disabled {
+        display: none !important;
+    }
+
     .account-header {
         display: flex;
         flex-wrap: wrap; 
@@ -69,6 +73,46 @@
     
     .table-controls {
         max-width: 100%; 
+    }
+    .table-wrapper {
+    overflow-x: auto; /* Enables horizontal scroll if table is too wide */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+    margin-bottom: 20px;
+    border: 1px solid #eee; /* Optional frame */
+    border-radius: 8px;
+    }
+
+    /* Force the table to keep its width */
+    .table-wrapper table {
+        width: 100%;
+        min-width: 1200px; /* Forces the table to be wide enough for data */
+        border-collapse: collapse;
+    }
+
+    /* Styling for header and cells */
+    .table-wrapper th, 
+    .table-wrapper td {
+        padding: 12px 15px;
+        white-space: nowrap; /* PREVENTS TEXT WRAPPING/TRUNCATION */
+        text-align: left;
+        font-size: 0.9rem;
+    }
+
+    /* Optional: Sticky First Column (The "Name" column) */
+    /* Assuming column 1 is ID and column 2 is Name */
+    .table-wrapper th:nth-child(2),
+    .table-wrapper td:nth-child(2) {
+        position: sticky;
+        left: 0;
+        background-color: #fff; /* Match your table bg */
+        z-index: 10;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.05); /* Subtle shadow to show separation */
+    }
+
+    /* Ensure header sticky background matches header color */
+    .table-wrapper thead th:nth-child(2) {
+        background-color: #8B0000; /* Match your existing header red */
+        color: white;
     }
 </style>
 {% endblock %}
@@ -337,7 +381,12 @@
                     <select id="coop-assigned" name="coop_assigned" required>
                         <option value="" disabled selected>Choose Cooperatives</option>
                         {% for coop in cooperatives %}
-                            <option value="{{ coop.coop_id }}">{{ coop.cooperative_name }}</option>
+                            <option 
+                                value="{{ coop.coop_id }}" 
+                                data-owner-id="{{ coop.staff.user.user_id|default_if_none:'' }}"
+                            >
+                                {{ coop.cooperative_name }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -539,7 +588,6 @@
         const filter = urlParams.get('filter');
         const tab = urlParams.get('tab');
         
-        // --- FIX START: Set default tab based on User Role ---
         let defaultTab = 'staffs'; // Default for Admin
         
         if (USER_ROLE === 'staff') {
@@ -632,37 +680,93 @@
         setupEventListeners(elements);
     }
 
-    function collectInitialData() {
-        allUsersData = [];
-        const staffTableBody = document.getElementById('staff-table-body');
-        const officerTableBody = document.getElementById('officer-table-body');
-        const adminTableBody = document.getElementById('admin-table-body');
-        const tables = [
-            { body: staffTableBody, type: 'Staff', indices: [1, 2, 3, 4], roleIndex: -1, coopIndex: 4 },
-            { body: officerTableBody, type: 'Officer', indices: [1, 2, 3, 4, 5], roleIndex: 5, coopIndex: 2 },
-            { body: adminTableBody, type: 'Admin', indices: [1, 2, 3, 4], roleIndex: 4, coopIndex: -1 }
-        ];
-        tables.forEach(table => {
-            if (table.body) {
-                table.body.querySelectorAll('tr').forEach(row => {
-                    if (row.cells.length <= 1) return;
-                    const cells = Array.from(row.cells).map(cell => cell.textContent);
-                    allUsersData.push({
-                        user_id: row.dataset.userId,
-                        profile_id: row.dataset.profileId,
-                        name: cells[1],
-                        email: table.type === 'Officer' ? cells[3] : cells[2],
-                        contact: table.type === 'Officer' ? cells[4] : cells[3],
-                        role: table.roleIndex !== -1 ? cells[table.roleIndex] : '-',
-                        coop: table.coopIndex !== -1 ? cells[table.coopIndex] : '-',
-                        type: table.type
-                    });
+function collectInitialData() {
+    allUsersData = [];
+    const staffTableBody = document.getElementById('staff-table-body');
+    const officerTableBody = document.getElementById('officer-table-body');
+    const adminTableBody = document.getElementById('admin-table-body');
+
+    /* INDEX MAPPING GUIDE (Based on your screenshot errors):
+       Staff Table usually: #, Name, Position, Email, Contact, Coop
+    */
+
+    const tables = [
+        // STAFF MAPPING
+        { 
+            body: staffTableBody, 
+            type: 'Staff', 
+            // Indices: Name(1), Position(2), Email(3), Contact(4), Coop(5)
+            indices: [1, 2, 3, 4, 5], 
+            nameIndex: 1,
+            positionIndex: 2, // Capture Position
+            emailIndex: 3,    // Capture Email
+            contactIndex: 4,  // Capture Contact
+            coopIndex: 5      // Capture Coop
+        },
+        // OFFICER MAPPING
+        { 
+            body: officerTableBody, 
+            type: 'Officer', 
+            // Indices: Name(1), Coop(2), Email(3), Contact(4), Position(5)
+            indices: [1, 2, 3, 4, 5], 
+            nameIndex: 1,
+            positionIndex: 5, // Position is usually last for officers
+            emailIndex: 3,
+            contactIndex: 4,
+            coopIndex: 2      // Coop is usually 2nd for officers
+        },
+        // ADMIN MAPPING
+        { 
+            body: adminTableBody, 
+            type: 'Admin', 
+            // Indices: Name(1), Email(2), Contact(3), Position(4)
+            indices: [1, 2, 3, 4], 
+            nameIndex: 1,
+            positionIndex: 4,
+            emailIndex: 2,
+            contactIndex: 3,
+            coopIndex: -1 // Admin has no coop column
+        }
+    ];
+
+    tables.forEach(table => {
+        if (table.body) {
+            table.body.querySelectorAll('tr').forEach(row => {
+                if (row.cells.length <= 1) return;
+                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                
+                // DATA EXTRACTION
+                const nameText = cells[table.nameIndex] || '';
+                const positionText = cells[table.positionIndex] || '-';
+                const emailText = cells[table.emailIndex] || '';
+                const contactText = cells[table.contactIndex] || '';
+                
+                // Handle Coop Text (with Admin fallback)
+                let coopText = '-';
+                if (table.coopIndex !== -1) {
+                    coopText = cells[table.coopIndex];
+                } else {
+                    coopText = 'System-Wide'; // Improved Admin UX
+                }
+
+                allUsersData.push({
+                    user_id: row.dataset.userId,
+                    profile_id: row.dataset.profileId,
+                    name: nameText,
+                    email: emailText,
+                    contact: contactText,
+                    role: positionText,
+                    coop: coopText,
+                    type: table.type
                 });
-            }
-        });
-        const allUserCountSpan = document.getElementById('all-user-count');
-        if (allUserCountSpan) allUserCountSpan.textContent = allUsersData.length;
-    }
+            });
+        }
+    });
+    
+    // Update the counter
+    const allUserCountSpan = document.getElementById('all-user-count');
+    if (allUserCountSpan) allUserCountSpan.textContent = allUsersData.length;
+}
 
     function renderAllUsersTable(data) {
         const allUsersTableBody = document.getElementById('all-users-table-body');
@@ -835,12 +939,33 @@
         const isOfficer = accountType === 'officer'; 
         const isStaff = accountType === 'staff';
         
+        const currentUserId = el.formEditUserId.value;
+
         el.onboardForm.setAttribute('data-account-type', accountType);
         
         // Handle Tom Select Initialization
         if (isStaff || isOfficer) {
             el.coopGroup.style.display = 'block';
             
+            const options = el.coopSelectEl.querySelectorAll('option');
+            options.forEach(opt => {
+                // Reset first: Enable everything
+                opt.disabled = false;
+
+                // Only apply strict filtering for STAFF (Officers can usually join any coop)
+                if (isStaff) {
+                    const ownerId = opt.getAttribute('data-owner-id');
+                    
+                    // If coop has an owner...
+                    if (ownerId && ownerId !== 'None' && ownerId !== '') {
+                        // If adding new user OR editing a user who is NOT the owner
+                        // We disable the option (CSS will hide it)
+                        if (ownerId != currentUserId) {
+                            opt.disabled = true;
+                        }
+                    }
+                }
+            });
             // Destroy existing instance to re-initialize
             if (coopTomSelect) {
                 coopTomSelect.destroy();

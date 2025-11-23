@@ -101,6 +101,17 @@ def send_credentials_view(request):
                 coop_name_for_email = Cooperatives.objects.get(pk=officer_coop_id).cooperative_name
             elif role == 'staff':
                 staff_coop_ids = data.get('coop', [])
+                taken_coops = Cooperatives.objects.filter(
+                    coop_id__in=staff_coop_ids, 
+                    staff__isnull=False  # Check if a Staff relation exists
+                )
+                
+                if taken_coops.exists():
+                    names = ", ".join([c.cooperative_name for c in taken_coops])
+                    return JsonResponse({
+                        'status': 'error', 
+                        'message': f"Cannot assign: {names} are already owned by another staff member."
+                    }, status=400)
                 if staff_coop_ids:
                     coop_names = Cooperatives.objects.filter(pk__in=staff_coop_ids).values_list('cooperative_name', flat=True)
                     coop_name_for_email = ", ".join(coop_names)
@@ -288,7 +299,19 @@ def update_user_view(request, user_id):
             officer_coop_id = data.get('coop')
         elif role == 'staff':
             staff_coop_ids = data.get('coop', [])
+            conflicting_coops = Cooperatives.objects.filter(
+                coop_id__in=staff_coop_ids,
+                staff__isnull=False
+            ).exclude(
+                staff__user_id=user_id # IMPORTANT: Ignore coops already owned by THIS user
+            )
 
+            if conflicting_coops.exists():
+                names = ", ".join([c.cooperative_name for c in conflicting_coops])
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f"Cannot assign: {names} are already managed by another staff."
+                }, status=400)
         with connection.cursor() as cursor:
             cursor.execute("""
                 CALL sp_update_user_profile(

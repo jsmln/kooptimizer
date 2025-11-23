@@ -74,7 +74,7 @@ class AuthenticationMiddleware:
             # Validate session freshness
             if last_activity:
                 from django.conf import settings
-                session_age = getattr(settings, 'SESSION_COOKIE_AGE', 900)
+                session_age = getattr(settings, 'SESSION_COOKIE_AGE', 900) #15 minutes
                 
                 if (current_time - last_activity) > session_age:
                     # Session expired due to inactivity - clear it
