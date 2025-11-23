@@ -62,6 +62,38 @@ class AuthenticationMiddleware:
         self.get_response = get_response
     
     def __call__(self, request):
+        # Check session validity and freshness
+        user_id = request.session.get('user_id')
+        
+        if request.session.session_key and user_id:
+            # Check if session has last_activity timestamp
+            last_activity = request.session.get('last_activity')
+            current_time = __import__('time').time()
+            
+            # Validate session freshness
+            if last_activity:
+                # Check if session has been inactive for more than SESSION_COOKIE_AGE
+                from django.conf import settings
+                session_age = getattr(settings, 'SESSION_COOKIE_AGE', 900)
+                
+                if (current_time - last_activity) > session_age:
+                    # Session expired due to inactivity - clear it
+                    request.session.flush()
+                    if request.path_info not in ['/login/', '/', '/about/', '/download/']:
+                        messages.warning(request, 'Your session has expired due to inactivity. Please log in again.')
+                        return redirect('login')
+            else:
+                # No last_activity means this is a stale/restored session
+                # Browser might have restored the cookie after close
+                # Force re-authentication
+                request.session.flush()
+                if request.path_info not in ['/login/', '/', '/about/', '/download/']:
+                    messages.warning(request, 'Your session has expired. Please log in again.')
+                    return redirect('login')
+            
+            # Update last activity timestamp
+            request.session['last_activity'] = current_time
+        
         # Get the current URL name
         try:
             current_url = resolve(request.path_info).url_name
@@ -139,8 +171,41 @@ class AuthenticationMiddleware:
                     'message': 'Authentication required. Please log in to access this resource.'
                 }, status=403)
             
-            # For regular pages, show access denied page
-            return render(request, 'access_denied.html', status=403)
+            # Check if there's a stored current page in session
+            # This helps detect if session just expired vs. never existed
+            last_page = request.session.get('current_page')
+            
+            # If trying to access the same page they were just on (refresh scenario)
+            # This means session might have expired naturally or hard refresh cleared cookie
+            if last_page and request.path_info == last_page:
+                # For page refresh with expired session, redirect to login
+                messages.warning(request, 'Your session has expired. Please log in again.')
+                return redirect('login')
+            
+            # If no session/last_page (never logged in or on public page)
+            # User is trying to access protected page directly
+            if not last_page:
+                # Check referer to see if coming from public page
+                referer = request.META.get('HTTP_REFERER', '')
+                base_url = f"{request.scheme}://{request.get_host()}/"
+                
+                # If no referer (typed URL) or referer is from same site (navigating from public page)
+                # Redirect to access denied page
+                if not referer or referer.startswith(base_url):
+                    # Add message before redirecting
+                    if not messages.get_messages(request):
+                        messages.warning(request, 'Access denied. Please log in to access this page.')
+                    return redirect('access_denied')
+                else:
+                    # External referer - redirect to login
+                    messages.warning(request, 'Please log in to access this page.')
+                    return redirect('login')
+            
+            # If there is a last_page but trying to access different URL (URL manipulation while logged in)
+            # Redirect back to last known page to prevent unauthorized access
+            if last_page and request.path_info != last_page:
+                messages.warning(request, 'Please use the navigation menu to access pages.')
+                return HttpResponseRedirect(last_page)
         
         # If user IS logged in and accessing file/attachment endpoints
         # Always allow these through without redirection (for <img> tags, downloads, etc.)
@@ -168,47 +233,17 @@ class AuthenticationMiddleware:
         
         # If user IS logged in on regular pages (not API)
         if user_id and not is_public_prefix and not is_public_url and not is_api_endpoint:
-            # Check if this is a direct URL access (typed in browser)
-            referer = request.META.get('HTTP_REFERER', '')
-            is_direct_access = not referer or not referer.startswith(request.build_absolute_uri('/'))
-            
-            # Get the last valid page from session
-            last_page = request.session.get('current_page')
-            
-            # Only redirect if ALL these conditions are met:
-            # 1. No referer (direct access)
-            # 2. We have a previously stored page
-            # 3. The new page is different from the stored page
-            # 4. There IS a referer but it's external (to prevent hijacking)
-            # 5. NOT the first access in this session (allow initial navigation)
-            
-            # Check if this is likely the first meaningful navigation in the session
-            # (dashboard pages are often the first page after login)
-            is_first_navigation = last_page is None or last_page == '/dashboard/' or 'dashboard' in last_page
-            
-            # If user has no referer but is making their first navigation, allow it
-            # This handles PWA launches and direct bookmarks
-            if is_direct_access and is_first_navigation:
-                # Allow and update current page
-                request.session['current_page'] = request.path_info
-            elif is_direct_access and last_page and last_page != request.path_info and referer == '':
-                # Only block if there's truly NO referer at all (manual URL typing)
-                # But still allow if coming from a bookmark or PWA
-                # Check if this might be a legitimate navigation (has session activity)
-                session_age = request.session.get('_session_activity_count', 0)
-                request.session['_session_activity_count'] = session_age + 1
-                
-                # If session is new (< 3 requests), likely PWA or bookmark - allow it
-                if session_age < 3:
-                    request.session['current_page'] = request.path_info
-                else:
-                    # Established session with manual URL typing - redirect
-                    messages.warning(request, 'Please use the navigation menu to access pages.')
-                    return HttpResponseRedirect(last_page)
-            else:
-                # Normal navigation with referer - update current page
-                request.session['current_page'] = request.path_info
+            # Allow logged-in users to access any page directly (no referer check)
+            # Just update current_page for navigation tracking
+            request.session['current_page'] = request.path_info
         
         # Continue with request
         response = self.get_response(request)
+        
+        # Add cache control headers to prevent caching of authenticated pages
+        if user_id and not is_public_prefix and not is_public_url:
+            response['Cache-Control'] = 'no-cache, no-store, must-revalidate, private, max-age=0'
+            response['Pragma'] = 'no-cache'
+            response['Expires'] = '0'
+        
         return response

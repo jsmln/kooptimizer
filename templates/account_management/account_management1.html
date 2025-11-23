@@ -57,7 +57,6 @@
             <button class="tab-btn" data-target="admins">Admins</button>
             <button class="tab-btn active" data-target="staffs">Staffs</button>
             <button class="tab-btn" data-target="officers">Officers</button>
-            <button class="tab-btn" data-target="deactivated">Deactivated</button>
             {% elif request.session.role == 'staff' %}
             <button class="tab-btn active" data-target="officers">Officers</button>
             {% endif %}
@@ -82,9 +81,6 @@
         <div class="add-section hidden" id="officer-add-section">
             <p class="total-label">Total Officers: <span class="count" id="officer-count">{{ officers|length }}</span></p>
             <button class="add-btn" data-account-type="officer" id="onboard-officer-btn"><i class="bi bi-plus-circle"></i> Add</button> 
-        </div>
-        <div class="add-section hidden" id="deactivated-add-section">
-            <p class="total-label">Total Deactivated: <span class="count" id="deactivated-count">{{ deactivated_accounts|length }}</span></p>
         </div>
         {% elif request.session.role == 'staff' %}
         <div class="add-section" id="officer-add-section">
@@ -227,83 +223,6 @@
             <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
         </div>
     </div>
-
-    {% if request.session.role == 'admin' %}
-    <!-- DEACTIVATED ACCOUNTS TABLE (Admin Only) -->
-    <div class="table-section" id="deactivated">
-        <h2>Deactivated User Accounts</h2>
-        <div class="table-wrapper"> 
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Full Name</th>
-                        <th>Email Address</th>
-                        <th>Contact Number</th>
-                        <th>Role/Perm.</th>
-                        <th>Cooperative</th>
-                        <th>Type</th>
-                    </tr>
-                </thead>
-                <tbody id="deactivated-table-body">
-                    {% for user in deactivated_accounts %}
-                    <tr data-type="{{ user.account_type|lower }}" data-user-id="{{ user.user_id }}" data-profile-id="{{ user.profile_id }}">
-                        <td>{{ forloop.counter }}</td>
-                        <td>{{ user.fullname }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.contact }}</td>
-                        <td>{{ user.position }}</td>
-                        <td>{{ user.coop_name }}</td>
-                        <td>{{ user.account_type }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="7" style="text-align:center;">No deactivated accounts found.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="action-buttons">
-            <button class="reactivate-btn"><i class="bi bi-arrow-counterclockwise"></i> Reactivate</button>
-        </div>
-<!-- REACTIVATE PASSWORD VERIFICATION MODAL (Step 1 of Reactivation) -->
-<div class="modal-overlay hidden" id="reactivate-password-verify-modal">
-    <div class="confirm-modal-container">
-        <h3>Verify Your Password</h3>
-        <p>Please enter your password to reactivate this account.</p>
-        <div style="margin: 20px 0;">
-            <input 
-                type="password" 
-                id="reactivate-password-verify-input" 
-                placeholder="Enter your password" 
-                class="form-input"
-                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"
-            >
-            <p id="reactivate-password-verify-error" style="color: #dc3545; margin-top: 10px; display: none;"></p>
-        </div>
-        <div class="confirm-actions">
-            <button id="reactivate-password-verify-confirm-btn" class="modal-button primary-btn">Verify Password</button>
-            <button id="reactivate-password-verify-cancel-btn" class="modal-button secondary-btn">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<!-- REACTIVATE CONFIRMATION MODAL (Step 2 after password verified) -->
-<div class="modal-overlay hidden" id="reactivate-confirm-modal">
-    <div class="confirm-modal-container">
-        <h3>Reactivate Account</h3>
-        <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
-            <p style="color: #155724; margin: 0;">✓ Password Verified</p>
-        </div>
-        <p id="reactivate-confirm-text">Are you sure you want to reactivate this account?</p>
-        <div id="reactivate-account-details" style="margin: 10px 0; color: #333; font-size: 0.98em;"></div>
-        <div class="confirm-actions">
-            <button id="reactivate-confirm-btn" class="modal-button primary-btn">Reactivate</button>
-            <button id="reactivate-cancel-btn" class="modal-button secondary-btn">Cancel</button>
-        </div>
-    </div>
-</div>
-    </div>
-    {% endif %}
 </div>
 
 <!-- ONBOARD/EDIT MODAL -->
@@ -425,38 +344,13 @@
   </div>
 </div>
 
-<!-- PASSWORD VERIFICATION MODAL (Step 1 of Deactivation) -->
-<div class="modal-overlay hidden" id="password-verify-modal">
-  <div class="confirm-modal-container">
-    <h3>Verify Your Password</h3>
-    <p>Please enter your password to confirm this action.</p>
-    <div style="margin: 20px 0;">
-      <input 
-        type="password" 
-        id="password-verify-input" 
-        placeholder="Enter your password" 
-        class="form-input"
-        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"
-      >
-      <p id="password-verify-error" style="color: #dc3545; margin-top: 10px; display: none;"></p>
-    </div>
-    <div class="confirm-actions">
-      <button id="password-verify-confirm-btn" class="modal-button primary-btn">Verify Password</button>
-      <button id="password-verify-cancel-btn" class="modal-button secondary-btn">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- DEACTIVATE CONFIRMATION MODAL (Step 2 after password verified) -->
+<!-- DEACTIVATE CONFIRMATION MODAL -->
 <div class="modal-overlay hidden" id="deactivate-confirm-modal">
   <div class="confirm-modal-container">
     <h3>Deactivate Account</h3>
-    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
-      <p style="color: #155724; margin: 0;">✓ Password Verified</p>
-    </div>
     <p id="deactivate-confirm-text">Are you sure you want to deactivate this account?</p>
     <div class="confirm-actions">
-      <button id="deactivate-confirm-btn" class="modal-button primary-btn">Deactivate</button>
+      <button id="deactivate-confirm-btn" class="modal-button primary-btn">Continue</button>
       <button id="deactivate-cancel-btn" class="modal-button secondary-btn">Cancel</button>
     </div>
   </div>
@@ -552,67 +446,6 @@
     function initialize() {
         console.log('Initializing...');
         
-        // Check URL parameters and activate appropriate tab
-        const urlParams = new URLSearchParams(window.location.search);
-        const filter = urlParams.get('filter');
-        const tab = urlParams.get('tab');
-        
-        // Determine which tab to activate
-        let activeTab = tab || 'staffs'; // default to staffs if no tab specified
-        
-        // If filter is specified but no tab, infer the tab from filter
-        if (!tab && filter) {
-            if (filter === 'deactivated') {
-                activeTab = 'deactivated';
-            } else if (filter === 'all') {
-                activeTab = 'all-users';
-            }
-        }
-        
-        // Activate the appropriate tab
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            if (btn.dataset.target === activeTab) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-        
-        // Show the appropriate section
-        document.querySelectorAll('.table-section').forEach(section => {
-            if (section.id === activeTab) {
-                section.classList.add('active');
-            } else {
-                section.classList.remove('active');
-            }
-        });
-        
-        // Show appropriate add section based on active tab and permissions
-        document.querySelectorAll('.add-section').forEach(s => s.classList.add('hidden'));
-        
-        if (activeTab === 'staffs' && hasAccessToAccountType('staff')) {
-            const staffAddSection = document.getElementById('staff-add-section');
-            if (staffAddSection) staffAddSection.classList.remove('hidden');
-        } else if (activeTab === 'officers' && hasAccessToAccountType('officer')) {
-            const officerAddSection = document.getElementById('officer-add-section');
-            if (officerAddSection) officerAddSection.classList.remove('hidden');
-        } else if (activeTab === 'admins' && hasAccessToAccountType('admin')) {
-            const adminAddSection = document.getElementById('admin-add-section');
-            if (adminAddSection) adminAddSection.classList.remove('hidden');
-        } else if (activeTab === 'deactivated' && USER_ROLE === 'admin') {
-            const deactivatedAddSection = document.getElementById('deactivated-add-section');
-            if (deactivatedAddSection) deactivatedAddSection.classList.remove('hidden');
-        } else if (activeTab === 'all-users' && USER_ROLE === 'admin') {
-            const allUsersSection = document.getElementById('all-users-section');
-            if (allUsersSection) allUsersSection.classList.remove('hidden');
-        }
-        
-        // Handle search input visibility
-        const searchInput = document.getElementById('user-search');
-        if (searchInput && USER_ROLE === 'admin') {
-            searchInput.style.display = activeTab === 'all-users' ? 'block' : 'none';
-        }
-        
         // Get all DOM elements
         const elements = {
             onboardStaffBtn: document.getElementById('onboard-staff-btn'),
@@ -622,7 +455,6 @@
             onboardForm: document.getElementById('onboard-form'),
             confirmModal: document.getElementById('confirm-modal'),
             sendCredModal: document.getElementById('send-credentials-modal'),
-            passwordVerifyModal: document.getElementById('password-verify-modal'),
             deactivateModal: document.getElementById('deactivate-confirm-modal'),
             cancelEditModal: document.getElementById('cancel-edit-modal'),
             staffTableBody: document.getElementById('staff-table-body'),
@@ -789,32 +621,7 @@
             btn.addEventListener('click', () => handleDeleteClick(el));
         });
         
-        // Reactivate button (for deactivated accounts)
-        document.querySelectorAll('.reactivate-btn').forEach(btn => {
-            btn.addEventListener('click', () => handleReactivateClick(el));
-        });
-        
-        // Deactivate modal buttons - TWO STEP FLOW
-        // Step 1: Password verification
-        document.getElementById('password-verify-cancel-btn').addEventListener('click', () => {
-            closeModal(el.passwordVerifyModal);
-            document.getElementById('password-verify-input').value = '';
-            document.getElementById('password-verify-error').style.display = 'none';
-        });
-        
-        document.getElementById('password-verify-confirm-btn').addEventListener('click', () => {
-            handlePasswordVerification(el);
-        });
-        
-        // Allow Enter key to verify password
-        document.getElementById('password-verify-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handlePasswordVerification(el);
-            }
-        });
-        
-        // Step 2: Final deactivation confirmation (shown after password verified)
+        // Deactivate modal buttons
         document.getElementById('deactivate-cancel-btn').addEventListener('click', () => closeModal(el.deactivateModal));
         document.getElementById('deactivate-confirm-btn').addEventListener('click', () => handleDeactivateConfirm(el));
         
@@ -841,17 +648,46 @@
     function handleTabClick(btn) {
         const target = btn.dataset.target;
         
-        // Determine filter parameter based on tab
-        let filterParam = 'active'; // default
-        if (target === 'deactivated') {
-            filterParam = 'deactivated';
-        } else if (target === 'all-users') {
-            filterParam = 'all';
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".table-section").forEach(t => {
+            t.classList.remove("active");
+            const actionButtons = t.querySelector('.action-buttons');
+            if (actionButtons) actionButtons.style.display = 'none';
+        });
+        document.querySelectorAll(".add-section").forEach(s => s.classList.add("hidden"));
+        document.querySelectorAll('tbody tr.selected').forEach(row => row.classList.remove('selected'));
+
+        btn.classList.add("active");
+        const targetSection = document.getElementById(target);
+        if (targetSection) {
+            targetSection.classList.add("active");
         }
         
-        // Reload page with filter parameter to get fresh data from database
-        // This ensures changes (like deactivation/reactivation) are immediately reflected
-        window.location.href = `?filter=${filterParam}&tab=${target}`;
+        const searchInput = document.getElementById('user-search');
+        if (searchInput) {
+            const isSearchVisible = target === 'all-users' && USER_ROLE === 'admin';
+            searchInput.style.display = isSearchVisible ? 'block' : 'none';
+        }
+        
+        // Show appropriate add section based on permissions
+        if (target === 'staffs' && hasAccessToAccountType('staff')) {
+            const staffAddSection = document.getElementById('staff-add-section');
+            if (staffAddSection) staffAddSection.classList.remove('hidden');
+        } else if (target === 'officers' && hasAccessToAccountType('officer')) {
+            const officerAddSection = document.getElementById('officer-add-section');
+            if (officerAddSection) officerAddSection.classList.remove('hidden');
+        } else if (target === 'admins' && hasAccessToAccountType('admin')) {
+            const adminAddSection = document.getElementById('admin-add-section');
+            if (adminAddSection) adminAddSection.classList.remove('hidden');
+        } else if (target === 'all-users' && USER_ROLE === 'admin') {
+            const allUsersSection = document.getElementById('all-users-section');
+            if (allUsersSection) {
+                allUsersSection.classList.remove('hidden');
+                renderAllUsersTable(allUsersData);
+            }
+        }
+        
+        selectedRowData.element = null;
     }
 
     function handleSearch(e) {
@@ -1097,172 +933,9 @@
             return;
         }
         
-        // STEP 1: Show password verification modal first
-        // Clear any previous input and errors
-        document.getElementById('password-verify-input').value = '';
-        document.getElementById('password-verify-error').style.display = 'none';
-        
-        // Open password verification modal
-        openModal(el.passwordVerifyModal);
-    }
-        // Reactivation password verification
-        document.getElementById('reactivate-password-verify-confirm-btn').addEventListener('click', function() {
-            const passwordInput = document.getElementById('reactivate-password-verify-input');
-            const errorEl = document.getElementById('reactivate-password-verify-error');
-            const verifyBtn = document.getElementById('reactivate-password-verify-confirm-btn');
-            const password = passwordInput.value.trim();
-            if (!password) {
-                errorEl.textContent = 'Please enter your password.';
-                errorEl.style.display = 'block';
-                return;
-            }
-            verifyBtn.disabled = true;
-            verifyBtn.textContent = 'Verifying...';
-            errorEl.style.display = 'none';
-            fetch('/account_management/api/verify-password/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCsrfToken()
-                },
-                body: JSON.stringify({ password: password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.valid) {
-                    closeModal(document.getElementById('reactivate-password-verify-modal'));
-                    passwordInput.value = '';
-                    // STEP 2: Show reactivation confirmation modal with details
-                    let details = `${selectedRowData.name} (${selectedRowData.type}`;
-                    if (selectedRowData.type.toLowerCase() === 'officer' && selectedRowData.coop) {
-                        details += `, Cooperative: ${selectedRowData.coop}`;
-                    }
-                    details += ')';
-                    document.getElementById('reactivate-confirm-text').textContent = `Are you sure you want to reactivate this account?`;
-                    document.getElementById('reactivate-account-details').textContent = details;
-                    openModal(document.getElementById('reactivate-confirm-modal'));
-                } else {
-                    errorEl.textContent = data.message || 'Incorrect password. Please try again.';
-                    errorEl.style.display = 'block';
-                    passwordInput.value = '';
-                    passwordInput.focus();
-                }
-            })
-            .catch(error => {
-                console.error('Error verifying password:', error);
-                errorEl.textContent = 'An error occurred. Please try again.';
-                errorEl.style.display = 'block';
-            })
-            .finally(() => {
-                verifyBtn.disabled = false;
-                verifyBtn.textContent = 'Verify Password';
-            });
-        });
-
-        document.getElementById('reactivate-password-verify-cancel-btn').addEventListener('click', function() {
-            closeModal(document.getElementById('reactivate-password-verify-modal'));
-            document.getElementById('reactivate-password-verify-input').value = '';
-            document.getElementById('reactivate-password-verify-error').style.display = 'none';
-        });
-
-        document.getElementById('reactivate-password-verify-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('reactivate-password-verify-confirm-btn').click();
-            }
-        });
-
-        document.getElementById('reactivate-cancel-btn').addEventListener('click', function() {
-            closeModal(document.getElementById('reactivate-confirm-modal'));
-        });
-
-        document.getElementById('reactivate-confirm-btn').addEventListener('click', function() {
-            const userId = selectedRowData.userId;
-            if (!userId) return;
-            fetch(`/account_management/api/reactivate-user/${userId}/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    removeRowFromTable(userId);
-                    showNotification('Account reactivated successfully. Page will reload.', 'success');
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    showNotification(`Error: ${data.message}`, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification(`An error occurred: ${error.message}`, 'error');
-            })
-            .finally(() => closeModal(document.getElementById('reactivate-confirm-modal')));
-        });
-
-    /**
-     * STEP 1: Handle password verification
-     * Sends password to backend for validation
-     * If valid, closes password modal and shows final confirmation modal
-     */
-    function handlePasswordVerification(el) {
-        const passwordInput = document.getElementById('password-verify-input');
-        const errorEl = document.getElementById('password-verify-error');
-        const verifyBtn = document.getElementById('password-verify-confirm-btn');
-        
-        const password = passwordInput.value.trim();
-        
-        // Validate password is not empty
-        if (!password) {
-            errorEl.textContent = 'Please enter your password.';
-            errorEl.style.display = 'block';
-            return;
-        }
-        
-        // Disable button and show loading state
-        verifyBtn.disabled = true;
-        verifyBtn.textContent = 'Verifying...';
-        errorEl.style.display = 'none';
-        
-        // Call backend API to verify password
-        fetch('/account_management/api/verify-password/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCsrfToken()
-            },
-            body: JSON.stringify({ password: password })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.valid) {
-                // Password is correct
-                // Close password modal
-                closeModal(el.passwordVerifyModal);
-                passwordInput.value = '';
-                
-                // STEP 2: Show final confirmation modal
-                document.getElementById('deactivate-confirm-text').textContent = 
-                    `Are you sure you want to deactivate ${selectedRowData.name}'s account?`;
-                openModal(el.deactivateModal);
-            } else {
-                // Password is incorrect
-                errorEl.textContent = data.message || 'Incorrect password. Please try again.';
-                errorEl.style.display = 'block';
-                passwordInput.value = '';
-                passwordInput.focus();
-            }
-        })
-        .catch(error => {
-            console.error('Error verifying password:', error);
-            errorEl.textContent = 'An error occurred. Please try again.';
-            errorEl.style.display = 'block';
-        })
-        .finally(() => {
-            // Re-enable button
-            verifyBtn.disabled = false;
-            verifyBtn.textContent = 'Verify Password';
-        });
+        document.getElementById('deactivate-confirm-text').textContent = 
+            `Are you sure you want to deactivate ${selectedRowData.name}'s account?`;
+        openModal(el.deactivateModal);
     }
 
     function handleDeactivateConfirm(el) {
@@ -1287,40 +960,6 @@
             showNotification(`An error occurred: ${error.message}`, 'error');
         })
         .finally(() => closeModal(el.deactivateModal));
-    }
-
-    function handleReactivateClick(el) {
-        const userId = selectedRowData.userId;
-        if (!userId) {
-            showNotification('Please select an account to reactivate.', 'error');
-            return;
-        }
-
-        // Confirm reactivation
-        if (!confirm('Are you sure you want to reactivate this account?')) {
-            return;
-        }
-
-        fetch(`/account_management/api/reactivate-user/${userId}/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Remove row from deactivated table and refresh page
-                removeRowFromTable(userId);
-                showNotification('Account reactivated successfully. Page will reload.', 'success');
-                // Reload page after 1.5 seconds to show updated data
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                showNotification(`Error: ${data.message}`, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(`An error occurred: ${error.message}`, 'error');
-        });
     }
 
     function openEditModal(userId, type, el) {

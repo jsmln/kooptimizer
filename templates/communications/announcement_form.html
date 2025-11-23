@@ -1013,6 +1013,17 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Prevent annoying beforeunload warning after successful save/send/schedule
+    window.onbeforeunload = function (e) {
+        if (window.isNavigating) return;
+        const title = document.getElementById('announcement-title')?.value;
+        const content = document.getElementById('announcement-content')?.value;
+        const recipientRows = document.querySelectorAll('.recipient-row');
+        if ((title && title.trim()) || (content && content.trim()) || recipientRows.length > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    };
 
     // --- Global Variables ---
     let currentDraftId = null;  // Track if editing a draft
@@ -3261,7 +3272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Mark as navigating to prevent beforeunload warning
                 window.isNavigating = true;
-                
+                window.onbeforeunload = null; // Remove handler before reload
                 // Use replace instead of reload to avoid confirmation dialog
                 setTimeout(() => {
                     window.location.replace(window.location.href);
