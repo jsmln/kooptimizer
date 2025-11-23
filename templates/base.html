@@ -8,13 +8,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>{% block title %}KoopTimizer{% endblock %}</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="48x48" href="{% static 'css/images/icon-48x48.png' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'css/images/icon-96x96.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% static 'css/images/icon-192x192.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'css/images/icon-152x152.png' %}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{% static 'css/images/icon-192x192.png' %}">
+    
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="apple-mobile-web-app-status-bar-style" content="#3367D6">
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <link href="{% static 'frontend/base.css' %}" rel="stylesheet">
+    <link href="{% static 'frontend/base.css' %}?v=2.7.0" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
 
     {% block extra_head %}{% endblock %}
@@ -38,17 +46,17 @@
         </div>
        <nav>
             <ul>
-                {% if request.session.user_id %}
+                {% if request.session.user_id and not request.session.pending_verification_user_id %}
                 {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'officer'%}
                     <li class="logout-button">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
                     </li>
                 {% endif %}
-                {% else %}
-                    <li><a href="{% url 'home' %}">Home</a></li>
-                    <li><a href="{% url 'login' %}">Login</a></li>
-                    <li><a href="{% url 'download' %}">Download</a></li>
-                    <li><a href="{% url 'about' %}">About</a></li>
+                {% elif not request.session.pending_verification_user_id %}
+                    <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+                    <li><a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">Login</a></li>
+                    <li><a href="{% url 'download' %}" class="{% if request.resolver_match.url_name == 'download' %}active{% endif %}">Download</a></li>
+                    <li><a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -103,7 +111,7 @@
         })();
     </script>
 
-    {% if request.session.user_id %}
+    {% if request.session.user_id and not request.session.pending_verification_user_id %}
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered"> 
             <div class="modal-content">
@@ -133,6 +141,139 @@
         allForms.forEach(form => form.addEventListener('submit', () => NProgress.start()));
         window.addEventListener('pageshow', (e) => { if (e.persisted) NProgress.done(); });
     </script>
+
+    {% if request.session.user_id and not request.session.pending_verification_user_id %}
+    <script>
+        // ====================================================================
+        // SESSION TIMEOUT & BROWSER CLOSE DETECTION
+        // ====================================================================
+        
+        // Session timeout: 15 minutes (900000ms)
+        const SESSION_TIMEOUT = 900000; // 15 minutes
+        const WARNING_TIME = 60000; // Show warning 1 minute before timeout
+        let sessionTimer;
+        let warningTimer;
+        let warningShown = false;
+
+        function resetSessionTimer() {
+            // Clear existing timers
+            clearTimeout(sessionTimer);
+            clearTimeout(warningTimer);
+            warningShown = false;
+            
+            // Set warning timer (14 minutes)
+            warningTimer = setTimeout(() => {
+                if (!warningShown) {
+                    warningShown = true;
+                    if (confirm('Your session will expire in 1 minute due to inactivity. Click OK to stay logged in.')) {
+                        // User clicked OK, reset the timer
+                        resetSessionTimer();
+                        // Ping server to keep session alive
+                        fetch('{% url "home" %}', { method: 'HEAD' });
+                    }
+                }
+            }, SESSION_TIMEOUT - WARNING_TIME);
+            
+            // Set logout timer (15 minutes)
+            sessionTimer = setTimeout(() => {
+                alert('Your session has expired due to inactivity. You will be logged out.');
+                window.location.href = '{% url "users:logout" %}';
+            }, SESSION_TIMEOUT);
+        }
+
+        // Reset timer on user activity
+        ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'].forEach(event => {
+            document.addEventListener(event, resetSessionTimer, { passive: true });
+        });
+
+        // Start the session timer
+        resetSessionTimer();
+
+        // ====================================================================
+        // BROWSER/TAB CLOSE DETECTION
+        // ====================================================================
+        
+        // Track if user explicitly logged out or navigating within the app
+        let explicitLogout = false;
+        let isNavigating = false;
+        
+        // Mark explicit logout
+        const logoutBtn = document.getElementById('btn-logout-confirm');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                explicitLogout = true;
+            });
+        }
+
+        // Track internal navigation (clicking links within the app)
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href && link.href.startsWith(window.location.origin)) {
+                // Internal link - this is navigation, not closing
+                isNavigating = true;
+                // Reset after a short delay
+                setTimeout(() => { isNavigating = false; }, 100);
+            }
+        });
+
+        // Track form submissions (also internal navigation)
+        document.addEventListener('submit', (e) => {
+            isNavigating = true;
+            setTimeout(() => { isNavigating = false; }, 100);
+        });
+
+        // Detect browser/tab close and logout
+        window.addEventListener('beforeunload', (e) => {
+            // Only show warning if NOT navigating within app and NOT logging out
+            // Also check if we're on certain pages that handle their own navigation
+            const isAnnouncementPage = window.location.pathname.includes('/announcement');
+            const isMessagePage = window.location.pathname.includes('/message');
+            
+            if (!explicitLogout && !isNavigating && !isAnnouncementPage && !isMessagePage) {
+                // Show confirmation message
+                e.preventDefault();
+                e.returnValue = 'You are still logged in. Are you sure you want to leave? Your session will end.';
+                
+                // Use sendBeacon to logout immediately (non-blocking)
+                
+                // This ensures logout happens even if user confirms leaving
+                const logoutUrl = '{% url "users:logout" %}';
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+                
+                // Send logout request using sendBeacon (works even as page unloads)
+                const formData = new FormData();
+                formData.append('csrfmiddlewaretoken', csrfToken);
+                navigator.sendBeacon(logoutUrl, formData);
+                
+                return e.returnValue;
+            }
+        });
+
+        // PWA visibility change detection
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Page is hidden (tab switched or minimized)
+                console.log('Page hidden - session will expire after timeout');
+            } else {
+                // Page is visible again - check if session is still valid
+                fetch('{% url "home" %}', { method: 'HEAD' })
+                    .then(response => {
+                        if (response.redirected && response.url.includes('login')) {
+                            alert('Your session has expired. Please log in again.');
+                            window.location.href = '{% url "login" %}';
+                        } else {
+                            // Session still valid, reset timer
+                            resetSessionTimer();
+                        }
+                    })
+                    .catch(() => {
+                        console.log('Could not verify session');
+                    });
+            }
+        });
+    </script>
+    {% endif %}
+
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

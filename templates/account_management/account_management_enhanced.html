@@ -1,0 +1,359 @@
+{% extends "dashboard/dashboard.html" %}
+{% load static %}
+
+{% block title %}Account Management - KoopTimizer{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'frontend/account_management.css' %}">
+<style>
+    /* ... keep all existing styles ... */
+    
+    /* Password confirmation modal specific styles */
+    .password-confirm-modal {
+        max-width: 450px;
+    }
+    
+    .password-input-group {
+        margin: 20px 0;
+    }
+    
+    .password-input-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .password-input-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .password-input-group input:focus {
+        outline: none;
+        border-color: #8B0000;
+        box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.1);
+    }
+    
+    .password-error {
+        color: #d32f2f;
+        font-size: 13px;
+        margin-top: 5px;
+        display: none;
+    }
+    
+    .deactivate-warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 4px;
+        padding: 12px;
+        margin: 15px 0;
+        color: #856404;
+    }
+    
+    .deactivate-warning strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .spinner-inline {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #fff;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin-right: 8px;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<!-- ... keep all existing HTML structure ... -->
+
+<!-- PASSWORD CONFIRMATION MODAL FOR DEACTIVATE -->
+<div class="modal-overlay hidden" id="password-confirm-modal">
+    <div class="confirm-modal-container password-confirm-modal">
+        <h3>⚠️ Confirm Account Deactivation</h3>
+        
+        <div class="deactivate-warning">
+            <strong>Warning!</strong>
+            You are about to deactivate <span id="deactivate-user-name-display" style="font-weight: 600;"></span>'s account.
+            This action will immediately revoke their access to the system.
+        </div>
+        
+        <div class="password-input-group">
+            <label for="admin-password-input">Enter your password to confirm:</label>
+            <input 
+                type="password" 
+                id="admin-password-input" 
+                placeholder="Your password" 
+                autocomplete="current-password"
+                required
+            />
+            <span class="password-error" id="password-error-message">Incorrect password. Please try again.</span>
+        </div>
+        
+        <div class="confirm-actions">
+            <button id="password-confirm-deactivate-btn" class="modal-button primary-btn" style="background-color: #d32f2f;">
+                Deactivate Account
+            </button>
+            <button id="password-cancel-btn" class="modal-button secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Container -->
+<div id="account-notifications" aria-live="polite" aria-atomic="true" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; max-width: 400px;"></div>
+
+<script>
+(function() {
+    'use strict';
+    
+    // ... keep all existing JavaScript code until handleDeleteClick ...
+    
+    // MODIFIED: New password verification endpoint
+    async function verifyPassword(password) {
+        try {
+            const response = await fetch('/account_management/api/verify-password/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({ password: password })
+            });
+            const data = await response.json();
+            return data.valid === true;
+        } catch (error) {
+            console.error('Password verification error:', error);
+            return false;
+        }
+    }
+    
+    // MODIFIED: Enhanced delete/deactivate with password confirmation
+    function handleDeleteClick(el) {
+        console.log('Delete button clicked');
+        if (!selectedRowData.name) {
+            console.log('No user selected');
+            return;
+        }
+        
+        const accountType = selectedRowData.type.toLowerCase();
+        
+        if (!hasAccessToAccountType(accountType)) {
+            showNotification('You do not have permission to delete this account type.', 'error');
+            return;
+        }
+        
+        // Show password confirmation modal
+        document.getElementById('deactivate-user-name-display').textContent = selectedRowData.name;
+        document.getElementById('admin-password-input').value = '';
+        document.getElementById('password-error-message').style.display = 'none';
+        openModal(document.getElementById('password-confirm-modal'));
+    }
+    
+    // MODIFIED: Handle password confirmation and deactivation
+    async function handlePasswordConfirmDeactivate(el) {
+        const passwordInput = document.getElementById('admin-password-input');
+        const password = passwordInput.value.trim();
+        const errorMessage = document.getElementById('password-error-message');
+        const confirmBtn = document.getElementById('password-confirm-deactivate-btn');
+        
+        if (!password) {
+            passwordInput.focus();
+            errorMessage.textContent = 'Password is required.';
+            errorMessage.style.display = 'block';
+            return;
+        }
+        
+        // Disable button and show loading
+        confirmBtn.disabled = true;
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<span class="spinner-inline"></span> Verifying...';
+        
+        // Verify password
+        const isValid = await verifyPassword(password);
+        
+        if (!isValid) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalText;
+            errorMessage.textContent = 'Incorrect password. Please try again.';
+            errorMessage.style.display = 'block';
+            passwordInput.value = '';
+            passwordInput.focus();
+            return;
+        }
+        
+        // Password correct, proceed with deactivation
+        errorMessage.style.display = 'none';
+        confirmBtn.innerHTML = '<span class="spinner-inline"></span> Deactivating...';
+        
+        const userId = selectedRowData.userId;
+        if (!userId) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalText;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/account_management/api/deactivate-user/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Remove from UI
+                removeRowFromTable(userId);
+                
+                // Refresh the page data
+                await refreshAccountData();
+                
+                showNotification('Account deactivated successfully.', 'success');
+                closeModal(document.getElementById('password-confirm-modal'));
+            } else {
+                showNotification(`Error: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification(`An error occurred: ${error.message}`, 'error');
+        } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = originalText;
+        }
+    }
+    
+    // NEW: Refresh account data from server
+    async function refreshAccountData() {
+        try {
+            // Reload the page to get fresh data
+            // Alternative: use AJAX to fetch updated table data
+            console.log('Refreshing account data...');
+            
+            // If on "All Users" tab, re-collect data
+            if (USER_ROLE === 'admin') {
+                collectInitialData();
+                const allUsersSection = document.getElementById('all-users');
+                if (allUsersSection && allUsersSection.classList.contains('active')) {
+                    renderAllUsersTable(allUsersData);
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing data:', error);
+        }
+    }
+    
+    // MODIFIED: Enhanced save changes with auto-refresh
+    async function saveChanges(el) {
+        const userId = el.formEditUserId.value;
+        if (!userId) return;
+
+        console.log('Saving changes for user:', userId);
+        
+        const submitBtn = el.formButtonsEdit.querySelector('.submit-btn');
+        submitBtn.disabled = true;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner-inline"></span> Saving...';
+
+        try {
+            const response = await fetch(`/account_management/api/update-user/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify(submittedData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                // Update the UI
+                updateRowInTable(userId, submittedData);
+                
+                // Refresh data
+                await refreshAccountData();
+                
+                showNotification('Account updated successfully.', 'success');
+                closeModal(el.onboardModal);
+            } else {
+                showNotification(`Error: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification(`An error occurred: ${error.message}`, 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    }
+    
+    // MODIFIED: Enhanced add row with auto-refresh
+    async function addNewRowToTable(userData) {
+        // ... existing code to add row ...
+        
+        // Refresh data after adding
+        await refreshAccountData();
+    }
+    
+    // Setup event listeners (ADD THIS)
+    function setupPasswordConfirmListeners() {
+        const passwordConfirmModal = document.getElementById('password-confirm-modal');
+        const passwordConfirmBtn = document.getElementById('password-confirm-deactivate-btn');
+        const passwordCancelBtn = document.getElementById('password-cancel-btn');
+        const passwordInput = document.getElementById('admin-password-input');
+        
+        if (passwordConfirmBtn) {
+            passwordConfirmBtn.addEventListener('click', () => handlePasswordConfirmDeactivate(elements));
+        }
+        
+        if (passwordCancelBtn) {
+            passwordCancelBtn.addEventListener('click', () => {
+                closeModal(passwordConfirmModal);
+            });
+        }
+        
+        // Allow Enter key to submit
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handlePasswordConfirmDeactivate(elements);
+                }
+            });
+            
+            // Clear error on input
+            passwordInput.addEventListener('input', () => {
+                document.getElementById('password-error-message').style.display = 'none';
+            });
+        }
+    }
+    
+    // MODIFIED: Update initialization to include password listeners
+    function initialize() {
+        // ... existing initialization code ...
+        
+        setupPasswordConfirmListeners();
+        
+        console.log('Initialization complete with enhanced security');
+    }
+    
+    // ... rest of existing code ...
+    
+})();
+</script>
+{% endblock %}

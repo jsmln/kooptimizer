@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}About - KoopTimizer{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'frontend/about.css' %}">
+{% endblock %}
+
+{% block content %}
+<section id="about-page">
+    <div class="about-card">
+        <h2>About KoopTimizer</h2>
+        
+        <div class="about-content">
+            <div class="about-section">
+                <div class="section-icon">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+                <h3>What is KoopTimizer?</h3>
+                <p>
+                    KoopTimizer is a comprehensive digital platform designed to streamline cooperative management, 
+                    digitize records, and improve governance. Our Progressive Web App (PWA) provides real-time 
+                    updates and seamless communication tools for cooperative organizations.
+                </p>
+            </div>
+
+            <div class="about-section">
+                <div class="section-icon">
+                    <i class="bi bi-bullseye"></i>
+                </div>
+                <h3>Our Mission</h3>
+                <p>
+                    To empower cooperative organizations with modern digital tools that enhance efficiency, 
+                    transparency, and member engagement. We believe in making cooperative management accessible, 
+                    efficient, and data-driven.
+                </p>
+            </div>
+
+            <div class="about-section">
+                <div class="section-icon">
+                    <i class="bi bi-stars"></i>
+                </div>
+                <h3>Key Features</h3>
+                <ul class="features-list">
+                    <li><i class="bi bi-check-circle-fill"></i> Digital Record Management</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Real-time Communication & Announcements</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Cooperative Dashboard & Analytics</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Member Account Management</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Secure Data Storage</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Progressive Web App Technology</li>
+                </ul>
+            </div>
+
+            <div class="about-section">
+                <div class="section-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h3>Who We Serve</h3>
+                <p>
+                    KoopTimizer is designed for cooperative organizations of all sizes, from small community 
+                    cooperatives to large-scale cooperative networks. Whether you're managing member records, 
+                    coordinating communications, or tracking cooperative activities, our platform adapts to your needs.
+                </p>
+            </div>
+
+            <div class="about-section">
+                <div class="section-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h3>Security & Privacy</h3>
+                <p>
+                    We prioritize the security and privacy of your cooperative's data. KoopTimizer employs 
+                    industry-standard encryption, secure authentication, and regular security updates to protect 
+                    your information.
+                </p>
+            </div>
+
+            <div class="about-section cta-section">
+                <h3>Get Started Today</h3>
+                <p>
+                    Ready to transform your cooperative management? Join KoopTimizer and experience the future 
+                    of cooperative governance.
+                </p>
+                <div class="cta-buttons">
+                    <a href="{% url 'login' %}" class="btn-primary">Login</a>
+                    <a href="{% url 'download' %}" class="btn-secondary">Download App</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
