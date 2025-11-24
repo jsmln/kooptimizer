@@ -6,6 +6,9 @@ from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import DatabaseError, connection
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.utils.timesince import timesince
+from .models import Message
 
 # Import services and utils
 from apps.core.services.sms_service import SmsService
@@ -79,6 +82,58 @@ def cancel_scheduled_announcement(request, announcement_id):
             'message': 'Schedule cancelled successfully. Announcement reverted to draft.'
         })
         
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def delete_announcement(request, announcement_id):
+    """
+    Deletes an announcement. Admins can delete any announcement. Staff can only delete announcements they created.
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+    try:
+        try:
+            ann = Announcement.objects.get(announcement_id=announcement_id)
+        except Announcement.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
+
+        # Permission check: only admins and the staff who created it can delete
+        if role == 'staff':
+            try:
+                staff_profile = Staff.objects.get(user_id=user_id)
+                # Staff can only delete announcements they created (staff_id matches)
+                if ann.staff_id != staff_profile.staff_id:
+                    return JsonResponse({'status': 'error', 'message': 'You do not have permission to delete this announcement.'}, status=403)
+            except Staff.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Staff profile not found'}, status=403)
+        # Admin role: no permission check needed, can delete any announcement
+
+        # Log before deletion
+        print(f"Deleting announcement ID: {announcement_id}")
+        
+        # Proceed to delete using raw SQL to ensure it actually deletes
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM announcements WHERE announcement_id = %s", [announcement_id])
+            deleted_count = cursor.rowcount
+            print(f"Deleted {deleted_count} rows from announcements table")
+        
+        print(f"Successfully deleted announcement {announcement_id}")
+        return JsonResponse({'status': 'success', 'message': 'Announcement deleted successfully.'})
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Error in delete_announcement: {str(e)}"
+        print(error_msg)
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': error_msg}, status=500)
+
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
@@ -1138,3 +1193,44 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
         import traceback
         traceback.print_exc()
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+def get_recent_activity(request):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=401)
+    
+    # STEP 1: Get the list of Message IDs directly
+    # .values_list() is crucial here because it reads SPECIFIC columns only.
+    # It won't try to read the missing 'id' column.
+    message_ids = MessageRecipient.objects.filter(
+        receiver_id=user_id
+    ).values_list('message_id', flat=True)
+
+    # STEP 2: Fetch the actual Message objects using those IDs
+    recent_messages = Message.objects.filter(
+        message_id__in=message_ids
+    ).select_related('sender').order_by('-sent_at')[:5]
+
+    activities = []
+    
+    for msg in recent_messages:
+        sender_name = "Unknown"
+        if msg.sender:
+            sender_name = f"{msg.sender.first_name} {msg.sender.last_name}"
+        
+        time_diff = timesince(msg.sent_at).split(',')[0]
+        
+        # Clean up the time display
+        if "minute" not in time_diff and "hour" not in time_diff and "day" not in time_diff:
+            time_display = "Just now"
+        else:
+            time_display = f"{time_diff} ago"
+
+        activities.append({
+            'title': 'New Message',
+            'sender': f"from {sender_name}",
+            'time': time_display
+        })
+
+    return JsonResponse({'status': 'success', 'activities': activities})

@@ -1,5 +1,6 @@
 import requests
 import random
+import string
 from datetime import datetime, timedelta
 from django.conf import settings
 
@@ -23,6 +24,7 @@ class OTPService:
         """
         Generates, stores, and sends an OTP.
         """
+        print(f"--- OTP SERVICE STARTED ---") # DEBUG
         try:
             # 1. Generate and store the pin in the session
             pin = self._generate_pin()
@@ -31,27 +33,46 @@ class OTPService:
             # Set a 5-minute expiry
             expiry_time = (datetime.now() + timedelta(minutes=5)).isoformat()
             self.session['otp_expiry'] = expiry_time
+            
+            # Save session immediately to ensure persistence
+            self.session.save()
+
+            print(f"✅ Generated PIN: {pin}") # DEBUG: See the pin in console
+            print(f"✅ Target Number: {mobile_number}") # DEBUG
 
             # 2. Prepare and send the SMS via IPROG API
-            url = settings.IPROG_SMS['API_URL']
+            url = settings.IPROG_SMS.get('API_URL')
+            api_token = settings.IPROG_SMS.get('API_TOKEN')
+            
+            if not url or not api_token:
+                print("❌ ERROR: IPROG settings missing in settings.py")
+                return False, "System configuration error."
+
             message = message_template.format(pin=pin)
             
             data = {
-                'api_token': settings.IPROG_SMS['API_TOKEN'],
+                'api_token': api_token,
                 'message': message,
-                'phone_number': mobile_number  # e.g., '639171071234'
+                'phone_number': mobile_number
             }
 
-            response = requests.post(url, data=data)
+            print(f"📡 Sending Request to: {url}") # DEBUG
+            
+            # Added timeout to prevent hanging
+            response = requests.post(url, data=data, timeout=15)
+            
+            print(f"📩 API Response Code: {response.status_code}") # DEBUG
+            print(f"📩 API Response Body: {response.text}") # DEBUG
+
             response.raise_for_status() # Raise an error for bad responses (4xx or 5xx)
 
-            # 3. Return success
-            # We don't have a 'pin_id' anymore, so we just return success
             return True, None
 
         except requests.exceptions.RequestException as e:
-            return False, str(e)
+            print(f"❌ Network Error: {e}") # DEBUG
+            return False, "Network error sending SMS."
         except Exception as e:
+            print(f"❌ Unexpected Error: {e}") # DEBUG
             return False, f"An unexpected error occurred: {e}"
 
     def verify_otp(self, provided_pin):
@@ -60,6 +81,8 @@ class OTPService:
         """
         stored_pin = self.session.get('otp_pin')
         expiry_str = self.session.get('otp_expiry')
+
+        print(f"🔍 Verifying OTP: Input='{provided_pin}' vs Stored='{stored_pin}'") # DEBUG
 
         if not stored_pin or not expiry_str:
             return False, "OTP session expired or not found. Please request a new one."
@@ -83,3 +106,4 @@ class OTPService:
             del self.session['otp_pin']
         if 'otp_expiry' in self.session:
             del self.session['otp_expiry']
+        self.session.save()
