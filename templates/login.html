@@ -248,9 +248,21 @@
     </div>
 
     {% else %}
+<<<<<<< HEAD
     <!-- NORMAL LOGIN SECTION -->
+=======
+>>>>>>> 9b91edc8f9b37e1b1de9256054b34f1d85b9357b
     <section id="login">
         <h2>Login</h2>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <form id="login-form" method="POST">
             {% csrf_token %} 
             
@@ -259,20 +271,52 @@
                 <input type="text" id="username" name="username" placeholder="Enter your username" required>
             </div>
 
-             <div class="password-wrapper">
+            <div class="password-wrapper">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" placeholder="Enter your password" required>
                 <i class="bi bi-eye-slash" id="togglePassword"></i>
+                
+                <a href="#" class="forgot-password-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+                    Forgot Password?
+                </a>
             </div>
 
             <div id="recaptcha-placeholder" class="g-recaptcha" data-sitekey="6LeepvErAAAAAP3XNLdmBipdELXOuZqfo13T6lYE">
-                </div>
+            </div>
 
             <button type="submit">Login</button>
-
-
         </form>
+<<<<<<< HEAD
     </section>
+=======
+        </section>
+
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" style="color: #b71c1c; font-weight: 700;">Find Your Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Please enter your username or mobile number to search for your account.</p>
+                    
+                    <form action="{% url 'users:initiate_password_reset' %}" method="POST">
+                        {% csrf_token %} <div class="mb-3">
+                            <input type="text" name="identifier" class="form-control" placeholder="Username or Mobile Number" required>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger" style="background: linear-gradient(90deg, #b71c1c, #a00000); border:none;">Search</button>
+                        </div>
+                    </form>
+                    </div>
+            </div>
+        </div>
+    </div>
+>>>>>>> 9b91edc8f9b37e1b1de9256054b34f1d85b9357b
     {% endif %}
 
        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

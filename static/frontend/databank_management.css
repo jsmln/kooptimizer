@@ -43,7 +43,6 @@ html, body {
     font-size: 0.9rem;
     font-weight: 500;
 }
-
 .databank-toolbar {
     padding: 2px 0;
     display: flex;
@@ -54,88 +53,35 @@ html, body {
     gap: 5px;
 }
 
-.toolbar-left {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
+.toolbar-left { display: flex; gap: 12px; align-items: center; }
 
 .add-btn {
     background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
-    color: #fff;
-    border: none;
-    padding: 11px 22px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(169, 30, 44, 0.25);
+    color: #fff; border: none; padding: 10px 20px; border-radius: 10px;
+    cursor: pointer; font-weight: 600; font-size: 0.9rem;
+    display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;
 }
-
-.add-btn:hover {
-    background: linear-gradient(135deg, #8a1824 0%, #771520 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(169, 30, 44, 0.35);
-}
+.add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(169, 30, 44, 0.35); }
 
 .filter-btn {
-    background: #fff;
-    border: 1px solid #edf2f7;
-    color: #2B3674;
-    padding: 11px 18px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s;
+    background: #fff; border: 1px solid #edf2f7; color: #2B3674;
+    padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: 600;
+    display: flex; align-items: center; gap: 8px; transition: all 0.2s;
 }
+.filter-btn:hover { border-color: #a91e2c; color: #a91e2c; background: #fff5f6; }
 
-.filter-btn:hover {
-    border-color: #a91e2c;
-    color: #a91e2c;
-    background: #fff5f6;
-}
-
-.search-bar {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-bar i {
-    position: absolute;
-    left: 14px;
-    color: #A3AED0;
-    font-size: 16px;
-}
-
+.search-bar { position: relative; display: flex; align-items: center; width: 300px; }
+.search-bar i { position: absolute; left: 14px; color: #A3AED0; }
 .search-bar input {
-    padding: 11px 14px 11px 42px;
-    border: 1px solid #edf2f7;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    width: 280px;
-    transition: all 0.2s;
-    background: #f8f9fc;
+    width: 100%; padding: 10px 14px 10px 40px;
+    border: 1px solid #edf2f7; border-radius: 10px;
+    font-size: 0.9rem; background: #f8f9fc; outline: none;
 }
-
-.search-bar input:focus {
-    outline: none;
-    border-color: #a91e2c;
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(169, 30, 44, 0.08);
-}
+.search-bar input:focus { border-color: #a91e2c; background: #fff; }
 
 .table-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+    flex-grow: 1; /* Take remaining height */
+    display: flex; flex-direction: column;
     overflow: hidden;
     padding: 0 32px 28px 32px;
     position: relative;
@@ -149,6 +95,8 @@ html, body {
     position: relative;
     overflow: hidden;
 }
+.table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+.table-wrapper::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
 
 .table-scroll {
     height: 100%;
@@ -217,6 +165,7 @@ html, body {
 #coop-table th:nth-child(10),
 #coop-table td:nth-child(10) { min-width: 90px; }
 
+/* keep hover behavior subtle and neutral */
 #coop-table tbody tr[data-modal-target]:hover {
     background-color: #fbfbfc;
 }
@@ -264,6 +213,8 @@ html, body {
     }
 }
 
+/* --- OCR Drawer & Toggle Button styles moved from template (all styles kept here) --- */
+/* OCR Drawer wrapper and drawer */
 .ocr-drawer-wrapper {
     position: fixed;
     right: 0;
