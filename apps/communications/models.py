@@ -129,6 +129,8 @@ class MessageRecipient(models.Model):
         managed = False
         db_table = 'message_recipients'
         unique_together = (('message', 'receiver'),)
+        # Disable Django's automatic primary key creation
+        # The table uses a composite PK (message_id, receiver_id)
 # ======================================================
 # 9) ANNOUNCEMENTS MODEL (Updated)
 # ======================================================
@@ -151,10 +153,14 @@ class Announcement(models.Model):
     admin = models.ForeignKey(Admin, on_delete=models.SET_NULL, db_column='admin_id', blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     type = models.CharField(max_length=10, blank=True, null=True) # Mapped from 'announcement_type_enum'
+    
+    # DEPRECATED: These fields will be removed after migration
+    # Use AnnouncementAttachment model instead
     attachment = models.BinaryField(blank=True, null=True)
     attachment_filename = models.CharField(max_length=255, blank=True, null=True, db_column='attachment_filename')
     attachment_content_type = models.CharField(max_length=255, blank=True, null=True, db_column='attachment_content_type')
     attachment_size = models.BigIntegerField(blank=True, null=True, db_column='attachment_size')
+    
     sent_at = models.DateTimeField(blank=True, null=True, db_column='sent_at')
     scope = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
@@ -180,6 +186,19 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+    
+    # Helper property to check if announcement has attachments
+    @property
+    def has_attachments(self):
+        """Check if announcement has attachments using new structure"""
+        return self.attachments.exists()
+    
+    @property
+    def total_attachment_size(self):
+        """Calculate total size of all attachments"""
+        from django.db.models import Sum
+        result = self.attachments.aggregate(total=Sum('file_size'))
+        return result['total'] or 0
     
     # --- NEW METHOD 1 ---
     @classmethod
@@ -352,3 +371,41 @@ class AnnouncementOfficerRecipient(models.Model):
         managed = False
         db_table = 'announcement_officer_recipients'
         unique_together = (('announcement', 'officer'),)
+
+# ======================================================
+# 10.6) ANNOUNCEMENT ATTACHMENTS (NEW)
+# ======================================================
+class AnnouncementAttachment(models.Model):
+    attachment_id = models.AutoField(primary_key=True, db_column='attachment_id')
+    announcement = models.ForeignKey(
+        Announcement,
+        on_delete=models.CASCADE,
+        db_column='announcement_id',
+        related_name='attachments'
+    )
+    filename = models.CharField(max_length=255, db_column='filename')
+    original_filename = models.CharField(max_length=255, db_column='original_filename')
+    content_type = models.CharField(max_length=100, db_column='content_type')
+    file_size = models.BigIntegerField(db_column='file_size')
+    file_data = models.BinaryField(db_column='file_data')
+    uploaded_at = models.DateTimeField(auto_now_add=True, db_column='uploaded_at')
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        db_column='uploaded_by',
+        null=True,
+        blank=True,
+        related_name='uploaded_announcement_attachments'
+    )
+    display_order = models.IntegerField(default=0, db_column='display_order')
+    
+    class Meta:
+        managed = False
+        db_table = 'announcement_attachments'
+        ordering = ['display_order', 'attachment_id']
+        indexes = [
+            models.Index(fields=['announcement'], name='idx_ann_att_announcement'),
+        ]
+    
+    def __str__(self):
+        return f"{self.original_filename} ({self.announcement.title})"

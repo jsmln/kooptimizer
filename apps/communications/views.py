@@ -6,6 +6,9 @@ from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import DatabaseError, connection
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.utils.timesince import timesince
+from .models import Message
 
 # Import services and utils
 from apps.core.services.sms_service import SmsService
@@ -84,6 +87,7 @@ def cancel_scheduled_announcement(request, announcement_id):
 
 
 @csrf_exempt
+@csrf_exempt
 @require_http_methods(["GET"])
 def get_announcement_details(request, announcement_id):
     """
@@ -103,15 +107,16 @@ def get_announcement_details(request, announcement_id):
             if not row:
                 return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
             
-            # Parse the row data
+            # Parse the row data (updated to include attachments_json field)
             (ann_id, title, description, ann_type, status, scope, sent_at, created_at,
-             attachment_size, attachment_filename, sender_name, sender_role,
-             coop_recipients_json, officer_recipients_json) = row
+             attachment_size, attachment_filename, attachments_json,
+             sender_name, sender_role, coop_recipients_json, officer_recipients_json) = row
             
             # Parse JSON strings
             import json
             coop_recipients = json.loads(coop_recipients_json) if coop_recipients_json else []
             officer_recipients = json.loads(officer_recipients_json) if officer_recipients_json else []
+            attachments = json.loads(attachments_json) if attachments_json else []
             
             return JsonResponse({
                 'status': 'success',
@@ -124,9 +129,12 @@ def get_announcement_details(request, announcement_id):
                     'scope': scope,
                     'sent_at': sent_at.isoformat() if sent_at else None,
                     'created_at': created_at.isoformat() if created_at else None,
-                    'has_attachment': attachment_size is not None and attachment_size > 0,
-                    'attachment_size': attachment_size,
+                    # Legacy attachment support (for backward compatibility)
+                    'has_attachment': (attachment_size is not None and attachment_size > 0) or len(attachments) > 0,
+                    'attachment_size': int(attachment_size) if attachment_size is not None else sum(att.get('file_size', 0) for att in attachments),
                     'attachment_filename': attachment_filename,
+                    # New individual attachments
+                    'attachments': attachments,
                     'sender_name': sender_name,
                     'sender_role': sender_role,
                     'coop_recipients': coop_recipients,
@@ -135,6 +143,9 @@ def get_announcement_details(request, announcement_id):
             })
             
     except Exception as e:
+        import traceback
+        print(f"Error in get_announcement_details: {e}")
+        print(traceback.format_exc())
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
@@ -182,8 +193,16 @@ def get_draft_announcement(request, announcement_id):
             'data': draft_data
         })
         
+    except Announcement.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error in get_draft_announcement: {error_details}")
+        return JsonResponse({
+            'status': 'error', 
+            'message': f'An error occurred: {str(e)}'
+        }, status=500)
 
 
 @csrf_exempt
@@ -290,40 +309,35 @@ def handle_announcement(request):
         if not saved_announcement_id:
              return JsonResponse({'status': 'error', 'message': 'Failed to save announcement.'}, status=500)
 
-        # --- 6.5. Handle attachments for email announcements ---
+        # --- 6.5. Handle attachments using new structure ---
         if ann_type == 'e-mail' and attachments:
             try:
-                from .utils import process_attachment
+                from .attachment_utils import save_announcement_attachments
                 
-                # Process and combine all attachments
-                combined_data = b''
-                combined_filenames = []
-                total_size = 0
+                # Get user_id for tracking who uploaded
+                user_id = request.session.get('user_id')
                 
-                for uploaded_file in attachments:
-                    # Process each file
-                    file_data, content_type, final_filename, file_size = process_attachment(
-                        uploaded_file, 
-                        uploaded_file.name
-                    )
-                    
-                    combined_data += file_data
-                    combined_filenames.append(final_filename)
-                    total_size += file_size
-                
-                # Update the announcement with attachments
-                Announcement.objects.filter(announcement_id=saved_announcement_id).update(
-                    attachment=combined_data,
-                    attachment_filename='; '.join(combined_filenames),  # Multiple filenames separated by semicolon
-                    attachment_content_type='application/mixed',  # Indicate multiple files
-                    attachment_size=total_size
+                # Save attachments using new structure
+                success, message, count = save_announcement_attachments(
+                    announcement_id=saved_announcement_id,
+                    uploaded_files=attachments,
+                    user_id=user_id
                 )
                 
-            except ValueError as ve:
-                return JsonResponse({'status': 'error', 'message': str(ve)}, status=400)
+                if not success:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Failed to save attachments: {message}'
+                    }, status=400)
+                
+                print(f"Successfully saved {count} attachments for announcement {saved_announcement_id}")
+                
             except Exception as e:
                 print(f"Error processing attachments: {e}")
-                return JsonResponse({'status': 'error', 'message': f'Error processing attachments: {str(e)}'}, status=500)
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Error processing attachments: {str(e)}'
+                }, status=500)
 
         # --- 7. Send via appropriate service ---
         if action == 'send_sms' and ann_type == 'sms':
@@ -360,8 +374,12 @@ def announcement_view(request):
     Renders the announcement form, passing all cooperative, officer,
     and announcement list data to the template.
     """
-    # 1. Get Cooperatives for the dropdown
-    cooperatives = Cooperative.objects.all().order_by('cooperative_name')
+    # 1. Get Cooperatives that have at least one officer
+    from django.db.models import Count
+    cooperatives = Cooperative.objects.annotate(
+        officer_count=Count('officer')
+    ).filter(officer_count__gt=0).order_by('cooperative_name')
+    
     cooperatives_list = [
         {'id': coop.coop_id, 'name': coop.cooperative_name}
         for coop in cooperatives
@@ -516,6 +534,19 @@ def get_message_contacts(request):
                 (Q(sender_id=contact_id) & Q(messagerecipient__receiver_id=user_id))
             ).order_by('-sent_at').first()
             
+            # Count unread messages (messages sent TO me that I haven't read)
+            # Use raw SQL to avoid Django ORM composite key issues
+            with connection.cursor() as cur:
+                cur.execute("""
+                    SELECT COUNT(*) 
+                    FROM message_recipients mr
+                    JOIN messages m ON mr.message_id = m.message_id
+                    WHERE mr.receiver_id = %s 
+                    AND m.sender_id = %s 
+                    AND (mr.status IS NULL OR mr.status = 'sent')
+                """, [user_id, contact_id])
+                unread_count = cur.fetchone()[0]
+            
             if last_msg:
                 contact['last_message'] = "Attachment" if last_msg.attachment else last_msg.message
                 if last_msg.sender_id == user_id:
@@ -528,6 +559,7 @@ def get_message_contacts(request):
                 contact['last_time'] = ""
                 contact['sort_time'] = 0 # No messages go to bottom
             
+            contact['unread_count'] = unread_count
             final_contacts.append(contact)
 
         # 3. Sort by time descending (newest on top)
@@ -538,6 +570,8 @@ def get_message_contacts(request):
     except Exception as e:
         print(f"Error in get_message_contacts: {e}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
 def get_conversation(request, receiver_id):
     """
     Fetches conversation between current user and a specific receiver.
@@ -584,6 +618,19 @@ def get_conversation(request, receiver_id):
 
         if not allowed:
             return JsonResponse({'status': 'error', 'message': 'You do not have permission to view this conversation'}, status=403)
+
+        # Mark messages as read (messages sent TO me FROM the other person)
+        # Use raw SQL to handle composite primary key properly
+        with connection.cursor() as cur:
+            cur.execute("""
+                UPDATE message_recipients mr
+                SET status = 'seen', seen_at = %s
+                FROM messages m
+                WHERE mr.message_id = m.message_id
+                AND mr.receiver_id = %s
+                AND m.sender_id = %s
+                AND (mr.status IS NULL OR mr.status = 'sent')
+            """, [timezone.now(), sender_id, receiver_id])
 
         # Call stored procedure
         with connection.cursor() as cursor:
@@ -706,6 +753,8 @@ def send_message(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+@csrf_exempt
+@require_http_methods(["GET"])
 def download_attachment(request, message_id):
     """
     Securely streams an attachment stored on a Message row.
@@ -733,6 +782,13 @@ def download_attachment(request, message_id):
         # Stream attachment bytes
         from io import BytesIO
         data = msg.attachment
+        
+        # Handle memoryview objects from PostgreSQL bytea fields
+        if isinstance(data, memoryview):
+            data = bytes(data)
+        elif data is None:
+            return JsonResponse({'status': 'error', 'message': 'Attachment data is null'}, status=404)
+            
         filename = msg.attachment_filename or f"attachment_{message_id}"
         content_type = msg.attachment_content_type or 'application/octet-stream'
 
@@ -819,25 +875,35 @@ def convert_attachment_to_pdf(request, message_id):
 
         from apps.communications.utils import convert_to_pdf
         filename = msg.attachment_filename or f"attachment_{message_id}"
+        
+        # Log conversion attempt
+        print(f"[CONVERSION] Starting conversion for {filename} (type: {content_type})")
+        
         pdf_bytes, success = convert_to_pdf(msg.attachment, filename, content_type)
 
-        if not success:
-            return JsonResponse({'status': 'error', 'message': 'Conversion failed'}, status=400)
+        if not success or not pdf_bytes:
+            print(f"[CONVERSION] Failed to convert {filename}")
+            return JsonResponse({'status': 'error', 'message': 'Conversion failed. The document format may not be supported.'}, status=400)
 
+        print(f"[CONVERSION] Successfully converted {filename} to PDF ({len(pdf_bytes)} bytes)")
+        
         stream = BytesIO(pdf_bytes)
         response = FileResponse(stream, as_attachment=False, filename=filename.rsplit('.', 1)[0] + '.pdf', content_type='application/pdf')
         response['Content-Length'] = str(len(pdf_bytes))
         return response
 
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        print(f"[CONVERSION ERROR] {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'status': 'error', 'message': f'Conversion error: {str(e)}'}, status=500)
 
 
 @require_http_methods(["GET"])
 def download_announcement_attachment(request, announcement_id):
     """
     Download or preview attachment from an announcement.
-    Note: Since multiple files are combined, this returns the combined blob.
+    Supports both new individual attachments and legacy combined attachments.
     """
     user_id = request.session.get('user_id')
     role = request.session.get('role')
@@ -848,27 +914,96 @@ def download_announcement_attachment(request, announcement_id):
     try:
         announcement = Announcement.objects.get(announcement_id=announcement_id)
         
-        if not announcement.attachment:
-            return JsonResponse({'status': 'error', 'message': 'No attachment found'}, status=404)
+        # Get attachment_id from query params (for new structure)
+        attachment_id = request.GET.get('attachment_id')
         
-        # Parse filenames (semicolon-separated for multiple files)
-        filenames = announcement.attachment_filename.split(';') if announcement.attachment_filename else ['attachment']
+        # NEW STRUCTURE: Download specific attachment
+        if attachment_id:
+            try:
+                from .models import AnnouncementAttachment
+                attachment = AnnouncementAttachment.objects.get(
+                    attachment_id=attachment_id,
+                    announcement=announcement
+                )
+                
+                data = attachment.file_data
+                if isinstance(data, memoryview):
+                    data = bytes(data)
+                elif data is None:
+                    return JsonResponse({'status': 'error', 'message': 'Attachment data is null'}, status=404)
+                
+                filename = attachment.original_filename
+                content_type = attachment.content_type
+                
+                # Check if preview mode or download
+                preview = request.GET.get('preview', 'false').lower() == 'true'
+                format_flag = request.GET.get('format')
+                
+                # PDF Conversion if requested
+                if format_flag == 'pdf' and content_type != 'application/pdf':
+                    from apps.communications.utils import convert_to_pdf
+                    pdf_data, success = convert_to_pdf(data, filename, content_type)
+                    if success:
+                        data = pdf_data
+                        filename = filename.rsplit('.', 1)[0] + '.pdf'
+                        content_type = 'application/pdf'
+                    else:
+                        return JsonResponse({'status': 'error', 'message': 'PDF conversion failed'}, status=400)
+                
+                stream = BytesIO(data)
+                response = FileResponse(stream, as_attachment=not preview, filename=filename, content_type=content_type)
+                response['Content-Length'] = str(len(data))
+                
+                return response
+                
+            except AnnouncementAttachment.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Attachment not found'}, status=404)
         
-        # For combined files, use first filename or generic name
-        filename = filenames[0].strip() if filenames else 'attachments.bin'
-        content_type = announcement.attachment_content_type or 'application/octet-stream'
-        
-        # Check if preview mode (open in browser) or download
-        preview = request.GET.get('preview', 'false').lower() == 'true'
-        
-        response = HttpResponse(announcement.attachment, content_type=content_type)
-        if preview:
-            response['Content-Disposition'] = f'inline; filename="{filename}"'
+        # LEGACY STRUCTURE: Download combined attachment
         else:
-            response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        response['Content-Length'] = str(announcement.attachment_size or len(announcement.attachment))
-        
-        return response
+            if not announcement.attachment:
+                # No legacy attachment, check if there are new attachments
+                if announcement.attachments.exists():
+                    # Get first attachment as default
+                    first_attachment = announcement.attachments.first()
+                    return JsonResponse({
+                        'status': 'info',
+                        'message': 'Please specify attachment_id parameter',
+                        'attachment_id': first_attachment.attachment_id
+                    }, status=400)
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'No attachment found'}, status=404)
+            
+            # Handle legacy attachment data
+            data = announcement.attachment
+            
+            if isinstance(data, memoryview):
+                data = bytes(data)
+            elif data is None:
+                return JsonResponse({'status': 'error', 'message': 'Attachment data is null'}, status=404)
+            
+            filenames = announcement.attachment_filename.split(';') if announcement.attachment_filename else ['attachment']
+            filename = filenames[0].strip() if filenames else 'attachments.bin'
+            content_type = announcement.attachment_content_type or 'application/octet-stream'
+            
+            preview = request.GET.get('preview', 'false').lower() == 'true'
+            format_flag = request.GET.get('format')
+            
+            if format_flag == 'pdf' and content_type != 'application/pdf':
+                from apps.communications.utils import convert_to_pdf
+                pdf_data, success = convert_to_pdf(data, filename, content_type)
+                if success:
+                    data = pdf_data
+                    filename = filename.rsplit('.', 1)[0] + '.pdf'
+                    content_type = 'application/pdf'
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'PDF conversion failed'}, status=400)
+            
+            stream = BytesIO(data)
+            response = FileResponse(stream, as_attachment=not preview, filename=filename, content_type=content_type)
+            response['Content-Length'] = str(len(data))
+            
+            return response
         
     except Announcement.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
@@ -879,7 +1014,8 @@ def download_announcement_attachment(request, announcement_id):
 @require_http_methods(["GET"])
 def convert_announcement_attachment_to_pdf(request, announcement_id):
     """
-    Convert announcement attachment to PDF for preview.
+    Convert a specific attachment to PDF and return it.
+    Supports both new individual attachments and legacy combined attachments.
     """
     user_id = request.session.get('user_id')
     role = request.session.get('role')
@@ -890,33 +1026,159 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
     try:
         announcement = Announcement.objects.get(announcement_id=announcement_id)
         
-        if not announcement.attachment:
-            return JsonResponse({'status': 'error', 'message': 'No attachment found'}, status=404)
+        # Get attachment_id from request body (for new structure)
+        try:
+            body = json.loads(request.body)
+            attachment_id = body.get('attachment_id')
+        except json.JSONDecodeError:
+            attachment_id = None
         
-        content_type = announcement.attachment_content_type or 'application/octet-stream'
+        # NEW STRUCTURE: Convert specific attachment
+        if attachment_id:
+            try:
+                from .models import AnnouncementAttachment
+                attachment = AnnouncementAttachment.objects.get(
+                    attachment_id=attachment_id,
+                    announcement=announcement
+                )
+                
+                data = attachment.file_data
+                if isinstance(data, memoryview):
+                    data = bytes(data)
+                elif data is None:
+                    return JsonResponse({'status': 'error', 'message': 'Attachment data is null'}, status=404)
+                
+                filename = attachment.original_filename
+                content_type = attachment.content_type
+                
+                # Already PDF, just return it
+                if content_type == 'application/pdf':
+                    stream = BytesIO(data)
+                    response = FileResponse(stream, as_attachment=False, 
+                                           filename=filename, 
+                                           content_type='application/pdf')
+                    response['Content-Length'] = str(len(data))
+                    return response
+                
+                # Convert to PDF
+                from apps.communications.utils import convert_to_pdf
+                pdf_data, success = convert_to_pdf(data, filename, content_type)
+                
+                if not success:
+                    return JsonResponse({
+                        'status': 'error', 
+                        'message': f'Cannot convert {content_type} to PDF'
+                    }, status=400)
+                
+                pdf_filename = filename.rsplit('.', 1)[0] + '.pdf'
+                stream = BytesIO(pdf_data)
+                response = FileResponse(stream, as_attachment=False, 
+                                       filename=pdf_filename, 
+                                       content_type='application/pdf')
+                response['Content-Length'] = str(len(pdf_data))
+                return response
+                
+            except AnnouncementAttachment.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Attachment not found'}, status=404)
         
-        # If already PDF, just return it
-        if content_type == 'application/pdf':
-            response = HttpResponse(announcement.attachment, content_type='application/pdf')
-            response['Content-Disposition'] = 'inline'
+        # LEGACY STRUCTURE: Convert combined attachment
+        else:
+            if not announcement.attachment:
+                # No legacy attachment, check if there are new attachments
+                if announcement.attachments.exists():
+                    first_attachment = announcement.attachments.first()
+                    return JsonResponse({
+                        'status': 'info',
+                        'message': 'Please specify attachment_id in request body',
+                        'attachment_id': first_attachment.attachment_id
+                    }, status=400)
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'No attachment found'}, status=404)
+            
+            # Handle legacy attachment data
+            data = announcement.attachment
+            
+            if isinstance(data, memoryview):
+                data = bytes(data)
+            elif data is None:
+                return JsonResponse({'status': 'error', 'message': 'Attachment data is null'}, status=404)
+            
+            filenames = announcement.attachment_filename.split(';') if announcement.attachment_filename else ['attachment']
+            filename = filenames[0].strip() if filenames else 'attachment.bin'
+            content_type = announcement.attachment_content_type or 'application/octet-stream'
+            
+            # Already PDF, just return it
+            if content_type == 'application/pdf':
+                stream = BytesIO(data)
+                response = FileResponse(stream, as_attachment=False, 
+                                       filename=filename, 
+                                       content_type='application/pdf')
+                response['Content-Disposition'] = 'inline'
+                response['Content-Length'] = str(len(data))
+                return response
+            
+            # Convert to PDF
+            from apps.communications.utils import convert_to_pdf
+            pdf_data, success = convert_to_pdf(data, filename, content_type)
+            
+            if not success:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Cannot convert {content_type} to PDF'
+                }, status=400)
+            
+            pdf_filename = filename.rsplit('.', 1)[0] + '.pdf'
+            stream = BytesIO(pdf_data)
+            response = FileResponse(stream, as_attachment=False, 
+                                   filename=pdf_filename, 
+                                   content_type='application/pdf')
+            response['Content-Length'] = str(len(pdf_data))
             return response
-        
-        # Convert to PDF
-        from apps.communications.utils import convert_to_pdf
-        filenames = announcement.attachment_filename.split(';') if announcement.attachment_filename else ['attachment']
-        filename = filenames[0].strip() if filenames else 'attachment'
-        
-        pdf_bytes, success = convert_to_pdf(announcement.attachment, filename, content_type)
-        
-        if not success:
-            return JsonResponse({'status': 'error', 'message': 'Conversion failed'}, status=400)
-        
-        stream = BytesIO(pdf_bytes)
-        response = FileResponse(stream, as_attachment=False, filename=filename.rsplit('.', 1)[0] + '.pdf', content_type='application/pdf')
-        response['Content-Length'] = str(len(pdf_bytes))
-        return response
         
     except Announcement.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+def get_recent_activity(request):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=401)
+    
+    # STEP 1: Get the list of Message IDs directly
+    # .values_list() is crucial here because it reads SPECIFIC columns only.
+    # It won't try to read the missing 'id' column.
+    message_ids = MessageRecipient.objects.filter(
+        receiver_id=user_id
+    ).values_list('message_id', flat=True)
+
+    # STEP 2: Fetch the actual Message objects using those IDs
+    recent_messages = Message.objects.filter(
+        message_id__in=message_ids
+    ).select_related('sender').order_by('-sent_at')[:5]
+
+    activities = []
+    
+    for msg in recent_messages:
+        sender_name = "Unknown"
+        if msg.sender:
+            sender_name = f"{msg.sender.first_name} {msg.sender.last_name}"
+        
+        time_diff = timesince(msg.sent_at).split(',')[0]
+        
+        # Clean up the time display
+        if "minute" not in time_diff and "hour" not in time_diff and "day" not in time_diff:
+            time_display = "Just now"
+        else:
+            time_display = f"{time_diff} ago"
+
+        activities.append({
+            'title': 'New Message',
+            'sender': f"from {sender_name}",
+            'time': time_display
+        })
+
+    return JsonResponse({'status': 'success', 'activities': activities})

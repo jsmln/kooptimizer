@@ -45,6 +45,11 @@ def apply_sql_file(path):
                         pass
                 except Exception:
                     pass
+            if base == 'sp_get_announcement_details.sql':
+                try:
+                    cur.execute('DROP FUNCTION IF EXISTS sp_get_announcement_details(integer) CASCADE;')
+                except Exception:
+                    pass
             cur.execute(sql)
         print(f"Applied {os.path.basename(path)} successfully.")
     except Exception as e:

@@ -9,6 +9,231 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     
     <style>
+    /* --- HIDE DASHBOARD HEADER ELEMENTS --- */
+    .top-bar .page-title,
+    .top-bar .search-box {
+        display: none !important;
+    }
+    
+    .top-bar .user-menu {
+        display: none !important;
+    }
+    
+    /* Hide sidebar toggle on desktop only, keep it visible on mobile */
+    @media (min-width: 901px) {
+        .top-bar #sidebar-toggle-btn {
+            display: none !important;
+        }
+        
+        .top-bar .top-left {
+            display: none !important;
+        }
+    }
+    
+    /* On mobile, keep the top bar visible but minimal */
+    @media (max-width: 900px) {
+        .top-bar {
+            padding: 0 10px;
+        }
+        
+        .top-bar .top-left {
+            display: flex !important;
+        }
+    }
+    
+    /* --- CUSTOM MESSAGES HEADER --- */
+    .messages-header {
+        position: fixed;
+        top: 0;
+        left: 250px;
+        right: 0;
+        height: 56px;
+        background: white;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 100;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    
+    .messages-header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .messages-header h1 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2B3674;
+    }
+    
+    /* Profile Dropdown */
+    .profile-dropdown {
+        position: relative;
+    }
+    
+    .profile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 12px;
+        transition: background 0.2s;
+    }
+    
+    .profile-trigger:hover {
+        background: #f7f9fc;
+    }
+    
+    .profile-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #a91e2c;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        line-height: 1.2;
+    }
+    
+    .profile-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #2B3674;
+    }
+    
+    .profile-role {
+        font-size: 0.75rem;
+        color: #A3AED0;
+    }
+    
+    .dropdown-arrow {
+        color: #A3AED0;
+        font-size: 0.8rem;
+        transition: transform 0.2s;
+    }
+    
+    .profile-dropdown.active .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+    
+    /* Dropdown Menu */
+    .dropdown-menu-custom {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        min-width: 200px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        z-index: 1000;
+    }
+    
+    .profile-dropdown.active .dropdown-menu-custom {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    .dropdown-item-custom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        color: #2B3674;
+        text-decoration: none;
+        transition: background 0.2s;
+        border-radius: 8px;
+        margin: 4px;
+    }
+    
+    .dropdown-item-custom:first-child {
+        margin-top: 8px;
+    }
+    
+    .dropdown-item-custom:last-child {
+        margin-bottom: 8px;
+    }
+    
+    .dropdown-item-custom:hover {
+        background: #f7f9fc;
+        color: #2B3674;
+    }
+    
+    .dropdown-item-custom i {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .dropdown-item-custom.logout {
+        color: #a91e2c;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 4px;
+    }
+    
+    .dropdown-item-custom.logout:hover {
+        background: #fff0f2;
+        color: #a91e2c;
+    }
+    
+    /* Adjust content area for fixed header */
+    .content-scrollable {
+        margin-top: 56px !important;
+        height: calc(100% - 56px) !important;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 992px) {
+        .messages-header {
+            left: 0;
+            padding: 0 15px;
+            height: 52px;
+            top: 56px; /* Position below dashboard top bar */
+        }
+        
+        .messages-header h1 {
+            font-size: 1.1rem;
+        }
+        
+        .profile-info {
+            display: none;
+        }
+        
+        .dropdown-arrow {
+            display: none;
+        }
+        
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 0.9rem;
+        }
+        
+        .content-scrollable {
+            margin-top: 52px !important;
+            height: calc(100% - 52px) !important;
+        }
+    }
+    
     /* --- 1. PARENT CONTAINER (Dashboard Center Panel) --- */
     /* We turn this into a Flex container to perfectly center the message box */
     .content-scrollable {
@@ -20,6 +245,7 @@
         justify-content: center; /* Center Horizontally */
         overflow: hidden !important;
         background-color: #F4F7FE; /* Ensure it matches dashboard bg */
+        position: relative;
     }
 
     /* --- 2. THE LAYOUT WRAPPER (The "Container") --- */
@@ -31,7 +257,10 @@
         max-width: 1400px; /* Prevent it from getting too wide on huge screens */
         
         gap: 20px; /* Space between Contact List and Chat */
-        background: transparent; 
+        background: transparent;
+        position: relative;
+        z-index: 10;
+        min-height: 0;
     }
 
     /* --- LEFT CARD: CONVERSATION LIST --- */
@@ -48,6 +277,12 @@
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03); /* Very subtle shadow */
         overflow: hidden; 
         border: none;
+        position: relative;
+        z-index: 11;
+        min-height: 0;
+        height: 100%;
+        flex-shrink: 0;
+        pointer-events: auto;
     }
 
     /* --- RIGHT CARD: CHAT WINDOW --- */
@@ -62,52 +297,160 @@
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
         overflow: hidden;
         border: none;
+        min-height: 0;
+        height: 100%;
+        pointer-events: auto;
+        position: relative;
+        z-index: 10;
     }
 
     /* --- INNER CONTENT SCROLLING --- */
     .contact-list {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0;
+        max-width: 100%;
+        pointer-events: auto;
+    }
+    
+    .contact-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .contact-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .contact-list::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+    }
+    
+    .contact-list::-webkit-scrollbar-thumb:hover {
+        background: #999;
     }
 
     .message-area { 
         flex: 1; 
-        overflow-y: auto; 
+        overflow-y: auto !important;
+        overflow-x: hidden;
         padding: 20px; 
         background: #fff; 
         display: flex;
         flex-direction: column;
         gap: 12px;
+        min-height: 0;
+        -webkit-overflow-scrolling: touch;
+        pointer-events: auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .message-area::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .message-area::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .message-area::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+    }
+    
+    .message-area::-webkit-scrollbar-thumb:hover {
+        background: #999;
     }
 
     /* --- HEADER & FOOTER STYLING --- */
     .list-header, .chat-header {
         padding: 0 20px;
         border-bottom: 1px solid #f5f5f5;
-        height: 60px; /* Reduced height slightly for a cleaner look */
+        height: 56px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
         background: #fff;
+        flex-shrink: 0;
+    }
+    
+    .list-header {
+        justify-content: space-between;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .chat-header {
+        justify-content: flex-start;
+        gap: 12px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .chat-header h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin: 0;
+        color: #2B3674;
+        line-height: 1.2;
+        flex: 1;
+        overflow: hidden;
+    }
+    
+    .chat-header h3 span {
+        display: block;
+        margin-top: 2px;
+        line-height: 1.1;
+    }
+    
+    .chat-header .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background-color: #a91e2c;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        flex-shrink: 0;
     }
 
-    .list-header h2, .chat-header h3 {
+    .list-header h2 {
         font-size: 1.1rem;
         font-weight: 700;
         margin: 0;
-        color: #000;
+        color: #2B3674;
+        text-align: left;
     }
 
     .message-input { 
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
-        padding: 15px 20px; 
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 12px 20px 15px;
         border-top: 1px solid #f5f5f5; 
         background: #fff;
+        flex-shrink: 0;
+        z-index: 10;
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
     }
 
-    .message-input input[type="text"] { 
+    .message-input-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .message-input textarea { 
         flex: 1; 
         padding: 10px 15px; 
         border-radius: 20px; 
@@ -116,11 +459,156 @@
         outline: none;
         color: #000;
         font-size: 0.9rem;
+        min-width: 0;
+        resize: none;
+        overflow-y: hidden;
+        max-height: 90px;
+        min-height: 40px;
+        line-height: 1.4;
+        font-family: inherit;
+        width: 100%;
+        box-sizing: border-box;
     }
     
-    .message-input input[type="text"]:focus {
-        border-color: #a91e2c; /* Red border on focus */
+    .message-input textarea.scrollable {
+        overflow-y: auto;
+    }
+    
+    .message-input textarea:focus {
+        border-color: #a91e2c;
         background: #fff;
+    }
+
+    .message-input textarea::placeholder {
+        color: #999;
+    }
+
+    /* Attachment preview container */
+    .attachment-preview-container {
+        display: none;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        padding: 8px 0 12px;
+        gap: 8px;
+        margin-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .attachment-preview-container.has-files {
+        display: flex;
+    }
+
+    .attachment-preview-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .attachment-preview-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    .attachment-preview-container::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+
+    .attachment-preview-container::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }
+
+    /* Individual attachment preview item */
+    .attachment-preview-item {
+        position: relative;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 60px;
+        max-width: 80px;
+        height: 60px;
+        background: #f5f5f5;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+        flex-shrink: 0;
+    }
+
+    .attachment-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .attachment-preview-item .file-icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        height: 100%;
+    }
+
+    .attachment-preview-item .file-icon i {
+        font-size: 20px;
+        color: #666;
+        margin-bottom: 2px;
+    }
+
+    .attachment-preview-item .file-name {
+        font-size: 8px;
+        color: #666;
+        text-align: center;
+        word-break: break-word;
+        white-space: normal;
+        line-height: 1.1;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    /* Remove button */
+    .attachment-remove-btn {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 10px;
+        line-height: 1;
+        padding: 0;
+        transition: background 0.2s;
+    }
+
+    .attachment-remove-btn:hover {
+        background: rgba(0, 0, 0, 0.9);
+    }
+
+    .attachment-remove-btn i {
+        font-size: 9px;
+    }
+
+    /* Error message */
+    .attachment-error {
+        color: #d32f2f;
+        font-size: 12px;
+        padding: 4px 0 8px;
+        display: none;
+    }
+
+    .attachment-error.show {
+        display: block;
     }
 
     /* --- Search Bar --- */
@@ -128,6 +616,8 @@
         padding: 15px 20px;
         border-bottom: 1px solid #f5f5f5;
         position: relative;
+        background: #fff;
+        z-index: 1;
     }
     .search-bar input {
         width: 100%;
@@ -146,6 +636,7 @@
         transform: translateY(-50%);
         color: #888;
         font-size: 0.9rem;
+        pointer-events: none;
     }
 
     /* --- Contact Items --- */
@@ -156,11 +647,46 @@
         cursor: pointer;
         transition: background 0.2s;
         border-bottom: 1px solid #fafafa;
+        max-width: 100%;
+        overflow: hidden;
+        position: relative;
     }
     .contact-item:hover { background-color: #fafafa; }
     .contact-item.active { 
         background-color: #fff5f5; /* Very light red */
         border-left: 3px solid #a91e2c;
+    }
+    
+    /* Contact name and details styling */
+    .contact-name {
+        color: #000 !important;
+        font-weight: 500;
+    }
+    .contact-item.unread .contact-name {
+        font-weight: 700 !important;
+    }
+    .contact-item.unread .message-preview {
+        font-weight: 600 !important;
+        color: #000 !important;
+    }
+    .contact-item.unread .timestamp {
+        font-weight: 700 !important;
+        color: #000 !important;
+    }
+    .contact-role {
+        display: block;
+        font-size: 11px !important;
+        color: #888 !important;
+        margin-top: 2px !important;
+        margin-bottom: 4px !important;
+        line-height: 1.2;
+    }
+    .contact-item.unread .contact-role {
+        font-weight: 700 !important;
+        color: #000 !important;
+    }
+    .message-preview {
+        color: #666 !important;
     }
 
     /* --- Chat Bubbles --- */
@@ -171,6 +697,17 @@
         line-height: 1.4;
         font-size: 0.95rem;
         position: relative;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+    .message p {
+        margin: 0;
+        word-wrap: break-word;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+        max-width: 100%;
     }
     .message.incoming {
         background-color: #f5f5f5;
@@ -196,18 +733,39 @@
         background: #a91e2c;
         border: none;
         color: #fff;
-        width: 40px; height: 40px;
+        width: 40px; 
+        height: 40px;
         border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
         cursor: pointer;
         transition: 0.2s;
+        flex-shrink: 0;
+        z-index: 10;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
     .send-btn:hover { background: #8a1824; }
+    .send-btn:active { background: #6d1420; transform: scale(0.95); }
+    .send-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
 
     .attach-btn {
-        background: none; border: none;
-        color: #666; font-size: 1.3rem;
-        cursor: pointer; padding: 0 5px;
+        background: none; 
+        border: none;
+        color: #666; 
+        font-size: 1.3rem;
+        cursor: pointer; 
+        padding: 0 5px;
+        flex-shrink: 0;
+        z-index: 10;
+        position: relative;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
     .attach-btn:hover { color: #a91e2c; }
 
@@ -215,22 +773,592 @@
     .new-message-btn:hover { color: #a91e2c; }
 
     /* --- ATTACHMENTS & PREVIEW --- */
-    .attachment { margin-top:6px; }
-    .attachment img.thumb { max-width: 200px; border-radius:8px; cursor:pointer; }
-    .preview-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:1200; }
-    .preview-content { background:#fff; width:85vw; height:85vh; border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+    .attachment { 
+        margin-top: 8px; 
+        display: block;
+    }
+    
+    /* Image attachments - Meta Messenger style */
+    .attachment img.thumb { 
+        max-width: 200px;
+        max-height: 250px;
+        border-radius: 12px;
+        cursor: pointer;
+        display: block;
+        object-fit: cover;
+        transition: opacity 0.2s;
+        background: #f0f0f0;
+        min-height: 80px;
+    }
+    .attachment img.thumb:hover {
+        opacity: 0.95;
+    }
+    
+    /* Image loading state */
+    .attachment {
+        position: relative;
+    }
+    .attachment img.thumb[src] {
+        animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    /* Document attachments - Card style */
+    .doc-attachment-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+        max-width: 220px;
+        margin-top: 4px;
+    }
+    .message.incoming .doc-attachment-card {
+        background: rgba(0, 0, 0, 0.08);
+    }
+    .message.outgoing .doc-attachment-card {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .doc-attachment-card:hover {
+        background: rgba(0, 0, 0, 0.12);
+    }
+    .message.outgoing .doc-attachment-card:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    .doc-attachment-icon {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .message.outgoing .doc-attachment-icon {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    .message.outgoing .doc-attachment-icon.text-danger,
+    .message.outgoing .doc-attachment-icon.text-primary,
+    .message.outgoing .doc-attachment-icon.text-success,
+    .message.outgoing .doc-attachment-icon.text-warning,
+    .message.outgoing .doc-attachment-icon.text-info {
+        filter: brightness(1.5);
+    }
+    .doc-attachment-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .doc-attachment-name {
+        font-size: 0.8rem;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .doc-attachment-size {
+        font-size: 0.65rem;
+        opacity: 0.7;
+    }
+    
+    /* Preview Modal - Meta Messenger style */
+    .preview-overlay { 
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .preview-overlay.show {
+        opacity: 1;
+    }
+    .preview-content { 
+        background: #fff;
+        width: 90vw;
+        max-width: 1200px;
+        height: 85vh;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    }
+    .preview-main-container {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+    .preview-sidebar {
+        width: 180px;
+        background: #2b2b2b;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-right: 1px solid #444;
+        flex-shrink: 0;
+    }
+    .preview-sidebar-header {
+        padding: 10px;
+        background: #1a1a1a;
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 1px solid #444;
+    }
+    .preview-thumbnails {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+    }
+    .preview-thumbnail {
+        margin-bottom: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #333;
+        transition: border-color 0.2s;
+        position: relative;
+    }
+    .preview-thumbnail:hover {
+        border-color: #666;
+    }
+    .preview-thumbnail.active {
+        border-color: #d32f2f;
+    }
+    .preview-thumbnail canvas {
+        width: 100%;
+        display: block;
+    }
+    .preview-thumbnail-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.7);
+        color: #fff;
+        text-align: center;
+        font-size: 0.7rem;
+        padding: 2px 4px;
+    }
+    .preview-content-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .preview-header {
+        background: #f8f9fa;
+        padding: 12px 16px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .preview-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #2B3674;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 15px;
+    }
+    .preview-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .preview-controls button,
+    .preview-controls .btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 8px;
+        background: #6c757d;
+        color: white;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+    .preview-controls button[title] {
+        padding: 6px 10px;
+        font-size: 1rem;
+    }
+    .preview-controls button:hover,
+    .preview-controls .btn:hover {
+        background: #5a6268;
+    }
+    
+    /* Download button group */
+    .preview-download-group {
+        display: inline-flex;
+        position: relative;
+    }
+    .preview-download-group .btn-download-main {
+        background: #d32f2f;
+        border-radius: 8px 0 0 8px;
+        padding: 6px 12px;
+        border: none;
+        color: white;
+        text-decoration: none;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .preview-download-group .btn-download-main:hover {
+        background: #b71c1c;
+    }
+    .preview-download-group .btn-download-toggle {
+        background: #d32f2f;
+        border-radius: 0 8px 8px 0;
+        border-left: 1px solid rgba(255,255,255,0.2);
+        padding: 6px 8px;
+        border: none;
+        color: white;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .preview-download-group .btn-download-toggle:hover {
+        background: #b71c1c;
+    }
+    .preview-download-group .btn-download-toggle::after {
+        content: '';
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        display: inline-block;
+        padding: 3px;
+        transform: rotate(45deg);
+        transition: transform 0.2s;
+    }
+    .preview-download-group .btn-download-toggle[aria-expanded="true"]::after {
+        transform: rotate(-135deg);
+        margin-bottom: -3px;
+    }
+    .preview-download-dropdown {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 160px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        z-index: 1000;
+        overflow: hidden;
+    }
+    .preview-download-dropdown.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    .preview-download-dropdown a {
+        display: block;
+        padding: 10px 16px;
+        color: #2B3674;
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: background 0.2s;
+    }
+    .preview-download-dropdown a:hover {
+        background: #f7f9fc;
+    }
+    .preview-download-dropdown a i {
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
+    }
+    .preview-zoom-level {
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 500;
+        min-width: 45px;
+        text-align: center;
+    }
+    .preview-body {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        background: #f8f9fa;
+        padding: 20px;
+    }
+    .preview-body img {
+        max-width: none;
+        max-height: none;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        transition: width 0.2s, height 0.2s;
+        margin: auto;
+    }
+    .preview-body canvas {
+        display: block;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Loading overlay */
+    .loading-spinner-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1300;
+    }
+    .loading-content {
+        text-align: center;
+        color: white;
+    }
+    .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid white;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 
-    /* --- Responsive --- */
+    /* --- Back Button (Mobile Only) --- */
+    .back-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: #000;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0;
+        margin-right: 10px;
+        align-items: center;
+        justify-content: center;
+    }
+    .back-btn:hover {
+        color: #a91e2c;
+    }
+
+    /* --- Responsive Messenger-like Behavior --- */
     @media (max-width: 900px) {
-        .message-layout { flex-direction: column; gap: 10px; width: 95%; height: 95%; }
-        .conversation-list { width: 100%; max-width: none; height: 35%; }
-        .chat-window { height: 65%; }
+        /* Adjust parent container to fixed positioning for mobile */
+        .content-scrollable {
+            position: fixed;
+            top: 108px; /* Dashboard top bar (56px) + Messages header (52px) */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin-top: 0 !important;
+            height: calc(100vh - 108px) !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+        
+        /* Stack layout vertically, full width/height */
+        .message-layout { 
+            flex-direction: column; 
+            gap: 0; 
+            width: 100%; 
+            height: 100%; 
+            max-height: 100%;
+            position: relative;
+        }
+        
+        /* Sidebar takes full width and height initially */
+        .conversation-list { 
+            width: 100%; 
+            max-width: none; 
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 15;
+            transition: transform 0.3s ease;
+            border-radius: 0;
+            pointer-events: auto;
+        }
+        
+        /* Chat window takes full width and height, positioned behind sidebar */
+        .chat-window { 
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 10;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
+        }
+        
+        /* When chat is active, slide sidebar to the left (hide it) */
+        .conversation-list.slide-left {
+            transform: translateX(-100%);
+            pointer-events: none;
+        }
+        
+        /* Re-enable pointer events for chat when visible */
+        .conversation-list.slide-left ~ .chat-window {
+            pointer-events: auto;
+            z-index: 15;
+        }
+        
+        /* Show back button in chat header on mobile */
+        .back-btn {
+            display: flex;
+        }
+        
+        /* Fixed chat header on mobile - positioned below main header */
+        .chat-header {
+            position: fixed;
+            top: 52px;
+            left: 0;
+            right: 0;
+            padding: 12px 15px;
+            height: 52px;
+            flex-shrink: 0;
+            background: #fff;
+            z-index: 90;
+            border-bottom: 1px solid #f5f5f5;
+            pointer-events: auto;
+        }
+        
+        .chat-header h3 {
+            font-size: 0.85rem;
+            line-height: 1.2;
+        }
+        
+        .chat-header .avatar {
+            width: 34px;
+            height: 34px;
+            font-size: 0.9rem;
+        }
+        
+        /* Ensure message area scrolls properly on mobile with fixed header and input */
+        .message-area {
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+            min-height: 0;
+            margin-top: 52px;
+            margin-bottom: 62px;
+            pointer-events: auto;
+        }
+        
+        /* Fixed message input at bottom on mobile */
+        .message-input {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 12px 12px;
+            gap: 0;
+            background: #fff;
+            border-top: 1px solid #f5f5f5;
+            z-index: 90;
+            pointer-events: auto;
+        }
+        
+        .message-input-wrapper {
+            gap: 8px;
+        }
+        
+        /* Ensure buttons are clickable on mobile */
+        .send-btn,
+        .attach-btn {
+            pointer-events: auto;
+            touch-action: manipulation;
+        }
+        
+        .send-btn {
+            min-width: 38px;
+            min-height: 38px;
+            width: 38px;
+            height: 38px;
+        }
+        
+        .message-input textarea {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            max-height: 80px;
+        }
+        
+        /* Prevent body scrolling on mobile */
+        body.messages-page {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+    }
+    
+    /* Desktop: hide back button, show normal layout */
+    @media (min-width: 901px) {
+        .back-btn {
+            display: none !important;
+        }
     }
 </style>
 
 {% endblock %}
 
 {% block dashboard_content %}
+
+<!-- Custom Messages Header -->
+<div class="messages-header">
+    <div class="messages-header-left">
+        <h1>Messages</h1>
+    </div>
+    
+    <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-trigger">
+            <div class="profile-avatar">{{ request.session.username|first|upper }}</div>
+            <div class="profile-info">
+                <span class="profile-name">{{ request.session.username }}</span>
+                <span class="profile-role">{{ request.session.role|capfirst }}</span>
+            </div>
+            <i class="bi bi-chevron-down dropdown-arrow"></i>
+        </div>
+        
+        <div class="dropdown-menu-custom">
+            <a href="{% url 'users:profile_settings' %}" class="dropdown-item-custom">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+            <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal" class="dropdown-item-custom logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</div>
 
 <div class="message-layout">
 
@@ -252,31 +1380,43 @@
 
     <div class="chat-window">
         
-        <div class="chat-header">
+        <div class="chat-header" id="chat-header-section">
+            <button class="back-btn" id="back-btn" title="Back to contacts">
+                <i class="bi bi-arrow-left"></i>
+            </button>
             <div class="avatar" id="chat-avatar">-</div>
-            <h3 id="chat-name">Select a contact</h3>
+            <h3 id="chat-name"></h3>
         </div>
 
         <div class="message-area" id="message-area">
-            <div class="empty-state">
-                <p>No messages yet. Select a contact to start messaging.</p>
+            <div class="empty-state" id="empty-state-message" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #888;">
+                <i class="bi bi-chat-dots" style="font-size: 64px; color: #ccc; margin-bottom: 16px;"></i>
+                <p style="font-size: 16px; margin: 0;">Click the <i class="bi bi-pencil-square"></i> button to start a new conversation.</p>
             </div>
         </div>
 
-        <div class="message-input">
-            <!-- keep input in DOM but move offscreen to avoid display:none browser quirks -->
-            <input type="file" id="file-input" style="position: absolute; left: -9999px;" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">
+        <div class="message-input" id="message-input-section">
+            <!-- Hidden file input for multiple files -->
+            <input type="file" id="file-input" style="position: absolute; left: -9999px;" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" multiple>
             
-            <button class="attach-btn" id="attach-btn" title="Attach file">
-                <i class="bi bi-paperclip"></i>
-            </button>
-            <span id="attached-filename" style="margin-left:8px; font-size:12px; color:#666;"></span>
+            <!-- Attachment preview area (hidden by default) -->
+            <div class="attachment-preview-container" id="attachment-preview-container"></div>
             
-            <input type="text" id="text-input" placeholder="Type a message..." disabled>
+            <!-- Error message -->
+            <div class="attachment-error" id="attachment-error"></div>
             
-            <button class="send-btn" id="send-btn" title="Send" disabled>
-                <i class="bi bi-send-fill"></i>
-            </button>
+            <!-- Input wrapper -->
+            <div class="message-input-wrapper">
+                <button class="attach-btn" id="attach-btn" title="Attach files">
+                    <i class="bi bi-paperclip"></i>
+                </button>
+                
+                <textarea id="text-input" placeholder="Type a message..." rows="1" disabled></textarea>
+                
+                <button class="send-btn" id="send-btn" title="Send" disabled>
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
         </div>
 
     </div>
@@ -313,23 +1453,53 @@
 <div id="preview-modal" class="preview-overlay" style="display:none;">
     <div class="preview-content" role="dialog" aria-modal="true">
         <div class="preview-header">
-            <div class="preview-title" id="preview-title">Preview</div>
+            <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                <button id="toggleSidebar" title="Toggle thumbnails" style="border:none;"><i class="bi bi-layout-sidebar" style="font-size:1.25rem;"></i></button>
+                <div class="preview-title" id="preview-title">Preview</div>
+            </div>
             <div class="preview-controls">
-                <button id="zoomOut" onclick="zoomOut()">−</button>
+                <button id="rotateLeft" title="Rotate left"><i class="bi bi-arrow-counterclockwise"></i></button>
+                <button id="rotateRight" title="Rotate right"><i class="bi bi-arrow-clockwise"></i></button>
+                <button id="fitWidth" title="Fit to width"><i class="bi bi-arrows-expand"></i></button>
+                <button id="fitHeight" title="Fit to height"><i class="bi bi-arrows-expand-vertical"></i></button>
+                <button id="zoomOut">−</button>
                 <span class="preview-zoom-level" id="zoomLevel">100%</span>
-                <button id="zoomIn" onclick="zoomIn()">+</button>
+                <button id="zoomIn">+</button>
                 <div id="page-controls" style="display:none; gap:8px; align-items:center;">
-                    <button id="prevPage" onclick="previousPage()" style="background:#666;">‹ Prev</button>
-                    <span class="preview-zoom-level" id="pageCounter" style="min-width:60px;">Page 1</span>
-                    <button id="nextPage" onclick="nextPage()" style="background:#666;">Next ›</button>
+                    <button id="prevPage" style="background:#666;">‹</button>
+                    <input type="number" id="pageInput" min="1" style="width:50px; padding:4px 6px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:0.85rem;" />
+                    <span class="preview-zoom-level" style="min-width:auto;">of <span id="totalPages">1</span></span>
+                    <button id="nextPage" style="background:#666;">›</button>
                 </div>
-                <a id="preview-download-original" class="btn" href="#" style="text-decoration:none; background:#d32f2f;">Download</a>
-                <a id="preview-download-pdf" class="btn" href="#" style="text-decoration:none; background:#d32f2f; display:none;">As PDF</a>
-                <button id="preview-close" onclick="closePreview()" style="background:#666;">✕</button>
+                
+                <div class="preview-download-group">
+                    <a id="preview-download-main" class="btn-download-main" href="#" download>Download</a>
+                    <button id="preview-download-toggle" class="btn-download-toggle" type="button" aria-expanded="false"></button>
+                    <div id="preview-download-dropdown" class="preview-download-dropdown">
+                        <a id="preview-download-original" href="#" download>
+                            <i class="bi bi-file-earmark"></i>Original File
+                        </a>
+                        <a id="preview-download-pdf" href="#" download style="display:none;">
+                            <i class="bi bi-file-earmark-pdf"></i>As PDF
+                        </a>
+                    </div>
+                </div>
+                
+                <button id="preview-close" style="background:#666;">✕</button>
             </div>
         </div>
-        <div class="preview-body" id="preview-body">
-            <!-- content injected dynamically: <img> or <canvas> for PDF -->
+        <div class="preview-main-container">
+            <div class="preview-sidebar" id="preview-sidebar" style="display:none;">
+                <div class="preview-sidebar-header">Pages</div>
+                <div class="preview-thumbnails" id="preview-thumbnails">
+                    <!-- Thumbnails will be generated here -->
+                </div>
+            </div>
+            <div class="preview-content-wrapper">
+                <div class="preview-body" id="preview-body">
+                    <!-- content injected dynamically: <img> or <canvas> for PDF -->
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -353,11 +1523,194 @@
     const sendBtn = document.getElementById('send-btn');
     const attachBtn = document.getElementById('attach-btn');
     const fileInput = document.getElementById('file-input');
+    const attachmentPreviewContainer = document.getElementById('attachment-preview-container');
+    const attachmentError = document.getElementById('attachment-error');
     const searchInput = document.querySelector('.search-bar input');
     const newMsgBtn = document.querySelector('.new-message-btn');
     const newMsgModal = document.getElementById('new-message-modal');
     const modalCloseBtn = newMsgModal.querySelector('.modal-close-btn');
     const modalContactList = document.getElementById('modal-contact-list');
+    const backBtn = document.getElementById('back-btn');
+    const conversationListEl = document.querySelector('.conversation-list');
+    
+    // Download dropdown toggle
+    const downloadToggle = document.getElementById('preview-download-toggle');
+    const downloadDropdown = document.getElementById('preview-download-dropdown');
+    const downloadMain = document.getElementById('preview-download-main');
+    
+    // Preview control buttons
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageInput = document.getElementById('pageInput');
+    const previewCloseBtn = document.getElementById('preview-close');
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    const rotateLeftBtn = document.getElementById('rotateLeft');
+    const rotateRightBtn = document.getElementById('rotateRight');
+    const fitWidthBtn = document.getElementById('fitWidth');
+    const fitHeightBtn = document.getElementById('fitHeight');
+    const previewSidebar = document.getElementById('preview-sidebar');
+    const previewThumbnails = document.getElementById('preview-thumbnails');
+    
+    if (downloadToggle && downloadDropdown) {
+        downloadToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isExpanded = downloadToggle.getAttribute('aria-expanded') === 'true';
+            downloadToggle.setAttribute('aria-expanded', !isExpanded);
+            downloadDropdown.classList.toggle('show');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.preview-download-group')) {
+                downloadToggle.setAttribute('aria-expanded', 'false');
+                downloadDropdown.classList.remove('show');
+            }
+        });
+        
+        // Close dropdown when clicking a download link
+        downloadDropdown.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                downloadToggle.setAttribute('aria-expanded', 'false');
+                downloadDropdown.classList.remove('show');
+            });
+        });
+    }
+    
+    // Add event listeners for preview controls
+    if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', () => {
+            currentZoom = Math.min(currentZoom + 10, 300);
+            applyZoom();
+        });
+    }
+    
+    if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', () => {
+            currentZoom = Math.max(currentZoom - 10, 10);
+            applyZoom();
+        });
+    }
+    
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            const icon = toggleSidebarBtn.querySelector('i');
+            if (previewSidebar.style.display === 'none') {
+                previewSidebar.style.display = 'flex';
+                // Change to filled icon when open
+                icon.className = 'bi bi-layout-sidebar-inset';
+            } else {
+                previewSidebar.style.display = 'none';
+                // Change to outline icon when closed
+                icon.className = 'bi bi-layout-sidebar';
+            }
+        });
+    }
+    
+    if (rotateLeftBtn) {
+        rotateLeftBtn.addEventListener('click', () => {
+            currentRotation = (currentRotation - 90 + 360) % 360;
+            applyZoom();
+        });
+    }
+    
+    if (rotateRightBtn) {
+        rotateRightBtn.addEventListener('click', () => {
+            currentRotation = (currentRotation + 90) % 360;
+            applyZoom();
+        });
+    }
+    
+    if (fitWidthBtn) {
+        fitWidthBtn.addEventListener('click', () => {
+            fitToWidth();
+        });
+    }
+    
+    if (fitHeightBtn) {
+        fitHeightBtn.addEventListener('click', () => {
+            fitToHeight();
+        });
+    }
+    
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPage);
+                updatePageInput();
+                updateThumbnailActive();
+            }
+        });
+    }
+    
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPdfPage(currentPage);
+                updatePageInput();
+                updateThumbnailActive();
+            }
+        });
+    }
+    
+    // Page input - jump to specific page
+    if (pageInput) {
+        pageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const page = parseInt(pageInput.value);
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderPdfPage(currentPage);
+                    updatePageInput();
+                    updateThumbnailActive();
+                } else {
+                    // Reset to current page if invalid
+                    pageInput.value = currentPage;
+                }
+            }
+        });
+        
+        pageInput.addEventListener('blur', () => {
+            const page = parseInt(pageInput.value);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderPdfPage(currentPage);
+                updatePageInput();
+                updateThumbnailActive();
+            } else {
+                pageInput.value = currentPage;
+            }
+        });
+    }
+    
+    if (previewCloseBtn) {
+        previewCloseBtn.addEventListener('click', closePreview);
+    }
+
+    // ========================================
+    // Mobile Responsive Behavior
+    // ========================================
+    function showChatWindow() {
+        // On mobile, slide the sidebar to the left to reveal chat
+        if (window.innerWidth <= 900) {
+            conversationListEl.classList.add('slide-left');
+        }
+    }
+
+    function showContactList() {
+        // On mobile, slide the sidebar back to show contacts
+        if (window.innerWidth <= 900) {
+            conversationListEl.classList.remove('slide-left');
+        }
+    }
+
+    // Back button handler
+    backBtn.addEventListener('click', () => {
+        showContactList();
+    });
 
     // ========================================
     // Utility Functions
@@ -448,13 +1801,19 @@
         // Use data directly from the backend object
         const messagePreview = contact.last_message ? contact.last_message : 'No messages yet';
         const timestamp = contact.last_time ? timeAgo(contact.last_time) : '';
+        const hasUnread = contact.unread_count && contact.unread_count > 0;
+        
+        // Add unread class if there are unread messages
+        if (hasUnread) {
+            contactDiv.classList.add('unread');
+        }
 
         // Added Cooperative Name below the contact name
         contactDiv.innerHTML = `
             <div class="avatar">${getInitials(contact.name)}</div>
             <div class="contact-details">
                 <span class="contact-name">${contact.name}</span>
-                <span class="contact-role" style="font-size: 11px; color: #888; margin-bottom: 2px;">${contact.coop}</span>
+                <span class="contact-role">${contact.coop}</span>
                 <span class="message-preview">${escapeHtml(messagePreview)}</span>
             </div>
             <span class="timestamp" data-timestamp="${contact.last_time}">${timestamp}</span>
@@ -507,22 +1866,39 @@
     async function selectContact(contact) {
         currentConversationReceiverId = contact.user_id;
         
+        // Save last opened contact to localStorage
+        localStorage.setItem('lastOpenedContact', JSON.stringify({
+            user_id: contact.user_id,
+            name: contact.name,
+            coop: contact.coop
+        }));
+        
         // Update UI
         document.querySelectorAll('.contact-item').forEach(item => {
             item.classList.remove('active');
         });
         document.querySelector(`[data-user-id="${contact.user_id}"]`)?.classList.add('active');
 
+        // Hide empty state
+        const emptyState = document.getElementById('empty-state-message');
+        if (emptyState) emptyState.style.display = 'none';
+
+        // Update chat header
         chatHeaderAvatar.textContent = getInitials(contact.name);
-        // Show name and coop in header
         chatHeaderName.innerHTML = `${contact.name} <br><span style="font-size:12px;font-weight:normal;color:#ccc">${contact.coop}</span>`;
 
         // Enable input
         textInput.disabled = false;
         sendBtn.disabled = false;
 
+        // Show chat window on mobile
+        showChatWindow();
+
         // Load conversation
         await loadConversation(contact.user_id);
+        
+        // Start auto-refresh for this conversation
+        startMessagePolling();
     }
 
     // ========================================
@@ -553,7 +1929,8 @@
             messageArea.innerHTML = '';
             
             if (data.messages.length === 0) {
-                messageArea.innerHTML = '<div class="empty-state"><p>No messages yet. Start the conversation!</p></div>';
+                messageArea.innerHTML = '<div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #888;"><i class="bi bi-chat-dots" style="font-size: 64px; color: #ccc; margin-bottom: 16px;"></i><p style="font-size: 16px; margin: 0;">No messages yet. Start the conversation!</p></div>';
+                lastMessageCount = 0;
                 return;
             }
 
@@ -562,6 +1939,9 @@
             });
 
             messageArea.scrollTop = messageArea.scrollHeight;
+            
+            // Initialize message count for polling
+            lastMessageCount = data.messages.length;
         } catch (error) {
             console.error('Error loading conversation:', error);
             messageArea.innerHTML = `<div class="empty-state">Error loading messages</div>`;
@@ -571,25 +1951,57 @@
     function appendMessageElement(msg) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', msg.type);
-        const contentHTML = `<p>${escapeHtml(msg.text || '')}</p>`;
+        
+        // Only show text if present
+        const contentHTML = msg.text ? `<p>${escapeHtml(msg.text)}</p>` : '';
         let attachmentHTML = '';
+        
         if (msg.has_attachment) {
             const fname = msg.attachment_filename || 'attachment';
-            const size = msg.attachment_size ? ' (' + Math.round(msg.attachment_size / 1024) + ' KB)' : '';
+            const sizeKB = msg.attachment_size ? Math.round(msg.attachment_size / 1024) : 0;
+            const sizeText = sizeKB > 0 ? `${sizeKB} KB` : '';
             const href = `/communications/api/message/attachment/${msg.message_id}/`;
 
-            // If content type indicates image, show thumbnail and open modal on click
+            // If content type indicates image, show inline thumbnail (Meta Messenger style)
             if (msg.attachment_content_type && msg.attachment_content_type.startsWith('image')) {
                 attachmentHTML = `
                     <div class="attachment">
-                        <img class="thumb" src="${href}" alt="${escapeHtml(fname)}" data-message-id="${msg.message_id}" />
-                        <div style="font-size:12px;color:#666;margin-top:6px">${escapeHtml(fname)}${size}</div>
+                        <img class="thumb" 
+                             src="${href}" 
+                             alt="${escapeHtml(fname)}" 
+                             data-message-id="${msg.message_id}"
+                             onerror="console.error('Failed to load image:', '${href}'); this.style.display='none'; this.nextElementSibling.style.display='flex';" 
+                             onload="console.log('Image loaded successfully:', '${href}');" />
+                        <div style="display:none; padding:10px; background:rgba(0,0,0,0.1); border-radius:8px; font-size:0.85rem; align-items:center; gap:8px;">
+                            <i class="bi bi-image" style="font-size:1.5rem;"></i> 
+                            <span>Failed to load image</span>
+                        </div>
                     </div>`;
             } else {
-                // Document/other: show doc preview box that opens iframe modal
+                // Document/other: show as card with Bootstrap icon (matching announcement modal)
+                const fileExt = fname.split('.').pop().toLowerCase();
+                let iconClass = 'bi-file-earmark text-secondary';
+                
+                if (fileExt === 'pdf') iconClass = 'bi-file-earmark-pdf text-danger';
+                else if (['doc', 'docx'].includes(fileExt)) iconClass = 'bi-file-earmark-word text-primary';
+                else if (['xls', 'xlsx'].includes(fileExt)) iconClass = 'bi-file-earmark-excel text-success';
+                else if (['ppt', 'pptx'].includes(fileExt)) iconClass = 'bi-file-earmark-ppt text-warning';
+                else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileExt)) iconClass = 'bi-file-earmark-image text-info';
+                else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(fileExt)) iconClass = 'bi-file-earmark-zip text-purple';
+                else if (['txt', 'csv'].includes(fileExt)) iconClass = 'bi-file-earmark-text text-muted';
+                
                 attachmentHTML = `
                     <div class="attachment">
-                        <div class="doc-preview" data-href="${href}" data-fname="${escapeHtml(fname)}" data-content-type="${msg.attachment_content_type || ''}">📎 ${escapeHtml(fname)}${size} (preview)</div>
+                        <div class="doc-attachment-card" 
+                             data-href="${href}" 
+                             data-fname="${escapeHtml(fname)}" 
+                             data-content-type="${msg.attachment_content_type || ''}">
+                            <i class="bi ${iconClass} doc-attachment-icon"></i>
+                            <div class="doc-attachment-info">
+                                <div class="doc-attachment-name">${escapeHtml(fname)}</div>
+                                <div class="doc-attachment-size">${sizeText}</div>
+                            </div>
+                        </div>
                     </div>`;
             }
         }
@@ -604,16 +2016,16 @@
 
         // Attach click handlers for dynamic preview elements
         if (msg.has_attachment) {
-            // image thumbnails
+            // Image thumbnails - click to preview
             const imgEl = messageElement.querySelector('img.thumb');
             if (imgEl) {
                 imgEl.addEventListener('click', () => {
-                    openPreviewImage(imgEl.src, msg.attachment_filename || 'image');
+                    openPreviewImage(imgEl.src, msg.attachment_filename || 'image', msg.message_id);
                 });
             }
 
-            // document preview boxes
-            const docEl = messageElement.querySelector('.doc-preview');
+            // Document cards - click to preview
+            const docEl = messageElement.querySelector('.doc-attachment-card');
             if (docEl) {
                 docEl.addEventListener('click', () => {
                     const src = docEl.getAttribute('data-href');
@@ -642,52 +2054,79 @@
     async function sendMessage() {
         const messageText = textInput.value.trim();
 
-        // Allow sending when either message text or an attachment exists
-        const hasFile = fileInput.files && fileInput.files.length > 0;
-        if ((!messageText && !hasFile) || !currentConversationReceiverId) {
+        // Allow sending when either message text or attachments exist
+        if ((!messageText && selectedFiles.length === 0) || !currentConversationReceiverId) {
             return;
         }
 
+        updateActivity(); // Mark as active when sending
+
         try {
-            // Use FormData so we can support file uploads
-            const form = new FormData();
-            form.append('receiver_id', currentConversationReceiverId);
-            form.append('message', messageText);
-            if (fileInput.files && fileInput.files[0]) {
-                form.append('attachment', fileInput.files[0]);
+            // Send text message first if there is text
+            if (messageText) {
+                const textForm = new FormData();
+                textForm.append('receiver_id', currentConversationReceiverId);
+                textForm.append('message', messageText);
+
+                const textResponse = await fetch('/communications/api/message/send/', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: textForm
+                });
+
+                if (textResponse.status === 401) {
+                    alert('Session expired. Redirecting to login.');
+                    window.location.href = '/';
+                    return;
+                }
+
+                const textData = await textResponse.json();
+                if (textData.status !== 'success') {
+                    alert('Error sending message: ' + textData.message);
+                    return;
+                }
             }
 
-            const response = await fetch('/communications/api/message/send/', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: form
-            });
+            // Send each file individually
+            if (selectedFiles.length > 0) {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    const file = selectedFiles[i];
+                    const fileForm = new FormData();
+                    fileForm.append('receiver_id', currentConversationReceiverId);
+                    fileForm.append('message', ''); // Empty message for file-only
+                    fileForm.append('attachment', file);
 
-            if (response.status === 401) {
-                alert('Session expired. Redirecting to login.');
-                window.location.href = '/';
-                return;
+                    const fileResponse = await fetch('/communications/api/message/send/', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: fileForm
+                    });
+
+                    if (fileResponse.status === 401) {
+                        alert('Session expired. Redirecting to login.');
+                        window.location.href = '/';
+                        return;
+                    }
+
+                    const fileData = await fileResponse.json();
+                    if (fileData.status !== 'success') {
+                        alert(`Error sending file ${file.name}: ${fileData.message}`);
+                        // Continue sending other files even if one fails
+                    }
+                }
             }
 
-            const data = await response.json();
-
-            if (data.status !== 'success') {
-                alert('Error sending message: ' + data.message);
-                return;
-            }
-
-            // Clear input and attached file
+            // Clear input and attachments
             textInput.value = '';
-            fileInput.value = '';
-            attachedFilenameEl.textContent = '';
-            if(clientPreviewEl) {
-                clientPreviewEl.remove();
-                clientPreviewEl = null;
-            }
+            textInput.style.height = 'auto'; // Reset textarea height
+            selectedFiles = [];
+            updateAttachmentPreviews();
 
-            // 1. Reload conversation to show new message
+            // 1. Reload conversation to show new messages
             await loadConversation(currentConversationReceiverId);
             // 2. Reload contacts to update the sidebar (move to top, update timestamp/preview)
             await loadContacts();
@@ -702,56 +2141,177 @@
     // Event Listeners
     // ========================================
     sendBtn.addEventListener('click', sendMessage);
+    
+    // Add touch support for mobile
+    sendBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        sendMessage();
+    });
+    
     textInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
             sendMessage();
         }
     });
+    
+    // Enable/disable send button based on input
+    textInput.addEventListener('input', function() {
+        if (currentConversationReceiverId) {
+            sendBtn.disabled = !this.value.trim() && selectedFiles.length === 0;
+        }
+    });
 
+    // ========================================
+    // Auto-expanding textarea
+    // ========================================
+    textInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        const newHeight = Math.min(this.scrollHeight, 90);
+        this.style.height = newHeight + 'px';
+        
+        // Show scrollbar only when content exceeds max height (3 lines)
+        if (this.scrollHeight > 90) {
+            this.classList.add('scrollable');
+        } else {
+            this.classList.remove('scrollable');
+        }
+    });
+
+    // ========================================
+    // Multiple File Attachment Handling
+    // ========================================
+    const MAX_TOTAL_SIZE = 25 * 1024 * 1024; // 25MB in bytes
+    let selectedFiles = []; // Array to store File objects
+    
     // Attach button - opens file picker
     attachBtn.addEventListener('click', (e) => {
         e.preventDefault();
         fileInput.click();
     });
 
-    // Show selected filename, client-side preview and enable send when a file is chosen
-    const attachedFilenameEl = document.getElementById('attached-filename');
-    let clientPreviewUrl = null;
-    let clientPreviewEl = null;
+    // Handle file selection with validation
     fileInput.addEventListener('change', (e) => {
-        const f = fileInput.files && fileInput.files[0];
-        // clean previous preview
-        if (clientPreviewUrl) {
-            URL.revokeObjectURL(clientPreviewUrl);
-            clientPreviewUrl = null;
+        const newFiles = Array.from(fileInput.files);
+        
+        if (newFiles.length === 0) return;
+        
+        // Add new files to existing selection
+        selectedFiles = [...selectedFiles, ...newFiles];
+        
+        // Validate total size
+        const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+        
+        if (totalSize > MAX_TOTAL_SIZE) {
+            // Show error
+            attachmentError.textContent = `Total file size exceeds 25MB limit. Current: ${(totalSize / (1024 * 1024)).toFixed(2)}MB`;
+            attachmentError.classList.add('show');
+            
+            // Remove the newly added files
+            selectedFiles = selectedFiles.slice(0, selectedFiles.length - newFiles.length);
+            
+            // Reset file input
+            fileInput.value = '';
+            
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                attachmentError.classList.remove('show');
+            }, 5000);
+            
+            return;
         }
-        if (clientPreviewEl) {
-            clientPreviewEl.remove();
-            clientPreviewEl = null;
-        }
-
-        if (f) {
-            attachedFilenameEl.textContent = f.name + ' (' + Math.round(f.size/1024) + ' KB)';
-            // If image, show client-side preview
-            if (f.type && f.type.startsWith('image')) {
-                clientPreviewUrl = URL.createObjectURL(f);
-                clientPreviewEl = document.createElement('img');
-                clientPreviewEl.src = clientPreviewUrl;
-                clientPreviewEl.className = 'thumb';
-                clientPreviewEl.style.marginLeft = '8px';
-                clientPreviewEl.style.maxHeight = '56px';
-                clientPreviewEl.style.borderRadius = '6px';
-                attachedFilenameEl.parentNode.insertBefore(clientPreviewEl, attachedFilenameEl.nextSibling);
-                // click to open full preview (before upload, uses client preview)
-                clientPreviewEl.addEventListener('click', () => openPreviewImage(clientPreviewUrl, f.name));
-            }
-
-            // Enable send button if a conversation is selected
-            if (currentConversationReceiverId) sendBtn.disabled = false;
-        } else {
-            attachedFilenameEl.textContent = '';
+        
+        // Clear error if any
+        attachmentError.classList.remove('show');
+        
+        // Reset file input to allow selecting same file again
+        fileInput.value = '';
+        
+        // Update preview
+        updateAttachmentPreviews();
+        
+        // Enable send button if conversation is selected
+        if (currentConversationReceiverId) {
+            sendBtn.disabled = false;
         }
     });
+
+    // Update attachment preview display
+    function updateAttachmentPreviews() {
+        attachmentPreviewContainer.innerHTML = '';
+        
+        if (selectedFiles.length === 0) {
+            attachmentPreviewContainer.classList.remove('has-files');
+            return;
+        }
+        
+        attachmentPreviewContainer.classList.add('has-files');
+        
+        selectedFiles.forEach((file, index) => {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'attachment-preview-item';
+            previewItem.dataset.index = index;
+            
+            // Remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'attachment-remove-btn';
+            removeBtn.innerHTML = '<i class=\"bi bi-x\"></i>';
+            removeBtn.title = 'Remove';
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeAttachment(index);
+            });
+            previewItem.appendChild(removeBtn);
+            
+            // Check if file is an image
+            if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.alt = file.name;
+                previewItem.appendChild(img);
+                
+                // Click to preview
+                previewItem.style.cursor = 'pointer';
+                previewItem.addEventListener('click', () => {
+                    openPreviewImage(img.src, file.name);
+                });
+            } else {
+                // Show file icon and name
+                const fileIcon = document.createElement('div');
+                fileIcon.className = 'file-icon';
+                
+                // Determine icon based on file type
+                let iconClass = 'bi-file-earmark';
+                if (file.type.includes('pdf')) {
+                    iconClass = 'bi-file-earmark-pdf';
+                } else if (file.type.includes('word') || file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
+                    iconClass = 'bi-file-earmark-word';
+                } else if (file.type.includes('sheet') || file.name.endsWith('.xls') || file.name.endsWith('.xlsx')) {
+                    iconClass = 'bi-file-earmark-excel';
+                } else if (file.type.includes('presentation') || file.name.endsWith('.ppt') || file.name.endsWith('.pptx')) {
+                    iconClass = 'bi-file-earmark-ppt';
+                } else if (file.type.includes('text')) {
+                    iconClass = 'bi-file-earmark-text';
+                }
+                
+                fileIcon.innerHTML = `<i class=\"bi ${iconClass}\"></i><div class=\"file-name\">${file.name}</div>`;
+                previewItem.appendChild(fileIcon);
+            }
+            
+            attachmentPreviewContainer.appendChild(previewItem);
+        });
+    }
+
+    // Remove attachment by index
+    function removeAttachment(index) {
+        selectedFiles.splice(index, 1);
+        updateAttachmentPreviews();
+        
+        // Disable send button if no files and no text
+        if (selectedFiles.length === 0 && !textInput.value.trim()) {
+            sendBtn.disabled = !currentConversationReceiverId;
+        }
+    }
 
     searchInput.addEventListener('keyup', () => {
         const searchTerm = searchInput.value.toLowerCase();
@@ -781,8 +2341,31 @@
     // ========================================
     // Initialize
     // ========================================
-    document.addEventListener('DOMContentLoaded', () => {
-        loadContacts();
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Add mobile class to body if on mobile
+        if (window.innerWidth <= 900) {
+            document.body.classList.add('messages-page');
+        }
+        
+        await loadContacts();
+        
+        // Auto-open last conversation if exists (but only on desktop)
+        const lastContact = localStorage.getItem('lastOpenedContact');
+        if (lastContact && window.innerWidth > 900) {
+            try {
+                const contact = JSON.parse(lastContact);
+                // Find the contact in the loaded contacts list
+                const foundContact = allContacts.find(c => c.user_id === contact.user_id);
+                if (foundContact) {
+                    await selectContact(foundContact);
+                }
+            } catch (e) {
+                console.error('Error loading last contact:', e);
+            }
+        } else if (window.innerWidth <= 900) {
+            // On mobile, ensure we start with contact list visible
+            showContactList();
+        }
     });
 
     // ========================================
@@ -800,67 +2383,373 @@
     let totalPages = 0;
     let previewMessageId = null;
     let isConvertibleDocument = false;
+    let currentRotation = 0;  // Track rotation state (0, 90, 180, 270)
+    let continuousScrollMode = true;  // Render all pages continuously
+    let pageCache = new Map();  // Cache rendered pages
 
     const CONVERTIBLE_TYPES = [
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',  // .docx
         'application/msword',  // .doc
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',  // .xlsx
         'application/vnd.ms-excel',  // .xls
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',  // .pptx
+        'application/vnd.ms-powerpoint',  // .ppt
+        'text/plain',  // .txt
+        'text/csv',  // .csv
     ];
-
-    function zoomIn() {
-        currentZoom = Math.min(currentZoom + 10, 300);
-        applyZoom();
-    }
-
-    function zoomOut() {
-        currentZoom = Math.max(currentZoom - 10, 50);
-        applyZoom();
+    
+    function updatePageInput() {
+        if (pageInput) {
+            pageInput.value = currentPage;
+            pageInput.max = totalPages;
+        }
+        document.getElementById('totalPages').textContent = totalPages;
     }
 
     function applyZoom() {
         document.getElementById('zoomLevel').textContent = currentZoom + '%';
         const img = previewBody.querySelector('img');
         if (img) {
-            img.style.transform = `scale(${currentZoom / 100})`;
+            applyRotation(img);
+            const naturalWidth = img.naturalWidth;
+            const naturalHeight = img.naturalHeight;
+            
+            if (currentZoom === 100) {
+                img.style.width = 'auto';
+                img.style.height = 'auto';
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                img.style.margin = 'auto';
+            } else {
+                const containerWidth = previewBody.clientWidth - 40;
+                const containerHeight = previewBody.clientHeight - 40;
+                const scaleToFit = Math.min(
+                    containerWidth / naturalWidth,
+                    containerHeight / naturalHeight
+                );
+                const finalWidth = naturalWidth * scaleToFit * (currentZoom / 100);
+                const finalHeight = naturalHeight * scaleToFit * (currentZoom / 100);
+                
+                img.style.width = finalWidth + 'px';
+                img.style.height = finalHeight + 'px';
+                img.style.maxWidth = 'none';
+                img.style.maxHeight = 'none';
+                
+                if (finalWidth < previewBody.clientWidth && finalHeight < previewBody.clientHeight) {
+                    img.style.margin = 'auto';
+                } else {
+                    img.style.margin = '0';
+                }
+            }
         }
-        // For PDF, re-render at new scale
+        // For PDF, re-render with new zoom
         if (isPdfOpen && pdfDoc) {
-            renderPdfPage(currentPage);
+            if (continuousScrollMode) {
+                renderAllPages();
+            } else {
+                renderPdfPage(currentPage);
+            }
+        }
+    }
+    
+    function applyRotation(element) {
+        if (element) {
+            element.style.transform = `rotate(${currentRotation}deg)`;
+        }
+    }
+    
+    async function fitToWidth() {
+        const img = previewBody.querySelector('img');
+        
+        if (img) {
+            const containerWidth = previewBody.clientWidth - 40;
+            let elementWidth = img.naturalWidth;
+            
+            // Account for rotation (90 or 270 degrees swap dimensions)
+            if (currentRotation === 90 || currentRotation === 270) {
+                elementWidth = img.naturalHeight;
+            }
+            
+            const scaleToFit = containerWidth / elementWidth;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            applyZoom();
+        } else if (isPdfOpen && pdfDoc) {
+            // Get actual page dimensions from PDF
+            const page = await pdfDoc.getPage(1);
+            const viewport = page.getViewport({ scale: 1, rotation: currentRotation });
+            const containerWidth = previewBody.clientWidth - 40;
+            
+            // Calculate scale needed to fit width
+            const scaleToFit = containerWidth / viewport.width;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            
+            if (continuousScrollMode) {
+                renderAllPages();
+            } else {
+                applyZoom();
+            }
+        }
+    }
+    
+    async function fitToHeight() {
+        const img = previewBody.querySelector('img');
+        
+        if (img) {
+            const containerHeight = previewBody.clientHeight - 40;
+            let elementHeight = img.naturalHeight;
+            
+            // Account for rotation (90 or 270 degrees swap dimensions)
+            if (currentRotation === 90 || currentRotation === 270) {
+                elementHeight = img.naturalWidth;
+            }
+            
+            const scaleToFit = containerHeight / elementHeight;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            applyZoom();
+        } else if (isPdfOpen && pdfDoc) {
+            // Get actual page dimensions from PDF
+            const page = await pdfDoc.getPage(1);
+            const viewport = page.getViewport({ scale: 1, rotation: currentRotation });
+            const containerHeight = previewBody.clientHeight - 40;
+            
+            // Calculate scale needed to fit height
+            const scaleToFit = containerHeight / viewport.height;
+            currentZoom = Math.round(scaleToFit * 100);
+            currentZoom = Math.max(10, Math.min(300, currentZoom));
+            
+            if (continuousScrollMode) {
+                renderAllPages();
+            } else {
+                applyZoom();
+            }
         }
     }
 
     async function renderPdfPage(pageNum) {
+        if (continuousScrollMode) {
+            // In continuous mode, scroll to the page
+            scrollToPage(pageNum);
+            return;
+        }
+        
+        // Single page mode (legacy)
         try {
             const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: currentZoom / 100 });
-            const canvas = previewBody.querySelector('canvas') || document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-            if (!previewBody.contains(canvas)) {
+            const finalScale = (currentZoom / 100);
+            const viewport = page.getViewport({ scale: finalScale, rotation: currentRotation });
+            
+            let canvas = previewBody.querySelector('canvas');
+            if (!canvas) {
+                canvas = document.createElement('canvas');
                 previewBody.innerHTML = '';
                 previewBody.appendChild(canvas);
             }
-            // Update page counter
-            document.getElementById('pageCounter').textContent = `Page ${pageNum} / ${totalPages}`;
+            
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.display = 'block';
+            canvas.style.maxWidth = 'none';
+            canvas.style.maxHeight = 'none';
+            
+            const renderContext = {
+                canvasContext: canvas.getContext('2d'),
+                viewport: viewport
+            };
+            
+            await page.render(renderContext).promise;
+            previewBody.scrollTop = 0;
+            previewBody.scrollLeft = 0;
+            updatePageInput();
+            updateThumbnailActive();
         } catch (e) {
             console.error('PDF render error:', e);
         }
     }
-
-    function previousPage() {
-        if (currentPage > 1) {
-            currentPage--;
-            renderPdfPage(currentPage);
+    
+    async function renderAllPages() {
+        if (!pdfDoc) return;
+        
+        // Save current scroll position ratio before re-rendering
+        const scrollRatio = previewBody.scrollHeight > 0 
+            ? previewBody.scrollTop / previewBody.scrollHeight 
+            : 0;
+        
+        previewBody.innerHTML = '';
+        const containerWidth = previewBody.clientWidth;
+        const finalScale = (currentZoom / 100);
+        
+        // Create container for all pages
+        const pagesContainer = document.createElement('div');
+        pagesContainer.style.width = '100%';
+        pagesContainer.style.display = 'flex';
+        pagesContainer.style.flexDirection = 'column';
+        pagesContainer.style.alignItems = 'center';
+        pagesContainer.style.gap = '10px';
+        pagesContainer.style.padding = '20px 0';
+        
+        previewBody.appendChild(pagesContainer);
+        
+        // Render all pages
+        for (let i = 1; i <= totalPages; i++) {
+            const pageWrapper = document.createElement('div');
+            pageWrapper.className = 'pdf-page-wrapper';
+            pageWrapper.dataset.pageNum = i;
+            pageWrapper.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+            pageWrapper.style.marginBottom = '10px';
+            pageWrapper.style.background = '#fff';
+            
+            const canvas = document.createElement('canvas');
+            canvas.style.display = 'block';
+            pageWrapper.appendChild(canvas);
+            pagesContainer.appendChild(pageWrapper);
+            
+            try {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: finalScale, rotation: currentRotation });
+                
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+            } catch (e) {
+                console.error('Error rendering page', i, e);
+            }
+        }
+        
+        // Restore scroll position proportionally after re-rendering
+        // But only if we were already scrolled (scrollRatio > 0)
+        // Otherwise keep at top (for initial load)
+        if (scrollRatio > 0) {
+            setTimeout(() => {
+                previewBody.scrollTop = previewBody.scrollHeight * scrollRatio;
+            }, 50);
+        } else {
+            // First time rendering - scroll to top
+            previewBody.scrollTop = 0;
+            previewBody.scrollLeft = 0;
+        }
+        
+        // Ensure current page is set
+        if (!currentPage || currentPage < 1) {
+            currentPage = 1;
+        }
+        updatePageInput();
+        
+        // Set up scroll tracking to update current page
+        setupScrollTracking();
+    }
+    
+    function scrollToPage(pageNum) {
+        const pageWrapper = previewBody.querySelector(`[data-page-num="${pageNum}"]`);
+        if (pageWrapper) {
+            pageWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
-
-    function nextPage() {
-        if (currentPage < totalPages) {
-            currentPage++;
-            renderPdfPage(currentPage);
+    
+    function setupScrollTracking() {
+        let scrollTimeout;
+        previewBody.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                // Determine which page is currently visible
+                const pageWrappers = previewBody.querySelectorAll('.pdf-page-wrapper');
+                const scrollTop = previewBody.scrollTop;
+                const containerTop = previewBody.getBoundingClientRect().top;
+                
+                for (let i = 0; i < pageWrappers.length; i++) {
+                    const wrapper = pageWrappers[i];
+                    const rect = wrapper.getBoundingClientRect();
+                    const wrapperTop = rect.top - containerTop + scrollTop;
+                    const wrapperBottom = wrapperTop + rect.height;
+                    
+                    // If page occupies center of viewport
+                    if (wrapperTop <= scrollTop + 100 && wrapperBottom > scrollTop + 100) {
+                        const newPage = parseInt(wrapper.dataset.pageNum);
+                        if (newPage !== currentPage) {
+                            currentPage = newPage;
+                            updatePageInput();
+                            updateThumbnailActive();
+                        }
+                        break;
+                    }
+                }
+            }, 100);
+        });
+    }
+    
+    async function generateThumbnails() {
+        if (!pdfDoc) return;
+        
+        previewThumbnails.innerHTML = '';
+        
+        for (let i = 1; i <= totalPages; i++) {
+            try {
+                const page = await pdfDoc.getPage(i);
+                const scale = 0.3; // Small scale for thumbnails
+                const viewport = page.getViewport({ scale });
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                // Create thumbnail container
+                const thumbDiv = document.createElement('div');
+                thumbDiv.className = 'preview-thumbnail';
+                thumbDiv.dataset.page = i;
+                if (i === currentPage) {
+                    thumbDiv.classList.add('active');
+                }
+                
+                // Add canvas
+                thumbDiv.appendChild(canvas);
+                
+                // Add label
+                const label = document.createElement('div');
+                label.className = 'preview-thumbnail-label';
+                label.textContent = i;
+                thumbDiv.appendChild(label);
+                
+                // Click to navigate
+                thumbDiv.addEventListener('click', () => {
+                    currentPage = i;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                });
+                
+                previewThumbnails.appendChild(thumbDiv);
+            } catch (e) {
+                console.error('Thumbnail generation error for page', i, e);
+            }
         }
+    }
+    
+    function updateThumbnailActive() {
+        const thumbnails = previewThumbnails.querySelectorAll('.preview-thumbnail');
+        thumbnails.forEach(thumb => {
+            const pageNum = parseInt(thumb.dataset.page);
+            if (pageNum === currentPage) {
+                thumb.classList.add('active');
+                // Scroll thumbnail into view
+                thumb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else {
+                thumb.classList.remove('active');
+            }
+        });
     }
 
     // Handle keyboard navigation (Arrow keys) and scroll wheel
@@ -878,57 +2767,144 @@
         
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
             e.preventDefault();
-            nextPage();
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPdfPage(currentPage);
+                updateThumbnailActive();
+            }
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
             e.preventDefault();
-            previousPage();
-        }
-    }
-
-    function handlePdfScroll(e) {
-        if (!isPdfOpen || !pdfDoc || previewModal.style.display === 'none') return;
-        
-        // Only intercept scroll if content doesn't need scrolling
-        const hasVerticalScroll = previewBody.scrollHeight > previewBody.clientHeight;
-        const hasHorizontalScroll = previewBody.scrollWidth > previewBody.clientWidth;
-        
-        if (!hasVerticalScroll && !hasHorizontalScroll) {
-            e.preventDefault();
-            if (e.deltaY > 0) {
-                nextPage();
-            } else if (e.deltaY < 0) {
-                previousPage();
+            if (currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPage);
+                updateThumbnailActive();
             }
         }
     }
 
-    function openPreviewImage(src, title) {
+    function handlePdfScroll(e) {
+        // In continuous scroll mode, scrolling is natural - no interception needed
+        if (continuousScrollMode) {
+            return; // Let browser handle scroll naturally
+        }
+        
+        // Single page mode: old behavior
+        if (!isPdfOpen || !pdfDoc || previewModal.style.display === 'none') return;
+        
+        const hasVerticalScroll = previewBody.scrollHeight > previewBody.clientHeight;
+        const hasHorizontalScroll = previewBody.scrollWidth > previewBody.clientWidth;
+        
+        if (hasVerticalScroll || hasHorizontalScroll) {
+            const atBottom = previewBody.scrollTop + previewBody.clientHeight >= previewBody.scrollHeight - 5;
+            const atTop = previewBody.scrollTop <= 5;
+            
+            if (e.deltaY > 0 && atBottom && currentPage < totalPages) {
+                e.preventDefault();
+                currentPage++;
+                renderPdfPage(currentPage);
+            } else if (e.deltaY < 0 && atTop && currentPage > 1) {
+                e.preventDefault();
+                currentPage--;
+                renderPdfPage(currentPage);
+            }
+        } else {
+            e.preventDefault();
+            if (e.deltaY > 0 && currentPage < totalPages) {
+                currentPage++;
+                renderPdfPage(currentPage);
+            } else if (e.deltaY < 0 && currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPage);
+            }
+        }
+    }
+
+    function openPreviewImage(src, title, messageId) {
         currentZoom = 100;
+        currentRotation = 0;
         isPdfOpen = false;
         isConvertibleDocument = false;
-        previewBody.innerHTML = `<img src="${src}" alt="${escapeHtml(title)}" style="max-width:100%; max-height:100%; object-fit:contain;" />`;
-        document.getElementById('preview-title').textContent = title;
+        
+        // Hide sidebar for images
+        previewSidebar.style.display = 'none';
+        
+        // Hide fit and thumbnail buttons for images
+        document.getElementById('toggleSidebar').style.display = 'none';
+        document.getElementById('fitWidth').style.display = 'none';
+        document.getElementById('fitHeight').style.display = 'none';
+        
+        // Create image element with better styling
+        previewBody.innerHTML = `
+            <img src="${src}" 
+                 alt="${escapeHtml(title)}" 
+                 style="max-width:100%; max-height:100%; object-fit:contain; cursor: zoom-in;" 
+                 id="preview-image" />`;
+        
+        document.getElementById('preview-title').textContent = title || 'Image';
         document.getElementById('zoomLevel').textContent = '100%';
         document.getElementById('page-controls').style.display = 'none';
         document.getElementById('preview-download-pdf').style.display = 'none';
-        previewModal.classList.add('show');
-        previewModal.style.display = 'flex';
         
+        // For images, hide the dropdown toggle and show only main download button
+        document.getElementById('preview-download-toggle').style.display = 'none';
+        document.getElementById('preview-download-main').style.borderRadius = '6px'; // Full rounded corners
+        
+        // Show modal with animation
+        previewModal.style.display = 'flex';
+        setTimeout(() => previewModal.classList.add('show'), 10);
+        
+        // Set download link
         try {
             const url = new URL(src, window.location.origin);
             url.searchParams.set('download', '1');
-            document.getElementById('preview-download-original').href = url.toString();
+            const downloadUrl = url.toString();
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title || 'image';
+            document.getElementById('preview-download-main').textContent = 'Download';
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title || 'image';
         } catch (e) {
-            document.getElementById('preview-download-original').href = src + '?download=1';
+            const downloadUrl = src + '?download=1';
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title || 'image';
+            document.getElementById('preview-download-main').textContent = 'Download';
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title || 'image';
+        }
+        
+        // Add click to toggle zoom
+        const img = document.getElementById('preview-image');
+        if (img) {
+            // Wait for image to load, then apply fit-to-height
+            img.addEventListener('load', () => {
+                fitToHeight();
+            });
+            
+            img.addEventListener('click', () => {
+                if (currentZoom === 100) {
+                    currentZoom = 150;
+                    img.style.cursor = 'zoom-out';
+                } else {
+                    currentZoom = 100;
+                    img.style.cursor = 'zoom-in';
+                }
+                applyZoom();
+            });
         }
     }
 
     function openPreviewDocument(src, title, contentType) {
         currentZoom = 100;
+        currentRotation = 0;
         isPdfOpen = true;
         isConvertibleDocument = CONVERTIBLE_TYPES.includes(contentType);
         document.getElementById('preview-title').textContent = title;
         document.getElementById('zoomLevel').textContent = '100%';
+        
+        // Show fit and thumbnail buttons for documents
+        document.getElementById('toggleSidebar').style.display = 'inline-flex';
+        document.getElementById('fitWidth').style.display = 'inline-flex';
+        document.getElementById('fitHeight').style.display = 'inline-flex';
         
         // Extract message_id from src URL
         let messageId = null;
@@ -937,9 +2913,17 @@
             const pathParts = url.pathname.split('/');
             messageId = pathParts[pathParts.length - 2];
             url.searchParams.set('download', '1');
-            document.getElementById('preview-download-original').href = url.toString();
+            const downloadUrl = url.toString();
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title;
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title;
         } catch (e) {
-            document.getElementById('preview-download-original').href = src + '?download=1';
+            const downloadUrl = src + '?download=1';
+            document.getElementById('preview-download-main').href = downloadUrl;
+            document.getElementById('preview-download-main').download = title;
+            document.getElementById('preview-download-original').href = downloadUrl;
+            document.getElementById('preview-download-original').download = title;
         }
 
         previewMessageId = messageId;
@@ -948,9 +2932,16 @@
         if (contentType === 'application/pdf' || contentType.startsWith('image')) {
             loadPdfPreview(src, title, contentType);
             document.getElementById('preview-download-pdf').style.display = 'none';
+            // For PDFs, hide the dropdown toggle and show only main download button
+            document.getElementById('preview-download-toggle').style.display = 'none';
+            document.getElementById('preview-download-main').style.borderRadius = '6px'; // Full rounded corners
+            document.getElementById('preview-download-main').textContent = 'Download';
         } 
         // If convertible document, show loading and convert
         else if (isConvertibleDocument && messageId) {
+            // For convertible documents, show the dropdown toggle
+            document.getElementById('preview-download-toggle').style.display = 'flex';
+            document.getElementById('preview-download-main').style.borderRadius = '6px 0 0 6px'; // Left side only
             showLoadingOverlay('Converting document to PDF...');
             convertAndPreview(messageId, src, title);
         } 
@@ -958,6 +2949,10 @@
         else {
             loadPdfPreview(src, title, contentType);
             document.getElementById('preview-download-pdf').style.display = 'none';
+            // Hide dropdown toggle for non-convertible files
+            document.getElementById('preview-download-toggle').style.display = 'none';
+            document.getElementById('preview-download-main').style.borderRadius = '6px'; // Full rounded corners
+            document.getElementById('preview-download-main').textContent = 'Download';
         }
     }
 
@@ -971,7 +2966,7 @@
             });
 
             if (!response.ok) {
-                const data = await response.json();
+                const data = await response.json().catch(() => ({ message: 'Conversion failed' }));
                 throw new Error(data.message || 'Conversion failed');
             }
 
@@ -984,10 +2979,18 @@
             previewModal.classList.add('show');
             previewModal.style.display = 'flex';
 
-            // Show download options
+            // Show download options - both original and converted PDF
+            const pdfFilename = title.split('.').slice(0, -1).join('.') + '.pdf';
+            
+            // Set main download button to PDF (since that's what's being previewed)
+            document.getElementById('preview-download-main').href = pdfUrl;
+            document.getElementById('preview-download-main').download = pdfFilename;
+            document.getElementById('preview-download-main').textContent = 'Download PDF';
+            
+            // Show PDF option in dropdown
             document.getElementById('preview-download-pdf').href = pdfUrl;
-            document.getElementById('preview-download-pdf').download = title.rsplit('.', 1)[0] + '.pdf';
-            document.getElementById('preview-download-pdf').style.display = 'inline-block';
+            document.getElementById('preview-download-pdf').download = pdfFilename;
+            document.getElementById('preview-download-pdf').style.display = 'block';
 
             // Load and render the converted PDF
             loadPdfFromBlob(pdfUrl, title);
@@ -1000,10 +3003,12 @@
         }
     }
 
-    function loadPdfPreview(src, title, contentType) {
-        previewModal.classList.add('show');
+    async function loadPdfPreview(src, title, contentType) {
+        // Show modal with animation
         previewModal.style.display = 'flex';
-        previewBody.innerHTML = '<p style="color:#aaa;">Loading document...</p>';
+        setTimeout(() => previewModal.classList.add('show'), 10);
+        
+        previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
 
         // If convertible, show PDF download option
         if (isConvertibleDocument) {
@@ -1019,39 +3024,74 @@
         // Load PDF with PDF.js
         if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            window.pdfjsLib.getDocument(src).promise.then(doc => {
+            try {
+                const doc = await window.pdfjsLib.getDocument(src).promise;
                 pdfDoc = doc;
-                currentPage = 1;
+                currentPage = 1;  // Always start at page 1
                 totalPages = doc.numPages;
                 document.getElementById('page-controls').style.display = totalPages > 1 ? 'flex' : 'none';
-                renderPdfPage(1);
+                
+                // Show sidebar for multi-page PDFs
+                if (totalPages > 1) {
+                    previewSidebar.style.display = 'flex';
+                    // Update toggle button icon to filled state
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar-inset';
+                    generateThumbnails();
+                } else {
+                    previewSidebar.style.display = 'none';
+                    // Update toggle button icon to outline state
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar';
+                }
+                
+                // Apply fit-to-height by default
+                await fitToHeight();
                 setupPdfNavigation();
-            }).catch(err => {
-                previewBody.innerHTML = `<p style="color:#d32f2f;">Error loading document: ${err.message}</p>`;
+            } catch (err) {
+                previewBody.innerHTML = `<p style="color:#d32f2f; font-size:0.95rem;">Error loading document: ${err.message}</p>`;
                 console.error('PDF load error:', err);
-            });
+            }
         } else {
             previewBody.innerHTML = `<iframe src="${src}" title="${escapeHtml(title)}" style="width:100%; height:100%; border:0;"></iframe>`;
             document.getElementById('page-controls').style.display = 'none';
+            previewSidebar.style.display = 'none';
         }
     }
 
-    function loadPdfFromBlob(blobUrl, title) {
+    async function loadPdfFromBlob(blobUrl, title) {
         previewBody.innerHTML = '<p style="color:#aaa;">Rendering PDF...</p>';
 
         if (window.pdfjsLib) {
             window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            window.pdfjsLib.getDocument(blobUrl).promise.then(doc => {
+            try {
+                const doc = await window.pdfjsLib.getDocument(blobUrl).promise;
                 pdfDoc = doc;
-                currentPage = 1;
+                currentPage = 1;  // Always start at page 1
                 totalPages = doc.numPages;
                 document.getElementById('page-controls').style.display = totalPages > 1 ? 'flex' : 'none';
-                renderPdfPage(1);
+                
+                // Show sidebar for multi-page PDFs
+                if (totalPages > 1) {
+                    previewSidebar.style.display = 'flex';
+                    // Update toggle button icon to filled state
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar-inset';
+                    generateThumbnails();
+                } else {
+                    previewSidebar.style.display = 'none';
+                    // Update toggle button icon to outline state
+                    const toggleIcon = document.querySelector('#toggleSidebar i');
+                    if (toggleIcon) toggleIcon.className = 'bi bi-layout-sidebar';
+                }
+                
+                // Apply fit-to-height by default
+                await fitToHeight();
                 setupPdfNavigation();
-            }).catch(err => {
+            } catch (err) {
                 previewBody.innerHTML = `<p style="color:#d32f2f;">Error rendering PDF: ${err.message}</p>`;
                 console.error('PDF render error:', err);
-            });
+            }
         }
     }
 
@@ -1065,11 +3105,18 @@
     }
 
     function closePreview() {
-        previewModal.style.display = 'none';
-        previewBody.innerHTML = '';
+        // Fade out animation
+        previewModal.classList.remove('show');
+        setTimeout(() => {
+            previewModal.style.display = 'none';
+            previewBody.innerHTML = '';
+            previewThumbnails.innerHTML = '';
+        }, 300);
+        
         pdfDoc = null;
         isPdfOpen = false;
         currentZoom = 100;
+        currentRotation = 0;
         previewMessageId = null;
         
         // Clean up event listeners
@@ -1080,6 +3127,175 @@
     previewClose.addEventListener('click', closePreview);
     previewModal.addEventListener('click', (e) => { if (e.target === previewModal) closePreview(); });
 
+    // ========================================
+    // Auto-Refresh Messages & Contacts (Optimized Polling)
+    // ========================================
+    let lastMessageCount = 0;
+    let isPolling = false;
+    let lastActivity = Date.now();
+    let currentPollInterval = 1000; // Start at 1 second
+
+    // Update activity timestamp
+    function updateActivity() {
+        lastActivity = Date.now();
+        currentPollInterval = 1000; // Reset to fast polling
+    }
+
+    // Poll for new messages in the current conversation
+    async function pollMessages() {
+        if (isPolling || !currentConversationReceiverId) return;
+        
+        isPolling = true;
+        try {
+            const response = await fetch(`/communications/api/message/conversation/${currentConversationReceiverId}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                clearInterval(messagePollingInterval);
+                clearInterval(contactPollingInterval);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Check if there are new messages
+                if (data.messages.length !== lastMessageCount) {
+                    // Save scroll position
+                    const wasAtBottom = messageArea.scrollHeight - messageArea.scrollTop <= messageArea.clientHeight + 100;
+                    
+                    // Clear and re-render messages
+                    messageArea.innerHTML = '';
+                    
+                    if (data.messages.length === 0) {
+                        messageArea.innerHTML = '<div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #888;"><i class="bi bi-chat-dots" style="font-size: 64px; color: #ccc; margin-bottom: 16px;"></i><p style="font-size: 16px; margin: 0;">No messages yet. Start the conversation!</p></div>';
+                    } else {
+                        data.messages.forEach(msg => {
+                            appendMessageElement(msg);
+                        });
+                    }
+                    
+                    // Auto-scroll to bottom if user was already at bottom
+                    if (wasAtBottom) {
+                        messageArea.scrollTop = messageArea.scrollHeight;
+                    }
+                    
+                    lastMessageCount = data.messages.length;
+                }
+            }
+        } catch (error) {
+            console.error('Error polling messages:', error);
+        } finally {
+            isPolling = false;
+        }
+    }
+
+    // Poll for updated contact list (new messages from others)
+    async function pollContacts() {
+        try {
+            const response = await fetch('/communications/api/message/contacts/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (response.status === 401) {
+                clearInterval(messagePollingInterval);
+                clearInterval(contactPollingInterval);
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                // Check if contacts have changed
+                const contactsChanged = JSON.stringify(data.contacts) !== JSON.stringify(allContacts);
+                
+                if (contactsChanged) {
+                    allContacts = data.contacts;
+                    
+                    // Save currently selected contact
+                    const selectedUserId = currentConversationReceiverId;
+                    
+                    // Re-render contacts
+                    renderContacts();
+                    renderModalContacts();
+                    
+                    // Re-highlight the selected contact if any
+                    if (selectedUserId) {
+                        document.querySelector(`[data-user-id="${selectedUserId}"]`)?.classList.add('active');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error polling contacts:', error);
+        }
+    }
+
+    // Set up adaptive polling intervals
+    let messagePollingInterval = null;
+    let contactPollingInterval = null;
+
+    // Adaptive polling - adjusts speed based on activity
+    function startMessagePolling() {
+        if (messagePollingInterval) {
+            clearInterval(messagePollingInterval);
+        }
+        
+        function adaptivePoll() {
+            const idleTime = Date.now() - lastActivity;
+            
+            // Adjust interval: 1s when active, 3s after 30s idle, 5s after 2min idle
+            if (idleTime < 30000) {
+                currentPollInterval = 1000; // 1 second when active
+            } else if (idleTime < 120000) {
+                currentPollInterval = 3000; // 3 seconds after 30s idle
+            } else {
+                currentPollInterval = 5000; // 5 seconds after 2min idle
+            }
+            
+            pollMessages();
+            
+            // Reschedule with current interval
+            if (messagePollingInterval) {
+                clearInterval(messagePollingInterval);
+            }
+            messagePollingInterval = setInterval(adaptivePoll, currentPollInterval);
+        }
+        
+        adaptivePoll(); // Start immediately
+    }
+
+    // Stop message polling when no conversation is selected
+    function stopMessagePolling() {
+        if (messagePollingInterval) {
+            clearInterval(messagePollingInterval);
+            messagePollingInterval = null;
+        }
+        lastMessageCount = 0;
+        lastActivity = Date.now();
+    }
+
+    // Start contact polling on page load (adaptive)
+    let contactPollInterval = 5000;
+    function startContactPolling() {
+        pollContacts(); // Poll immediately
+        contactPollingInterval = setInterval(() => {
+            const idleTime = Date.now() - lastActivity;
+            // Poll contacts less frequently when idle
+            contactPollInterval = idleTime > 120000 ? 10000 : 5000;
+            pollContacts();
+        }, contactPollInterval);
+    }
+    startContactPolling();
+
     // Refresh timestamps every 10 seconds
     setInterval(() => {
         document.querySelectorAll('[data-timestamp]').forEach(el => {
@@ -1087,4 +3303,73 @@
             el.textContent = timeAgo(isoString);
         });
     }, 10000);
+
+    // Stop polling when tab is hidden (save resources)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopMessagePolling();
+            clearInterval(contactPollingInterval);
+        } else {
+            // Resume polling when tab becomes visible
+            if (currentConversationReceiverId) {
+                startMessagePolling();
+            }
+            startContactPolling();
+            updateActivity(); // Treat as activity
+        }
+    });
+
+    // Track user activity to optimize polling
+    ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, () => {
+            updateActivity();
+        }, { passive: true });
+    });
+
+    // Clean up intervals when page unloads
+    window.addEventListener('beforeunload', () => {
+        stopMessagePolling();
+        clearInterval(contactPollingInterval);
+    });
+
+    // Handle window resize to reset mobile state
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 900) {
+                // Reset to desktop view - show both panels
+                conversationListEl.classList.remove('slide-left');
+                document.body.classList.remove('messages-page');
+            } else {
+                // Add mobile class
+                document.body.classList.add('messages-page');
+                if (!currentConversationReceiverId) {
+                    // On mobile with no conversation, ensure contact list is visible
+                    showContactList();
+                }
+            }
+        }, 250);
+    });
+
+    // ========================================
+    // Profile Dropdown Functionality
+    // ========================================
+    const profileDropdown = document.getElementById('profileDropdown');
+    const profileTrigger = profileDropdown?.querySelector('.profile-trigger');
+    
+    if (profileTrigger) {
+        profileTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('active');
+        });
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (profileDropdown && !profileDropdown.contains(e.target)) {
+            profileDropdown.classList.remove('active');
+        }
+    });
+
 </script>{% endblock %}

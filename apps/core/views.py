@@ -5,5 +5,11 @@ def download_view(request):
     return render(request, 'download.html') 
 
 def about_view(request):
-    # We don't have an about.html, so just render the home for now
-    return render(request, 'home.html')
+    # Render the about page
+    return render(request, 'about.html')
+
+def access_denied_view(request):
+    """
+    Shows access denied page for unauthenticated users
+    """
+    return render(request, 'access_denied.html', status=403)
