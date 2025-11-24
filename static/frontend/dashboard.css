@@ -115,6 +115,7 @@ a { text-decoration: none; }
     /* Force Left Alignment */
     align-items: stretch; 
     text-align: left;
+    z-index: 100000;
 }
 
 /* --- SECTION TITLE (MODULES) --- */

@@ -10,4 +10,6 @@ urlpatterns = [
     path('api/get-user-details/<int:user_id>/', views.get_user_details_view, name='get_user_details'),
     path('api/update-user/<int:user_id>/', views.update_user_view, name='update_user'),
     path('api/deactivate-user/<int:user_id>/', views.deactivate_user_view, name='deactivate_user'),
+    path('api/reactivate-user/<int:user_id>/', views.reactivate_user_view, name='reactivate_user'),
+    path('api/verify-password/', views.verify_password_view, name='verify_password'),
 ]
