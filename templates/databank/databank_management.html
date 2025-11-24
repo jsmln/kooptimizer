@@ -74,8 +74,20 @@
                         <td><strong>{{ coop.cooperative_name }}</strong></td>
                         <td>{% if coop.category %}<span class="badge-category">{{ coop.category }}</span>{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
                         <td>{{ coop.district|default:"N/A" }}</td>
-                        <td class="address-cell">{{ coop.address|default:"N/A" }}</td>
-                        <td class="contact-cell">{{ coop.mobile_number|default:"N/A" }}</td>
+                        <td style="min-width: 180px;">{{ coop.address|default:"N/A" }}</td>
+                        <td style="min-width: 200px;">
+                            <div class="contact-info">
+                                {% if coop.email_address %}
+                                    <div><i class="bi bi-envelope"></i> {{ coop.email_address }}</div>
+                                {% endif %}
+                                {% if coop.mobile_number %}
+                                    <div><i class="bi bi-phone"></i> {{ coop.mobile_number }}</div>
+                                {% endif %}
+                                {% if not coop.email_address and not coop.mobile_number %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
                         <td>
                             {% if coop.cda_registration_number %}
                                 {{ coop.cda_registration_number }}
@@ -84,37 +96,49 @@
                                 <span class="text-muted">N/A</span>
                             {% endif %}
                         </td>
-                        <td class="text-end">{{ coop.assets|default:"-" }}</td>
-                        <td class="text-end">{{ coop.paid_up_capital|default:"-" }}</td>
-                        <td class="text-center">{{ coop.members_count|default:0 }}</td>
-                        <td class="text-center">{{ coop.officers_count|default:0 }}</td>
+                        <td class="text-end">
+                            {% if coop.assets %}{{ coop.assets|floatformat:2 }}{% else %}-{% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if coop.paid_up_capital %}{{ coop.paid_up_capital|floatformat:2 }}{% else %}-{% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-count">{{ coop.members_count|default:0 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-count">{{ coop.officers_count|default:0 }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="event.stopPropagation(); viewCooperativeDetails({{ coop.coop_id }})" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn-action btn-edit" onclick="event.stopPropagation(); editCooperative({{ coop.coop_id }})" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-action btn-delete" onclick="event.stopPropagation(); deleteCooperative({{ coop.coop_id }})" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
-                    <tr data-modal-target="profile-modal" data-coop-id="sample-001">
-                        <td><strong>Sample Cooperative</strong></td>
-                        <td><span class="badge-category">consumer</span></td>
-                        <td>Sample District</td>
-                        <td class="address-cell">123 Sample St., Sample City</td>
-                        <td class="contact-cell">0917-000-0000</td>
-                        <td>1414-060923055 <div class="text-muted">09-06-2005</div></td>
-                        <td class="text-end">356,964.68</td>
-                        <td class="text-end">108,243.78</td>
-                        <td class="text-center">128</td>
-                        <td class="text-center">8</td>
+                    <tr>
+                        <td colspan="11">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h3>No cooperatives found</h3>
+                                <p>Click "Add Cooperative" to get started.</p>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 </table>
             </div>
         </div>
-
         <div class="table-footer">
             <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
-            {% if cooperatives %}
-            <div class="pagination">
-                <!-- Pagination will be added here if needed -->
-            </div>
-            {% endif %}
         </div>
     </div>
 
@@ -133,48 +157,64 @@
         </div>
         
         <div class="ocr-drawer-body">
-            <p class="text-muted small mb-3">
-                Upload images or screenshots to extract text automatically
-            </p>
             
-            <div class="ocr-upload-area" id="ocrUploadArea" data-ocr-endpoint="">
-                <i class="bi bi-cloud-upload"></i>
-                <h5>Drag & Drop Image</h5>
-                <p class="text-muted small mb-0">or click to browse</p>
-                <input type="file" id="ocrFileInput" accept="image/*" style="display: none;">
+            <div id="camera-container" style="display: none; margin-bottom: 20px; text-align: center;">
+                <video id="camera-video" autoplay playsinline style="width: 100%; border-radius: 12px; border: 2px solid #a91e2c; background: black;"></video>
+                <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
+                    <button id="capture-btn" class="btn-apply" style="padding: 8px 20px;">
+                        <i class="bi bi-camera-fill me-2"></i> Capture
+                    </button>
+                    <button id="cancel-camera-btn" class="btn-clear" style="padding: 8px 20px;">Cancel</button>
+                </div>
+            </div>
+
+            <div id="upload-container">
+                <p class="text-muted small mb-3" style="border-left: 3px solid #a91e2c; padding-left: 10px; background: #fff5f6; padding: 8px; border-radius: 4px;">
+                    Scan documents using your phone camera or upload an image to auto-fill forms.
+                </p>
+                
+                <div class="ocr-upload-area" id="ocrUploadArea">
+                    <i class="bi bi-cloud-upload"></i>
+                    <h5>Drag & Drop Image</h5>
+                    <p class="text-muted small mb-0">or click to browse</p>
+                    
+                    <input type="file" id="ocrFileInput" accept="image/*" style="display: none;">
+                    
+                    <input type="file" id="mobileCameraInput" accept="image/*" capture="environment" style="display: none;">
+                </div>
+                
+                <div class="ocr-btn-group">
+                    <button class="ocr-action-btn" id="ocrUploadBtn">
+                        <i class="bi bi-upload"></i>
+                        <span>Upload Image</span>
+                    </button>
+                    
+                    <button class="ocr-action-btn" id="ocrCameraBtn">
+                        <i class="bi bi-camera-fill"></i>
+                        <span>Scan / Camera</span>
+                    </button>
+                    
+                    <button class="ocr-action-btn" id="ocrPasteBtn">
+                        <i class="bi bi-clipboard"></i>
+                        <span>Paste</span>
+                    </button>
+                    
+                    <button class="ocr-action-btn" id="ocrScreenshotBtn">
+                        <i class="bi bi-display"></i>
+                        <span>Screenshot</span>
+                    </button>
+                </div>
             </div>
             
-            <div class="ocr-btn-group">
-                <button class="ocr-action-btn" id="ocrUploadBtn">
-                    <i class="bi bi-upload"></i>
-                    <span>Upload Image</span>
-                </button>
-                
-                <button class="ocr-action-btn" id="ocrScreenshotBtn">
-                    <i class="bi bi-camera"></i>
-                    <span>Take Screenshot</span>
-                </button>
-                
-                <button class="ocr-action-btn" id="ocrPasteBtn">
-                    <i class="bi bi-clipboard"></i>
-                    <span>Paste from Clipboard</span>
-                </button>
-                
-                <button class="ocr-action-btn" id="ocrDragDropInfo">
-                    <i class="bi bi-box-arrow-in-down"></i>
-                    <span>Drag & Drop</span>
-                </button>
-            </div>
-            
-            <div class="ocr-loading" id="ocrLoading" aria-hidden="true">
+            <div class="ocr-loading" id="ocrLoading">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Processing...</span>
                 </div>
-                <p class="mt-2 text-muted">Extracting text from image...</p>
+                <p class="mt-2 text-muted">Scanning text...</p>
             </div>
             
-            <div class="ocr-result-area" id="ocrResultArea">
-                <label class="form-label fw-bold">Extracted Text:</label>
+            <div class="ocr-result-area" id="ocrResultArea" style="display: none;">
+                <label class="form-label fw-bold">Extracted Data:</label>
                 <textarea class="ocr-result-text" id="ocrResultText" placeholder="Extracted text will appear here..."></textarea>
                 
                 <div class="ocr-result-actions">
@@ -190,216 +230,269 @@
     </div>
 </div>
 
-<!-- Restore OCR behavior: toggles + drag/drop + file upload + clipboard paste + screenshot + client-side OCR via Tesseract.js fallback to backend if configured -->
 <script>
-(function () {
-  const toggleBtn = document.getElementById('ocrToggleBtn');
-  const drawer = document.getElementById('ocrDrawer');
-  const drawerClose = document.getElementById('ocrDrawerClose');
-  const uploadArea = document.getElementById('ocrUploadArea');
-  const fileInput = document.getElementById('ocrFileInput');
-  const uploadBtn = document.getElementById('ocrUploadBtn');
-  const screenshotBtn = document.getElementById('ocrScreenshotBtn');
-  const pasteBtn = document.getElementById('ocrPasteBtn');
-  const loading = document.getElementById('ocrLoading');
-  const resultArea = document.getElementById('ocrResultArea');
-  const resultText = document.getElementById('ocrResultText');
-  const applyBtn = document.getElementById('ocrApplyBtn');
-  const clearBtn = document.getElementById('ocrClearBtn');
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- Elements ---
+    const ocrToggleBtn = document.getElementById('ocrToggleBtn');
+    const ocrDrawer = document.getElementById('ocrDrawer');
+    const ocrDrawerClose = document.getElementById('ocrDrawerClose');
+    const databankContainer = document.querySelector('.databank-container');
+    
+    // Camera Elements
+    const uploadContainer = document.getElementById('upload-container');
+    const cameraContainer = document.getElementById('camera-container');
+    const videoElement = document.getElementById('camera-video');
+    const captureBtn = document.getElementById('capture-btn');
+    const cancelCameraBtn = document.getElementById('cancel-camera-btn');
+    
+    // Input Elements
+    const ocrUploadArea = document.getElementById('ocrUploadArea');
+    const ocrFileInput = document.getElementById('ocrFileInput');
+    const mobileCameraInput = document.getElementById('mobileCameraInput');
+    const ocrUploadBtn = document.getElementById('ocrUploadBtn');
+    const ocrCameraBtn = document.getElementById('ocrCameraBtn');
+    const ocrPasteBtn = document.getElementById('ocrPasteBtn');
+    const ocrScreenshotBtn = document.getElementById('ocrScreenshotBtn');
+    
+    // Result Elements
+    const ocrLoading = document.getElementById('ocrLoading');
+    const ocrResultArea = document.getElementById('ocrResultArea');
+    const ocrResultText = document.getElementById('ocrResultText');
+    const ocrApplyBtn = document.getElementById('ocrApplyBtn');
+    const ocrClearBtn = document.getElementById('ocrClearBtn');
 
-  const ocrEndpoint = uploadArea.dataset.ocrEndpoint || ''; // set a backend endpoint by adding data-ocr-endpoint attr to .ocr-upload-area
+    let videoStream = null;
 
-  function openDrawer() { drawer.classList.add('open'); }
-  function closeDrawer() { drawer.classList.remove('open'); }
-
-  toggleBtn.addEventListener('click', openDrawer);
-  drawerClose.addEventListener('click', closeDrawer);
-
-  // Drag & drop
-  ['dragenter','dragover'].forEach(evt => {
-    uploadArea.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); uploadArea.classList.add('dragover'); });
-  });
-  ['dragleave','drop'].forEach(evt => {
-    uploadArea.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); uploadArea.classList.remove('dragover'); });
-  });
-  uploadArea.addEventListener('drop', function (e) {
-    const f = (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
-    if (f) processFile(f);
-  });
-
-  // Click to browse
-  uploadArea.addEventListener('click', () => fileInput.click());
-  uploadBtn.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', (e) => {
-    const f = e.target.files && e.target.files[0];
-    if (f) processFile(f);
-    fileInput.value = '';
-  });
-
-  // Clipboard paste - listen globally while drawer open
-  pasteBtn.addEventListener('click', () => {
-    // Focus hint for paste
-    resultText.focus();
-    resultText.value = 'Press Ctrl+V (Cmd+V on Mac) to paste image from clipboard...';
-    document.addEventListener('paste', handlePasteOnce, { once: true });
-  });
-
-  function handlePasteOnce(e) {
-    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-    for (const it of items) {
-      if (it.type && it.type.indexOf('image') !== -1) {
-        const blob = it.getAsFile();
-        processFile(blob);
-        return;
-      }
+    // --- Drawer Toggle ---
+    function toggleDrawer(open) {
+        if (open) {
+            ocrDrawer.classList.add('open');
+        } else {
+            ocrDrawer.classList.remove('open');
+            stopCamera(); 
+        }
     }
-    alert('No image found in clipboard.');
-  }
+    
+    if(ocrToggleBtn) ocrToggleBtn.addEventListener('click', () => toggleDrawer(true));
+    if(ocrDrawerClose) ocrDrawerClose.addEventListener('click', () => toggleDrawer(false));
 
-  // Screenshot using Screen Capture API (user will be prompted)
-  screenshotBtn.addEventListener('click', async () => {
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      const track = stream.getVideoTracks()[0];
-      const img = await captureFrameFromStream(stream);
-      track.stop();
-      processBlob(img);
-    } catch (err) {
-      console.error(err);
-      alert('Unable to capture screen. Check permissions or try another method.');
+    // --- Camera Logic ---
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    ocrCameraBtn.addEventListener('click', () => {
+        if (isMobile) {
+            mobileCameraInput.click();
+        } else {
+            startWebcam();
+        }
+    });
+
+    mobileCameraInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            processImageFile(e.target.files[0]);
+        }
+    });
+
+    async function startWebcam() {
+        try {
+            uploadContainer.style.display = 'none';
+            ocrResultArea.style.display = 'none';
+            cameraContainer.style.display = 'block';
+            
+            videoStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment' } 
+            });
+            videoElement.srcObject = videoStream;
+        } catch (err) {
+            console.error("Camera Error:", err);
+            alert("Camera access denied or unavailable.");
+            stopCamera();
+        }
     }
-  });
 
-  async function captureFrameFromStream(stream) {
-    return new Promise((resolve) => {
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-      video.addEventListener('loadeddata', async () => {
+    function stopCamera() {
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+            videoStream = null;
+        }
+        cameraContainer.style.display = 'none';
+        uploadContainer.style.display = 'block';
+    }
+
+    cancelCameraBtn.addEventListener('click', stopCamera);
+
+    captureBtn.addEventListener('click', () => {
         const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        canvas.toBlob(blob => resolve(blob), 'image/png');
-      }, { once: true });
+        ctx.drawImage(videoElement, 0, 0);
+        
+        const base64Image = canvas.toDataURL('image/jpeg');
+        stopCamera();
+        processBase64Image(base64Image);
     });
-  }
 
-  function processBlob(blob) {
-    if (!blob) return;
-    // convert Blob to File with a name to keep same processing path
-    const file = new File([blob], 'screenshot.png', { type: blob.type });
-    processFile(file);
-  }
-
-  // Core: try backend OCR if endpoint provided; otherwise use Tesseract client-side
-  async function processFile(file) {
-    resultArea.style.display = 'none';
-    loading.classList.add('active');
-    loading.setAttribute('aria-hidden', 'false');
-
-    // If backend endpoint is configured, try that first
-    if (ocrEndpoint) {
-      try {
-        const fd = new FormData();
-        fd.append('file', file);
-        const resp = await fetch(ocrEndpoint, { method: 'POST', body: fd });
-        if (resp.ok) {
-          const data = await resp.json();
-          const text = data.text || data.result || '';
-          showResult(text || '(no text detected)');
-          return;
-        }
-      } catch (err) {
-        console.warn('Backend OCR failed, falling back to client-side Tesseract', err);
-        // fallthrough to client-side
-      }
-    }
-
-    // Client-side: load Tesseract if not present
-    try {
-      await loadTesseract();
-      const { createWorker } = window.Tesseract;
-      const worker = createWorker({
-        logger: m => {
-          // Optionally: show progress in loading area
-          // console.log(m);
-        }
-      });
-      await worker.load();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      const { data: { text } } = await worker.recognize(file);
-      await worker.terminate();
-      showResult(text || '(no text detected)');
-    } catch (err) {
-      console.error('Client OCR failed', err);
-      showResult('(OCR failed — check backend or network).');
-    }
-  }
-
-  function showResult(text) {
-    loading.classList.remove('active');
-    loading.setAttribute('aria-hidden', 'true');
-    resultArea.style.display = 'block';
-    resultText.value = text;
-  }
-
-  function loadTesseract() {
-    return new Promise((resolve, reject) => {
-      if (window.Tesseract) return resolve();
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@v4.1.1/dist/tesseract.min.js';
-      s.onload = () => setTimeout(resolve, 50);
-      s.onerror = reject;
-      document.head.appendChild(s);
+    // --- Upload Logic ---
+    ocrUploadArea.addEventListener('click', () => ocrFileInput.click());
+    ocrUploadBtn.addEventListener('click', () => ocrFileInput.click());
+    
+    ocrFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) processImageFile(e.target.files[0]);
     });
-  }
 
-  // Apply: copy to clipboard and dispatch custom event for app-level handlers
-  applyBtn.addEventListener('click', async () => {
-    const text = resultText.value || '';
-    if (!text.trim()) return alert('Nothing to apply.');
-    // copy to clipboard
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      // ignore
+    if (ocrPasteBtn) {
+        ocrPasteBtn.addEventListener('click', async () => {
+            try {
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                    for (const type of item.types) {
+                        if (type.startsWith('image/')) {
+                            const blob = await item.getType(type);
+                            const reader = new FileReader();
+                            reader.onload = (e) => processBase64Image(e.target.result);
+                            reader.readAsDataURL(blob);
+                            return;
+                        }
+                    }
+                }
+                alert("No image found in clipboard.");
+            } catch (e) { alert("Clipboard access denied."); }
+        });
     }
-    // dispatch event so other scripts can listen and populate forms
-    const ev = new CustomEvent('ocr:applied', { detail: { text } });
-    document.dispatchEvent(ev);
-    alert('Extracted text copied to clipboard. Use Paste or listen for ocr:applied event to insert into form.');
-  });
 
-  clearBtn.addEventListener('click', () => {
-    resultText.value = '';
-    resultArea.style.display = 'none';
-  });
+    // --- IMAGE COMPRESSION LOGIC (THE FIX) ---
+    function compressImage(fileOrBlob, maxWidth = 1000, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(fileOrBlob);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
 
-  // close drawer when clicking outside (optional)
-  document.addEventListener('click', (e) => {
-    if (!drawer.classList.contains('open')) return;
-    if (!drawer.contains(e.target) && !toggleBtn.contains(e.target)) {
-      closeDrawer();
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve(blob);
+                        } else {
+                            reject(new Error("Compression failed"));
+                        }
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
+        });
     }
-  });
 
-  // accessibility: close drawer with Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeDrawer();
-  });
+    // --- PROCESSING ---
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
-  // allow other parts of app to set a backend endpoint dynamically:
-  window.setOcrEndpoint = function(url) {
-    uploadArea.dataset.ocrEndpoint = url;
-  };
+    function showLoading(show) {
+        if (show) {
+            ocrLoading.classList.add('active');
+            ocrResultArea.style.display = 'none';
+        } else {
+            ocrLoading.classList.remove('active');
+        }
+    }
 
-  // expose for debug/testing
-  window._ocr = { processFile, processBlob, openDrawer, closeDrawer };
+    function displayResult(text) {
+        ocrResultText.value = text;
+        ocrResultArea.style.display = 'block';
+    }
 
-})();
+    // Updated Process Image File
+    async function processImageFile(file) {
+        showLoading(true);
+        try {
+            // 1. Compress before sending
+            console.log("Original size:", file.size);
+            const compressedBlob = await compressImage(file);
+            console.log("Compressed size:", compressedBlob.size);
+
+            const formData = new FormData();
+            formData.append('image', compressedBlob, "scan.jpg");
+            
+            const res = await fetch('{% url "databank:process_ocr" %}', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            });
+            
+            const data = await res.json();
+            if (data.success) displayResult(data.text);
+            else alert('OCR Failed: ' + (data.error || 'Unknown error'));
+            
+        } catch (e) {
+            console.error(e);
+            alert('Error processing image. Please try a smaller image.');
+        } finally { 
+            showLoading(false); 
+        }
+    }
+
+    // Updated Process Base64
+    async function processBase64Image(base64) {
+        // Convert base64 to blob for compression
+        const res = await fetch(base64);
+        const blob = await res.blob();
+        processImageFile(blob);
+    }
+
+    // Apply / Clear Buttons
+    ocrApplyBtn.addEventListener('click', () => {
+        const text = ocrResultText.value;
+        alert("Text copied! (Implement field mapping logic here)");
+    });
+
+    ocrClearBtn.addEventListener('click', () => {
+        ocrResultText.value = '';
+        ocrResultArea.style.display = 'none';
+        ocrFileInput.value = '';
+        mobileCameraInput.value = '';
+    });
+    
+    // Search Logic
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#coop-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+});
 </script>
 
 <!-- Modal overlay (copied as requested) -->
@@ -436,8 +529,6 @@
                             <div class="info-item"><label>Email Address</label><p>consumercoop@gmail.com</p></div>
                             <div class="info-item"><label>CDA Registration Number</label><p>1414-060923055</p></div>
                             <div class="info-item"><label>CDA Registration Date</label><p>09-06-2005</p></div>
-                            <div class="info-item"><label>Cooperative Category</label><p>Consumer</p></div>
-                            <div class="info-item"><label>District</label><p>East</p></div>
                             <div class="info-item"><label>LCCDC Membership</label><p>09-14-2014</p></div>
                             <div class="info-item"><label>Area of Operation</label><p>Consumer</p></div>
                             <div class="info-item"><label>Business Activity</label><p>Supply and demand</p></div>

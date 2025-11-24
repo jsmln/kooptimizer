@@ -17,39 +17,75 @@
     <nav class="sidebar">
         <div class="logo-area">
             <img src="{% static 'frontend/images/Logo.png' %}" alt="Logo" class="sidebar-logo">
-            <h3>KoopTimizer</h3>
+            <h3 class="logo-text">KoopTimizer</h3>
         </div>
 
         <ul class="nav-links">
             {% if request.session.role == 'admin' %}
-                <li><a href="{% url 'dashboard:admin_dashboard' %}" class="nav-item active"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+                <li>
+                    <a href="{% url 'dashboard:admin_dashboard' %}" class="nav-item active">
+                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
             {% elif request.session.role == 'staff' %}
-                <li><a href="{% url 'dashboard:staff_dashboard' %}" class="nav-item active"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+                <li>
+                    <a href="{% url 'dashboard:staff_dashboard' %}" class="nav-item active">
+                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
             {% elif request.session.role == 'officer' %}
-                <li><a href="{% url 'dashboard:cooperative_dashboard' %}" class="nav-item active"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+                <li>
+                    <a href="{% url 'dashboard:cooperative_dashboard' %}" class="nav-item active">
+                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
             {% endif %}
 
-            <li class="nav-section-title">Modules</li>
+            <li class="nav-section-title"><span class="nav-text">Modules</span></li>
 
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
-                <li><a href="{% url 'account_management:account_management' %}" class="nav-item"><i class="bi bi-people-fill"></i> Accounts</a></li>
-                <li><a href="{% url 'databank:databank_management' %}" class="nav-item"><i class="bi bi-database-fill"></i> Data Bank</a></li>
+                <li>
+                    <a href="{% url 'account_management:account_management' %}" class="nav-item">
+                        <i class="bi bi-people-fill"></i> <span class="nav-text">Accounts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'databank:databank_management' %}" class="nav-item">
+                        <i class="bi bi-database-fill"></i> <span class="nav-text">Data Bank</span>
+                    </a>
+                </li>
             {% endif %}
 
             {% if request.session.role == 'officer' %}
-                <li><a href="{% url 'cooperatives:profile_form' %}" class="nav-item"><i class="bi bi-building"></i> Profile</a></li>
+                <li>
+                    <a href="{% url 'cooperatives:profile_form' %}" class="nav-item">
+                        <i class="bi bi-building"></i> <span class="nav-text">Profile</span>
+                    </a>
+                </li>
             {% endif %}
 
-            <li><a href="{% url 'communications:message' %}" class="nav-item"><i class="bi bi-chat-dots-fill"></i> Messages</a></li>
+            <li>
+                <a href="{% url 'communications:message' %}" class="nav-item">
+                    <i class="bi bi-chat-dots-fill"></i> <span class="nav-text">Messages</span>
+                </a>
+            </li>
+            
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
-            <li><a href="{% url 'communications:announcement_form' %}" class="nav-item"><i class="bi bi-megaphone-fill"></i> Announcements</a></li>
+            <li>
+                <a href="{% url 'communications:announcement_form' %}" class="nav-item">
+                    <i class="bi bi-megaphone-fill"></i> <span class="nav-text">Announcements</span>
+                </a>
+            </li>
             {% endif %}
         </ul>
 
         <div class="sidebar-widgets">
             
             <div class="mini-widget">
-                <h4>Calendar <i class="bi bi-calendar4-week"></i></h4>
+                <h4>
+                    <span class="nav-text">Calendar</span> 
+                    <i class="bi bi-calendar4-week"></i>
+                </h4>
                 <div class="mini-calendar-box">
                     <div class="mini-date" id="current-date">{% now "M d" %}</div>
                     <div class="mini-day" id="current-day">{% now "l" %}</div>
@@ -58,18 +94,12 @@
             </div>
 
             <div class="mini-widget">
-                <h4>Activity</h4>
-                <div class="mini-activity-list">
+                <h4><span class="nav-text">Activity</span></h4>
+    
+                <div class="mini-activity-list" id="sidebar-activity-list">
                     <div class="mini-activity-item">
                         <div class="mini-activity-text">
-                            <strong>New Message</strong>
-                            <span>Just now</span>
-                        </div>
-                    </div>
-                    <div class="mini-activity-item">
-                        <div class="mini-activity-text">
-                            <strong>System Update</strong>
-                            <span>2h ago</span>
+                            <span style="font-size: 0.75rem; color: #aaa;">Checking for updates...</span>
                         </div>
                     </div>
                 </div>
@@ -144,13 +174,14 @@
         // Real-time clock
         function updateClock() {
             const now = new Date();
-            const hours = now.getHours();
+            let hours = now.getHours();
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
             const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
             
-            const timeString = `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
             
             const timeElement = document.getElementById('current-time');
             if (timeElement) {
@@ -158,9 +189,79 @@
             }
         }
         
-        // Update clock immediately and then every second
         updateClock();
         setInterval(updateClock, 1000);
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // 1. Select the container
+    const activityContainer = document.getElementById('sidebar-activity-list');
+
+    function loadRecentActivity() {
+        // DEBUG: Check if script runs
+        // console.log("Fetching activity..."); 
+
+        fetch("{% url 'communications:api_recent_activity' %}")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // DEBUG: See what data came back
+                // console.log("Data received:", data);
+
+                if (data.status === 'success') {
+                    if (data.activities.length > 0) {
+                        // WE HAVE MESSAGES: Build the list
+                        let html = '';
+                        data.activities.forEach(activity => {
+                            html += `
+                            <div class="mini-activity-item">
+                                <div class="mini-activity-text">
+                                    <strong style="color: #2B3674; font-size: 0.85rem;">${activity.title}</strong>
+                                    <span style="font-size: 0.7rem; color: #707EAE; display:block; margin-top:2px;">${activity.sender}</span>
+                                    <span style="font-size: 0.65rem; color: #A3AED0; margin-top:2px;">${activity.time}</span>
+                                </div>
+                            </div>`;
+                        });
+                        
+                        // Update the HTML only if it changed (prevents flickering)
+                        if (activityContainer.innerHTML !== html) {
+                            activityContainer.innerHTML = html;
+                        }
+
+                    } else {
+                        // NO MESSAGES: Update text to say so
+                        activityContainer.innerHTML = `
+                            <div class="mini-activity-item">
+                                <div class="mini-activity-text">
+                                    <span style="font-size: 0.75rem; color: #A3AED0;">No recent messages</span>
+                                </div>
+                            </div>`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading activity:', error);
+                activityContainer.innerHTML = `
+                    <div class="mini-activity-item">
+                        <div class="mini-activity-text">
+                            <span style="font-size: 0.75rem; color: red;">Error loading data</span>
+                        </div>
+                    </div>`;
+            });
+    }
+
+    // Load immediately
+    loadRecentActivity();
+
+    // Refresh every 2 seconds
+    setInterval(loadRecentActivity, 2000);
+});
 </script>
 {% endblock %}
