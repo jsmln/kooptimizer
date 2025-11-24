@@ -515,3 +515,13 @@ a { text-decoration: none; }
     .dropdown-arrow { display:none; }
     .profile-avatar { width:32px; height:32px; font-size:0.9rem; }
 }
+
+/* FAQ modal scrolling: keep modal within viewport and enable internal scrolling */
+#faqModal .modal-dialog { max-width: 900px; }
+#faqModal .modal-body {
+    max-height: 64vh; /* keep modal from growing beyond viewport */
+    overflow-y: auto;
+}
+
+/* Inside the FAQ modal, keep the chat messages scrollable and bounded */
+#faq-messages { max-height: 46vh; overflow-y: auto; }
