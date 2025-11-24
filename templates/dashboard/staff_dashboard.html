@@ -1,7 +1,380 @@
 {% extends 'dashboard/dashboard.html' %}
+{% load static %}
+
+{% block dashboard_title %}Staff Dashboard{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'frontend/staff_dashboard.css' %}">
+{% endblock %}
 
 {% block dashboard_content %}
-<div class="dashboard staff-dashboard">
-    <!-- <h1>{{ page_title }}</h1> -->
+<div class="staff-dashboard-container">
+    
+    <div class="dashboard-header">
+        <div>
+            <h4 class="subtitle">Workload Overview</h4>
+            <h1>Welcome back, {{ request.session.username|default:'Staff' }}!</h1>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#assignedCoopsModal">
+            <div class="icon-box red-box">
+                <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Assigned Cooperatives</p>
+                <h3>6</h3>
+                <span class="link-text">View List <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box green-box">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Updated Profiles</p>
+                <h3>4</h3>
+                <small class="text-muted">Recently updated by coops</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box orange-box">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Pending Submission</p>
+                <h3>2</h3>
+                <small class="text-muted">Profiles not yet submitted</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-split">
+        
+        <div class="card-section main-list">
+            <div class="card-header-custom">
+                <h3>My Assigned Cooperatives</h3>
+                <div class="header-actions" style="display:flex;align-items:center;gap:8px;">
+
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button id="filterToggleStaff" class="filter-toggle-btn" title="Toggle filters">
+                            <i class="bi bi-funnel"></i> <span>Filter</span>
+                        </button>
+
+                        <div id="filterControlsStaff" class="filter-controls" style="display:none; gap:6px; align-items:center;">
+                            <select class="form-select-sm" id="categoryFilterStaff" style="min-width:110px;">
+                                <option value="">All Categories</option>
+                                <option value="Micro">Micro</option>
+                                <option value="Small">Small</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Large">Large</option>
+                            </select>
+                            <select class="form-select-sm" id="districtFilterStaff" style="min-width:110px;">
+                                <option value="">All Districts</option>
+                                <option value="East">East</option>
+                                <option value="West">West</option>
+                                <option value="North">North</option>
+                                <option value="South">South</option>
+                                <option value="Urban">Urban</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+             </div>
+            
+            <div class="table-responsive">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>Cooperative Name</th>
+                            <th>Category</th>
+                            <th>District</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr data-category="Micro" data-district="East" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
+                             <td>
+                                 <div class="coop-cell">
+                                     <div class="avatar-sm">C</div>
+                                     <div>
+                                         <span class="fw-bold">Consumer Cooperative</span>
+                                         <small class="d-block text-muted">Sabang, Lipa City</small>
+                                     </div>
+                                 </div>
+                             </td>
+                             <td>Micro</td>
+                             <td>East</td>
+                             <td><span class="badge-status success">Updated</span></td>
+                          </tr>
+                        <tr data-category="Large" data-district="West" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
+                             <td>
+                                 <div class="coop-cell">
+                                     <div class="avatar-sm">P</div>
+                                     <div>
+                                         <span class="fw-bold">Plaridel MPC</span>
+                                         <small class="d-block text-muted">Balintawak, Lipa City</small>
+                                     </div>
+                                 </div>
+                             </td>
+                             <td>Large</td>
+                             <td>West</td>
+                             <td><span class="badge-status success">Updated</span></td>
+                          </tr>
+                        <tr data-category="Small" data-district="South" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
+                             <td>
+                                 <div class="coop-cell">
+                                     <div class="avatar-sm" style="background: #f0ad4e;">A</div>
+                                     <div>
+                                         <span class="fw-bold">Agriculture Cooperative</span>
+                                         <small class="d-block text-muted">Sabang, Lipa City</small>
+                                     </div>
+                                 </div>
+                             </td>
+                             <td>Small</td>
+                             <td>District 4</td>
+                             <td><span class="badge-status warning">Pending</span></td>
+                          </tr>
+                        <tr data-category="Medium" data-district="District 3" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
+                             <td>
+                                 <div class="coop-cell">
+                                     <div class="avatar-sm">H</div>
+                                     <div>
+                                         <span class="fw-bold">Housing Cooperative</span>
+                                         <small class="d-block text-muted">Inosluban, Lipa City</small>
+                                     </div>
+                                 </div>
+                             </td>
+                             <td>Medium</td>
+                             <td>North</td>
+                             <td><span class="badge-status warning">Pending</span></td>
+                          </tr>
+                        <tr data-category="Medium" data-district="East" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
+                             <td>
+                                 <div class="coop-cell">
+                                     <div class="avatar-sm">T</div>
+                                     <div>
+                                         <span class="fw-bold">Transport Service Coop</span>
+                                         <small class="d-block text-muted">Tambo, Lipa City</small>
+                                     </div>
+                                 </div>
+                             </td>
+                             <td>Medium</td>
+                             <td>East</td>
+                             <td><span class="badge-status success">Updated</span></td>
+                          </tr>
+                        <tr data-category="Micro" data-district="Urban" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
+                             <td>
+                                 <div class="coop-cell">
+                                     <div class="avatar-sm">F</div>
+                                     <div>
+                                         <span class="fw-bold">Farmers Credit Coop</span>
+                                         <small class="d-block text-muted">Pinagtong-ulan, Lipa City</small>
+                                     </div>
+                                 </div>
+                             </td>
+                             <td>Micro</td>
+                             <td>District 5</td>
+                             <td><span class="badge-status success">Updated</span></td>
+                          </tr>
+                      </tbody>
+                  </table>
+                <div id="noResultsMessageStaff" style="display:none;padding:12px;text-align:center;color:#6c757d;">
+                    No cooperatives found matching the selected filters.
+                </div>
+             </div>
+        </div>
+
+        <div class="card-section activity-feed">
+            <div class="card-header-custom">
+                <h3>Recent Updates</h3>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-icon bg-blue"><i class="bi bi-file-earmark-text"></i></div>
+                    <div class="timeline-content">
+                        <p class="text-dark fw-bold">Financial Report Uploaded</p>
+                        <p class="text-muted small">Consumer Cooperative uploaded 2024 Assets.</p>
+                        <span class="time-ago">2 hours ago</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon bg-red"><i class="bi bi-pencil-square"></i></div>
+                    <div class="timeline-content">
+                        <p class="text-dark fw-bold">Profile Updated</p>
+                        <p class="text-muted small">Agriculture Cooperative updated officer list.</p>
+                        <span class="time-ago">1 day ago</span>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon bg-green"><i class="bi bi-check-circle"></i></div>
+                    <div class="timeline-content">
+                        <p class="text-dark fw-bold">Compliance Verified</p>
+                        <p class="text-muted small">You marked Plaridel MPC as compliant.</p>
+                        <span class="time-ago">2 days ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
+
+<div class="modal fade" id="coopProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cooperative Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-circle mb-2">C</div>
+                    <h4>Consumer Cooperative</h4>
+                    <span class="badge bg-success">Updated</span>
+                    <p class="text-muted mt-2">Sabang, Lipa City, Batangas</p>
+                </div>
+
+                <div class="info-grid">
+                    <div><strong>CDA No:</strong> 1414-060923055</div>
+                    <div><strong>Category:</strong> Micro</div>
+                    <div><strong>Assets:</strong> ₱ 356,964.68</div>
+                    <div><strong>Members:</strong> 120</div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button class="btn btn-sm btn-outline-secondary">Download PDF</button>
+                    <button class="btn btn-sm btn-danger">Edit Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="assignedCoopsModal" tabindex="-1" aria-labelledby="assignedCoopsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignedCoopsLabel">Assigned Cooperatives</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="modal-table" id="assignedCoopsTable">
+                        <thead>
+                            <tr>
+                                <th>Cooperative Name</th>
+                                <th>Address</th>
+                                <th>Email</th>
+                                <th>CDA Registration No.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Consumer Cooperative</td>
+                                <td>Sabang, Lipa City</td>
+                                <td>consumercoop@gmail.com</td>
+                                <td>1414-060923055</td>
+                            </tr>
+                            <tr>
+                                <td>Plaridel MPC</td>
+                                <td>Balintawak, Lipa City</td>
+                                <td>plaridelmpc@gmail.com</td>
+                                <td>1414-06140255</td>
+                            </tr>
+                            <tr>
+                                <td>Agriculture Cooperative</td>
+                                <td>Sabang, Lipa City</td>
+                                <td>agricoop@gmail.com</td>
+                                <td>1414-06140256</td>
+                            </tr>
+                            <tr>
+                                <td>Housing Cooperative</td>
+                                <td>Inosluban, Lipa City</td>
+                                <td>housingcoop@gmail.com</td>
+                                <td>1414-06140258</td>
+                            </tr>
+                             <tr>
+                                <td>Transport Service Coop</td>
+                                <td>Tambo, Lipa City</td>
+                                <td>transportcoop@gmail.com</td>
+                                <td>1414-06140260</td>
+                            </tr>
+                            <tr>
+                                <td>Farmers Credit Coop</td>
+                                <td>Pinagtong-ulan, Lipa City</td>
+                                <td>farmerscredit@gmail.com</td>
+                                <td>1414-06140262</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('filterToggleStaff');
+    const controls = document.getElementById('filterControlsStaff');
+    const category = document.getElementById('categoryFilterStaff');
+    const district = document.getElementById('districtFilterStaff');
+    const tableBody = document.querySelector('.staff-table tbody');
+    const rows = () => Array.from(tableBody.querySelectorAll('tr'));
+    const noResults = document.getElementById('noResultsMessageStaff');
+
+    // Apply filters across all rows dynamically
+    function applyStaffFilters() {
+        const catVal = (category?.value || '').trim();
+        const distVal = (district?.value || '').trim();
+        let found = false;
+
+        rows().forEach(r => {
+            const rCat = (r.dataset.category || '').trim();
+            const rDist = (r.dataset.district || '').trim();
+
+            const matches = (catVal === '' || rCat === catVal)
+                && (distVal === '' || rDist === distVal);
+
+            r.style.display = matches ? '' : 'none';
+            if (matches) found = true;
+        });
+
+        noResults.style.display = found ? 'none' : 'block';
+    }
+
+    // Toggle inline filter controls
+    toggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!controls) return;
+        controls.style.display = (controls.style.display === 'flex') ? 'none' : 'flex';
+        toggle.setAttribute('aria-expanded', String(controls.style.display === 'flex'));
+    });
+
+    // Hide controls when clicking outside (do not clear)
+    document.addEventListener('click', (ev) => {
+        if (!controls || !toggle) return;
+        if (!controls.contains(ev.target) && !toggle.contains(ev.target)) {
+            controls.style.display = 'none';
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // Wire change events so filtering is immediate
+    [category, district].forEach(el => el?.addEventListener('change', applyStaffFilters));
+
+    // Initialize on load
+    applyStaffFilters();
+});
+</script>
 {% endblock %}
