@@ -282,21 +282,48 @@ a { text-decoration: none; }
     flex-wrap: wrap;
 }
 
-.top-left { display: flex; align-items: center; gap: 12px; }
+.top-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
 #sidebar-toggle-btn {
-    background: white; border: none; color: var(--text-dark);
-    font-size: 1.5rem; padding: 8px 12px; border-radius: 10px;
-    cursor: pointer; box-shadow: 0px 2px 5px rgba(0,0,0,0.02);
+    background: white;
+    border: none;
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.02);
     display: none;
 }
 
-.page-title { font-size: 1rem; color: var(--text-dark); font-weight: 700; white-space: nowrap; }
+#sidebar-toggle-btn:hover {
+    background: var(--brand-red-light);
+    color: var(--brand-red);
+}
+
+.page-title { 
+    font-size: 1rem; 
+    color: var(--text-dark); 
+    font-weight: 700; 
+    white-space: nowrap;
+}
 
 .search-box {
-    background: white; padding: 8px 20px; border-radius: 30px;
-    display: flex; align-items: center; gap: 10px; color: var(--text-gray);
-    width: 350px; max-width: 100%; box-shadow: 0px 2px 5px rgba(0,0,0,0.02); flex-shrink: 1;
+    background: white;
+    padding: 8px 20px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-gray);
+    width: 350px;
+    max-width: 100%;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.02);
+    flex-shrink: 1;
 }
 .search-box input { border: none; outline: none; background: transparent; width: 100%; color: var(--text-dark); }
 
@@ -330,28 +357,91 @@ a { text-decoration: none; }
 }
 
 @media (max-width: 992px) {
-    .dashboard-layout { grid-template-columns: 1fr; } 
+    .dashboard-layout { grid-template-columns: 1fr; } /* 1 Column only */
+    
     .sidebar { 
         position: fixed; width: 260px; height: 100%; 
         transform: translateX(-100%); transition: 0.3s; 
-        box-shadow: 5px 0 15px rgba(0,0,0,0.1); padding: 20px 0;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        z-index: 100;
     }
-    .sidebar .nav-text, .sidebar .logo-text, .sidebar .sidebar-widgets {
-        opacity: 1; visibility: visible; width: auto; position: static; height: auto; overflow: visible;
-    }
-    .nav-item { justify-content: flex-start; padding-left: 25px; }
+    
     .sidebar-close { 
-        display: block; position: absolute; top: 15px; right: 15px; background: none; 
-        border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-dark);
+        display: block; 
+        position: absolute; 
+        top: 15px; 
+        right: 15px; 
+        background: none; 
+        border: none; 
+        font-size: 1.5rem; 
+        cursor: pointer; 
+        color: var(--text-dark);
     }
-    #sidebar-toggle-btn { display: flex !important; }
+    
+    #sidebar-toggle-btn {
+        display: flex !important;
+    }
+    
     body.sidebar-open .sidebar { transform: translateX(0); }
     body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: all; }
-    .user-info { display: none; }
-    .top-bar { padding: 12px 15px; gap: 10px; }
-    .search-box { order: 3; width: 100%; flex-basis: 100%; margin-top: 10px; }
-    .user-menu { order: 2; padding: 6px 10px; gap: 8px; }
-    .top-left { order: 1; flex: 1; }
+    
+    /* Top Bar Responsive */
+    .top-bar {
+        padding: 12px 15px;
+        gap: 10px;
+    }
+    
+    .search-box {
+        order: 3;
+        width: 100%;
+        flex-basis: 100%;
+        margin-top: 10px;
+    }
+    
+    .user-menu {
+        order: 2;
+        padding: 6px 10px;
+        gap: 8px;
+    }
+    
+    .top-left {
+        order: 1;
+        flex: 1;
+    }
+    
+    .page-title {
+        font-size: 0.9rem;
+    }
+    
+    .user-info {
+        display: none;
+    }
+}
+
+/* Extra Small Screens */
+@media (max-width: 576px) {
+    .top-bar {
+        padding: 10px 12px;
+    }
+    
+    .search-box {
+        padding: 6px 15px;
+    }
+    
+    .page-title {
+        font-size: 0.85rem;
+    }
+    
+    .user-menu .avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+    
+    .logout-btn-mini,
+    .settings-btn-mini {
+        font-size: 1rem;
+    }
 }
 
 @media (max-width: 576px) {

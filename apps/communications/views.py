@@ -87,6 +87,58 @@ def cancel_scheduled_announcement(request, announcement_id):
 
 
 @csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def delete_announcement(request, announcement_id):
+    """
+    Deletes an announcement. Admins can delete any announcement. Staff can only delete announcements they created.
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+    try:
+        try:
+            ann = Announcement.objects.get(announcement_id=announcement_id)
+        except Announcement.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
+
+        # Permission check: only admins and the staff who created it can delete
+        if role == 'staff':
+            try:
+                staff_profile = Staff.objects.get(user_id=user_id)
+                # Staff can only delete announcements they created (staff_id matches)
+                if ann.staff_id != staff_profile.staff_id:
+                    return JsonResponse({'status': 'error', 'message': 'You do not have permission to delete this announcement.'}, status=403)
+            except Staff.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Staff profile not found'}, status=403)
+        # Admin role: no permission check needed, can delete any announcement
+
+        # Log before deletion
+        print(f"Deleting announcement ID: {announcement_id}")
+        
+        # Proceed to delete using raw SQL to ensure it actually deletes
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM announcements WHERE announcement_id = %s", [announcement_id])
+            deleted_count = cursor.rowcount
+            print(f"Deleted {deleted_count} rows from announcements table")
+        
+        print(f"Successfully deleted announcement {announcement_id}")
+        return JsonResponse({'status': 'success', 'message': 'Announcement deleted successfully.'})
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Error in delete_announcement: {str(e)}"
+        print(error_msg)
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': error_msg}, status=500)
+
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@csrf_exempt
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_announcement_details(request, announcement_id):

@@ -558,12 +558,63 @@
     <div class="announcement-content">
         
         <div id="list-view-container" class="d-flex flex-column h-100">
-            <div class="content-header">
-                <div class="search-wrapper">
-                    <i class="bi bi-search"></i>
-                    <input type="text" id="search-input" placeholder="Search announcements...">
-                </div>
+            <div class="content-header" style="position: relative;">
+    <div style="display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px;">
+        <div class="search-wrapper">
+            <i class="bi bi-search"></i>
+            <input type="text" id="search-input" placeholder="Search announcements...">
+        </div>
+
+        <!-- Filter toggle + active-filters badge (top-right) -->
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button id="delete-mode-btn" class="btn btn-danger" title="Delete announcements">
+                <i class="bi bi-trash"></i>
+            </button>
+            <button id="done-delete-btn" class="btn btn-success d-none" title="Done deleting">
+                Done
+            </button>
+            <button id="filterToggleTop" class="filter-toggle-btn btn btn-sm btn-outline-secondary" title="Filters" aria-expanded="false">
+                <i class="bi bi-funnel"></i>
+            </button>
+            <span id="active-filters-badge" class="badge bg-danger d-none" style="font-weight:600; font-size:0.85rem;"></span>
+        </div>
+    </div>
+
+    <!-- Filter panel (hidden by default) -->
+    <div id="filter-panel" class="d-none" style="position:absolute; right:16px; top:70px; width:320px; background:#fff; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.12); padding:12px; z-index:1100;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong>Filters</strong>
+            <button id="closeFilterPanel" class="btn-close" aria-label="Close"></button>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label small mb-1">Type</label>
+            <div class="form-check">
+                <input class="form-check-input filter-type" type="checkbox" value="sms" id="filterTypeSms">
+                <label class="form-check-label small" for="filterTypeSms">SMS</label>
             </div>
+            <div class="form-check">
+                <input class="form-check-input filter-type" type="checkbox" value="e-mail" id="filterTypeEmail">
+                <label class="form-check-label small" for="filterTypeEmail">Email</label>
+            </div>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label small mb-1">Date From</label>
+            <input type="date" id="filter-date-from" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label small mb-1">Date To</label>
+            <input type="date" id="filter-date-to" class="form-control form-control-sm">
+        </div>
+
+        <div class="d-flex justify-content-between mt-2">
+            <button id="clear-filters-btn" class="btn btn-sm btn-outline-secondary">Clear</button>
+            <button id="apply-filters-btn" class="btn btn-sm btn-danger">Apply</button>
+        </div>
+    </div>
+</div>
 
             <div class="tab-content list-scroll-area">
                     
@@ -579,23 +630,28 @@
                                data-type="{{ item.type }}"
                                data-date="{{ item.sent_at|date:'Y-m-d' }}"
                                data-coops="{{ item.recipients_info.coop_names|join:', ' }}"
-                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ item.title }}</h5>
-                                    <small class="text-muted">{{ item.sent_at|date:"M d, Y" }}</small>
+                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}"
+                               onclick="event.target.closest('.announcement-checkbox') ? event.stopPropagation() : true;">
+                                <div class="d-flex w-100 align-items-start">
+                                    <input type="checkbox" class="announcement-checkbox d-none me-3" style="margin-top:8px; cursor:pointer;" data-announcement-id="{{ item.announcement_id }}" onclick="event.stopPropagation();">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ item.title }}</h5>
+                                            <small class="text-muted">{{ item.sent_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <p class="mb-1 text-truncate">{{ item.description }}</p>
+                                        <small>
+                                            {% if item.type == 'sms' %}
+                                                <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
+                                            {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                                <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
+                                            {% endif %}
+                                            {% if item.has_attachment %}
+                                                <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
-                                <p class="mb-1 text-truncate">{{ item.description }}</p>
-                                <small>
-                                    {% if item.type == 'sms' %}
-                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
-                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
-                                    {% endif %}
-                                    {% if item.has_attachment %}
-                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
-                                    {% endif %}
-                                </small>
-                            </a>
                             {% empty %}
                             <div class="p-4 text-center text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
@@ -615,24 +671,30 @@
                                data-type="{{ item.type }}"
                                data-date="{{ item.updated_at|date:'Y-m-d' }}"
                                data-coops="{{ item.recipients_info.coop_names|join:', ' }}"
-                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ item.title }}</h5>
-                                    <small class="text-muted">{{ item.updated_at|date:"M d, Y" }}</small>
+                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}"
+                               onclick="event.target.closest('.announcement-checkbox') ? event.stopPropagation() : true;">
+                                <div class="d-flex w-100 align-items-start">
+                                    <input type="checkbox" class="announcement-checkbox d-none me-3" style="margin-top:8px; cursor:pointer;" data-announcement-id="{{ item.announcement_id }}" onclick="event.stopPropagation();">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ item.title }}</h5>
+                                            <small class="text-muted">{{ item.updated_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <p class="mb-1 text-truncate">{{ item.description|default:"No content yet..." }}</p>
+                                        <small>
+                                            {% if item.type == 'sms' %}
+                                                <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
+                                            {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                                <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
+                                            {% else %}
+                                                <span class="badge-type" style="background-color: #6c757d; color: white;">No Type</span>
+                                            {% endif %}
+                                            {% if item.has_attachment %}
+                                                <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
-                                <p class="mb-1 text-truncate">{{ item.description|default:"No content yet..." }}</p>
-                                <small>
-                                    {% if item.type == 'sms' %}
-                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
-                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
-                                    {% else %}
-                                        <span class="badge-type" style="background-color: #6c757d; color: white;">No Type</span>
-                                    {% endif %}
-                                    {% if item.has_attachment %}
-                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
-                                    {% endif %}
-                                </small>
                             </a>
                             {% empty %}
                             <div class="p-4 text-center text-muted">
@@ -655,24 +717,30 @@
                                data-type="{{ item.type }}"
                                data-date="{{ item.sent_at|date:'Y-m-d' }}"
                                data-coops="{{ item.recipients_info.coop_names|join:', ' }}"
-                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ item.title }}</h5>
-                                    <small class="text-danger">
-                                        Sends: {{ item.sent_at|date:"M d, Y @ g:i A" }}
-                                    </small>
+                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}"
+                               onclick="event.target.closest('.announcement-checkbox') ? event.stopPropagation() : true;">
+                                <div class="d-flex w-100 align-items-start">
+                                    <input type="checkbox" class="announcement-checkbox d-none me-3" style="margin-top:8px; cursor:pointer;" data-announcement-id="{{ item.announcement_id }}" onclick="event.stopPropagation();">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ item.title }}</h5>
+                                            <small class="text-danger">
+                                                Sends: {{ item.sent_at|date:"M d, Y @ g:i A" }}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1 text-truncate">{{ item.description }}</p>
+                                        <small>
+                                            {% if item.type == 'sms' %}
+                                                <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
+                                            {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                                <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
+                                            {% endif %}
+                                            {% if item.has_attachment %}
+                                                <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
-                                <p class="mb-1 text-truncate">{{ item.description }}</p>
-                                <small>
-                                    {% if item.type == 'sms' %}
-                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
-                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
-                                    {% endif %}
-                                    {% if item.has_attachment %}
-                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
-                                    {% endif %}
-                                </small>
                             </a>
                             {% empty %}
                             <div class="p-4 text-center text-muted">
@@ -1046,6 +1114,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewScheduledModal = new bootstrap.Modal(document.getElementById('view-scheduled-modal'));
     const scheduleSendModal = new bootstrap.Modal(document.getElementById('schedule-send-modal'));
     const confirmCancelModal = new bootstrap.Modal(document.getElementById('confirm-cancel-modal'));
+    
+    // Delete mode state
+    let deleteMode = false;
+    const deleteModeBtn = document.getElementById('delete-mode-btn');
+    const doneModeBtn = document.getElementById('done-delete-btn');
+    
+    // Toggle delete mode
+    deleteModeBtn.addEventListener('click', function() {
+        deleteMode = !deleteMode;
+        const checkboxes = document.querySelectorAll('.announcement-checkbox');
+        checkboxes.forEach(cb => {
+            cb.classList.toggle('d-none');
+            cb.checked = false;
+        });
+        deleteModeBtn.classList.toggle('active');
+        doneModeBtn.classList.toggle('d-none');
+    });
+    
+    // Done button: delete all checked announcements
+    doneModeBtn.addEventListener('click', async function() {
+        const checkedBoxes = document.querySelectorAll('.announcement-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            showNotification('Please select at least one announcement to delete', 'warning');
+            return;
+        }
+        
+        const announcementIds = Array.from(checkedBoxes).map(cb => cb.dataset.announcementId);
+        
+        if (!confirm(`Delete ${announcementIds.length} announcement(s)? This cannot be undone.`)) return;
+        
+        let successCount = 0;
+        let failureCount = 0;
+        
+        for (const id of announcementIds) {
+            try {
+                const resp = await fetch(`/communications/api/announcement/${id}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                const result = await resp.json();
+                if (result.status === 'success') {
+                    successCount++;
+                } else {
+                    console.error(`Failed to delete announcement ${id}:`, result.message);
+                    failureCount++;
+                }
+            } catch (err) {
+                console.error(`Error deleting announcement ${id}:`, err);
+                failureCount++;
+            }
+        }
+        
+        if (successCount > 0) {
+            showNotification(`Deleted ${successCount} announcement(s)`, 'success');
+        }
+        if (failureCount > 0) {
+            showNotification(`Failed to delete ${failureCount} announcement(s)`, 'error');
+        }
+        
+        // Exit delete mode and reload
+        deleteMode = false;
+        const checkboxes = document.querySelectorAll('.announcement-checkbox');
+        checkboxes.forEach(cb => {
+            cb.classList.add('d-none');
+            cb.checked = false;
+        });
+        deleteModeBtn.classList.remove('active');
+        doneModeBtn.classList.add('d-none');
+        
+        setTimeout(() => location.reload(), 1000);
+    });
+    
     
     // Notification function
     function showNotification(message, type = 'info') {
@@ -3281,7 +3424,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================
-    // SEARCH AND FILTER FUNCTIONALITY
+    // SEARCH AND FILTER FUNCTIONALITY (updated)
     // ============================================
     
     const searchInput = document.getElementById('search-input');
@@ -3290,29 +3433,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterDateTo = document.getElementById('filter-date-to');
     const activeFiltersBadge = document.getElementById('active-filters-badge');
     const clearFiltersBtn = document.getElementById('clear-filters-btn');
-    
-    // Get all announcement items across all tabs
+
+    // Filter panel controls (top-right)
+    const filterToggleTop = document.getElementById('filterToggleTop');
+    const filterPanel = document.getElementById('filter-panel');
+    const closeFilterPanel = document.getElementById('closeFilterPanel');
+    const applyFiltersBtn = document.getElementById('apply-filters-btn');
+
+    function normalizeType(t) {
+        return (t || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
     function getAllAnnouncementItems() {
         return document.querySelectorAll('.announcement-item');
     }
-    
-    // Count active filters
+
     function countActiveFilters() {
         let count = 0;
-        
-        // Count type filters
-        filterTypes.forEach(checkbox => {
-            if (checkbox.checked) count++;
-        });
-        
-        // Count date filters
-        if (filterDateFrom.value) count++;
-        if (filterDateTo.value) count++;
-        
+        Array.from(filterTypes).forEach(checkbox => { if (checkbox.checked) count++; });
+        if (filterDateFrom && filterDateFrom.value) count++;
+        if (filterDateTo && filterDateTo.value) count++;
+        if (searchInput && searchInput.value.trim() !== '') count++;
         return count;
     }
-    
-    // Update filter badge
+
     function updateFilterBadge() {
         const count = countActiveFilters();
         if (count > 0) {
@@ -3324,141 +3468,165 @@ document.addEventListener('DOMContentLoaded', () => {
             clearFiltersBtn.classList.add('d-none');
         }
     }
-    
-    // Main filter function
+
+    // Update "no results" message for the currently active tab
+    function updateNoResultsMessage() {
+        const activeTab = document.querySelector('.tab-pane.active');
+        if (!activeTab) return;
+        const listGroup = activeTab.querySelector('.list-group');
+        if (!listGroup) return;
+
+        const items = Array.from(activeTab.querySelectorAll('.announcement-item'));
+        const visibleItems = items.filter(item => getComputedStyle(item).display !== 'none');
+
+        const existingMsg = activeTab.querySelector('.no-results-message');
+        if (items.length > 0 && visibleItems.length === 0) {
+            if (!existingMsg) {
+                const noResultsDiv = document.createElement('div');
+                noResultsDiv.className = 'p-4 text-center text-muted no-results-message';
+                noResultsDiv.innerHTML = `
+                    <i class="bi bi-search fs-1 d-block mb-2"></i>
+                    <p>No announcements match your filters.</p>
+                `;
+                listGroup.appendChild(noResultsDiv);
+            }
+        } else {
+            if (existingMsg) existingMsg.remove();
+        }
+    }
+
     function applyFilters() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
+        const searchTerm = (searchInput?.value || '').toLowerCase().trim();
         const selectedTypes = Array.from(filterTypes)
             .filter(cb => cb.checked)
-            .map(cb => cb.value);
-        const dateFrom = filterDateFrom.value;
-        const dateTo = filterDateTo.value;
-        
+            .map(cb => normalizeType(cb.value));
+        const dateFrom = filterDateFrom?.value;
+        const dateTo = filterDateTo?.value;
+
         const items = getAllAnnouncementItems();
-        let visibleCount = 0;
-        
         items.forEach(item => {
             let show = true;
-            
-            // Search filter (title, content, recipients, cooperatives)
+
             if (searchTerm) {
                 const title = (item.dataset.title || '').toLowerCase();
                 const content = (item.dataset.content || '').toLowerCase();
                 const coops = (item.dataset.coops || '').toLowerCase();
                 const officers = (item.dataset.officers || '').toLowerCase();
-                
+
                 const matchesSearch = title.includes(searchTerm) ||
-                                    content.includes(searchTerm) ||
-                                    coops.includes(searchTerm) ||
-                                    officers.includes(searchTerm);
-                
+                                      content.includes(searchTerm) ||
+                                      coops.includes(searchTerm) ||
+                                      officers.includes(searchTerm);
+
                 if (!matchesSearch) show = false;
             }
-            
-            // Type filter
+
             if (selectedTypes.length > 0 && show) {
-                const itemType = item.dataset.type;
-                if (!selectedTypes.includes(itemType)) {
+                const itemType = normalizeType(item.dataset.type || '');
+                if (!itemType || !selectedTypes.includes(itemType)) {
                     show = false;
                 }
             }
-            
-            // Date range filter
+
             if ((dateFrom || dateTo) && show) {
-                const itemDate = item.dataset.date;
-                
-                if (dateFrom && itemDate < dateFrom) {
-                    show = false;
-                }
-                
-                if (dateTo && itemDate > dateTo) {
-                    show = false;
-                }
+                const itemDate = item.dataset.date || '';
+                if (dateFrom && itemDate < dateFrom) show = false;
+                if (dateTo && itemDate > dateTo) show = false;
             }
-            
-            // Show/hide item
-            if (show) {
-                item.style.display = '';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
+
+            item.style.display = show ? '' : 'none';
         });
-        
-        // Show "no results" message if needed
-        updateNoResultsMessage(visibleCount);
+
+        updateNoResultsMessage();
         updateFilterBadge();
     }
-    
-    // Update "no results" messages for each tab
-    function updateNoResultsMessage(visibleCount) {
-        const activeTab = document.querySelector('.tab-pane.active');
-        if (!activeTab) return;
-        
-        const listGroup = activeTab.querySelector('.list-group');
-        if (!listGroup) return;
-        
-        const items = activeTab.querySelectorAll('.announcement-item');
-        const visibleItems = Array.from(items).filter(item => item.style.display !== 'none');
-        
-        // Remove existing no results message
-        const existingMsg = activeTab.querySelector('.no-results-message');
-        if (existingMsg) existingMsg.remove();
-        
-        // Add no results message if needed
-        if (items.length > 0 && visibleItems.length === 0) {
-            const noResultsDiv = document.createElement('div');
-            noResultsDiv.className = 'p-4 text-center text-muted no-results-message';
-            noResultsDiv.innerHTML = `
-                <i class="bi bi-search fs-1 d-block mb-2"></i>
-                <p>No announcements match your filters.</p>
-            `;
-            listGroup.appendChild(noResultsDiv);
-        }
-    }
-    
-    // Clear all filters
+
     function clearAllFilters() {
-        searchInput.value = '';
+        if (searchInput) searchInput.value = '';
         filterTypes.forEach(cb => cb.checked = false);
-        filterDateFrom.value = '';
-        filterDateTo.value = '';
+        if (filterDateFrom) filterDateFrom.value = '';
+        if (filterDateTo) filterDateTo.value = '';
         applyFilters();
     }
-    
-    // Event listeners for real-time filtering
-    if (searchInput) {
-        searchInput.addEventListener('input', applyFilters);
-    }
-    
-    if (filterTypes.length > 0) {
-        filterTypes.forEach(checkbox => {
-            checkbox.addEventListener('change', applyFilters);
+
+    // Wire up UI controls for the filter panel
+    if (filterToggleTop && filterPanel) {
+        filterToggleTop.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterPanel.classList.toggle('d-none');
+            const expanded = !filterPanel.classList.contains('d-none');
+            filterToggleTop.setAttribute('aria-expanded', String(expanded));
         });
-    }
-    
-    if (filterDateFrom) {
-        filterDateFrom.addEventListener('change', applyFilters);
-    }
-    
-    if (filterDateTo) {
-        filterDateTo.addEventListener('change', applyFilters);
-    }
-    
-    if (clearFiltersBtn) {
-        clearFiltersBtn.addEventListener('click', clearAllFilters);
-    }
-    
-    // Re-apply filters when switching tabs
-    const tabButtons = document.querySelectorAll('[data-bs-toggle="pill"]');
-    tabButtons.forEach(button => {
-        button.addEventListener('shown.bs.tab', () => {
+
+        // X (close) button: clear filters then hide panel
+        closeFilterPanel?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearAllFilters();
+            filterPanel.classList.add('d-none');
+            filterToggleTop.setAttribute('aria-expanded', 'false');
+        });
+
+        // Apply button: run filters, hide panel, scroll to results
+        applyFiltersBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
             applyFilters();
+            filterPanel.classList.add('d-none');
+            filterToggleTop.setAttribute('aria-expanded', 'false');
+
+            // Scroll first visible item in active tab into view for immediate feedback
+            const activeTab = document.querySelector('.tab-pane.active');
+            if (activeTab) {
+                const firstVisible = Array.from(activeTab.querySelectorAll('.announcement-item'))
+                    .find(item => getComputedStyle(item).display !== 'none');
+                if (firstVisible) {
+                    firstVisible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // briefly highlight for user's attention
+                    firstVisible.classList.add('filter-highlight');
+                    setTimeout(() => firstVisible.classList.remove('filter-highlight'), 900);
+                } else {
+                    // if none visible, scroll list container to top so "no results" is visible
+                    const listGroup = activeTab.querySelector('.list-group');
+                    if (listGroup) listGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         });
-    });
-    
+
+        // Clicking outside: just hide panel (do not clear filters)
+        document.addEventListener('click', (ev) => {
+            if (!filterPanel.contains(ev.target) && !filterToggleTop.contains(ev.target)) {
+                if (!filterPanel.classList.contains('d-none')) {
+                    filterPanel.classList.add('d-none');
+                    filterToggleTop.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+    }
+
+    // Small visual highlight class (CSS injected if not present)
+    (function ensureHighlightStyle(){
+        if (!document.getElementById('filter-highlight-style')) {
+            const s = document.createElement('style');
+            s.id = 'filter-highlight-style';
+            s.textContent = `.filter-highlight{box-shadow:0 0 0 4px rgba(183,28,28,0.12);transition:box-shadow .3s;}`;
+            document.head.appendChild(s);
+        }
+    })();
+
+    // Event listeners for real-time filtering (keeps Apply available)
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (filterTypes.length > 0) filterTypes.forEach(cb => cb.addEventListener('change', applyFilters));
+    if (filterDateFrom) filterDateFrom.addEventListener('change', applyFilters);
+    if (filterDateTo) filterDateTo.addEventListener('change', applyFilters);
+    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearAllFilters);
+
+    // Re-apply filters when switching tabs so the active tab reflects current controls
+    const tabButtons = document.querySelectorAll('[data-bs-toggle="pill"]');
+    tabButtons.forEach(button => button.addEventListener('shown.bs.tab', applyFilters));
+
     // Initialize on page load
     updateFilterBadge();
+    applyFilters();
 });
 </script>
+
 {% endblock %}
