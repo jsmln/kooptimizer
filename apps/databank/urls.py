@@ -5,6 +5,10 @@ app_name = 'databank'
 
 urlpatterns = [
     path('databank/', views.databank_management_view, name='databank_management'),
+    
+    # --- ADDED THIS LINE TO MATCH TEMPLATE ---
+    path('attachment/<int:coop_id>/<str:doc_type>/', views.view_attachment, name='view_attachment'),
+
     path('api/ocr/process/', views.process_ocr, name='process_ocr'),
     
     # Cooperative CRUD endpoints

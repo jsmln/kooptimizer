@@ -1,10 +1,9 @@
 # from django.db import models
-# # Import existing models from your communications app to avoid re-declaration
 # from apps.communications.models import Cooperative, Staff
 # from apps.users.models import User
 
 # class ProfileData(models.Model):
-#     APPROVAL_CHOICES = [('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')]
+#     APPROVAL_CHOICES = [('Pending', 'pending'), ('Approved', 'approved')]
     
 #     profile_id = models.AutoField(primary_key=True)
 #     # Link to existing Cooperative model

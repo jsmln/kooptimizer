@@ -1,243 +1,165 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.views.decorators.http import require_http_methods
 from django.db import connection
 import json
 from apps.core.services.ocr_service import optiic_service
 
-
 def databank_management_view(request):
-    """Main databank management page with cooperative data"""
     try:
         with connection.cursor() as cursor:
-            # Call stored procedure to get all cooperatives with full details
-            cursor.execute("SELECT * FROM sp_display_cooperatives()")
-            columns = [col[0] for col in cursor.description]
-            cooperatives = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            # UPDATED: Matches your specific SQL function name
+            cursor.execute("SELECT * FROM sp_get_all_cooperatives()")
             
+            if cursor.description:
+                columns = [col[0] for col in cursor.description]
+                # Convert rows to a list of dictionaries
+                cooperatives = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            else:
+                cooperatives = []
+
         context = {
             'cooperatives': cooperatives,
             'total_count': len(cooperatives)
         }
         return render(request, 'databank/databank_management.html', context)
     except Exception as e:
-        print(f"Error fetching cooperatives: {e}")
+        print(f"Error: {e}")
         return render(request, 'databank/databank_management.html', {
             'cooperatives': [],
-            'total_count': 0,
-            'error': str(e)
+            'error': f"Database Error: {str(e)}"
         })
+    
 
+def view_attachment(request, coop_id, doc_type):
+    # Placeholder for viewing attachments. 
+    # You need to implement the actual file serving logic here.
+    # Logic to fetch file path based on coop_id and doc_type
+    # Example:
+    # file_path = get_file_path(coop_id, doc_type)
+    # return FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+    return HttpResponse("File viewing logic not implemented yet.", status=501)
 
 @require_http_methods(["POST"])
 def process_ocr(request):
-    """
-    Process OCR request from uploaded image, URL, or base64 data
-    """
     try:
-        # Check if it's a file upload
         if 'image' in request.FILES:
-            image_file = request.FILES['image']
-            result = optiic_service.process_image_file(image_file)
-            
-        # Check if it's a URL
+            result = optiic_service.process_image_file(request.FILES['image'])
         elif 'url' in request.POST:
-            image_url = request.POST.get('url')
-            result = optiic_service.process_image_url(image_url)
-            
-        # Check if it's base64 data (clipboard/screenshot)
+            result = optiic_service.process_image_url(request.POST.get('url'))
         elif 'base64' in request.POST:
-            base64_data = request.POST.get('base64')
-            result = optiic_service.process_base64_image(base64_data)
-            
-        # Handle JSON payload
+            result = optiic_service.process_base64_image(request.POST.get('base64'))
         else:
-            try:
-                data = json.loads(request.body)
-                if 'base64' in data:
-                    result = optiic_service.process_base64_image(data['base64'])
-                elif 'url' in data:
-                    result = optiic_service.process_image_url(data['url'])
-                else:
-                    return JsonResponse({
-                        'success': False,
-                        'error': 'No image data provided'
-                    }, status=400)
-            except json.JSONDecodeError:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Invalid JSON payload'
-                }, status=400)
-        
+            data = json.loads(request.body)
+            if 'base64' in data:
+                result = optiic_service.process_base64_image(data['base64'])
+            elif 'url' in data:
+                result = optiic_service.process_image_url(data['url'])
+            else:
+                return JsonResponse({'success': False, 'error': 'No image data'}, status=400)
         return JsonResponse(result)
-        
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @require_http_methods(["POST"])
 def add_cooperative(request):
-    """Add a new cooperative using stored procedure"""
     try:
         data = json.loads(request.body)
         
         with connection.cursor() as cursor:
+            # UPDATED: Your SQL function accepts exactly 9 arguments
             cursor.execute("""
-                SELECT * FROM sp_add_cooperative(
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                SELECT sp_create_cooperative(
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
             """, [
                 data.get('staff_id'),
                 data.get('cooperative_name'),
+                data.get('category'),
+                data.get('district'),
                 data.get('address'),
                 data.get('mobile_number'),
                 data.get('email_address'),
                 data.get('cda_registration_number'),
-                data.get('cda_registration_date'),
-                data.get('lccdc_membership', False),
-                data.get('lccdc_membership_date'),
-                data.get('operation_area'),
-                data.get('business_activity'),
-                data.get('board_of_directors_count'),
-                data.get('salaried_employees_count'),
-                data.get('coc_renewal', False),
-                data.get('cote_renewal', False),
-                data.get('category'),
-                data.get('district'),
-                data.get('approval_status', 'pending')
+                data.get('cda_registration_date')
             ])
             
-            result = cursor.fetchone()
+            # Retrieve the new ID returned by the function
+            new_id = cursor.fetchone()[0]
             
         return JsonResponse({
-            'success': True,
-            'coop_id': result[0] if result else None,
+            'success': True, 
+            'coop_id': new_id, 
             'message': 'Cooperative added successfully'
         })
-        
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @require_http_methods(["GET"])
 def get_cooperative(request, coop_id):
-    """Get cooperative details by ID"""
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM sp_display_cooperatives(%s)", [coop_id])
+            # We fetch all but filter in Python or modify SQL to accept ID. 
+            # Since your provided SQL doesn't accept an ID param, we fetch all and find one.
+            # *Note: For production, you should overload sp_get_all_cooperatives to accept an ID.*
+            cursor.execute("SELECT * FROM sp_get_all_cooperatives()")
             columns = [col[0] for col in cursor.description]
-            row = cursor.fetchone()
             
-            if row:
-                cooperative = dict(zip(columns, row))
-                return JsonResponse({
-                    'success': True,
-                    'data': cooperative
-                })
+            target_coop = None
+            for row in cursor.fetchall():
+                row_dict = dict(zip(columns, row))
+                if row_dict['coop_id'] == coop_id:
+                    target_coop = row_dict
+                    break
+            
+            if target_coop:
+                return JsonResponse({'success': True, 'data': target_coop})
             else:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Cooperative not found'
-                }, status=404)
+                return JsonResponse({'success': False, 'error': 'Cooperative not found'}, status=404)
                 
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @require_http_methods(["PUT", "POST"])
 def update_cooperative(request, coop_id):
-    """Update cooperative using stored procedure"""
     try:
         data = json.loads(request.body)
-        
         with connection.cursor() as cursor:
+            # UPDATED: Using 'CALL' because your SQL defines this as a PROCEDURE, not FUNCTION
             cursor.execute("""
-                SELECT * FROM sp_edit_cooperative(
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                CALL sp_update_cooperative_profile(
+                    %s, %s, %s, %s, %s, %s, %s
                 )
             """, [
                 coop_id,
-                data.get('staff_id'),
-                data.get('cooperative_name'),
                 data.get('address'),
                 data.get('mobile_number'),
                 data.get('email_address'),
-                data.get('cda_registration_number'),
-                data.get('cda_registration_date'),
-                data.get('lccdc_membership'),
-                data.get('lccdc_membership_date'),
-                data.get('operation_area'),
-                data.get('business_activity'),
-                data.get('board_of_directors_count'),
-                data.get('salaried_employees_count'),
-                data.get('coc_renewal'),
-                data.get('cote_renewal'),
-                data.get('category'),
-                data.get('district')
+                data.get('assets', 0),
+                data.get('paid_up_capital', 0),
+                data.get('net_surplus', 0)
             ])
             
-            result = cursor.fetchone()
-            
-        return JsonResponse({
-            'success': True,
-            'message': 'Cooperative updated successfully'
-        })
-        
+        return JsonResponse({'success': True, 'message': 'Cooperative updated successfully'})
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @require_http_methods(["DELETE", "POST"])
 def delete_cooperative(request, coop_id):
-    """Mark cooperative as inactive (soft delete)"""
     try:
         with connection.cursor() as cursor:
-            # Soft delete: mark as inactive
-            cursor.execute("SELECT * FROM sp_delete_cooperative(%s, FALSE)", [coop_id])
-            result = cursor.fetchone()
+            # UPDATED: Using 'CALL' for stored procedure
+            cursor.execute("CALL sp_delete_cooperative(%s)", [coop_id])
             
-        return JsonResponse({
-            'success': True,
-            'message': 'Cooperative marked as inactive'
-        })
-        
+        return JsonResponse({'success': True, 'message': 'Cooperative deleted successfully'})
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
-
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
 @require_http_methods(["POST"])
 def restore_cooperative(request, coop_id):
-    """Restore inactive cooperative"""
     try:
         with connection.cursor() as cursor:
-            cursor.execute("""
-                UPDATE cooperatives 
-                SET is_active = TRUE, updated_at = NOW()
-                WHERE coop_id = %s
-            """, [coop_id])
-            
-        return JsonResponse({
-            'success': True,
-            'message': 'Cooperative restored successfully'
-        })
-        
+            cursor.execute("UPDATE cooperatives SET is_active = TRUE, updated_at = NOW() WHERE coop_id = %s", [coop_id])
+        return JsonResponse({'success': True, 'message': 'Cooperative restored successfully'})
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
