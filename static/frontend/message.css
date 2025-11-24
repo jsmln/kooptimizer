@@ -376,6 +376,31 @@
 .modal-body {
     max-height: 50vh; /* Make the list scrollable */
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.modal-contact-list {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-contact-item {

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,42 +22,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Read sensitive settings from environment variables where possible.
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY', 'django-insecure-eu6tra#vaqwuxk4z4((zawbf8h6wxi$@=+*)39(wpdwa0ll8(y'
-)
+# Read sensitive settings from environment variables - NO DEFAULTS for production
+SECRET_KEY = config('SECRET_KEY')
 
 # Optiic OCR API Configuration
-OPTIIC_API_KEY = os.environ.get('OPTIIC_API_KEY', 'test_api_key')
+OPTIIC_API_KEY = config('OPTIIC_API_KEY', default='')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
 
-# ALLOWED_HOSTS can be provided as a comma-separated list in the ALLOWED_HOSTS
-# environment variable, e.g. "127.0.0.1,localhost,mydomain.com"
-# raw_allowed = os.environ.get('ALLOWED_HOSTS', '')
-# ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()] if raw_allowed else []
-# settings.py
+# ALLOWED_HOSTS - securely load from environment with defaults for development
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1',
+    cast=Csv()
+)
 
-# Start with the default hosts required for development and ngrok
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '127.0.0.1:8000'
-    '.ngrok-free.dev',
-    'platinoid-sandra-endocentric.ngrok-free.dev',
-    '.dev'
-]
-
-# Get extra hosts from the environment variable (for production, etc.)
-raw_allowed = os.environ.get('ALLOWED_HOSTS', '')
-if raw_allowed:
-    # Add any hosts from the env var to our list
-    ALLOWED_HOSTS.extend([h.strip() for h in raw_allowed.split(',') if h.strip()])
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://platinoid-sandra-endocentric.ngrok-free.dev'
-]
+# CSRF_TRUSTED_ORIGINS - load from environment
+CSRF_TRUSTED_ORIGINS = config(
+    'CSRF_TRUSTED_ORIGINS',
+    default='',
+    cast=Csv()
+)
 
 # Application definition
 
@@ -86,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'apps.core.middleware.AuthenticationMiddleware',  # Custom auth middleware
 ]
 
 ROOT_URLCONF = 'kooptimizer.urls'
@@ -114,11 +102,11 @@ WSGI_APPLICATION = 'kooptimizer.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'kooptimizer_db2'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST', default='127.0.0.1'),
+        'PORT': config('DB_PORT', default='5432'),
     }
 }
 
@@ -168,6 +156,31 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ====================================================================
+#  SESSION SECURITY SETTINGS
+# ====================================================================
+
+# Session expires when browser closes (unless user explicitly logs out)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Session timeout after 15 minutes (900 seconds) of inactivity
+SESSION_COOKIE_AGE = 900  # 15 minutes in seconds
+
+# Update session on every request (resets timeout on activity)
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Security settings for session cookies
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)  # Enable in production with HTTPS
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)  # Enable in production with HTTPS
+
+# HTTPS/SSL Settings (for production)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=0, cast=int)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False, cast=bool)
+SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=False, cast=bool)
+
+# ====================================================================
 #  LOGGING CONFIGURATION
 # ====================================================================
 
@@ -202,29 +215,34 @@ LOGGING = {
 
 
 # ====================================================================
-#  RECAPTCHA TEST KEYS (FOR DEVELOPMENT)
+#  RECAPTCHA CONFIGURATION
 # ====================================================================
-RECAPTCHA_SITE_KEY = '6LeepvErAAAAAP3XNLdmBipdELXOuZqfo13T6lYEss'
-RECAPTCHA_SECRET_KEY = '6LeepvErAAAAACoTx3YxrhSVI_D9lzEtHeyE7uVf'
+RECAPTCHA_SITE_KEY = config('RECAPTCHA_SITE_KEY')
+RECAPTCHA_SECRET_KEY = config('RECAPTCHA_SECRET_KEY')
 
 # ====================================================================
 #  IPROG SMS OTP CONFIGURATION
 # ====================================================================
 
 IPROG_SMS = {
-    'API_TOKEN': 'a602bb94c96ebbc31de55242ffa4c6d9f684bc87', 
-    'API_URL': 'https://sms.iprogtech.com/api/v1/sms_messages',
-    'API_URL_BULK': 'https://sms.iprogtech.com/api/v1/sms_messages/send_bulk'
+    'API_TOKEN': config('IPROG_SMS_API_TOKEN'),
+    'API_URL': config('IPROG_SMS_API_URL', default='https://sms.iprogtech.com/api/v1/sms_messages'),
+    'API_URL_BULK': config('IPROG_SMS_API_URL_BULK', default='https://sms.iprogtech.com/api/v1/sms_messages/send_bulk')
 }
 
-#Here pls
+# ====================================================================
+#  BREVO EMAIL CONFIGURATION
+# ====================================================================
+BREVO_API_KEY = config('BREVO_API_KEY')
+BREVO_API_URL = config('BREVO_API_URL', default='https://api.brevo.com/v3/smtp/email')
+BREVO_SENDER_EMAIL = config('BREVO_SENDER_EMAIL')
+BREVO_SENDER_NAME = config('BREVO_SENDER_NAME', default='Kooptimizer')
 
-# settings.py
-import os
-from decouple import config 
-
-# NEW (Safe)
+# ====================================================================
+#  TICKETMASTER API CONFIGURATION
+# ====================================================================
 TICKETMASTER_API_KEY = config('TICKETMASTER_API_KEY', default='')
+
 
 
 
