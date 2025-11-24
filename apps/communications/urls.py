@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/announcement/<int:announcement_id>/attachment/', views.download_announcement_attachment, name='download_announcement_attachment'),
     path('api/announcement/<int:announcement_id>/attachment/convert-pdf/', views.convert_announcement_attachment_to_pdf, name='convert_announcement_to_pdf'),
     path('api/announcement/cancel-schedule/<int:announcement_id>/', views.cancel_scheduled_announcement, name='cancel_scheduled_announcement'),
+    path('api/announcement/<int:announcement_id>/delete/', views.delete_announcement, name='delete_announcement'),
 
     path('api/activity/recent/', views.get_recent_activity, name='api_recent_activity'),
 ]

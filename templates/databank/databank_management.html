@@ -40,33 +40,27 @@
 
     <div class="table-section">
         <div class="table-wrapper">
-            <table id="coop-table">
-                <thead>
-                    <tr>
-                        <th>Cooperative Name</th>
-                        <th>Category</th>
-                        <th>District</th>
-                        <th>Address</th>
-                        <th>Contact</th>
-                        <th>CDA Registration</th>
-                        <th>Assets (₱)</th>
-                        <th>Capital (₱)</th>
-                        <th>Members</th>
-                        <th>Officers</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="table-scroll">
+                <table id="coop-table" role="table" aria-label="Cooperative list">
+                    <thead>
+                        <tr>
+                            <th>Cooperative Name</th>
+                            <th>Category</th>
+                            <th>District</th>
+                            <th>Address</th>
+                            <th>Contact No.</th>
+                            <th>CDA Registration</th>
+                            <th>Assets (₱)</th>
+                            <th>Capital (₱)</th>
+                            <th>Members</th>
+                            <th>Officers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     {% for coop in cooperatives %}
-                    <tr data-coop-id="{{ coop.coop_id }}" data-modal-target>
+                    <tr data-modal-target="profile-modal" data-coop-id="{{ coop.coop_id }}" data-detail-url="{% url 'databank:coop_detail' coop.coop_id %}">
                         <td><strong>{{ coop.cooperative_name }}</strong></td>
-                        <td>
-                            {% if coop.category %}
-                                <span class="badge-category">{{ coop.category }}</span>
-                            {% else %}
-                                <span class="text-muted">N/A</span>
-                            {% endif %}
-                        </td>
+                        <td>{% if coop.category %}<span class="badge-category">{{ coop.category }}</span>{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
                         <td>{{ coop.district|default:"N/A" }}</td>
                         <td style="min-width: 180px;">{{ coop.address|default:"N/A" }}</td>
                         <td style="min-width: 200px;">
@@ -84,10 +78,8 @@
                         </td>
                         <td>
                             {% if coop.cda_registration_number %}
-                                <div>{{ coop.cda_registration_number }}</div>
-                                {% if coop.cda_registration_date %}
-                                    <small class="text-muted">{{ coop.cda_registration_date }}</small>
-                                {% endif %}
+                                {{ coop.cda_registration_number }}
+                                {% if coop.cda_registration_date %}<div class="text-muted">{{ coop.cda_registration_date }}</div>{% endif %}
                             {% else %}
                                 <span class="text-muted">N/A</span>
                             {% endif %}
@@ -130,9 +122,9 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-            </table>
+                </table>
+            </div>
         </div>
-        
         <div class="table-footer">
             <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
         </div>
@@ -140,6 +132,7 @@
 
 </div>
 
+<!-- OCR Toggle button and drawer markup unchanged -->
 <button class="ocr-toggle-btn" id="ocrToggleBtn" title="Open OCR Assistant">
     <i class="bi bi-upc-scan"></i>
 </button>

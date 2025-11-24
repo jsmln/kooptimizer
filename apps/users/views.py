@@ -79,12 +79,14 @@ def login_view(request):
         if status_code == 'SUCCESS':
             # Handle first login or pending verification - DO NOT log them in yet
             if is_first_login or verification_status == 'pending':
+                # Store minimal session data for verification process only
                 request.session['pending_verification_user_id'] = user_id
                 request.session['pending_verification_role'] = role
-                # Clear any accidental auth session
+                # Clear any existing authenticated session
                 request.session.pop('user_id', None)
                 request.session.pop('role', None)
                 
+                # Get user details for verification flow
                 try:
                     user = User.objects.get(pk=user_id)
                     full_mobile_number = user.mobile_number
@@ -93,21 +95,23 @@ def login_view(request):
                         masked_number = f"{full_mobile_number[:3]}********{full_mobile_number[-2:]}"
                 except User.DoesNotExist:
                     messages.error(request, 'User account not found.')
-                    return render(request, 'login.html') # Fixed Path
+                    return render(request, 'login.html')
                 
+                # Render login page with verification flow
                 context = {
                     'show_verification_flow': True,
                     'verification_step': 'start',
                     'masked_mobile_number': masked_number,
                 }
                 messages.info(request, 'Please complete your account verification to continue.')
-                return render(request, 'login.html', context) # Fixed Path
+                return render(request, 'login.html', context)
 
             # User is verified - set up full session data
             request.session['user_id'] = user_id
             request.session['role'] = role
             request.session['username'] = username
 
+            # Redirect based on role
             messages.success(request, f'Welcome back, {username}!')
             if role == 'admin':
                 return redirect('dashboard:admin_dashboard')
@@ -128,9 +132,15 @@ def login_view(request):
 
 def logout_view(request):
     request.session.flush()
+    
+    # Check if this is a sendBeacon request (from browser close)
+    # sendBeacon sends POST but doesn't expect a redirect response
     if request.method == 'POST':
+        # Just return success, no redirect needed
         from django.http import JsonResponse
         return JsonResponse({'status': 'success', 'message': 'Logged out'})
+    
+    # Normal logout (user clicked logout button)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('home')
 
@@ -139,15 +149,24 @@ def logout_view(request):
 # ============================================
 
 def first_login_setup(request):
+    # Check for pending verification session (NOT authenticated session)
     user_id = request.session.get('pending_verification_user_id')
-    # ... (rest of logic remains the same, ensure renders point to 'login.html') ...
+    role = request.session.get('pending_verification_role')
     
-    # Since first_login_setup logic is complex, I'll provide the corrected renders:
-    
+    # If no pending verification session, check if already logged in
     if not user_id:
+        # If already logged in, redirect to appropriate dashboard
         if request.session.get('user_id'):
             messages.info(request, 'You have already completed setup.')
+            user_role = request.session.get('role')
+            if user_role == 'admin':
+                return redirect('dashboard:admin_dashboard')
+            elif user_role == 'officer':
+                return redirect('dashboard:cooperative_dashboard')
+            elif user_role == 'staff':
+                return redirect('dashboard:staff_dashboard')
             return redirect('home')
+        # Not logged in and no pending verification
         messages.error(request, 'Unauthorized access. Please login first.')
         return redirect('login')
 
@@ -155,6 +174,9 @@ def first_login_setup(request):
         user = User.objects.get(pk=user_id)
     except User.DoesNotExist:
         messages.error(request, 'Invalid user. Please contact support.')
+        # Clear invalid pending session
+        request.session.pop('pending_verification_user_id', None)
+        request.session.pop('pending_verification_role', None)
         return redirect('login')
 
     full_mobile_number = user.mobile_number
@@ -178,7 +200,8 @@ def first_login_setup(request):
             else:
                 messages.error(request, f'Failed to send OTP: {error}')
                 context['verification_step'] = 'start'
-            return render(request, 'login.html', context) # Fixed
+            
+            return render(request, 'login.html', context)
         
         elif action == 'verify_otp':
             otp_1 = request.POST.get('otp_1')
@@ -189,7 +212,8 @@ def first_login_setup(request):
             if not (otp_1 and otp_2 and otp_3 and otp_4):
                 messages.error(request, 'Please enter all 4 digits of the OTP.')
                 context['verification_step'] = 'otp'
-                return render(request, 'login.html', context) # Fixed
+                context['show_otp_form'] = True
+                return render(request, 'login.html', context)
             
             otp_code = f"{otp_1}{otp_2}{otp_3}{otp_4}"
             success, error = otp_service.verify_otp(otp_code)
@@ -197,11 +221,11 @@ def first_login_setup(request):
             if success:
                 messages.success(request, 'Phone number verified successfully.')
                 context['verification_step'] = 'password'
-                return render(request, 'login.html', context) # Fixed
+                return render(request, 'login.html', context)
             else:
                 messages.error(request, f'Invalid OTP code: {error}')
                 context['verification_step'] = 'otp'
-                return render(request, 'login.html', context) # Fixed
+                return render(request, 'login.html', context)
                 
         elif action == 'change_password':
             new_password = request.POST.get('new_password')
@@ -209,20 +233,27 @@ def first_login_setup(request):
             accept_terms = request.POST.get('accept_terms')
 
             if not accept_terms:
-                messages.error(request, 'You must accept the Terms & Conditions.')
+                messages.error(request, 'You must accept the Terms & Conditions and Privacy Policy to continue.')
                 context['verification_step'] = 'password'
-                return render(request, 'login.html', context) # Fixed
+                context['show_password_form'] = True
+                return render(request, 'login.html', context)
 
+            if not new_password or not confirm_password:
+                messages.error(request, 'Please enter and confirm your new password.')
+                context['verification_step'] = 'password'
+                context['show_password_form'] = True
+                return render(request, 'login.html', context)
             if new_password != confirm_password:
                 messages.error(request, 'Passwords do not match.')
                 context['verification_step'] = 'password'
-                return render(request, 'login.html', context) # Fixed
-            
+                context['show_password_form'] = True
+                return render(request, 'login.html', context)
             if len(new_password) < 8:
                 messages.error(request, 'Password must be at least 8 characters long.')
                 context['verification_step'] = 'password'
-                return render(request, 'login.html', context) # Fixed
-
+                context['show_password_form'] = True
+                return render(request, 'login.html', context)
+            # Hash the password
             hashed_password = make_password(new_password)
             
             try:
@@ -231,18 +262,22 @@ def first_login_setup(request):
                     new_password_hash=hashed_password,
                     verification_status='verified'
                 )
+                # Success! Account is now verified
+
             except Exception as e:
                 messages.error(request, f'An error occurred while updating your profile: {e}')
                 context['verification_step'] = 'password'
-                return render(request, 'login.html', context) # Fixed
+                return render(request, 'login.html', context)
             
+            # Clear pending verification session - user must login with new password
             request.session.pop('pending_verification_user_id', None)
             request.session.pop('pending_verification_role', None)
             
+            # Show success page with auto-redirect to login
             context['verification_step'] = 'success'
-            return render(request, 'login.html', context) # Fixed
+            return render(request, 'login.html', context)
 
-    return render(request, 'login.html', context) # Fixed
+    return render(request, 'login.html', context)
 
 
 # ============================================
