@@ -62,8 +62,20 @@
                         <td><strong>{{ coop.cooperative_name }}</strong></td>
                         <td>{% if coop.category %}<span class="badge-category">{{ coop.category }}</span>{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
                         <td>{{ coop.district|default:"N/A" }}</td>
-                        <td class="address-cell">{{ coop.address|default:"N/A" }}</td>
-                        <td class="contact-cell">{{ coop.mobile_number|default:"N/A" }}</td>
+                        <td style="min-width: 180px;">{{ coop.address|default:"N/A" }}</td>
+                        <td style="min-width: 200px;">
+                            <div class="contact-info">
+                                {% if coop.email_address %}
+                                    <div><i class="bi bi-envelope"></i> {{ coop.email_address }}</div>
+                                {% endif %}
+                                {% if coop.mobile_number %}
+                                    <div><i class="bi bi-phone"></i> {{ coop.mobile_number }}</div>
+                                {% endif %}
+                                {% if not coop.email_address and not coop.mobile_number %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
                         <td>
                             {% if coop.cda_registration_number %}
                                 {{ coop.cda_registration_number }}
@@ -72,30 +84,47 @@
                                 <span class="text-muted">N/A</span>
                             {% endif %}
                         </td>
-                        <td class="text-end">{{ coop.assets|default:"-" }}</td>
-                        <td class="text-end">{{ coop.paid_up_capital|default:"-" }}</td>
-                        <td class="text-center">{{ coop.members_count|default:0 }}</td>
-                        <td class="text-center">{{ coop.officers_count|default:0 }}</td>
+                        <td class="text-end">
+                            {% if coop.assets %}{{ coop.assets|floatformat:2 }}{% else %}-{% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if coop.paid_up_capital %}{{ coop.paid_up_capital|floatformat:2 }}{% else %}-{% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-count">{{ coop.members_count|default:0 }}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-count">{{ coop.officers_count|default:0 }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="event.stopPropagation(); viewCooperativeDetails({{ coop.coop_id }})" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn-action btn-edit" onclick="event.stopPropagation(); editCooperative({{ coop.coop_id }})" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-action btn-delete" onclick="event.stopPropagation(); deleteCooperative({{ coop.coop_id }})" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
-                    <tr data-modal-target="profile-modal" data-coop-id="sample-001">
-                        <td><strong>Sample Cooperative</strong></td>
-                        <td><span class="badge-category">consumer</span></td>
-                        <td>Sample District</td>
-                        <td class="address-cell">123 Sample St., Sample City</td>
-                        <td class="contact-cell">0917-000-0000</td>
-                        <td>1414-060923055 <div class="text-muted">09-06-2005</div></td>
-                        <td class="text-end">356,964.68</td>
-                        <td class="text-end">108,243.78</td>
-                        <td class="text-center">128</td>
-                        <td class="text-center">8</td>
+                    <tr>
+                        <td colspan="11">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h3>No cooperatives found</h3>
+                                <p>Click "Add Cooperative" to get started.</p>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 </table>
             </div>
         </div>
-        
         <div class="table-footer">
             <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
         </div>
@@ -103,6 +132,7 @@
 
 </div>
 
+<!-- OCR Toggle button and drawer markup unchanged -->
 <button class="ocr-toggle-btn" id="ocrToggleBtn" title="Open OCR Assistant">
     <i class="bi bi-upc-scan"></i>
 </button>
