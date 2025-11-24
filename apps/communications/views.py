@@ -1,5 +1,6 @@
 from io import BytesIO
 import json
+from datetime import timedelta
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse, FileResponse
 from django.views.decorators.http import require_POST, require_http_methods
@@ -1200,24 +1201,64 @@ def get_recent_activity(request):
     if not user_id:
         return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=401)
     
-    # STEP 1: Get the list of Message IDs directly
-    # .values_list() is crucial here because it reads SPECIFIC columns only.
-    # It won't try to read the missing 'id' column.
-    message_ids = MessageRecipient.objects.filter(
-        receiver_id=user_id
-    ).values_list('message_id', flat=True)
+    # STEP 1: Determine messages that either:
+    #  - haven't been seen by the recipient (seen_at is null or status != 'seen'),
+    #  - AND were sent within the last hour.
+    # Messages that are already marked as 'seen' are excluded automatically.
+    # This ensures activities disappear when the user marks them as read.
+    one_hour_ago = timezone.now() - timedelta(hours=1)
 
-    # STEP 2: Fetch the actual Message objects using those IDs
-    recent_messages = Message.objects.filter(
-        message_id__in=message_ids
-    ).select_related('sender').order_by('-sent_at')[:5]
+    recipient_condition = (
+        (Q(seen_at__isnull=True) | ~Q(status='seen')) & Q(message__sent_at__gte=one_hour_ago)
+    )
+
+    message_ids = (
+        MessageRecipient.objects
+        .filter(receiver_id=user_id)
+        .filter(recipient_condition)
+        .values_list('message_id', flat=True)
+        .distinct()
+    )
+
+    # STEP 2: Fetch the Message objects (latest first), limited to the most
+    # recent 5 that match the criteria.
+    recent_messages = (
+        Message.objects
+        .filter(message_id__in=message_ids)
+        .select_related('sender')
+        .order_by('-sent_at')[:5]
+    )
 
     activities = []
     
     for msg in recent_messages:
-        sender_name = "Unknown"
-        if msg.sender:
-            sender_name = f"{msg.sender.first_name} {msg.sender.last_name}"
+        # Determine a friendly sender name safely. The User model in this
+        # project does not include `first_name`/`last_name` fields, so fall
+        # back to related profile fullname fields or `username`.
+        def _friendly_name(user_obj):
+            if not user_obj:
+                return 'Unknown'
+            # Prefer explicit first/last if present
+            fn = getattr(user_obj, 'first_name', None)
+            ln = getattr(user_obj, 'last_name', None)
+            if fn or ln:
+                return f"{fn or ''} {ln or ''}".strip()
+
+            # Try related profile models that have `fullname`
+            for rel in ('admin_profile', 'staff_profile', 'officer_profile'):
+                try:
+                    prof = getattr(user_obj, rel)
+                except Exception:
+                    prof = None
+                if prof:
+                    fullname = getattr(prof, 'fullname', None)
+                    if fullname:
+                        return fullname
+
+            # Fallback to username
+            return getattr(user_obj, 'username', 'Unknown')
+
+        sender_name = _friendly_name(msg.sender)
         
         time_diff = timesince(msg.sent_at).split(',')[0]
         

@@ -195,17 +195,10 @@ a { text-decoration: none; }
 
 /* --- HIDE TEXT SPAN --- */
 .nav-text {
-    opacity: 0;
-    visibility: hidden;
-    width: 0;
-    overflow: hidden;
-    transition: opacity 0.2s ease-in-out;
-}
-
-.sidebar:hover .nav-text {
     opacity: 1;
     visibility: visible;
     width: auto;
+    overflow: visible;
 }
 
 
