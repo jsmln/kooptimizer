@@ -187,16 +187,91 @@
             <p>This page requires authentication. Please log in with your credentials to continue.</p>
         </div>
 
+
+
         <div class="button-group">
-            <a href="{% url 'login' %}" class="btn btn-primary">
+            <a href="{% url 'login' %}" class="btn btn-primary" id="btn-login" {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}style="pointer-events:none;opacity:0.5;cursor:not-allowed;" aria-disabled="true"{% endif %}>
                 <i class="bi bi-box-arrow-in-right"></i>
                 Login
             </a>
-            <a href="{% url 'home' %}" class="btn btn-secondary">
+            <a href="{% url 'home' %}" class="btn btn-secondary" id="btn-home" {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}style="pointer-events:none;opacity:0.5;cursor:not-allowed;" aria-disabled="true"{% endif %}>
                 <i class="bi bi-house"></i>
                 Go to Home
             </a>
         </div>
+
+        {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}
+        <div class="info-box" id="lockout-timer-box" style="margin-top:24px;">
+            <i class="bi bi-clock-history"></i>
+            <strong>Too many failed login attempts.</strong><br>
+            Please wait <span id="lockout-timer"></span> before you can try again.
+        </div>
+        <script>
+        // Countdown timer for lockout
+        (function() {
+            var lockoutUntil = {{ request.session.login_lockout_until }};
+            var now = {{ now }};
+            var seconds = lockoutUntil - now;
+            var timerSpan = document.getElementById('lockout-timer');
+            function updateTimer() {
+                if (seconds <= 0) {
+                    timerSpan.textContent = '0:00';
+                    // Optionally, reload the page to enable buttons
+                    setTimeout(function() { window.location.reload(); }, 1000);
+                    return;
+                }
+                var m = Math.floor(seconds / 60);
+                var s = seconds % 60;
+                timerSpan.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+                seconds--;
+            }
+            updateTimer();
+            var interval = setInterval(function() {
+                updateTimer();
+                if (seconds <= 0) clearInterval(interval);
+            }, 1000);
+        })();
+        </script>
+        {% endif %}
+
+        {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}
+        <div class="info-box" id="lockout-timer-box">
+            <i class="bi bi-clock-history"></i>
+            <strong>Too many failed login attempts.</strong><br>
+            Please wait <span id="lockout-timer"></span> before you can try again.
+        </div>
+        <script>
+        // Countdown timer for lockout
+        (function() {
+            var lockoutUntil = {{ request.session.login_lockout_until|default:0 }};
+            var now = Math.floor(Date.now() / 1000);
+            var seconds = lockoutUntil - now;
+            var timerSpan = document.getElementById('lockout-timer');
+            function updateTimer() {
+                if (seconds <= 0) {
+                    timerSpan.textContent = '0:00';
+                    document.getElementById('btn-login').style.pointerEvents = '';
+                    document.getElementById('btn-login').style.opacity = '';
+                    document.getElementById('btn-login').removeAttribute('aria-disabled');
+                    document.getElementById('btn-home').style.pointerEvents = '';
+                    document.getElementById('btn-home').style.opacity = '';
+                    document.getElementById('btn-home').removeAttribute('aria-disabled');
+                    document.getElementById('lockout-timer-box').style.display = 'none';
+                    return;
+                }
+                var m = Math.floor(seconds / 60);
+                var s = seconds % 60;
+                timerSpan.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+                seconds--;
+            }
+            updateTimer();
+            var interval = setInterval(function() {
+                updateTimer();
+                if (seconds <= 0) clearInterval(interval);
+            }, 1000);
+        })();
+        </script>
+        {% endif %}
 
         <div class="info-box">
             <i class="bi bi-info-circle"></i>

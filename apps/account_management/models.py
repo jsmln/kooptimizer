@@ -42,8 +42,6 @@ class Users(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_online = models.BooleanField(default=False)
     last_active = models.DateTimeField(auto_now=True)
-    
-    # **FIX:** Added is_active field for deactivation logic
     is_active = models.BooleanField(default=True)
 
     def set_password(self, raw_password):

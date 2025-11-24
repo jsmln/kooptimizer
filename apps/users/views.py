@@ -15,7 +15,7 @@ import random
 
 def login_view(request):
     # If user is already logged in, redirect to their dashboard
-    if request.session.get('user_id'):
+    if request.session.get('user_id') and request.session.get('is_active', True):
         role = request.session.get('role')
         if role == 'admin':
             return redirect('dashboard:admin_dashboard')
@@ -26,26 +26,28 @@ def login_view(request):
         else:
             return redirect('home')
     
+    # Check for lockout on GET as well (for disabling login/home navigation)
+    import time
+    now = int(time.time())
+    lockout_until = request.session.get('login_lockout_until')
+    is_locked_out = lockout_until and now < lockout_until
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        # ============================================================
-        # 🛠️ HARDCODED TEST ACCOUNT (Remove in Production)
-        # ============================================================
-        if username == 'testadmin' and password == '12345':
-            # Set dummy session data required by your Dashboard
-            request.session['user_id'] = 9999 
-            request.session['username'] = 'Administrator' 
-            request.session['role'] = 'admin'
-            
-            messages.success(request, 'Welcome back, Administrator! (Bypassed)')
-            return redirect('dashboard:admin_dashboard')
-        # ============================================================
+        # --- LOGIN ATTEMPT LIMITING ---
+        max_attempts = 5
+        lockout_minutes = 1
+        failed_attempts = request.session.get('failed_login_attempts', 0)
+        lockout_until = request.session.get('login_lockout_until')
+
+        if is_locked_out:
+            # Still locked out
+            messages.error(request, f'Too many failed login attempts. Please wait {((lockout_until-now)//60)+1} minutes before trying again.')
+            return redirect('access_denied')
 
         recaptcha_response = request.POST.get('g-recaptcha-response')
-
-        # Verify reCAPTCHA
         data = {'secret': settings.RECAPTCHA_SECRET_KEY, 'response': recaptcha_response}
         try:
             r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
@@ -59,16 +61,22 @@ def login_view(request):
             messages.error(request, 'Invalid reCAPTCHA. Please try again.')
             return render(request, 'login.html') # Fixed Path
 
-        # Call the stored procedure via User model helper
         try:
             login_result = User.login_user(username, password)
         except Exception as e:
             messages.error(request, 'Login service unavailable. Please try again later.')
-            return render(request, 'login.html') # Fixed Path
+            return render(request, 'login.html')
 
         if not login_result:
-            messages.error(request, 'Invalid login attempt.')
-            return render(request, 'login.html') # Fixed Path
+            failed_attempts += 1
+            request.session['failed_login_attempts'] = failed_attempts
+            if failed_attempts >= max_attempts:
+                lockout_until = now + lockout_minutes * 60
+                request.session['login_lockout_until'] = lockout_until
+                messages.error(request, f'Too many failed login attempts. Please wait {lockout_minutes} minutes before trying again.')
+                return redirect('access_denied')
+            messages.error(request, f'Invalid login attempt. ({failed_attempts}/{max_attempts})')
+            return render(request, 'login.html')
 
         status_code = login_result['status']
         user_id = login_result['user_id']
@@ -77,16 +85,28 @@ def login_view(request):
         is_first_login = login_result['is_first_login']
 
         if status_code == 'SUCCESS':
-            # Handle first login or pending verification - DO NOT log them in yet
+
+            try:
+                user_check = User.objects.get(pk=user_id)
+                
+                if not user_check.is_active:
+                    # User is deactivated - Block access immediately
+                    messages.error(request, 'Your account has been deactivated. Please contact the administrator.')
+                    return redirect('access_denied')
+                    
+            except User.DoesNotExist:
+                messages.error(request, 'Please check your credentials and try again.')
+                return render(request, 'login.html')
+            
+
+            # Reset failed attempts on successful login
+            request.session['failed_login_attempts'] = 0
+            request.session['login_lockout_until'] = None
             if is_first_login or verification_status == 'pending':
-                # Store minimal session data for verification process only
                 request.session['pending_verification_user_id'] = user_id
                 request.session['pending_verification_role'] = role
-                # Clear any existing authenticated session
                 request.session.pop('user_id', None)
                 request.session.pop('role', None)
-                
-                # Get user details for verification flow
                 try:
                     user = User.objects.get(pk=user_id)
                     full_mobile_number = user.mobile_number
@@ -96,8 +116,6 @@ def login_view(request):
                 except User.DoesNotExist:
                     messages.error(request, 'User account not found.')
                     return render(request, 'login.html')
-                
-                # Render login page with verification flow
                 context = {
                     'show_verification_flow': True,
                     'verification_step': 'start',
@@ -106,12 +124,9 @@ def login_view(request):
                 messages.info(request, 'Please complete your account verification to continue.')
                 return render(request, 'login.html', context)
 
-            # User is verified - set up full session data
             request.session['user_id'] = user_id
             request.session['role'] = role
-            request.session['username'] = username
-
-            # Redirect based on role
+            request.session['last_activity'] = time.time()
             messages.success(request, f'Welcome back, {username}!')
             if role == 'admin':
                 return redirect('dashboard:admin_dashboard')
@@ -124,11 +139,24 @@ def login_view(request):
                 return redirect('login')
 
         elif status_code == 'INVALID_USERNAME_OR_PASSWORD':
-            messages.error(request, 'Invalid Username or Password.')
+            failed_attempts += 1
+            request.session['failed_login_attempts'] = failed_attempts
+            if failed_attempts >= max_attempts:
+                lockout_until = now + lockout_minutes * 60
+                request.session['login_lockout_until'] = lockout_until
+                messages.error(request, f'Too many failed login attempts. Please wait {lockout_minutes} minutes before trying again.')
+                return redirect('access_denied')
+            messages.error(request, f'Invalid Username or Password. ({failed_attempts}/{max_attempts})')
         else:
             messages.error(request, 'An internal error occurred. Please contact support.')
 
-    return render(request, 'login.html') # Fixed Path
+    # GET Request
+    # Pass lockout info to template for disabling login/home navigation
+    context = {'now': now}
+    if is_locked_out:
+        context['lockout_until'] = lockout_until
+        context['lockout_seconds'] = lockout_until - now
+    return render(request, 'login.html', context)
 
 def logout_view(request):
     request.session.flush()

@@ -1,6 +1,38 @@
-# Database Updates & Tests
+# Database Updates & Migrations
 
 This folder contains all database migration scripts, test files, update utilities, and diagnostic tools for the Kooptimizer system.
+
+## 🚀 IMPORTANT: For Teammates Pulling Latest Code
+
+**Last Updated:** November 22, 2025
+
+### Quick Migration Steps
+
+After pulling the latest code from GitHub, update your database with this command:
+
+```powershell
+# Method 1: Using psql
+psql -U postgres -d kooptimizer_db2 -f database/updates/update_from_backup.sql
+
+# Method 2: Using pgAdmin
+# Open database/updates/update_from_backup.sql in pgAdmin Query Tool and execute
+```
+
+**What this does:**
+- ✅ Creates new `announcement_attachments` table for multiple file uploads
+- ✅ Updates stored procedures (`sp_get_announcement_details`, `sp_save_announcement`, etc.)
+- ✅ Maintains backward compatibility with existing data
+- ✅ Safe to run multiple times (idempotent)
+
+**Before migration:**
+```powershell
+# Backup your database first!
+pg_dump -U postgres -d kooptimizer_db2 > my_backup.sql
+```
+
+See detailed migration guide at the end of this file.
+
+---
 
 ## Contents
 

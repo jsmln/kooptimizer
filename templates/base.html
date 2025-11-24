@@ -30,8 +30,6 @@
 </head>
 <body>
 
-    <script src="{% static 'main.js' %}"></script>
-
     {% block header %}
     <header>
         <div class="logo-title">
@@ -53,8 +51,18 @@
                     </li>
                 {% endif %}
                 {% elif not request.session.pending_verification_user_id %}
-                    <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
-                    <li><a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">Login</a></li>
+                    <li>
+                        <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+                           {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}style="pointer-events:none;opacity:0.5;cursor:not-allowed;" aria-disabled="true"{% endif %}>
+                            Home
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}"
+                           {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}style="pointer-events:none;opacity:0.5;cursor:not-allowed;" aria-disabled="true"{% endif %}>
+                            Login
+                        </a>
+                    </li>
                     <li><a href="{% url 'download' %}" class="{% if request.resolver_match.url_name == 'download' %}active{% endif %}">Download</a></li>
                     <li><a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
                 {% endif %}
@@ -194,60 +202,39 @@
         // ====================================================================
         
         // Track if user explicitly logged out or navigating within the app
-        let explicitLogout = false;
-        let isNavigating = false;
+        // Session management via Django session cookies
+        // Show logout confirmation when user tries to close browser/tab
         
-        // Mark explicit logout
+        let userConfirmedLogout = false;
+        
+        // Only show beforeunload confirmation if a form is dirty (unsaved changes)
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                let isDirty = false;
+                form.addEventListener('change', () => { isDirty = true; });
+                form.addEventListener('input', () => { isDirty = true; });
+                window.addEventListener('beforeunload', function(e) {
+                    if (isDirty) {
+                        e.preventDefault();
+                        e.returnValue = '';
+                        return '';
+                    }
+                });
+            });
+        });
+        
+        // Mark explicit logout to skip confirmation
         const logoutBtn = document.getElementById('btn-logout-confirm');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
-                explicitLogout = true;
+                sessionStorage.setItem('explicit_logout', 'true');
             });
         }
 
-        // Track internal navigation (clicking links within the app)
-        document.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (link && link.href && link.href.startsWith(window.location.origin)) {
-                // Internal link - this is navigation, not closing
-                isNavigating = true;
-                // Reset after a short delay
-                setTimeout(() => { isNavigating = false; }, 100);
-            }
-        });
-
-        // Track form submissions (also internal navigation)
-        document.addEventListener('submit', (e) => {
-            isNavigating = true;
-            setTimeout(() => { isNavigating = false; }, 100);
-        });
-
-        // Detect browser/tab close and logout
-        window.addEventListener('beforeunload', (e) => {
-            // Only show warning if NOT navigating within app and NOT logging out
-            // Also check if we're on certain pages that handle their own navigation
-            const isAnnouncementPage = window.location.pathname.includes('/announcement');
-            const isMessagePage = window.location.pathname.includes('/message');
-            
-            if (!explicitLogout && !isNavigating && !isAnnouncementPage && !isMessagePage) {
-                // Show confirmation message
-                e.preventDefault();
-                e.returnValue = 'You are still logged in. Are you sure you want to leave? Your session will end.';
-                
-                // Use sendBeacon to logout immediately (non-blocking)
-                
-                // This ensures logout happens even if user confirms leaving
-                const logoutUrl = '{% url "users:logout" %}';
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
-                
-                // Send logout request using sendBeacon (works even as page unloads)
-                const formData = new FormData();
-                formData.append('csrfmiddlewaretoken', csrfToken);
-                navigator.sendBeacon(logoutUrl, formData);
-                
-                return e.returnValue;
-            }
-        });
+        // No beforeunload logout - Django session cookie handles browser close
+        // SESSION_EXPIRE_AT_BROWSER_CLOSE = True means session automatically expires
+        // when browser/tab closes, without unreliable JavaScript detection
 
         // PWA visibility change detection
         document.addEventListener('visibilitychange', () => {
