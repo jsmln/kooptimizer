@@ -13,4 +13,7 @@ urlpatterns = [
     
     # Form Submission Handler
     path('settings/update/', views.update_profile, name='update_profile'),
+
+    path('password-reset/init/', views.initiate_password_reset, name='initiate_password_reset'),
+    path('password-reset/verify/', views.perform_password_reset, name='perform_password_reset'),
 ]

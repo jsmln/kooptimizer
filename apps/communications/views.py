@@ -6,6 +6,9 @@ from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import DatabaseError, connection
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.utils.timesince import timesince
+from .models import Message
 
 # Import services and utils
 from apps.core.services.sms_service import SmsService
@@ -1138,3 +1141,44 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
         import traceback
         traceback.print_exc()
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+def get_recent_activity(request):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=401)
+    
+    # STEP 1: Get the list of Message IDs directly
+    # .values_list() is crucial here because it reads SPECIFIC columns only.
+    # It won't try to read the missing 'id' column.
+    message_ids = MessageRecipient.objects.filter(
+        receiver_id=user_id
+    ).values_list('message_id', flat=True)
+
+    # STEP 2: Fetch the actual Message objects using those IDs
+    recent_messages = Message.objects.filter(
+        message_id__in=message_ids
+    ).select_related('sender').order_by('-sent_at')[:5]
+
+    activities = []
+    
+    for msg in recent_messages:
+        sender_name = "Unknown"
+        if msg.sender:
+            sender_name = f"{msg.sender.first_name} {msg.sender.last_name}"
+        
+        time_diff = timesince(msg.sent_at).split(',')[0]
+        
+        # Clean up the time display
+        if "minute" not in time_diff and "hour" not in time_diff and "day" not in time_diff:
+            time_display = "Just now"
+        else:
+            time_display = f"{time_diff} ago"
+
+        activities.append({
+            'title': 'New Message',
+            'sender': f"from {sender_name}",
+            'time': time_display
+        })
+
+    return JsonResponse({'status': 'success', 'activities': activities})
