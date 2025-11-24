@@ -1,9 +1,9 @@
 .databank-container {
     box-sizing: border-box;
-    width: 1100px;
+    width: 100%;
     max-width: 1100px;
-    height: 530px;
-    max-height: 600px;
+    height: 80vh; /* Better responsive height */
+    max-height: 800px;
     margin: 24px auto;
     padding: 24px;
     border-radius: 12px;
@@ -52,6 +52,7 @@ html, body {
     background: transparent;
     flex-shrink: 0;
     gap: 5px;
+    margin-bottom: 15px; /* Added spacing */
 }
 
 .toolbar-left {
@@ -137,35 +138,36 @@ html, body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 0 32px 28px 32px;
+    padding: 0; /* Removing padding to maximize space */
     position: relative;
 }
 
 .table-wrapper {
-    height: 420px;
+    flex: 1;
     border: 1px solid #edf2f7;
     border-radius: 12px;
     background: #fff;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .table-scroll {
-    height: 100%;
+    flex: 1;
     width: 100%;
-    overflow: auto;
+    overflow: auto; /* Handles both X and Y scroll */
     -webkit-overflow-scrolling: touch;
-    padding: 12px;
-    box-sizing: border-box;
-    position: relative;
+    padding: 0;
 }
 
 .table-scroll table {
-    width: auto;
-    min-width: 1100px;
-    table-layout: fixed;
+    width: 100%;
+    /* CRITICAL FIXES FOR DATA TRUNCATION: */
+    min-width: max-content; /* Force table to be as wide as its content */
+    table-layout: auto;     /* Let columns grow based on content */
     border-collapse: collapse;
-    white-space: nowrap;
+    white-space: normal;    /* Allow text wrapping */
 }
 
 #coop-table thead th {
@@ -181,89 +183,92 @@ html, body {
     text-transform: none;
     letter-spacing: 0.2px;
     border-bottom: 1px solid rgba(0,0,0,0.08);
-    white-space: nowrap;
+    white-space: nowrap; /* Keep headers single line */
 }
 
 #coop-table tbody td {
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-bottom: 1px solid #f1f1f1;
     color: #111827;
     font-size: 0.95rem;
     font-weight: 500;
     vertical-align: middle;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    
+    /* CRITICAL FIXES FOR DATA TRUNCATION: */
+    white-space: normal;   /* Wrap text */
+    word-wrap: break-word; /* Break long words if necessary */
+    overflow: visible;     /* Show all content */
+    text-overflow: clip;   /* Remove ellipses */
+    height: auto;          /* Allow row height to grow */
 }
 
+/* Specific column adjustments - increased min-widths */
 #coop-table th:nth-child(1),
-#coop-table td:nth-child(1) { min-width: 220px; }
-#coop-table th:nth-child(2),
-#coop-table td:nth-child(2) { min-width: 120px; }
-#coop-table th:nth-child(3),
-#coop-table td:nth-child(3) { min-width: 120px; }
+#coop-table td:nth-child(1) { min-width: 200px; max-width: 300px; } /* Name */
+
 #coop-table th:nth-child(4),
-#coop-table td:nth-child(4) { min-width: 180px; }
+#coop-table td:nth-child(4) { min-width: 250px; max-width: 400px; } /* Address - needs most space */
+
+#coop-table th:nth-child(2),
+#coop-table td:nth-child(2) { min-width: 140px; } /* Category */
+
+#coop-table th:nth-child(3),
+#coop-table td:nth-child(3) { min-width: 140px; } /* District */
+
 #coop-table th:nth-child(5),
-#coop-table td:nth-child(5) { min-width: 120px; }
+#coop-table td:nth-child(5) { min-width: 140px; white-space: nowrap; } /* Mobile */
+
 #coop-table th:nth-child(6),
-#coop-table td:nth-child(6) { min-width: 160px; }
-#coop-table th:nth-child(7),
-#coop-table td:nth-child(7) { min-width: 120px; }
-#coop-table th:nth-child(8),
-#coop-table td:nth-child(8) { min-width: 120px; }
-#coop-table th:nth-child(9),
-#coop-table td:nth-child(9) { min-width: 90px; }
-#coop-table th:nth-child(10),
-#coop-table td:nth-child(10) { min-width: 90px; }
+#coop-table td:nth-child(6) { min-width: 180px; } /* Email */
 
-#coop-table tbody tr[data-modal-target]:hover {
-    background-color: #fbfbfc;
+/* Make other columns have a sensible minimum so they don't squash */
+#coop-table th, #coop-table td {
+    min-width: 100px; 
 }
 
-.badge-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 36px;
-    height: 28px;
-    padding: 0 8px;
-    background: #374151;
-    color: #fff;
-    border-radius: 14px;
+#coop-table tbody tr {
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+#coop-table tbody tr:hover {
+    background: #fff5f5;
+}
+
+#coop-table tbody tr.selected {
+    background: #fff1f2 !important;
+    border-left: 4px solid #a91e2c;
+}
+
+/* Badge Styles */
+.badge-category {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #edf2f7;
+    color: #2d3748;
+    border-radius: 4px;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
 }
 
-.contact-info { font-size: 0.92rem; color: #111827; }
-
-#coop-table td.address-cell { min-width: 180px; }
-#coop-table td.contact-cell { min-width: 120px; }
-
+/* Scrollbar Styling */
 .table-scroll::-webkit-scrollbar { height: 12px; width: 12px; }
-.table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-.table-scroll::-webkit-scrollbar-track { background: transparent; }
+.table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; border: 3px solid #fff; }
+.table-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+.table-scroll::-webkit-scrollbar-corner { background: #f1f5f9; }
 
-@media (max-width: 768px) {
-    .databank-container {
-        padding: 16px;
-    }
-    .search-bar input {
-        width: 100%;
-        max-width: none;
-    }
-    .table-wrapper {
-        height: 360px;
-    }
-    .table-scroll {
-        padding: 8px;
-    }
-    .table-scroll table { min-width: 900px; }
-    @supports (overflow-scrolling: touch) {
-        .table-scroll { -webkit-overflow-scrolling: touch; }
-    }
+/* Status Indicators */
+.text-success { color: #10b981 !important; }
+.text-danger { color: #ef4444 !important; }
+.text-muted { color: #9ca3af !important; }
+
+.status-no { 
+    color: #9ca3af; 
+    font-style: italic; 
+    font-size: 0.85rem;
 }
 
+/* OCR Drawer Styles (Preserved) */
 .ocr-drawer-wrapper {
     position: fixed;
     right: 0;
@@ -373,131 +378,7 @@ html, body {
 }
 .ocr-toggle-btn:hover { transform:scale(1.1) translateY(-3px); }
 
-#coop-table tbody tr {
-    cursor: pointer;
-    transition: background 0.12s ease, outline 0.12s ease;
-}
-#coop-table tbody tr:hover {
-    background: #fff5f5;
-    color: #a91e2c;
-}
-#coop-table tbody tr.selected {
-    background: #fff1f2 !important;
-    outline: 3px solid rgba(169,30,44,0.08);
-    border-left: 4px solid #a91e2c;
-}
-
-#coop-table tbody tr.selected td:first-child,
-#coop-table tbody tr:hover td:first-child {
-    background: #fff5f5;
-}
-
-.databank-container {
-    position: relative;
-    width: 90%;
-    max-width: 1100px;
-    margin: 20px auto;
-    padding: 25px 30px;
-    box-sizing: border-box;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    color: #222;
-    display: flex;
-    flex-direction: column;
-    overflow: visible;
-    animation: fadeIn 0.4s ease-in-out;
-    z-index: 1;
-}
-
-.databank-header,
-.databank-toolbar {
-    flex: 0 0 auto;
-}
-
-.table-wrapper {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid #edf2f7;
-    border-radius: 12px;
-    background: #fff;
-    padding: 0;
-    margin-top: 12px;
-    max-height: calc(100vh - 220px);
-}
-
-.table-scroll {
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 12px;
-    box-sizing: border-box;
-    position: relative;
-}
-
-.table-scroll table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    background: #fafafa;
-}
-.table-scroll thead th {
-    position: sticky;
-    top: 0;
-    z-index: 12;
-    background: #860000;
-    color: #fff;
-}
-
-.table-scroll th,
-.table-scroll td {
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid #f1f1f1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.table-scroll tbody tr {
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.table-scroll tbody tr:hover { background: #f0f0f0; }
-.table-scroll tbody tr.selected {
-    background: #e3f2fd !important;
-    border-left: 4px solid #860000;
-}
-
-.table-scroll::-webkit-scrollbar { height: 12px; width: 12px; }
-.table-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-.table-scroll::-webkit-scrollbar-track { background: transparent; }
-
-@media (max-width: 768px) {
-    .databank-container {
-        position: static;
-        transform: none;
-        width: auto;
-        max-width: none;
-        height: auto;
-        max-height: none;
-        margin: 16px;
-    }
-    .table-wrapper { height: 360px; }
-
-    table tbody tr:hover {
-        background: #f0f0f0;
-    }
-
-    table tbody tr.selected {
-        background: #e3f2fd !important;
-        border-left: 4px solid #860000;
-    }
-}
-
+/* Modal Styles */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -546,22 +427,6 @@ html, body {
     font-weight: 700;
 }
 
-.modal-actions { display:flex; gap:12px; align-items:center; }
-
-.pdf-btn {
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 12px;
-    border:1px solid #a91e2c;
-    color:#a91e2c;
-    background:#fff;
-    border-radius:8px;
-    cursor:pointer;
-    font-weight:600;
-}
-.pdf-btn:hover { background:#a91e2c; color:#fff; }
-
 .modal-close-btn {
     background: transparent;
     border: none;
@@ -571,103 +436,8 @@ html, body {
 }
 .modal-close-btn:hover { color: #a91e2c; }
 
-.modal-scroll-area {
-    overflow-y: auto;
+.modal-body {
     padding: 20px;
-    flex: 1 1 auto;
+    overflow-y: auto;
     background: #fbfcfe;
-}
-
-.modal-header-section {
-    display:flex;
-    gap:16px;
-    align-items:center;
-    padding-bottom:12px;
-    border-bottom:1px solid #f0f0f0;
-    margin-bottom:16px;
-}
-
-.coop-avatar {
-    width:56px;
-    height:56px;
-    background:#a91e2c;
-    color:#fff;
-    border-radius:10px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:1.4rem;
-    font-weight:800;
-}
-
-.coop-title-info h4 { margin:0; color:#2B3674; font-size:1.1rem; }
-.badge-cda { background:#e8f1ff; color:#2366b3; padding:4px 8px; border-radius:5px; font-weight:600; margin-top:6px; display:inline-block; }
-.update-info { color:#9aa6c8; font-size:0.82rem; margin-top:6px; }
-
-.info-grid { display:grid; gap:12px; }
-.info-grid.two-col { grid-template-columns: 1fr 1fr; }
-.info-grid.three-col { grid-template-columns: repeat(3,1fr); }
-
-.info-item label { display:block; font-size:0.75rem; color:#9aa6c8; font-weight:700; margin-bottom:4px; }
-.info-item p { margin:0; color:#2B3674; font-weight:600; }
-
-.modal-table-container {
-    overflow-x: auto;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    margin-bottom: 12px;
-}
-.modal-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    white-space: nowrap;
-}
-.modal-table th {
-    background: #f8f9fa;
-    color: #A3AED0;
-    font-weight: 600;
-    text-align: left;
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-}
-.modal-table td {
-    padding: 10px 15px;
-    border-bottom: 1px solid #f9f9f9;
-    color: #2B3674;
-    font-weight: 500;
-}
-.modal-table tr:last-child td { border-bottom: none; }
-.modal-table tr:hover { background: #fafafa; }
-
-.modal-footer {
-    padding:12px 18px;
-    border-top:1px solid #f1f1f1;
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-    background:#fff;
-}
-.primary-btn { background:#a91e2c; color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:700; }
-.primary-btn:hover { background:#8a1824; }
-.secondary-btn { background:#f3f4f6; color:#374151; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:700; }
-.secondary-btn:hover { background:#e6e9ef; }
-
-@media (max-width: 720px) {
-    .modal-content { width: 96%; max-width: 720px; }
-    .info-grid.two-col, .info-grid.three-col { grid-template-columns: 1fr; }
-    .modal-top-bar { padding: 12px; }
-}
-
-.section-title {
-    margin: 0 0 15px 0;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: #A3AED0;
-    letter-spacing: 0.5px;
-    border-left: 4px solid #a91e2c;
-    padding-left: 10px;
-    font-weight: 700;
 }
