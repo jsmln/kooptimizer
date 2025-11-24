@@ -118,10 +118,7 @@
                 <div class="page-title">{% block page_header %}Dashboard Overview{% endblock %}</div>
             </div>
             
-            <div class="search-box">
-                <i class="bi bi-search"></i>
-                <input type="text" placeholder="Search...">
-            </div>
+            <!-- Search box removed per UX request -->
 
             <div class="user-menu">
                 <div class="user-info">
@@ -131,6 +128,12 @@
                 <div class="avatar">
                     {{ request.session.username|first|upper }}
                 </div>
+
+                <!-- FAQ button: opens FAQs modal -->
+                <a href="#" id="open-faq-btn" class="faq-btn-mini" title="FAQs">
+                    <i class="bi bi-question-circle"></i>
+                    <span style="font-size: 0.75rem; display: block; margin-top: 2px;">FAQs</span>
+                </a>
 
                 <a href="{% url 'users:profile_settings' %}" class="settings-btn-mini" title="Settings">
                     <i class="bi bi-three-dots-vertical"></i>
@@ -262,6 +265,135 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Refresh every 2 seconds
     setInterval(loadRecentActivity, 2000);
+});
+</script>
+
+<!-- FAQ Modal + mini-chat FAQ -->
+<div class="modal fade" id="faqModal" tabindex="-1" aria-labelledby="faqModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="faqModalLabel">Frequently Asked Questions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="list-group" id="faq-list" role="tablist">
+                            <!-- Static FAQs inserted here -->
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="To reset your password, go to Settings → Password Reset and follow the instructions.">How do I reset my password?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="To create an announcement, go to Announcements in the sidebar and click 'New Announcement'.">How do I post an announcement?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Messages appear in real-time; mark them as seen in the conversation to clear activities.">Why are some activities still showing?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="For support, email support@kooptimizer@gmail.com or use the contact form under About → Contact.">How do I contact support?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Access your profile by clicking on your avatar in the top-right corner and selecting 'Settings'.">How do I edit my profile?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Admins and staff manage accounts in the Accounts module. Officers can view their own profile in the Profile section.">Who can manage user accounts?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="The Data Bank module stores cooperative information and records. Access it from the sidebar under Modules.">What is the Data Bank?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Messages are sent and received through the Messages module in the sidebar. You'll receive notifications for new messages.">How do I send messages?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Your activity feed updates automatically every 2 seconds. Check the Activity widget in the sidebar.">How often does my activity update?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="To log out, click the logout button (arrow icon) in the top-right corner and confirm in the modal.">How do I log out?</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <div id="faq-chat" style="min-height:300px; border:1px solid #e9ecef; border-radius:6px; padding:12px; background:#f8fafc; display:flex; flex-direction:column;">
+                            <div id="faq-messages" style="flex:1; overflow:auto; margin-bottom:8px;"></div>
+                            <div id="faq-controls" style="display:flex; gap:8px; align-items:center;">
+                                <input id="faq-input-preview" class="form-control" placeholder="Selected question answer will type here..." readonly />
+                                <button id="faq-clear" class="btn btn-outline-secondary">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <small class="text-muted">Click a question to see an automatic typed answer.</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        const openFaqBtn = document.getElementById('open-faq-btn');
+        const faqModalEl = document.getElementById('faqModal');
+        const faqModal = faqModalEl ? new bootstrap.Modal(faqModalEl) : null;
+        const faqList = document.getElementById('faq-list');
+        const faqMessages = document.getElementById('faq-messages');
+        const faqInput = document.getElementById('faq-input-preview');
+        const faqClear = document.getElementById('faq-clear');
+
+        function appendMessage(text, from='system'){
+                const wrap = document.createElement('div');
+                wrap.style.margin = '6px 0';
+                const bubble = document.createElement('div');
+                bubble.style.display = 'inline-block';
+                bubble.style.padding = '8px 12px';
+                bubble.style.borderRadius = '18px';
+                bubble.style.maxWidth = '85%';
+                bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                if(from === 'user'){
+                        bubble.style.background = '#e7f3ff';
+                        bubble.style.alignSelf = 'flex-end';
+                        bubble.style.marginLeft = 'auto';
+                } else {
+                        bubble.style.background = '#ffffff';
+                        bubble.style.alignSelf = 'flex-start';
+                }
+                bubble.textContent = text;
+                wrap.appendChild(bubble);
+                faqMessages.appendChild(wrap);
+                faqMessages.scrollTop = faqMessages.scrollHeight;
+        }
+
+        function typeIntoPreview(text, speed=25){
+                faqInput.value = '';
+                let i = 0;
+                const interval = setInterval(() => {
+                        faqInput.value = text.slice(0, i+1);
+                        i++;
+                        if(i >= text.length){
+                                clearInterval(interval);
+                                // Append final bubble to messages
+                                appendMessage(text, 'system');
+                        }
+                }, speed);
+        }
+
+        if(openFaqBtn && faqModal){
+                openFaqBtn.addEventListener('click', function(e){
+                        e.preventDefault();
+                        // reset preview + messages
+                        faqInput.value = '';
+                        faqMessages.innerHTML = '';
+                        document.getElementById('faq-list').querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                        faqModal.show();
+                });
+        }
+
+        if(faqList){
+                faqList.addEventListener('click', function(e){
+                        const btn = e.target.closest('button');
+                        if(!btn) return;
+                        // mark active
+                        faqList.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+                        btn.classList.add('active');
+
+                        // show user question as a small user bubble
+                        appendMessage(btn.textContent.trim(), 'user');
+
+                        // animate typing of answer in preview then append
+                        const answer = btn.getAttribute('data-answer') || 'Sorry, no answer available.';
+                        typeIntoPreview(answer);
+                });
+        }
+
+        if(faqClear){
+                faqClear.addEventListener('click', function(){
+                        faqMessages.innerHTML = '';
+                        faqInput.value = '';
+                });
+        }
 });
 </script>
 {% endblock %}
