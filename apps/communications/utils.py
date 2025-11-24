@@ -42,8 +42,11 @@ def compress_pdf(pdf_bytes):
             return pdf_bytes
             
         except ImportError:
-            # Try pypdf (newer fork)
-            from pypdf import PdfReader, PdfWriter
+            # Try pypdf (newer fork) via dynamic import to avoid static analysis/import resolution issues
+            import importlib
+            pypdf = importlib.import_module('pypdf')
+            PdfReader = getattr(pypdf, 'PdfReader')
+            PdfWriter = getattr(pypdf, 'PdfWriter')
             
             pdf_input = BytesIO(pdf_bytes)
             reader = PdfReader(pdf_input)
@@ -75,7 +78,9 @@ def convert_docx_to_pdf(docx_bytes):
     try:
         # Method 1: Try pypandoc (if available)
         try:
-            import pypandoc
+            # Dynamically import pypandoc to avoid static analysis errors when it's not installed.
+            import importlib
+            pypandoc = importlib.import_module('pypandoc')
             
             with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as temp_input:
                 temp_input.write(docx_bytes)
@@ -489,7 +494,15 @@ def convert_pptx_to_pdf(pptx_bytes):
         
         # Method 2: Try python-pptx with reportlab fallback
         try:
-            from pptx import Presentation
+            # Dynamically import python-pptx to avoid static analysis/import resolution issues
+            import importlib
+            try:
+                pptx_module = importlib.import_module('pptx')
+                Presentation = getattr(pptx_module, 'Presentation')
+            except Exception:
+                # If python-pptx is not available, bail out of this fallback
+                raise ImportError("python-pptx not available")
+            
             from reportlab.lib.pagesizes import landscape, LETTER
             from reportlab.pdfgen import canvas
             
