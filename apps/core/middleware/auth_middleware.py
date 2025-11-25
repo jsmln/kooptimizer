@@ -21,6 +21,8 @@ class AuthenticationMiddleware:
         'download',       # Download page
         'users:logout',   # Logout (to clear session)
         'access_denied',  # Access denied page
+        'users:initiate_password_reset', # Allow searching for account
+        'users:perform_password_reset',
     ]
     
     # URLs that require pending verification (not full authentication)

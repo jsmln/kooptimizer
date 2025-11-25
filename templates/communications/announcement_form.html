@@ -765,6 +765,12 @@
 
         <!-- Filter toggle + active-filters badge (top-right) -->
         <div style="display:flex; align-items:center; gap:8px;">
+            <button id="delete-mode-btn" class="btn btn-danger" title="Delete announcements">
+                <i class="bi bi-trash"></i>
+            </button>
+            <button id="done-delete-btn" class="btn btn-success d-none" title="Done deleting">
+                Done
+            </button>
             <button id="filterToggleTop" class="filter-toggle-btn btn btn-sm btn-outline-secondary" title="Filters" aria-expanded="false">
                 <i class="bi bi-funnel"></i>
             </button>
@@ -822,23 +828,28 @@
                                data-type="{{ item.type }}"
                                data-date="{{ item.sent_at|date:'Y-m-d' }}"
                                data-coops="{{ item.recipients_info.coop_names|join:', ' }}"
-                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ item.title }}</h5>
-                                    <small class="text-muted">{{ item.sent_at|date:"M d, Y" }}</small>
+                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}"
+                               onclick="event.target.closest('.announcement-checkbox') ? event.stopPropagation() : true;">
+                                <div class="d-flex w-100 align-items-start">
+                                    <input type="checkbox" class="announcement-checkbox d-none me-3" style="margin-top:8px; cursor:pointer;" data-announcement-id="{{ item.announcement_id }}" onclick="event.stopPropagation();">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ item.title }}</h5>
+                                            <small class="text-muted">{{ item.sent_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <p class="mb-1 text-truncate">{{ item.description }}</p>
+                                        <small>
+                                            {% if item.type == 'sms' %}
+                                                <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
+                                            {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                                <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
+                                            {% endif %}
+                                            {% if item.has_attachment %}
+                                                <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
-                                <p class="mb-1 text-truncate">{{ item.description }}</p>
-                                <small>
-                                    {% if item.type == 'sms' %}
-                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
-                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
-                                    {% endif %}
-                                    {% if item.has_attachment %}
-                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
-                                    {% endif %}
-                                </small>
-                            </a>
                             {% empty %}
                             <div class="p-4 text-center text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
@@ -858,24 +869,30 @@
                                data-type="{{ item.type }}"
                                data-date="{{ item.updated_at|date:'Y-m-d' }}"
                                data-coops="{{ item.recipients_info.coop_names|join:', ' }}"
-                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ item.title }}</h5>
-                                    <small class="text-muted">{{ item.updated_at|date:"M d, Y" }}</small>
+                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}"
+                               onclick="event.target.closest('.announcement-checkbox') ? event.stopPropagation() : true;">
+                                <div class="d-flex w-100 align-items-start">
+                                    <input type="checkbox" class="announcement-checkbox d-none me-3" style="margin-top:8px; cursor:pointer;" data-announcement-id="{{ item.announcement_id }}" onclick="event.stopPropagation();">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ item.title }}</h5>
+                                            <small class="text-muted">{{ item.updated_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <p class="mb-1 text-truncate">{{ item.description|default:"No content yet..." }}</p>
+                                        <small>
+                                            {% if item.type == 'sms' %}
+                                                <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
+                                            {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                                <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
+                                            {% else %}
+                                                <span class="badge-type" style="background-color: #6c757d; color: white;">No Type</span>
+                                            {% endif %}
+                                            {% if item.has_attachment %}
+                                                <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
-                                <p class="mb-1 text-truncate">{{ item.description|default:"No content yet..." }}</p>
-                                <small>
-                                    {% if item.type == 'sms' %}
-                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
-                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
-                                    {% else %}
-                                        <span class="badge-type" style="background-color: #6c757d; color: white;">No Type</span>
-                                    {% endif %}
-                                    {% if item.has_attachment %}
-                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
-                                    {% endif %}
-                                </small>
                             </a>
                             {% empty %}
                             <div class="p-4 text-center text-muted">
@@ -898,24 +915,30 @@
                                data-type="{{ item.type }}"
                                data-date="{{ item.sent_at|date:'Y-m-d' }}"
                                data-coops="{{ item.recipients_info.coop_names|join:', ' }}"
-                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h5 class="mb-1">{{ item.title }}</h5>
-                                    <small class="text-danger">
-                                        Sends: {{ item.sent_at|date:"M d, Y @ g:i A" }}
-                                    </small>
+                               data-officers="{{ item.recipients_info.officer_names|join:', ' }}"
+                               onclick="event.target.closest('.announcement-checkbox') ? event.stopPropagation() : true;">
+                                <div class="d-flex w-100 align-items-start">
+                                    <input type="checkbox" class="announcement-checkbox d-none me-3" style="margin-top:8px; cursor:pointer;" data-announcement-id="{{ item.announcement_id }}" onclick="event.stopPropagation();">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ item.title }}</h5>
+                                            <small class="text-danger">
+                                                Sends: {{ item.sent_at|date:"M d, Y @ g:i A" }}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1 text-truncate">{{ item.description }}</p>
+                                        <small>
+                                            {% if item.type == 'sms' %}
+                                                <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
+                                            {% elif item.type == 'e-mail' or item.type == 'email' %}
+                                                <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
+                                            {% endif %}
+                                            {% if item.has_attachment %}
+                                                <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
                                 </div>
-                                <p class="mb-1 text-truncate">{{ item.description }}</p>
-                                <small>
-                                    {% if item.type == 'sms' %}
-                                        <span class="badge-type badge-sms"><i class="bi bi-phone me-1"></i>SMS</span>
-                                    {% elif item.type == 'e-mail' or item.type == 'email' %}
-                                        <span class="badge-type badge-email"><i class="bi bi-envelope me-1"></i>Email</span>
-                                    {% endif %}
-                                    {% if item.has_attachment %}
-                                        <span class="badge-type badge-attachment ms-1" title="{{ item.attachment_count }} attachment{{ item.attachment_count|pluralize }}"><i class="bi bi-paperclip me-1"></i>{{ item.attachment_count }}</span>
-                                    {% endif %}
-                                </small>
                             </a>
                             {% empty %}
                             <div class="p-4 text-center text-muted">
@@ -1251,8 +1274,8 @@
 <!-- PDF.js Library for Advanced Preview -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-{% comment %} // Replace the ENTIRE <script> section at the bottom of announcement_form.html
-// Everything from <script> to </script> {% endcomment %}
+<!-- {% comment %} // Replace the ENTIRE <script> section at the bottom of announcement_form.html
+// Everything from <script> to </script> {% endcomment %} -->
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -1300,6 +1323,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewScheduledModal = new bootstrap.Modal(document.getElementById('view-scheduled-modal'));
     const scheduleSendModal = new bootstrap.Modal(document.getElementById('schedule-send-modal'));
     const confirmCancelModal = new bootstrap.Modal(document.getElementById('confirm-cancel-modal'));
+    
+    // Delete mode state
+    let deleteMode = false;
+    const deleteModeBtn = document.getElementById('delete-mode-btn');
+    const doneModeBtn = document.getElementById('done-delete-btn');
+    
+    // Toggle delete mode
+    deleteModeBtn.addEventListener('click', function() {
+        deleteMode = !deleteMode;
+        const checkboxes = document.querySelectorAll('.announcement-checkbox');
+        checkboxes.forEach(cb => {
+            cb.classList.toggle('d-none');
+            cb.checked = false;
+        });
+        deleteModeBtn.classList.toggle('active');
+        doneModeBtn.classList.toggle('d-none');
+    });
+    
+    // Done button: delete all checked announcements
+    doneModeBtn.addEventListener('click', async function() {
+        const checkedBoxes = document.querySelectorAll('.announcement-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            showNotification('Please select at least one announcement to delete', 'warning');
+            return;
+        }
+        
+        const announcementIds = Array.from(checkedBoxes).map(cb => cb.dataset.announcementId);
+        
+        if (!confirm(`Delete ${announcementIds.length} announcement(s)? This cannot be undone.`)) return;
+        
+        let successCount = 0;
+        let failureCount = 0;
+        
+        for (const id of announcementIds) {
+            try {
+                const resp = await fetch(`/communications/api/announcement/${id}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    }
+                });
+                const result = await resp.json();
+                if (result.status === 'success') {
+                    successCount++;
+                } else {
+                    console.error(`Failed to delete announcement ${id}:`, result.message);
+                    failureCount++;
+                }
+            } catch (err) {
+                console.error(`Error deleting announcement ${id}:`, err);
+                failureCount++;
+            }
+        }
+        
+        if (successCount > 0) {
+            showNotification(`Deleted ${successCount} announcement(s)`, 'success');
+        }
+        if (failureCount > 0) {
+            showNotification(`Failed to delete ${failureCount} announcement(s)`, 'error');
+        }
+        
+        // Exit delete mode and reload
+        deleteMode = false;
+        const checkboxes = document.querySelectorAll('.announcement-checkbox');
+        checkboxes.forEach(cb => {
+            cb.classList.add('d-none');
+            cb.checked = false;
+        });
+        deleteModeBtn.classList.remove('active');
+        doneModeBtn.classList.add('d-none');
+        
+        setTimeout(() => location.reload(), 1000);
+    });
+    
     
     // Notification function
     function showNotification(message, type = 'info') {

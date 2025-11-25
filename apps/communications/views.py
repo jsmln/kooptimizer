@@ -1,11 +1,15 @@
 from io import BytesIO
 import json
+from datetime import timedelta
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse, FileResponse
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import DatabaseError, connection
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.utils.timesince import timesince
+from .models import Message
 
 # Import services and utils
 from apps.core.services.sms_service import SmsService
@@ -79,6 +83,58 @@ def cancel_scheduled_announcement(request, announcement_id):
             'message': 'Schedule cancelled successfully. Announcement reverted to draft.'
         })
         
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST", "DELETE"])
+def delete_announcement(request, announcement_id):
+    """
+    Deletes an announcement. Admins can delete any announcement. Staff can only delete announcements they created.
+    """
+    user_id = request.session.get('user_id')
+    role = request.session.get('role')
+
+    if not user_id or role not in ['admin', 'staff']:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+    try:
+        try:
+            ann = Announcement.objects.get(announcement_id=announcement_id)
+        except Announcement.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Announcement not found'}, status=404)
+
+        # Permission check: only admins and the staff who created it can delete
+        if role == 'staff':
+            try:
+                staff_profile = Staff.objects.get(user_id=user_id)
+                # Staff can only delete announcements they created (staff_id matches)
+                if ann.staff_id != staff_profile.staff_id:
+                    return JsonResponse({'status': 'error', 'message': 'You do not have permission to delete this announcement.'}, status=403)
+            except Staff.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Staff profile not found'}, status=403)
+        # Admin role: no permission check needed, can delete any announcement
+
+        # Log before deletion
+        print(f"Deleting announcement ID: {announcement_id}")
+        
+        # Proceed to delete using raw SQL to ensure it actually deletes
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM announcements WHERE announcement_id = %s", [announcement_id])
+            deleted_count = cursor.rowcount
+            print(f"Deleted {deleted_count} rows from announcements table")
+        
+        print(f"Successfully deleted announcement {announcement_id}")
+        return JsonResponse({'status': 'success', 'message': 'Announcement deleted successfully.'})
+
+    except Exception as e:
+        import traceback
+        error_msg = f"Error in delete_announcement: {str(e)}"
+        print(error_msg)
+        print(traceback.format_exc())
+        return JsonResponse({'status': 'error', 'message': error_msg}, status=500)
+
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
@@ -1138,3 +1194,84 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
         import traceback
         traceback.print_exc()
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+def get_recent_activity(request):
+    user_id = request.session.get('user_id')
+    
+    if not user_id:
+        return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=401)
+    
+    # STEP 1: Determine messages that either:
+    #  - haven't been seen by the recipient (seen_at is null or status != 'seen'),
+    #  - AND were sent within the last hour.
+    # Messages that are already marked as 'seen' are excluded automatically.
+    # This ensures activities disappear when the user marks them as read.
+    one_hour_ago = timezone.now() - timedelta(hours=1)
+
+    recipient_condition = (
+        (Q(seen_at__isnull=True) | ~Q(status='seen')) & Q(message__sent_at__gte=one_hour_ago)
+    )
+
+    message_ids = (
+        MessageRecipient.objects
+        .filter(receiver_id=user_id)
+        .filter(recipient_condition)
+        .values_list('message_id', flat=True)
+        .distinct()
+    )
+
+    # STEP 2: Fetch the Message objects (latest first), limited to the most
+    # recent 5 that match the criteria.
+    recent_messages = (
+        Message.objects
+        .filter(message_id__in=message_ids)
+        .select_related('sender')
+        .order_by('-sent_at')[:5]
+    )
+
+    activities = []
+    
+    for msg in recent_messages:
+        # Determine a friendly sender name safely. The User model in this
+        # project does not include `first_name`/`last_name` fields, so fall
+        # back to related profile fullname fields or `username`.
+        def _friendly_name(user_obj):
+            if not user_obj:
+                return 'Unknown'
+            # Prefer explicit first/last if present
+            fn = getattr(user_obj, 'first_name', None)
+            ln = getattr(user_obj, 'last_name', None)
+            if fn or ln:
+                return f"{fn or ''} {ln or ''}".strip()
+
+            # Try related profile models that have `fullname`
+            for rel in ('admin_profile', 'staff_profile', 'officer_profile'):
+                try:
+                    prof = getattr(user_obj, rel)
+                except Exception:
+                    prof = None
+                if prof:
+                    fullname = getattr(prof, 'fullname', None)
+                    if fullname:
+                        return fullname
+
+            # Fallback to username
+            return getattr(user_obj, 'username', 'Unknown')
+
+        sender_name = _friendly_name(msg.sender)
+        
+        time_diff = timesince(msg.sent_at).split(',')[0]
+        
+        # Clean up the time display
+        if "minute" not in time_diff and "hour" not in time_diff and "day" not in time_diff:
+            time_display = "Just now"
+        else:
+            time_display = f"{time_diff} ago"
+
+        activities.append({
+            'title': 'New Message',
+            'sender': f"from {sender_name}",
+            'time': time_display
+        })
+
+    return JsonResponse({'status': 'success', 'activities': activities})

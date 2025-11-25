@@ -17,39 +17,75 @@
     <nav class="sidebar">
         <div class="logo-area">
             <img src="{% static 'frontend/images/Logo.png' %}" alt="Logo" class="sidebar-logo">
-            <h3>KoopTimizer</h3>
+            <h3 class="logo-text">KoopTimizer</h3>
         </div>
 
         <ul class="nav-links">
             {% if request.session.role == 'admin' %}
-                <li><a href="{% url 'dashboard:admin_dashboard' %}" class="nav-item active"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+                <li>
+                    <a href="{% url 'dashboard:admin_dashboard' %}" class="nav-item active">
+                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
             {% elif request.session.role == 'staff' %}
-                <li><a href="{% url 'dashboard:staff_dashboard' %}" class="nav-item active"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+                <li>
+                    <a href="{% url 'dashboard:staff_dashboard' %}" class="nav-item active">
+                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
             {% elif request.session.role == 'officer' %}
-                <li><a href="{% url 'dashboard:cooperative_dashboard' %}" class="nav-item active"><i class="bi bi-grid-fill"></i> Dashboard</a></li>
+                <li>
+                    <a href="{% url 'dashboard:cooperative_dashboard' %}" class="nav-item active">
+                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
             {% endif %}
 
-            <li class="nav-section-title">Modules</li>
+            <li class="nav-section-title"><span class="nav-text">Modules</span></li>
 
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
-                <li><a href="{% url 'account_management:account_management' %}" class="nav-item"><i class="bi bi-people-fill"></i> Accounts</a></li>
-                <li><a href="{% url 'databank:databank_management' %}" class="nav-item"><i class="bi bi-database-fill"></i> Data Bank</a></li>
+                <li>
+                    <a href="{% url 'account_management:account_management' %}" class="nav-item">
+                        <i class="bi bi-people-fill"></i> <span class="nav-text">Accounts</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'databank:databank_management' %}" class="nav-item">
+                        <i class="bi bi-database-fill"></i> <span class="nav-text">Data Bank</span>
+                    </a>
+                </li>
             {% endif %}
 
             {% if request.session.role == 'officer' %}
-                <li><a href="{% url 'cooperatives:profile_form' %}" class="nav-item"><i class="bi bi-building"></i> Profile</a></li>
+                <li>
+                    <a href="{% url 'cooperatives:profile_form' %}" class="nav-item">
+                        <i class="bi bi-building"></i> <span class="nav-text">Profile</span>
+                    </a>
+                </li>
             {% endif %}
 
-            <li><a href="{% url 'communications:message' %}" class="nav-item"><i class="bi bi-chat-dots-fill"></i> Messages</a></li>
+            <li>
+                <a href="{% url 'communications:message' %}" class="nav-item">
+                    <i class="bi bi-chat-dots-fill"></i> <span class="nav-text">Messages</span>
+                </a>
+            </li>
+            
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
-            <li><a href="{% url 'communications:announcement_form' %}" class="nav-item"><i class="bi bi-megaphone-fill"></i> Announcements</a></li>
+            <li>
+                <a href="{% url 'communications:announcement_form' %}" class="nav-item">
+                    <i class="bi bi-megaphone-fill"></i> <span class="nav-text">Announcements</span>
+                </a>
+            </li>
             {% endif %}
         </ul>
 
         <div class="sidebar-widgets">
-            
+
             <div class="mini-widget">
-                <h4>Calendar <i class="bi bi-calendar4-week"></i></h4>
+                <h4>
+                    <span class="nav-text">Calendar</span> 
+                    <i class="bi bi-calendar4-week"></i>
+                </h4>
                 <div class="mini-calendar-box">
                     <div class="mini-date" id="current-date">{% now "M d" %}</div>
                     <div class="mini-day" id="current-day">{% now "l" %}</div>
@@ -57,21 +93,15 @@
                 </div>
             </div>
 
-            <div class="mini-widget">
-                <h4>Activity</h4>
-                <div class="mini-activity-list">
-                    <div class="mini-activity-item">
-                        <div class="mini-activity-text">
-                            <strong>New Message</strong>
-                            <span>Just now</span>
-                        </div>
-                    </div>
-                    <div class="mini-activity-item">
-                        <div class="mini-activity-text">
-                            <strong>System Update</strong>
-                            <span>2h ago</span>
-                        </div>
-                    </div>
+            <!-- FAQs widget moved into sidebar under Calendar -->
+            <div class="mini-widget" id="sidebar-faq-widget">
+                <h4>
+                    <i class="bi bi-question-circle"></i>
+                    <span class="nav-text" style="margin-left:8px;">FAQs</span>
+                </h4>
+                <div style="padding:8px 12px;">
+                    <div style="font-size:0.9rem; color:var(--text-gray); margin-bottom:6px;">Quick help</div>
+                    <button id="open-faq-from-sidebar" class="btn btn-outline-secondary btn-sm" style="width:100%; text-align:left;">Open FAQs</button>
                 </div>
             </div>
 
@@ -88,10 +118,7 @@
                 <div class="page-title">{% block page_header %}Dashboard Overview{% endblock %}</div>
             </div>
             
-            <div class="search-box">
-                <i class="bi bi-search"></i>
-                <input type="text" placeholder="Search...">
-            </div>
+            <!-- Search box removed per UX request -->
 
             <div class="user-menu">
                 <div class="user-info">
@@ -101,6 +128,19 @@
                 <div class="avatar">
                     {{ request.session.username|first|upper }}
                 </div>
+
+                    <!-- Activity bell (shows recent activity dropdown) -->
+                    <div class="notification-bell" id="notification-bell" style="position:relative;">
+                        <button id="bell-btn" class="btn" title="Activity" style="background:transparent; border:none; color:var(--text-gray); font-size:1.3rem;">
+                            <i class="bi bi-bell-fill"></i>
+                            <span id="activity-badge" class="activity-badge" style="display:none;">0</span>
+                        </button>
+                        <div id="activity-dropdown" class="activity-dropdown" style="display:none; position:absolute; right:0; top:36px; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.08); width:320px; z-index:120;">
+                            <div style="padding:8px 12px; border-bottom:1px solid #f5f5f5; font-weight:700;">Recent Activity</div>
+                            <div id="activity-dropdown-list" style="max-height:260px; overflow:auto;"></div>
+                            <div style="padding:8px 12px; border-top:1px solid #f5f5f5; text-align:center;"><a href="#" class="small">View all</a></div>
+                        </div>
+                    </div>
 
                 <a href="{% url 'users:profile_settings' %}" class="settings-btn-mini" title="Settings">
                     <i class="bi bi-three-dots-vertical"></i>
@@ -144,13 +184,14 @@
         // Real-time clock
         function updateClock() {
             const now = new Date();
-            const hours = now.getHours();
+            let hours = now.getHours();
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
             const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours % 12 || 12;
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
             
-            const timeString = `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
             
             const timeElement = document.getElementById('current-time');
             if (timeElement) {
@@ -158,9 +199,212 @@
             }
         }
         
-        // Update clock immediately and then every second
         updateClock();
         setInterval(updateClock, 1000);
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const activityBadge = document.getElementById('activity-badge');
+    const dropdownList = document.getElementById('activity-dropdown-list');
+    const bellBtn = document.getElementById('bell-btn');
+    const activityDropdown = document.getElementById('activity-dropdown');
+
+    function buildActivityHtml(activities){
+        if(!activities || activities.length === 0){
+            return `<div style="padding:12px; color:#A3AED0;">No recent messages</div>`;
+        }
+        let html = '';
+        activities.forEach(act => {
+            html += `<div style="padding:10px 12px; border-bottom:1px solid #f5f5f5;">
+                        <div style="font-weight:600; color:var(--text-dark);">${act.title}</div>
+                        <div style="font-size:0.8rem; color:#707EAE; margin-top:4px;">${act.sender} · ${act.time}</div>
+                     </div>`;
+        });
+        return html;
+    }
+
+    function setBadge(count){
+        if(!activityBadge) return;
+        if(count && count > 0){
+            activityBadge.textContent = count > 99 ? '99+' : count;
+            activityBadge.style.display = 'inline-block';
+        } else {
+            activityBadge.style.display = 'none';
+        }
+    }
+
+    function loadRecentActivity(){
+        fetch("{% url 'communications:api_recent_activity' %}")
+            .then(r => { if(!r.ok) throw new Error('Network'); return r.json(); })
+            .then(data => {
+                if(data.status === 'success'){
+                    const activities = data.activities || [];
+                    const count = activities.length;
+                    setBadge(count);
+                    const html = buildActivityHtml(activities.slice(0,6));
+                    if(dropdownList && dropdownList.innerHTML !== html) dropdownList.innerHTML = html;
+                }
+            })
+            .catch(err => {
+                console.error('Activity load error', err);
+                if(dropdownList) dropdownList.innerHTML = `<div style="padding:12px; color:red;">Error loading activity</div>`;
+                setBadge(0);
+            });
+    }
+
+    // Toggle dropdown on bell click — load activity only when opening
+    if(bellBtn && activityDropdown){
+        bellBtn.addEventListener('click', function(e){
+            e.stopPropagation();
+            const isOpen = activityDropdown.style.display === 'block';
+            if(!isOpen){
+                // Load latest activity on open
+                loadRecentActivity();
+                activityDropdown.style.display = 'block';
+            } else {
+                activityDropdown.style.display = 'none';
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function(e){
+            if(!activityDropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)){
+                activityDropdown.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+
+<!-- FAQ Modal + mini-chat FAQ -->
+<div class="modal fade" id="faqModal" tabindex="-1" aria-labelledby="faqModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="faqModalLabel">Frequently Asked Questions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="list-group" id="faq-list" role="tablist">
+                            <!-- Static FAQs inserted here -->
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="To reset your password, go to Settings → Password Reset and follow the instructions.">How do I reset my password?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="To create an announcement, go to Announcements in the sidebar and click 'New Announcement'.">How do I post an announcement?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Messages appear in real-time; mark them as seen in the conversation to clear activities.">Why are some activities still showing?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="For support, email support@kooptimizer@gmail.com or use the contact form under About → Contact.">How do I contact support?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Access your profile by clicking on your avatar in the top-right corner and selecting 'Settings'.">How do I edit my profile?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Admins and staff manage accounts in the Accounts module. Officers can view their own profile in the Profile section.">Who can manage user accounts?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="The Data Bank module stores cooperative information and records. Access it from the sidebar under Modules.">What is the Data Bank?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Messages are sent and received through the Messages module in the sidebar. You'll receive notifications for new messages.">How do I send messages?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="Your activity feed updates automatically every 2 seconds. Check the Activity widget in the sidebar.">How often does my activity update?</button>
+                            <button type="button" class="list-group-item list-group-item-action" data-answer="To log out, click the logout button (arrow icon) in the top-right corner and confirm in the modal.">How do I log out?</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <div id="faq-chat" style="min-height:300px; border:1px solid #e9ecef; border-radius:6px; padding:12px; background:#f8fafc; display:flex; flex-direction:column;">
+                            <div id="faq-messages" style="flex:1; overflow:auto; margin-bottom:8px;"></div>
+                            <div id="faq-controls" style="display:flex; gap:8px; align-items:center;">
+                                <input id="faq-input-preview" class="form-control" placeholder="Selected question answer will type here..." readonly />
+                                <button id="faq-clear" class="btn btn-outline-secondary">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <small class="text-muted">Click a question to see an automatic typed answer.</small>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+        const openFaqBtn = document.getElementById('open-faq-btn');
+        const openFaqSidebarBtn = document.getElementById('open-faq-from-sidebar');
+        const faqModalEl = document.getElementById('faqModal');
+        const faqModal = faqModalEl ? new bootstrap.Modal(faqModalEl) : null;
+        const faqList = document.getElementById('faq-list');
+        const faqMessages = document.getElementById('faq-messages');
+        const faqInput = document.getElementById('faq-input-preview');
+        const faqClear = document.getElementById('faq-clear');
+
+        function appendMessage(text, from='system'){
+                const wrap = document.createElement('div');
+                wrap.style.margin = '6px 0';
+                const bubble = document.createElement('div');
+                bubble.style.display = 'inline-block';
+                bubble.style.padding = '8px 12px';
+                bubble.style.borderRadius = '18px';
+                bubble.style.maxWidth = '85%';
+                bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                if(from === 'user'){
+                        bubble.style.background = '#e7f3ff';
+                        bubble.style.alignSelf = 'flex-end';
+                        bubble.style.marginLeft = 'auto';
+                } else {
+                        bubble.style.background = '#ffffff';
+                        bubble.style.alignSelf = 'flex-start';
+                }
+                bubble.textContent = text;
+                wrap.appendChild(bubble);
+                faqMessages.appendChild(wrap);
+                faqMessages.scrollTop = faqMessages.scrollHeight;
+        }
+
+        function typeIntoPreview(text, speed=25){
+                faqInput.value = '';
+                let i = 0;
+                const interval = setInterval(() => {
+                        faqInput.value = text.slice(0, i+1);
+                        i++;
+                        if(i >= text.length){
+                                clearInterval(interval);
+                                // Append final bubble to messages
+                                appendMessage(text, 'system');
+                        }
+                }, speed);
+        }
+
+        function openFaqModalReset(){
+            // reset preview + messages
+            faqInput.value = '';
+            faqMessages.innerHTML = '';
+            document.getElementById('faq-list').querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+            if(faqModal) faqModal.show();
+        }
+
+        if(openFaqBtn) openFaqBtn.addEventListener('click', function(e){ e.preventDefault(); openFaqModalReset(); });
+        if(openFaqSidebarBtn) openFaqSidebarBtn.addEventListener('click', function(e){ e.preventDefault(); openFaqModalReset(); });
+
+        if(faqList){
+                faqList.addEventListener('click', function(e){
+                        const btn = e.target.closest('button');
+                        if(!btn) return;
+                        // mark active
+                        faqList.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+                        btn.classList.add('active');
+
+                        // show user question as a small user bubble
+                        appendMessage(btn.textContent.trim(), 'user');
+
+                        // animate typing of answer in preview then append
+                        const answer = btn.getAttribute('data-answer') || 'Sorry, no answer available.';
+                        typeIntoPreview(answer);
+                });
+        }
+
+        if(faqClear){
+                faqClear.addEventListener('click', function(){
+                        faqMessages.innerHTML = '';
+                        faqInput.value = '';
+                });
+        }
+});
 </script>
 {% endblock %}
