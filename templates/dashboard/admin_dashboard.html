@@ -6,6 +6,7 @@
 {% block extra_head %}
     {{ block.super }}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="{% static 'frontend/admin_dashboard.css' %}">
 {% endblock %}
 
@@ -17,7 +18,6 @@
             <h4 class="subtitle">Lipa City Cooperatives Office</h4>
             <h1>Welcome back, Admin!</h1>
         </div>
-
     </div>
 
     <div class="stats-grid">
@@ -110,125 +110,6 @@
                         <span class="coop-asset">₱ 350M</span>
                     </div>
                 </div>
-                <div class="rank-item">
-                    <span class="rank-num">4</span>
-                    <div class="rank-info">
-                        <span class="coop-name">De La Salle Lipa Coop</span>
-                        <span class="coop-asset">₱ 210M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">5</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Feed Millers Cooperative</span>
-                        <span class="coop-asset">₱ 180M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">6</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Agricultural Cooperative</span>
-                        <span class="coop-asset">₱ 150M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">7</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Credit Cooperative</span>
-                        <span class="coop-asset">₱ 140M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">8</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Transport Cooperative</span>
-                        <span class="coop-asset">₱ 130M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">9</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Fishermen's Cooperative</span>
-                        <span class="coop-asset">₱ 120M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">10</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Women's Cooperative</span>
-                        <span class="coop-asset">₱ 110M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">11</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Consumer Cooperative</span>
-                        <span class="coop-asset">₱ 100M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">12</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Livestock Cooperative</span>
-                        <span class="coop-asset">₱ 90M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">13</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Handicraft Cooperative</span>
-                        <span class="coop-asset">₱ 80M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">14</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Marketing Cooperative</span>
-                        <span class="coop-asset">₱ 70M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">15</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Housing Cooperative</span>
-                        <span class="coop-asset">₱ 60M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">16</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Bakery Cooperative</span>
-                        <span class="coop-asset">₱ 50M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">17</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Eco-Tourism Cooperative</span>
-                        <span class="coop-asset">₱ 40M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">18</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Renewable Energy Cooperative</span>
-                        <span class="coop-asset">₱ 30M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">19</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Youth Cooperative</span>
-                        <span class="coop-asset">₱ 20M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">20</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Organic Farming Cooperative</span>
-                        <span class="coop-asset">₱ 10M</span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -240,10 +121,10 @@
             <div class="header-actions" style="display:flex;align-items:center;gap:0.5rem;">
                 <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters">
                     <i class="bi bi-funnel"></i>
-                    <span class="visually-hidden">Toggle filters</span>
+                    <span>Filter</span>
                 </button>
 
-                <div class="filter-controls">
+                <div class="filter-controls hidden">
                     <select class="form-select-sm" id="categoryFilter">
                         <option value="">All Categories</option>
                         <option value="Micro">Micro</option>
@@ -270,31 +151,27 @@
                         <th>Cooperative Name</th>
                         <th>Category</th>
                         <th>District</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="coopTableBody">
-                    <tr data-category="Micro" data-district="East">
+                    <tr data-category="Micro" data-district="East" onclick="openProfileModal('Consumer Cooperative')">
                         <td><span class="fw-bold text-dark">Consumer Cooperative</span></td>
                         <td><span class="badge-category">Micro</span></td>
                         <td>East</td>
-                        <td><button class="btn-view-profile" data-bs-toggle="modal" data-bs-target="#coopProfileModal">View Profile</button></td>
                     </tr>
-                    <tr data-category="Large" data-district="West">
+                    <tr data-category="Large" data-district="West" onclick="openProfileModal('Plaridel MPC')">
                         <td><span class="fw-bold text-dark">Plaridel MPC</span></td>
                         <td><span class="badge-category">Large</span></td>
                         <td>West</td>
-                        <td><button class="btn-view-profile">View Profile</button></td>
                     </tr>
-                    <tr data-category="Small" data-district="Urban">
+                    <tr data-category="Small" data-district="Urban" onclick="openProfileModal('Agriculture Cooperative')">
                         <td><span class="fw-bold text-dark">Agriculture Cooperative</span></td>
                         <td><span class="badge-category">Small</span></td>
                         <td>Urban</td>
-                        <td><button class="btn-view-profile">View Profile</button></td>
                     </tr>
                 </tbody>
             </table>
-            <div id="noResultsMessage" style="display: none;">No cooperatives found matching the selected filters.</div>
+            <div id="noResultsMessage" style="display: none; padding: 20px; text-align: center; color: #6c757d;">No cooperatives found matching the selected filters.</div>
         </div>
     </div>
 
@@ -310,12 +187,7 @@
             <div class="modal-body p-0">
                 <table class="modal-table">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Position</th>
-                            <th>Gender</th>
-                            <th>Email</th>
-                        </tr>
+                        <tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr>
                     </thead>
                     <tbody>
                         <tr><td>Juan Dela Cruz</td><td>Head Admin</td><td>Male</td><td>juan.admin@lipa.gov.ph</td></tr>
@@ -338,18 +210,13 @@
             <div class="modal-body p-0">
                 <table class="modal-table">
                     <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Position</th>
-                            <th>Gender</th>
-                            <th>Email</th>
-                        </tr>
+                        <tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr>
                     </thead>
                     <tbody>
                         <tr><td>Ana Reyes</td><td>Encoder</td><td>Female</td><td>ana.reyes@lipa.gov.ph</td></tr>
                         <tr><td>Jose Rizal</td><td>Clerk</td><td>Male</td><td>jose.r@lipa.gov.ph</td></tr>
                         <tr><td>Clara Recto</td><td>Secretary</td><td>Female</td><td>clara.recto@lipa.gov.ph</td></tr>
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -363,17 +230,59 @@
                 <h5 class="modal-title">Cooperative Profile</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            
             <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="avatar-circle mb-2">C</div>
-                    <h4>Consumer Cooperative</h4>
-                    <p class="text-muted">Sabang, Lipa City, Batangas</p>
+                <div id="printable-area">
+                    <div class="text-center mb-4">
+                        <div class="avatar-circle mb-2">C</div>
+                        <h4 id="modalCoopName">Consumer Cooperative</h4>
+                        <span class="badge bg-success">Active</span>
+                        <p class="text-muted mt-2">Sabang, Lipa City, Batangas</p>
+                    </div>
+
+                    <section class="info-section mb-4">
+                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">General Information</h6>
+                        <div class="info-grid">
+                            <div><strong>CDA No:</strong> 1414-060923055</div>
+                            <div><strong>Category:</strong> Micro</div>
+                            <div><strong>District:</strong> East</div>
+                            <div><strong>Email:</strong> consumercoop@gmail.com</div>
+                            <div><strong>Contact:</strong> 09929380925</div>
+                            <div><strong>Compliance:</strong> <span class="text-success fw-bold">Yes</span></div>
+                        </div>
+                    </section>
+
+                    <section class="info-section mb-4">
+                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">Financials (2024)</h6>
+                        <div class="info-grid">
+                            <div><strong>Assets:</strong> ₱ 356,964.68</div>
+                            <div><strong>Paid Up Capital:</strong> ₱ 108,243.78</div>
+                            <div><strong>Net Surplus:</strong> ₱ 10,653.54</div>
+                        </div>
+                    </section>
+
+                    <section class="info-section">
+                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">Officers</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr><th>Name</th><th>Position</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Isabel Delacion</td><td>Chairperson</td></tr>
+                                    <tr><td>Jasmin Esperida</td><td>Vice Chairperson</td></tr>
+                                    <tr><td>Maria Lopez</td><td>Secretary</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
-                <div class="info-grid">
-                    <div><strong>CDA No:</strong> 1414-060923055</div>
-                    <div><strong>Category:</strong> Micro</div>
-                    <div><strong>Assets:</strong> ₱ 356,964.68</div>
-                    <div><strong>Members:</strong> 120</div>
+
+                <div class="mt-4 text-end">
+                    <button class="btn btn-sm btn-outline-secondary" id="downloadPdfBtn">
+                        <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                    </button>
+                    <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -391,13 +300,7 @@
                 label: 'Number of Cooperatives',
                 data: [12, 19, 8, 5, 4, 10],
                 backgroundColor: [
-                             // darkest red
-                    '#a71b20',
-                    '#7f0f12',
-                    '#d8443a',
-                    '#e95b4b',
-                    '#f27a6a',
-                    '#c62828'  // lightest red
+                    '#a71b20', '#7f0f12', '#d8443a', '#e95b4b', '#f27a6a', '#c62828'
                 ],
                 borderRadius: 6,
             }]
@@ -405,9 +308,7 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
+            plugins: { legend: { display: false } },
             scales: {
                 y: { beginAtZero: true, grid: { display: false } },
                 x: { grid: { display: false } }
@@ -415,15 +316,15 @@
         }
     });
 
-    // Filter functionality
-    document.getElementById('categoryFilter').addEventListener('change', filterTable);
-    document.getElementById('districtFilter').addEventListener('change', filterTable);
-
-    // Toggle filter controls visibility when clicking the icon
-    document.getElementById('filterToggle').addEventListener('click', function(){
-        document.querySelector('.filter-controls').classList.toggle('hidden');
+    // Filter Toggle
+    const filterToggle = document.getElementById('filterToggle');
+    const filterControls = document.querySelector('.filter-controls');
+    
+    filterToggle.addEventListener('click', () => {
+        filterControls.classList.toggle('hidden');
     });
 
+    // Table Filtering Logic
     function filterTable() {
         const categoryFilter = document.getElementById('categoryFilter').value;
         const districtFilter = document.getElementById('districtFilter').value;
@@ -445,5 +346,41 @@
 
         document.getElementById('noResultsMessage').style.display = hasResults ? 'none' : 'block';
     }
+
+    document.getElementById('categoryFilter').addEventListener('change', filterTable);
+    document.getElementById('districtFilter').addEventListener('change', filterTable);
+
+    // Open Profile Modal Logic
+    window.openProfileModal = function(coopName) {
+        // Update modal content dynamically based on clicked row (Mock Logic)
+        document.getElementById('modalCoopName').textContent = coopName;
+        
+        const modal = new bootstrap.Modal(document.getElementById('coopProfileModal'));
+        modal.show();
+    }
+
+    // PDF Download Logic
+    document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+        const element = document.getElementById('printable-area');
+        const coopName = document.getElementById('modalCoopName').textContent.trim();
+        
+        const opt = {
+            margin: 0.5,
+            filename: `${coopName}_Profile.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // visual feedback
+        const originalText = this.innerHTML;
+        this.innerHTML = 'Generating...';
+        this.disabled = true;
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            this.innerHTML = originalText;
+            this.disabled = false;
+        });
+    });
 </script>
 {% endblock %}

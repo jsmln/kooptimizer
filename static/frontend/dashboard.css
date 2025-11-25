@@ -136,7 +136,7 @@ a { text-decoration: none; }
 .nav-section-title {
     font-size: 0.7rem;
     text-transform: uppercase;
-    color: var(--text-gray);
+    color: var(--text-dark);
     margin: 15px 0 5px 0;
     font-weight: 700;
     letter-spacing: 0.5px;
@@ -172,7 +172,7 @@ a { text-decoration: none; }
     
     margin: 0 10px;
     border-radius: 10px;
-    color: var(--text-gray);
+    color: var(--text-dark);
     font-weight: 500;
     font-size: 0.95rem;
     transition: all 0.2s ease;
@@ -404,7 +404,7 @@ a { text-decoration: none; }
 }
 .user-info { text-align: right; line-height: 1.2; }
 .u-name { display: block; font-weight: 700; font-size: 0.85rem; color: var(--text-dark); }
-.u-role { display: block; font-size: 0.7rem; color: var(--text-gray); }
+.u-role { display: block; font-size: 0.7rem; color: var(--text-dark); }
 .user-menu .avatar {
     width: 32px; height: 32px; border-radius: 50%;
     background: var(--brand-red); color: white;
@@ -595,7 +595,7 @@ a { text-decoration: none; }
 .profile-avatar { width:36px; height:36px; border-radius:50%; background:var(--brand-red); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; }
 .profile-info { display:flex; flex-direction:column; text-align:left; line-height:1.2; }
 .profile-name { font-weight:600; font-size:0.9rem; color:var(--text-dark); }
-.profile-role { font-size:0.75rem; color:var(--text-gray); }
+.profile-role { font-size:0.75rem; color:var(--text-dark); }
 .dropdown-arrow { color:var(--text-gray); font-size:0.8rem; transition:transform 0.2s; }
 .profile-dropdown.active .dropdown-arrow { transform:rotate(180deg); }
 .dropdown-menu-custom { position:absolute; top:calc(100% + 8px); right:0; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); min-width:200px; opacity:0; visibility:hidden; transform:translateY(-10px); transition:all 0.2s ease; z-index:1000; }
