@@ -228,11 +228,13 @@ a { text-decoration: none; }
 /* --- SIDEBAR WIDGETS (Bottom) --- */
 .sidebar-widgets {
     margin-top: auto;
-    padding: 20px 25px; 
+    /* Reduced padding (was 20px 25px) */
+    padding: 10px 25px; 
     border-top: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    /* Reduced gap between widgets (was 20px) */
+    gap: 10px; 
     opacity: 0;
     visibility: hidden;
     height: 0;
@@ -249,9 +251,10 @@ a { text-decoration: none; }
 
 /* Widget Styles */
 .mini-widget h4 {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--text-dark);
-    margin: 0 0 10px 0;
+    /* Reduced margin (was 10px) */
+    margin: 0 0 6px 0; 
     text-transform: uppercase;
     font-weight: 700;
     display: flex;
@@ -314,13 +317,26 @@ a { text-decoration: none; }
 
 .mini-calendar-box {
     background: #f8f9fa;
-    padding: 15px;
+    /* Drastically reduced padding (was 15px) */
+    padding: 8px 10px; 
     border-radius: 12px;
     text-align: center;
     border: 1px solid #eee;
 }
-.mini-date { font-size: 1.1rem; font-weight: 800; color: var(--brand-red); }
-.mini-day { font-size: 0.85rem; color: var(--text-dark); margin-top: 2px; }
+.mini-date { 
+    /* Smaller font (was 1.1rem) */
+    font-size: 0.95rem; 
+    font-weight: 800; 
+    color: var(--brand-red); 
+    line-height: 1.1;
+}
+
+.mini-day { 
+    /* Smaller font (was 0.85rem) */
+    font-size: 0.75rem; 
+    color: var(--text-dark); 
+    margin-top: 0; 
+}
 
 .mini-activity-item {
     display: flex;
