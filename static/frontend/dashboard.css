@@ -37,7 +37,7 @@ a { text-decoration: none; }
     border-right: 1px solid #edf2f7;
     overflow-x: hidden; 
     overflow-y: auto;
-    z-index: 100;
+    z-index: 9999; /* ensure sidebar sits above other UI */
     
     /* IMPORTANT: Ensure items stretch to full width, do not center them */
     align-items: stretch; 
@@ -75,6 +75,20 @@ a { text-decoration: none; }
     height: 60px;
     white-space: nowrap;
     width: 100%;
+}
+
+/* Center logo when sidebar is collapsed (not hovered) */
+.sidebar:not(:hover) .logo-area {
+    justify-content: center;
+    padding-left: 0;
+}
+
+.sidebar:not(:hover) .logo-area .sidebar-logo {
+    margin-left: 0;
+}
+
+.sidebar:not(:hover) .logo-text {
+    display: none;
 }
 
 .sidebar-logo { 
@@ -245,6 +259,59 @@ a { text-decoration: none; }
     justify-content: space-between;
 }
 
+/* Make widget icons (like FAQs) visible when sidebar is collapsed
+   and match the look of the nav icons. Keep the text hidden until hover. */
+.mini-widget h4 i {
+    font-size: 1.5rem;
+    color: var(--text-gray);
+    min-width: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+.mini-widget .nav-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.18s linear, width 0.18s linear;
+}
+
+.sidebar:hover .mini-widget .nav-text {
+    opacity: 1;
+    width: auto;
+    overflow: visible;
+}
+
+/* Reduce the calendar icon size so it appears smaller than module icons */
+.mini-widget h4 .bi-calendar4-week {
+    font-size: 1.1rem;
+    color: var(--text-gray);
+}
+
+/* Ensure FAQ icon remains visible when sidebar is collapsed */
+.sidebar:not(:hover) #sidebar-faq-widget h4 i {
+    opacity: 1;
+    color: var(--text-gray);
+}
+
+/* Make FAQ icon always visible and centered in collapsed state */
+.sidebar:not(:hover) #sidebar-faq-widget h4 {
+    justify-content: center;
+}
+.sidebar:not(:hover) #sidebar-faq-widget h4 i,
+#sidebar-faq-widget h4 i {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem !important;
+    color: var(--text-gray) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
 .mini-calendar-box {
     background: #f8f9fa;
     padding: 15px;
@@ -348,6 +415,26 @@ a { text-decoration: none; }
 .settings-btn-mini { color: #A3AED0; font-size: 1.2rem; margin-left: 8px; cursor: pointer; display: flex; align-items: center; }
 .settings-btn-mini:hover { color: #a91e2c; }
 
+/* Notification bell badge */
+.notification-bell { position: relative; }
+.activity-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--brand-red);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    border-radius: 999px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1;
+}
+
+/* activity dropdown tweaks (fallback in template for positioning) */
+.activity-dropdown { display: none; }
+.activity-dropdown .mini-activity-item { padding: 10px 12px; }
+
 /* Content Area */
 .content-scrollable {
     flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 30px;
@@ -366,7 +453,7 @@ a { text-decoration: none; }
         position: fixed; width: 260px; height: 100%; 
         transform: translateX(-100%); transition: 0.3s; 
         box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-        z-index: 100;
+        z-index: 10001; /* make mobile sidebar overlay everything */
     }
     
     .sidebar-close { 
@@ -399,6 +486,16 @@ a { text-decoration: none; }
         width: 100%;
         flex-basis: 100%;
         margin-top: 10px;
+    }
+
+    /* On mobile, always show sidebar text labels (dont hide via opacity/width) */
+    .sidebar .nav-text,
+    .sidebar .logo-text,
+    .sidebar .mini-widget .nav-text {
+        opacity: 1 !important;
+        visibility: visible !important;
+        width: auto !important;
+        overflow: visible !important;
     }
     
     .user-menu {
