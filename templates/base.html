@@ -43,30 +43,58 @@
             <h1>KoopTimizer</h1>
         </div>
        <nav>
-            <ul>
-                {% if request.session.user_id and not request.session.pending_verification_user_id %}
-                {% if request.session.role == 'admin' or request.session.role == 'staff' or request.session.role == 'officer'%}
-                    <li class="logout-button">
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">Logout</a>
-                    </li>
-                {% endif %}
-                {% elif not request.session.pending_verification_user_id %}
+            {% if request.session.user_id and not request.session.pending_verification_user_id %}
+            <div class="topbar-actions" style="display:flex; align-items:center; gap:10px;">
+                <!-- Notification bell (loads activity on click) -->
+                <div class="notification-bell" style="position:relative;">
+                    <button id="global-bell-btn" class="btn" title="Activity" style="background:transparent; border:none; color:var(--text-dark); font-size:1.25rem;">
+                        <i class="bi bi-bell-fill"></i>
+                        <span id="global-activity-badge" class="activity-badge" style="display:none;">0</span>
+                    </button>
+                    <div id="global-activity-dropdown" class="activity-dropdown" style="display:none; position:absolute; right:0; top:36px; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.08); width:320px; z-index:120;">
+                        <div style="padding:8px 12px; border-bottom:1px solid #f5f5f5; font-weight:700;">Recent Activity</div>
+                        <div id="global-activity-dropdown-list" style="max-height:260px; overflow:auto;"></div>
+                        <div style="padding:8px 12px; border-top:1px solid #f5f5f5; text-align:center;"><a href="#" class="small">View all</a></div>
+                    </div>
+                </div>
+
+                <!-- Profile dropdown (uniform across modules) -->
+                <div class="profile-dropdown" style="position:relative;">
+                    <button id="global-profile-btn" class="btn" style="display:flex; align-items:center; gap:8px; background:transparent; border:none;">
+                        <div class="avatar" style="width:32px; height:32px; border-radius:50%; background:var(--brand-red); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">{{ request.session.username|first|upper }}</div>
+                        <div style="text-align:left; line-height:1;">
+                            <div style="font-weight:600; font-size:0.9rem; color:var(--text-dark);">{{ request.session.username }}</div>
+                            <div style="font-size:0.75rem; color:var(--text-gray);">{{ request.session.role|capfirst }}</div>
+                        </div>
+                    </button>
+
+                    <div id="global-profile-dropdown" style="display:none; position:absolute; right:0; top:48px; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 12px 30px rgba(0,0,0,0.08); width:240px; z-index:120;">
+                        <div style="padding:12px; border-bottom:1px solid #f5f5f5; display:flex; gap:10px; align-items:center;">
+                            <div class="avatar" style="width:40px; height:40px; border-radius:50%; background:var(--brand-red); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;">{{ request.session.username|first|upper }}</div>
+                            <div>
+                                <div style="font-weight:700;">{{ request.session.username }}</div>
+                                <div style="font-size:0.8rem; color:#707EAE;">{{ request.session.role|capfirst }}</div>
+                            </div>
+                        </div>
+                        <div style="padding:8px 0;">
+                            <a href="{% url 'users:profile_settings' %}" class="dropdown-item" style="display:block; padding:10px 14px;">Settings</a>
+                            <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#logoutModal" style="display:block; padding:10px 14px;">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+                <ul>
                     <li>
-                        <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}"
-                           {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}style="pointer-events:none;opacity:0.5;cursor:not-allowed;" aria-disabled="true"{% endif %}>
-                            Home
-                        </a>
+                        <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
                     </li>
                     <li>
-                        <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}"
-                           {% if request.session.login_lockout_until and request.session.login_lockout_until > now %}style="pointer-events:none;opacity:0.5;cursor:not-allowed;" aria-disabled="true"{% endif %}>
-                            Login
-                        </a>
+                        <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">Login</a>
                     </li>
                     <li><a href="{% url 'download' %}" class="{% if request.resolver_match.url_name == 'download' %}active{% endif %}">Download</a></li>
                     <li><a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
-                {% endif %}
-            </ul>
+                </ul>
+            {% endif %}
         </nav>
     </header>
     {% endblock %}
@@ -139,6 +167,41 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+
+    <!-- Global activity/profile dropdown JS (used across modules) -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function(){
+        // Activity bell logic
+        const bellBtn = document.getElementById('global-bell-btn');
+        const badge = document.getElementById('global-activity-badge');
+        const dropdown = document.getElementById('global-activity-dropdown');
+        const list = document.getElementById('global-activity-dropdown-list');
+
+        function setGlobalBadge(n){ if(!badge) return; if(n>0){ badge.textContent = n>99? '99+': n; badge.style.display='inline-block'; } else badge.style.display='none'; }
+
+        function buildHtml(items){ if(!items || items.length===0) return '<div style="padding:12px;color:#A3AED0;">No recent messages</div>'; return items.map(it=>`<div style="padding:10px 12px;border-bottom:1px solid #f5f5f5;"><div style="font-weight:600;color:var(--text-dark);">${it.title}</div><div style="font-size:0.8rem;color:#707EAE;margin-top:4px;">${it.sender} · ${it.time}</div></div>`).join(''); }
+
+        function loadActivity(){
+            fetch('{% url "communications:api_recent_activity" %}')
+            .then(r=>{ if(!r.ok) throw new Error('Network'); return r.json(); })
+            .then(data=>{ if(data.status==='success'){ const acts=data.activities||[]; setGlobalBadge(acts.length); if(list) list.innerHTML = buildHtml(acts.slice(0,6)); }})
+            .catch(e=>{ console.error('Global activity error',e); if(list) list.innerHTML = '<div style="padding:12px;color:red;">Error loading activity</div>'; setGlobalBadge(0); });
+        }
+
+        if(bellBtn && dropdown){
+            bellBtn.addEventListener('click', function(e){ e.stopPropagation(); const open = dropdown.style.display==='block'; if(!open){ loadActivity(); dropdown.style.display='block'; } else dropdown.style.display='none'; });
+            document.addEventListener('click', function(e){ if(!dropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) dropdown.style.display='none'; });
+        }
+
+        // Profile dropdown
+        const profBtn = document.getElementById('global-profile-btn');
+        const profDropdown = document.getElementById('global-profile-dropdown');
+        if(profBtn && profDropdown){
+            profBtn.addEventListener('click', function(e){ e.stopPropagation(); profDropdown.style.display = profDropdown.style.display === 'block' ? 'none' : 'block'; });
+            document.addEventListener('click', function(e){ if(!profDropdown.contains(e.target) && e.target !== profBtn && !profBtn.contains(e.target)) profDropdown.style.display='none'; });
+        }
+    });
+    </script>
 
     <script>
         // NProgress Logic

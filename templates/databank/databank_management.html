@@ -9,36 +9,9 @@
     <link rel="stylesheet" href="{% static 'frontend/databank_management.css' %}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-    <style>
-        /* --- INTEGRATED PREVIEW MODAL STYLES (From Messages) --- */
-        .preview-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); display: flex; align-items: center; justify-content: center; z-index: 1200; opacity: 0; transition: opacity 0.3s ease; display: none; }
-        .preview-overlay.show { opacity: 1; display: flex; }
-        .preview-content { background: #fff; width: 90vw; max-width: 1200px; height: 85vh; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5); }
-        .preview-header { background: #f8f9fa; padding: 12px 16px; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-        .preview-title { font-weight: 600; font-size: 0.95rem; color: #2B3674; margin-right: 15px; }
-        .preview-body { flex: 1; overflow: auto; display: flex; align-items: flex-start; justify-content: center; background: #f8f9fa; padding: 20px; position: relative; }
-        .preview-body canvas { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-        .preview-controls button { padding: 6px 12px; border: none; border-radius: 8px; background: #6c757d; color: white; cursor: pointer; font-size: 0.85rem; margin-left: 5px; }
-        .preview-controls button:hover { background: #5a6268; }
-        
-        /* Table Attachment Button Style */
-        .btn-view-attach {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            border-radius: 4px;
-            border: 1px solid #2B3674;
-            color: #2B3674;
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-view-attach:hover {
-            background: #2B3674;
-            color: white;
-        }
-        .status-no { color: #dc3545; font-style: italic; }
-    </style>
+    <script>
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -46,12 +19,13 @@
 <div class="databank-container">
     
     {% if error %}
-    <div class="alert alert-danger" role="alert" style="margin: 20px; padding: 15px; border-radius: 8px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;">
+    <div class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-triangle-fill"></i> <strong>System Error:</strong> {{ error }}
     </div>
     {% endif %}
-    <div class="databank-toolbar">
-        <div class="toolbar-left">
+
+    <div class="databank-header">
+        <div class="tab-buttons">
             <button class="add-btn" id="addCoopBtn">
                 <i class="bi bi-plus-circle"></i> Add Cooperative
             </button>
@@ -59,49 +33,48 @@
                 <i class="bi bi-funnel"></i> Filter
             </button>
         </div>
-        <div class="search-bar">
-            <i class="bi bi-search"></i>
-            <input type="text" id="searchInput" placeholder="Search cooperatives...">
+
+        <div class="table-controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search cooperatives...">
         </div>
     </div>
 
-    <div class="table-section">
+    <div class="table-section active">
         <div class="table-wrapper">
-            <div class="table-scroll">
-                <table id="coop-table" role="table" aria-label="Cooperative list">
-                    <thead>
-                        <tr>
-                            <th>Cooperative Name</th>
-                            <th>Category</th>
-                            <th>District</th>
-                            <th>Address</th>
-                            <th>Mobile Number</th>
-                            <th>Email</th>
-                            <th>CDA Registration Number</th>
-                            <th>CDA Registration Date</th>
-                            <th>LCCDC Membership</th>
-                            <th>LCCDC Membership Date</th>
-                            <th>Operation Area</th>
-                            <th>Business Activity</th>
-                            <th>Board of Directors Count</th>
-                            <th>Salaried Employees Count</th>
-                            <th>COC Attachment</th>
-                            <th>COTE Attachment</th>
-                            <th>Assets (₱)</th>
-                            <th>Paid-Up Capital (₱)</th>
-                            <th>Net Surplus (₱)</th>
-                            <th>Financial Attachments</th>
-                            <th>Reporting Year</th>
-                            <th>Approval Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            <table id="coop-table">
+                <thead>
+                    <tr>
+                        <th class="sticky-col">Cooperative Name</th>
+                        <th>Category</th>
+                        <th>District</th>
+                        <th>Address</th>
+                        <th>Mobile Number</th>
+                        <th>Email</th>
+                        <th>CDA Registration Number</th>
+                        <th>CDA Registration Date</th>
+                        <th>LCCDC Membership</th>
+                        <th>LCCDC Membership Date</th>
+                        <th>Operation Area</th>
+                        <th>Business Activity</th>
+                        <th>Board of Directors Count</th>
+                        <th>Salaried Employees Count</th>
+                        <th>COC Attachment</th>
+                        <th>COTE Attachment</th>
+                        <th>Assets (₱)</th>
+                        <th>Paid-Up Capital (₱)</th>
+                        <th>Net Surplus (₱)</th>
+                        <th>Financial Attachments</th>
+                        <th>Reporting Year</th>
+                        <th>Approval Status</th>
+                    </tr>
+                </thead>
+                <tbody>
                     {% for coop in cooperatives %}
                     <tr data-modal-target="profile-modal" data-coop-id="{{ coop.coop_id }}">
-                        <td><strong>{{ coop.cooperative_name }}</strong></td>
+                        <td class="sticky-col"><strong>{{ coop.cooperative_name }}</strong></td>
                         <td>{% if coop.category %}<span class="badge-category">{{ coop.category }}</span>{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
                         <td>{{ coop.district|default:"N/A" }}</td>
-                        <td class="address-cell">{{ coop.address|default:"N/A" }}</td>
+                        <td class="address-cell" title="{{ coop.address }}">{{ coop.address|default:"N/A" }}</td>
                         <td class="contact-cell">{{ coop.mobile_number|default:"N/A" }}</td>
                         <td>{{ coop.email|default:"N/A" }}</td>
                         <td>{{ coop.cda_registration_number|default:"N/A" }}</td>
@@ -123,8 +96,7 @@
 
                         <td class="text-center">
                             {% if coop.coc_attachment_exists %}
-                                <button class="btn-view-attach" 
-                                        onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'coc' %}', 'COC - {{ coop.cooperative_name }}', 'application/pdf')">
+                                <button class="btn-view-attach" onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'coc' %}', 'COC - {{ coop.cooperative_name }}', 'application/pdf')">
                                     <i class="bi bi-eye"></i> View
                                 </button>
                             {% else %}
@@ -134,8 +106,7 @@
 
                         <td class="text-center">
                             {% if coop.cote_attachment_exists %}
-                                <button class="btn-view-attach" 
-                                        onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'cote' %}', 'COTE - {{ coop.cooperative_name }}', 'application/pdf')">
+                                <button class="btn-view-attach" onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'cote' %}', 'COTE - {{ coop.cooperative_name }}', 'application/pdf')">
                                     <i class="bi bi-eye"></i> View
                                 </button>
                             {% else %}
@@ -149,8 +120,7 @@
 
                         <td class="text-center">
                             {% if coop.financial_attachment_exists %}
-                                <button class="btn-view-attach" 
-                                        onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'financial' %}', 'Financials - {{ coop.cooperative_name }}', 'application/pdf')">
+                                <button class="btn-view-attach" onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'financial' %}', 'Financials - {{ coop.cooperative_name }}', 'application/pdf')">
                                     <i class="bi bi-eye"></i> View
                                 </button>
                             {% else %}
@@ -174,32 +144,93 @@
                         <td colspan="22" class="text-center py-4">No data found in the database.</td>
                     </tr>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
-        
         <div class="table-footer">
-            <div>Showing <strong>{{ cooperatives|length }}</strong> cooperatives</div>
+            <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
         </div>
     </div>
 </div>
 
-<div id="preview-modal" class="preview-overlay" style="display:none;">
-    <div class="preview-content" role="dialog" aria-modal="true">
-        <div class="preview-header">
-            <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                <div class="preview-title" id="preview-title">Preview</div>
+<button class="ocr-toggle-btn" id="ocrToggleBtn" title="Open OCR Assistant">
+    <i class="bi bi-upc-scan"></i>
+</button>
+
+<div class="ocr-drawer-wrapper">
+    <div class="ocr-drawer" id="ocrDrawer">
+        <div class="ocr-drawer-header">
+            <h3><i class="bi bi-upc-scan me-2"></i>OCR Assistant</h3>
+            <button class="ocr-drawer-close" id="ocrDrawerClose">&times;</button>
+        </div>
+        
+        <div class="ocr-drawer-body">
+            <div id="camera-container" style="display: none; margin-bottom: 20px; text-align: center;">
+                <video id="camera-video" autoplay playsinline style="width: 100%; border-radius: 12px; border: 2px solid #a91e2c; background: black;"></video>
+                <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
+                    <button id="capture-btn" class="btn-apply" style="padding: 8px 20px;">Capture</button>
+                    <button id="cancel-camera-btn" class="btn-clear" style="padding: 8px 20px;">Cancel</button>
+                </div>
             </div>
-            <div class="preview-controls">
-                <button id="zoomOut">−</button>
-                <span id="zoomLevel" style="font-size:0.85rem; min-width:45px; text-align:center;">100%</span>
-                <button id="zoomIn">+</button>
-                <button id="preview-close" style="background:#dc3545;">✕</button>
+
+            <div id="upload-container">
+                <p class="text-muted small mb-3" style="border-left: 3px solid #a91e2c; padding-left: 10px; background: #fff5f6; padding: 8px; border-radius: 4px;">
+                    Scan documents using your phone camera or upload an image to auto-fill forms.
+                </p>
+
+                <div class="ocr-upload-area" id="ocrUploadArea">
+                    <i class="bi bi-cloud-upload"></i>
+                    <h5>Drag & Drop Image</h5>
+                    <p class="text-muted small mb-0">or click to browse</p>
+                    <input type="file" id="ocrFileInput" accept="image/*" style="display: none;">
+                    <input type="file" id="mobileCameraInput" accept="image/*" capture="environment" style="display: none;">
+                </div>
+                
+                <div class="ocr-btn-group">
+                    <button class="ocr-action-btn" id="ocrUploadBtn">
+                        <i class="bi bi-upload"></i> <span>Upload Image</span>
+                    </button>
+                    <button class="ocr-action-btn" id="ocrCameraBtn">
+                        <i class="bi bi-camera-fill"></i> <span>Scan / Camera</span>
+                    </button>
+                    <button class="ocr-action-btn" id="ocrPasteBtn">
+                        <i class="bi bi-clipboard"></i> <span>Paste</span>
+                    </button>
+                    <button class="ocr-action-btn" id="ocrScreenshotBtn">
+                        <i class="bi bi-display"></i> <span>Screenshot</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="ocr-loading" id="ocrLoading">
+                <div class="spinner-border" role="status"></div>
+                <p class="mt-2 text-muted">Scanning text...</p>
+            </div>
+            
+            <div class="ocr-result-area" id="ocrResultArea" style="display: none;">
+                <label class="form-label fw-bold">Extracted Data:</label>
+                <textarea class="ocr-result-text" id="ocrResultText"></textarea>
+                <div class="ocr-result-actions">
+                    <button class="btn-apply" id="ocrApplyBtn">Apply</button>
+                    <button class="btn-clear" id="ocrClearBtn">Clear</button>
+                </div>
             </div>
         </div>
-        <div class="preview-body" id="preview-body">
+    </div>
+</div>
+
+<div id="preview-modal" class="preview-overlay">
+    <div class="preview-content">
+        <div class="preview-header">
+            <span class="preview-title" id="preview-title">Document Preview</span>
+            <div class="preview-controls">
+                <button id="zoomOut"><i class="bi bi-dash"></i></button>
+                <span id="zoomLevel">100%</span>
+                <button id="zoomIn"><i class="bi bi-plus"></i></button>
+                <button id="preview-close"><i class="bi bi-x-lg"></i></button>
             </div>
+        </div>
+        <div id="preview-body" class="preview-body"></div>
     </div>
 </div>
 
@@ -209,60 +240,238 @@
             <h3>Cooperative Profile</h3>
             <button class="modal-close-btn">&times;</button>
         </div>
-        <div class="modal-body">
-            <p class="text-center text-muted">Detailed view logic goes here based on row click.</p>
+        <div class="modal-scroll-area">
+            <div class="modal-body">
+                <section class="info-section">
+                    <h5 class="section-title">Cooperative Details</h5>
+                    <p>Loading details...</p>
+                </section>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // ========================================
-    // ATTACHMENT PREVIEW LOGIC
-    // ========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // --- OCR LOGIC ---
+    const ocrToggleBtn = document.getElementById('ocrToggleBtn');
+    const ocrDrawer = document.getElementById('ocrDrawer');
+    const ocrDrawerClose = document.getElementById('ocrDrawerClose');
+    const uploadContainer = document.getElementById('upload-container');
+    const cameraContainer = document.getElementById('camera-container');
+    const videoElement = document.getElementById('camera-video');
+    const captureBtn = document.getElementById('capture-btn');
+    const cancelCameraBtn = document.getElementById('cancel-camera-btn');
+    const ocrUploadArea = document.getElementById('ocrUploadArea');
+    const ocrFileInput = document.getElementById('ocrFileInput');
+    const mobileCameraInput = document.getElementById('mobileCameraInput');
+    const ocrUploadBtn = document.getElementById('ocrUploadBtn');
+    const ocrCameraBtn = document.getElementById('ocrCameraBtn');
+    const ocrPasteBtn = document.getElementById('ocrPasteBtn');
+    const ocrLoading = document.getElementById('ocrLoading');
+    const ocrResultArea = document.getElementById('ocrResultArea');
+    const ocrResultText = document.getElementById('ocrResultText');
+    const ocrClearBtn = document.getElementById('ocrClearBtn');
+
+    let videoStream = null;
+
+    function toggleDrawer(open) {
+        if (open) ocrDrawer.classList.add('open');
+        else { ocrDrawer.classList.remove('open'); stopCamera(); }
+    }
+    
+    if(ocrToggleBtn) ocrToggleBtn.addEventListener('click', () => toggleDrawer(true));
+    if(ocrDrawerClose) ocrDrawerClose.addEventListener('click', () => toggleDrawer(false));
+
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if(ocrCameraBtn) ocrCameraBtn.addEventListener('click', () => {
+        if (isMobile) mobileCameraInput.click();
+        else startWebcam();
+    });
+
+    if(mobileCameraInput) mobileCameraInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) processImageFile(e.target.files[0]);
+    });
+
+    async function startWebcam() {
+        try {
+            uploadContainer.style.display = 'none';
+            ocrResultArea.style.display = 'none';
+            cameraContainer.style.display = 'block';
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            videoElement.srcObject = videoStream;
+        } catch (err) { alert("Camera access denied."); stopCamera(); }
+    }
+
+    function stopCamera() {
+        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
+        if(cameraContainer) cameraContainer.style.display = 'none';
+        if(uploadContainer) uploadContainer.style.display = 'block';
+    }
+
+    if(cancelCameraBtn) cancelCameraBtn.addEventListener('click', stopCamera);
+
+    if(captureBtn) captureBtn.addEventListener('click', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        canvas.getContext('2d').drawImage(videoElement, 0, 0);
+        stopCamera();
+        processBase64Image(canvas.toDataURL('image/jpeg'));
+    });
+
+    if(ocrUploadArea) ocrUploadArea.addEventListener('click', () => ocrFileInput.click());
+    if(ocrUploadBtn) ocrUploadBtn.addEventListener('click', () => ocrFileInput.click());
+    if(ocrFileInput) ocrFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) processImageFile(e.target.files[0]);
+    });
+
+    if (ocrPasteBtn) ocrPasteBtn.addEventListener('click', async () => {
+        try {
+            const items = await navigator.clipboard.read();
+            for (const item of items) {
+                for (const type of item.types) {
+                    if (type.startsWith('image/')) {
+                        const blob = await item.getType(type);
+                        const reader = new FileReader();
+                        reader.onload = (e) => processBase64Image(e.target.result);
+                        reader.readAsDataURL(blob);
+                        return;
+                    }
+                }
+            }
+            alert("No image found.");
+        } catch (e) { alert("Clipboard access denied."); }
+    });
+
+    function compressImage(fileOrBlob, maxWidth = 1000, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(fileOrBlob);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width; let height = img.height;
+                    if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob((blob) => { if (blob) resolve(blob); else reject(new Error("Compression failed")); }, 'image/jpeg', quality);
+                };
+            };
+        });
+    }
+
+    function showLoading(show) {
+        if (show) { ocrLoading.style.display = 'block'; ocrResultArea.style.display = 'none'; }
+        else { ocrLoading.style.display = 'none'; }
+    }
+
+    function displayResult(text) { ocrResultText.value = text; ocrResultArea.style.display = 'block'; }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function processImageFile(file) {
+        showLoading(true);
+        try {
+            const compressedBlob = await compressImage(file);
+            const formData = new FormData();
+            formData.append('image', compressedBlob, "scan.jpg");
+            const res = await fetch('{% url "databank:process_ocr" %}', {
+                method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: formData
+            });
+            const data = await res.json();
+            if (data.success) displayResult(data.text);
+            else alert('OCR Failed: ' + (data.error || 'Unknown error'));
+        } catch (e) { console.error(e); alert('Error processing image.'); } 
+        finally { showLoading(false); }
+    }
+
+    async function processBase64Image(base64) {
+        const res = await fetch(base64);
+        const blob = await res.blob();
+        processImageFile(blob);
+    }
+
+    if(ocrClearBtn) ocrClearBtn.addEventListener('click', () => {
+        ocrResultText.value = ''; ocrResultArea.style.display = 'none';
+        if(ocrFileInput) ocrFileInput.value = '';
+    });
+
+    // --- TABLE SEARCH ---
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#coop-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+
+    // --- MODAL LOGIC ---
+    const profileModal = document.getElementById('profile-modal');
     const previewModal = document.getElementById('preview-modal');
+    
+    document.querySelectorAll('.modal-close-btn, #preview-close').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const modal = e.target.closest('.modal-overlay') || e.target.closest('.preview-overlay');
+            if(modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
+        });
+    });
+
+    if (profileModal) {
+        document.querySelector('#coop-table tbody').addEventListener('click', function(e) {
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            const row = e.target.closest('tr[data-modal-target]');
+            if (row) { profileModal.style.display = 'flex'; setTimeout(() => profileModal.classList.add('show'), 10); }
+        });
+    }
+
+    // --- PDF PREVIEW ---
     const previewBody = document.getElementById('preview-body');
-    const previewClose = document.getElementById('preview-close');
     const zoomInBtn = document.getElementById('zoomIn');
     const zoomOutBtn = document.getElementById('zoomOut');
-    
-    let currentZoom = 100;
-    let pdfDoc = null;
-    let currentPage = 1;
+    let currentZoom = 100; let pdfDoc = null;
 
-    // Open Document Function (Called by buttons in table)
-    async function openPreviewDocument(src, title, contentType) {
+    window.openPreviewDocument = async function(src, title, contentType) {
         currentZoom = 100;
         document.getElementById('preview-title').textContent = title;
         document.getElementById('zoomLevel').textContent = '100%';
-        
-        // Show modal
         previewModal.style.display = 'flex';
         setTimeout(() => previewModal.classList.add('show'), 10);
-        
         previewBody.innerHTML = '<p style="color:#6c757d;">Loading...</p>';
 
-        if (contentType === 'application/pdf') {
-            loadPdfPreview(src);
-        } else if (contentType.startsWith('image/')) {
-            previewBody.innerHTML = `<img src="${src}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
-        } else {
-            // Fallback for others
-            previewBody.innerHTML = `<iframe src="${src}" style="width:100%; height:100%; border:0;"></iframe>`;
-        }
-    }
+        if (contentType === 'application/pdf') loadPdfPreview(src);
+        else if (contentType.startsWith('image/')) previewBody.innerHTML = `<img src="${src}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+        else previewBody.innerHTML = `<iframe src="${src}" style="width:100%; height:100%; border:0;"></iframe>`;
+    };
 
-    // PDF Loading Logic using PDF.js
     async function loadPdfPreview(src) {
         if (window.pdfjsLib) {
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
             try {
                 const loadingTask = window.pdfjsLib.getDocument(src);
                 pdfDoc = await loadingTask.promise;
                 renderPdfPage(1);
-            } catch (err) {
-                console.error(err);
-                previewBody.innerHTML = `<p class="text-danger">Error loading PDF. <a href="${src}" target="_blank">Download instead</a>.</p>`;
-            }
+            } catch (err) { previewBody.innerHTML = `<p class="text-danger">Error loading PDF.</p>`; }
         }
     }
 
@@ -271,87 +480,24 @@
         const page = await pdfDoc.getPage(num);
         const scale = currentZoom / 100;
         const viewport = page.getViewport({ scale: scale });
-
-        // prepare canvas
         previewBody.innerHTML = ''; 
         const canvas = document.createElement('canvas');
         previewBody.appendChild(canvas);
-        
         const context = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        const renderContext = {
-            canvasContext: context,
-            viewport: viewport
-        };
-        await page.render(renderContext).promise;
+        canvas.height = viewport.height; canvas.width = viewport.width;
+        await page.render({ canvasContext: context, viewport: viewport }).promise;
     }
 
-    // Zoom Controls
-    zoomInBtn.addEventListener('click', () => {
-        currentZoom += 10;
-        document.getElementById('zoomLevel').textContent = currentZoom + '%';
-        if(pdfDoc) renderPdfPage(1); // Simplistic re-render
-        else {
-             const img = previewBody.querySelector('img');
-             if(img) img.style.transform = `scale(${currentZoom/100})`;
-        }
+    if(zoomInBtn) zoomInBtn.addEventListener('click', () => {
+        currentZoom += 10; document.getElementById('zoomLevel').textContent = currentZoom + '%';
+        if(pdfDoc) renderPdfPage(1); else { const img = previewBody.querySelector('img'); if(img) img.style.transform = `scale(${currentZoom/100})`; }
     });
 
-    zoomOutBtn.addEventListener('click', () => {
+    if(zoomOutBtn) zoomOutBtn.addEventListener('click', () => {
         if(currentZoom > 10) currentZoom -= 10;
         document.getElementById('zoomLevel').textContent = currentZoom + '%';
-        if(pdfDoc) renderPdfPage(1);
-        else {
-             const img = previewBody.querySelector('img');
-             if(img) img.style.transform = `scale(${currentZoom/100})`;
-        }
+        if(pdfDoc) renderPdfPage(1); else { const img = previewBody.querySelector('img'); if(img) img.style.transform = `scale(${currentZoom/100})`; }
     });
-
-    // Close Modal Logic
-    function closePreview() {
-        previewModal.classList.remove('show');
-        setTimeout(() => {
-            previewModal.style.display = 'none';
-            previewBody.innerHTML = '';
-            pdfDoc = null;
-        }, 300);
-    }
-
-    previewClose.addEventListener('click', closePreview);
-    previewModal.addEventListener('click', (e) => {
-        if (e.target === previewModal) closePreview();
-    });
-
-    // ========================================
-    // ROW CLICK LOGIC (Existing)
-    // ========================================
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal = document.getElementById('profile-modal');
-        const closeButtons = document.querySelectorAll('.modal-close-btn');
-
-        if (modal) {
-            // Use delegation for table row clicks to avoid binding issues with dynamic data
-            document.querySelector('#coop-table tbody').addEventListener('click', function(e) {
-                // Prevent opening profile modal if a button inside the row was clicked
-                if (e.target.closest('button') || e.target.closest('a')) return;
-
-                const row = e.target.closest('tr[data-modal-target]');
-                if (row) {
-                    modal.classList.add('visible');
-                    // Fetch details via AJAX here using row.dataset.coopId if needed
-                }
-            });
-
-            closeButtons.forEach(btn => {
-                btn.addEventListener('click', () => modal.classList.remove('visible'));
-            });
-            
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) modal.classList.remove('visible');
-            });
-        }
-    });
+});
 </script>
 {% endblock %}

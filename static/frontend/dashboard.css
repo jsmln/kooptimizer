@@ -1,3 +1,5 @@
+/* frontend/dashboard.css */
+
 :root {
     --bg-main: #F4F7FE;
     --sidebar-bg: #FFFFFF;
@@ -17,14 +19,14 @@ body {
 
 a { text-decoration: none; }
 
-/* --- 1. GRID LAYOUT (Changed to 2 Columns) --- */
+/* --- 1. GRID LAYOUT --- */
 .dashboard-layout {
     display: grid;
-    /* 250px Sidebar | Flexible Main Content */
-    grid-template-columns: 250px 1fr; 
+    grid-template-columns: auto 1fr; 
     height: 100vh;
     width: 100vw;
     overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 /* --- 2. LEFT SIDEBAR --- */
@@ -32,87 +34,227 @@ a { text-decoration: none; }
     background: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
-    padding: 20px;
     border-right: 1px solid #edf2f7;
-    overflow-y: auto; /* Allows scrolling if widgets make it too tall */
-    z-index: 100;
+    overflow-x: hidden; 
+    overflow-y: auto;
+    z-index: 9999; /* ensure sidebar sits above other UI */
+    
+    /* IMPORTANT: Ensure items stretch to full width, do not center them */
+    align-items: stretch; 
+    text-align: left;
+    
+    width: 72px; 
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 20px 0; 
 }
 
-/* Hide Scrollbar in Sidebar for cleaner look */
+/* EXPAND ON HOVER */
+.sidebar:hover {
+    width: 260px;
+}
+
+/* Hide Scrollbar */
 .sidebar::-webkit-scrollbar { width: 5px; }
 .sidebar::-webkit-scrollbar-thumb { background: #eee; border-radius: 10px; }
 
+
+/* --- LOGO AREA --- */
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    
+    /* Force Left Alignment */
+    padding-left: 12px; 
+    justify-content: flex-start;
+    
     padding-bottom: 20px;
-    padding-left: 5px;
+    margin-bottom: 10px;
     border-bottom: 1px solid #f0f0f0;
-    margin-bottom: 20px;
     flex-shrink: 0;
+    height: 60px;
+    white-space: nowrap;
+    width: 100%;
 }
 
-.sidebar-logo { height: 35px; width: auto; }
-.logo-area h3 {
+/* Center logo when sidebar is collapsed (not hovered) */
+.sidebar:not(:hover) .logo-area {
+    justify-content: center;
+    padding-left: 0;
+}
+
+.sidebar:not(:hover) .logo-area .sidebar-logo {
+    margin-left: 0;
+}
+
+.sidebar:not(:hover) .logo-text {
+    display: none;
+}
+
+.sidebar-logo { 
+    height: 35px; 
+    width: auto; 
+    margin-left: 0; 
+}
+
+.logo-text {
     margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--text-dark);
     text-transform: uppercase;
     letter-spacing: 1px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
 }
 
+.sidebar:hover .logo-text {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* --- NAVIGATION LINKS LIST --- */
 .nav-links {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex !important;
     flex-direction: column !important;
-    gap: 5px;
+    gap: 10px;
     flex-shrink: 0;
+    width: 100%;
+    
+    /* Force Left Alignment */
+    align-items: stretch; 
+    text-align: left;
     z-index: 100000;
 }
 
+/* --- SECTION TITLE (MODULES) --- */
 .nav-section-title {
     font-size: 0.7rem;
     text-transform: uppercase;
     color: var(--text-dark);
-    margin: 20px 0 10px 10px;
+    margin: 15px 0 5px 0;
     font-weight: 700;
     letter-spacing: 0.5px;
+    height: 20px;
+    overflow: hidden;
+    white-space: nowrap;
+    
+    /* Force Left Alignment */
+    text-align: left;
+    padding-left: 12px; 
+    display: flex;
+    align-items: center;
 }
 
+.nav-section-title .nav-text {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.sidebar:hover .nav-section-title .nav-text {
+    opacity: 1;
+}
+
+/* --- NAV ITEM (BUTTONS) --- */
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 15px;
+    gap: 15px; 
+    
+    /* Force Left Alignment */
+    padding: 12px 0 12px 12px; 
+    justify-content: flex-start !important; /* Override any flex centering */
+    text-align: left;
+    
+    margin: 0 10px;
     border-radius: 10px;
     color: var(--text-dark);
     font-weight: 500;
     font-size: 0.95rem;
     transition: all 0.2s ease;
+    white-space: nowrap; 
+    height: 50px; 
 }
 
-.nav-item i { font-size: 1rem; }
-.nav-item:hover { color: var(--text-dark); background: #f7f9fc; }
-.nav-item.active { background: var(--brand-red); color: white; box-shadow: 0 4px 12px rgba(169, 30, 44, 0.3); }
+/* Icon container */
+.nav-item i { 
+    font-size: 1.5rem; /* slightly larger so icons are clearer when collapsed */
+    min-width: 28px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
 
-/* --- NEW: SIDEBAR WIDGETS (Bottom Area) --- */
+/* Hover State */
+.nav-item:hover { 
+    color: var(--text-dark); 
+    background: #f7f9fc; 
+}
+
+/* Active State (Red Button) */
+.nav-item.active { 
+    background: var(--brand-red); 
+    color: white; 
+    box-shadow: 0 4px 12px rgba(169, 30, 44, 0.3); 
+    justify-content: flex-start !important; 
+
+    /* CHANGE: Ensure this matches the normal state */
+    padding-left: 12px;
+}
+
+
+/* --- HIDE TEXT SPAN --- */
+.nav-text {
+    /* Keep text in DOM for accessibility but visually collapse it in the compact sidebar.
+       We avoid changing `visibility` or `display` to preserve layout semantics. */
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.18s linear, width 0.18s linear;
+}
+
+.sidebar:hover .nav-text {
+    opacity: 1;
+    width: auto;
+    overflow: visible;
+}
+
+
+/* --- SIDEBAR WIDGETS (Bottom) --- */
 .sidebar-widgets {
-    margin-top: auto; /* Pushes widgets to the bottom if there's space */
-    padding-top: 20px;
+    margin-top: auto;
+    /* Reduced padding (was 20px 25px) */
+    padding: 10px 25px; 
     border-top: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    /* Reduced gap between widgets (was 20px) */
+    gap: 10px; 
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    transition: opacity 0.2s ease 0.1s; 
 }
 
+.sidebar:hover .sidebar-widgets {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    overflow: visible;
+}
+
+/* Widget Styles */
 .mini-widget h4 {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--text-dark);
-    margin: 0 0 10px 0;
+    /* Reduced margin (was 10px) */
+    margin: 0 0 6px 0; 
     text-transform: uppercase;
     font-weight: 700;
     display: flex;
@@ -120,18 +262,82 @@ a { text-decoration: none; }
     justify-content: space-between;
 }
 
-/* Mini Calendar Styling */
+/* Make widget icons (like FAQs) visible when sidebar is collapsed
+   and match the look of the nav icons. Keep the text hidden until hover. */
+.mini-widget h4 i {
+    font-size: 1.5rem;
+    color: var(--text-gray);
+    min-width: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+.mini-widget .nav-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: opacity 0.18s linear, width 0.18s linear;
+}
+
+.sidebar:hover .mini-widget .nav-text {
+    opacity: 1;
+    width: auto;
+    overflow: visible;
+}
+
+/* Reduce the calendar icon size so it appears smaller than module icons */
+.mini-widget h4 .bi-calendar4-week {
+    font-size: 1.1rem;
+    color: var(--text-gray);
+}
+
+/* Ensure FAQ icon remains visible when sidebar is collapsed */
+.sidebar:not(:hover) #sidebar-faq-widget h4 i {
+    opacity: 1;
+    color: var(--text-gray);
+}
+
+/* Make FAQ icon always visible and centered in collapsed state */
+.sidebar:not(:hover) #sidebar-faq-widget h4 {
+    justify-content: center;
+}
+.sidebar:not(:hover) #sidebar-faq-widget h4 i,
+#sidebar-faq-widget h4 i {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem !important;
+    color: var(--text-gray) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
 .mini-calendar-box {
     background: #f8f9fa;
-    padding: 15px;
+    /* Drastically reduced padding (was 15px) */
+    padding: 8px 10px; 
     border-radius: 12px;
     text-align: center;
     border: 1px solid #eee;
 }
-.mini-date { font-size: 1.1rem; font-weight: 800; color: var(--brand-red); }
-.mini-day { font-size: 0.85rem; color: var(--text-dark); margin-top: 2px; }
+.mini-date { 
+    /* Smaller font (was 1.1rem) */
+    font-size: 0.95rem; 
+    font-weight: 800; 
+    color: var(--brand-red); 
+    line-height: 1.1;
+}
 
-/* Mini Activity Styling */
+.mini-day { 
+    /* Smaller font (was 0.85rem) */
+    font-size: 0.75rem; 
+    color: var(--text-dark); 
+    margin-top: 0; 
+}
+
 .mini-activity-item {
     display: flex;
     gap: 10px;
@@ -140,7 +346,6 @@ a { text-decoration: none; }
     border-left: 2px solid #eee;
 }
 .mini-activity-item:last-child { margin-bottom: 0; }
-
 .mini-activity-text { display: flex; flex-direction: column; }
 .mini-activity-text strong { font-size: 0.85rem; color: var(--text-dark); }
 .mini-activity-text span { font-size: 0.75rem; color: var(--text-dark); }
@@ -215,7 +420,7 @@ a { text-decoration: none; }
 }
 .user-info { text-align: right; line-height: 1.2; }
 .u-name { display: block; font-weight: 700; font-size: 0.85rem; color: var(--text-dark); }
-.u-role { display: block; font-size: 0.7rem; color: var(--text-gray); }
+.u-role { display: block; font-size: 0.7rem; color: var(--text-dark); }
 .user-menu .avatar {
     width: 32px; height: 32px; border-radius: 50%;
     background: var(--brand-red); color: white;
@@ -223,13 +428,32 @@ a { text-decoration: none; }
 }
 .logout-btn-mini { color: var(--text-gray); font-size: 1.1rem; margin-left: 5px; cursor: pointer;}
 .logout-btn-mini:hover { color: var(--brand-red); }
+.settings-btn-mini { color: #A3AED0; font-size: 1.2rem; margin-left: 8px; cursor: pointer; display: flex; align-items: center; }
+.settings-btn-mini:hover { color: #a91e2c; }
+
+/* Notification bell badge */
+.notification-bell { position: relative; }
+.activity-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--brand-red);
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 5px;
+    border-radius: 999px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1;
+}
+
+/* activity dropdown tweaks (fallback in template for positioning) */
+.activity-dropdown { display: none; }
+.activity-dropdown .mini-activity-item { padding: 10px 12px; }
 
 /* Content Area */
 .content-scrollable {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 20px 30px;
+    flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 30px;
 }
 
 /* --- RESPONSIVE --- */
@@ -238,7 +462,6 @@ a { text-decoration: none; }
     z-index: 99; opacity: 0; pointer-events: none; transition: 0.3s;
 }
 
-/* On Tablet/Mobile: Hide Sidebar completely */
 @media (max-width: 992px) {
     .dashboard-layout { grid-template-columns: 1fr; } /* 1 Column only */
     
@@ -246,7 +469,7 @@ a { text-decoration: none; }
         position: fixed; width: 260px; height: 100%; 
         transform: translateX(-100%); transition: 0.3s; 
         box-shadow: 5px 0 15px rgba(0,0,0,0.1);
-        z-index: 100;
+        z-index: 10001; /* make mobile sidebar overlay everything */
     }
     
     .sidebar-close { 
@@ -279,6 +502,16 @@ a { text-decoration: none; }
         width: 100%;
         flex-basis: 100%;
         margin-top: 10px;
+    }
+
+    /* On mobile, always show sidebar text labels (dont hide via opacity/width) */
+    .sidebar .nav-text,
+    .sidebar .logo-text,
+    .sidebar .mini-widget .nav-text {
+        opacity: 1 !important;
+        visibility: visible !important;
+        width: auto !important;
+        overflow: visible !important;
     }
     
     .user-menu {
@@ -327,16 +560,81 @@ a { text-decoration: none; }
     }
 }
 
-.settings-btn-mini {
-    color: #A3AED0; /* Light Gray */
-    font-size: 1.2rem;
-    margin-left: 8px;
-    cursor: pointer;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
+@media (max-width: 576px) {
+    .top-bar { padding: 10px 12px; }
+    .search-box { padding: 6px 15px; }
+    .page-title { font-size: 0.85rem; }
 }
 
-.settings-btn-mini:hover {
-    color: #a91e2c; /* Theme Red */
+.mini-activity-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-left: 8px;
+    border-left: 3px solid #e0e0e0; /* Light gray indicator */
 }
+
+.mini-activity-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.mini-activity-text strong {
+    font-size: 0.85rem;
+    color: #2B3674;
+}
+
+/* This targets the sender name */
+.mini-activity-text span {
+    font-size: 0.75rem;
+}
+
+/* Messages-style topbar (to match message module layout) */
+.messages-header {
+    height: 56px;
+    background: white;
+    border-bottom: 1px solid #edf2f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.messages-header-left { display:flex; align-items:center; gap:12px; }
+.messages-header h1 { margin:0; font-size:1.1rem; font-weight:700; color:var(--text-dark); }
+
+.profile-dropdown { position: relative; }
+.profile-trigger { display:flex; align-items:center; gap:10px; cursor:pointer; padding:8px 12px; border-radius:12px; transition:background 0.2s; }
+.profile-trigger:hover { background:#f7f9fc; }
+.profile-avatar { width:36px; height:36px; border-radius:50%; background:var(--brand-red); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1rem; }
+.profile-info { display:flex; flex-direction:column; text-align:left; line-height:1.2; }
+.profile-name { font-weight:600; font-size:0.9rem; color:var(--text-dark); }
+.profile-role { font-size:0.75rem; color:var(--text-dark); }
+.dropdown-arrow { color:var(--text-gray); font-size:0.8rem; transition:transform 0.2s; }
+.profile-dropdown.active .dropdown-arrow { transform:rotate(180deg); }
+.dropdown-menu-custom { position:absolute; top:calc(100% + 8px); right:0; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.1); min-width:200px; opacity:0; visibility:hidden; transform:translateY(-10px); transition:all 0.2s ease; z-index:1000; }
+.profile-dropdown.active .dropdown-menu-custom { opacity:1; visibility:visible; transform:translateY(0); }
+.dropdown-item-custom { display:flex; align-items:center; gap:12px; padding:12px 16px; color:var(--text-dark); text-decoration:none; transition:background 0.2s; border-radius:8px; margin:4px; }
+.dropdown-item-custom:hover { background:#f7f9fc; color:var(--text-dark); }
+.dropdown-item-custom i { font-size:1.1rem; width:20px; text-align:center; }
+.dropdown-item-custom.logout { color:var(--brand-red); border-top:1px solid #f0f0f0; margin-top:4px; }
+.dropdown-item-custom.logout:hover { background:var(--brand-red-light); color:var(--brand-red); }
+
+@media (max-width: 992px) {
+    .messages-header { padding: 0 12px; height:52px; }
+    .profile-info { display:none; }
+    .dropdown-arrow { display:none; }
+    .profile-avatar { width:32px; height:32px; font-size:0.9rem; }
+}
+
+/* FAQ modal scrolling: keep modal within viewport and enable internal scrolling */
+#faqModal .modal-dialog { max-width: 900px; }
+#faqModal .modal-body {
+    max-height: 64vh; /* keep modal from growing beyond viewport */
+    overflow-y: auto;
+}
+
+/* Inside the FAQ modal, keep the chat messages scrollable and bounded */
+#faq-messages { max-height: 46vh; overflow-y: auto; }
