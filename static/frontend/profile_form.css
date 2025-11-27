@@ -495,11 +495,48 @@ input:focus, select:focus {
     padding: 8px 16px;
     border-radius: var(--radius-md);
     cursor: pointer;
+<<<<<<< HEAD
     display: inline-flex;
+=======
+    font-size: 0.85rem;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.add-row-btn:hover {
+    border-color: var(--brand-red);
+    color: var(--brand-red);
+    background-color: var(--brand-red-light);
+}
+
+/* ----- Submit Button ----- */
+.form-actions {
+    padding: 20px 0;
+    border-top: 1px solid rgb(0, 144, 0);
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.submit-btn {
+    padding: 12px 40px;
+    background-color: green;
+    color: var(--sidebar-bg);
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    display: flex;
+>>>>>>> 2b2ecc301becb3fd04d9b4573d126650881f88bf
     align-items: center;
     gap: 8px;
 }
 
+<<<<<<< HEAD
 /* Footer Actions */
 .form-actions {
     padding: 20px 30px;
@@ -523,6 +560,11 @@ input:focus, select:focus {
     display: flex;
     align-items: center;
     gap: 8px;
+=======
+.submit-btn:hover {
+    background-color: #005200; 
+    transform: translateY(-1px);
+>>>>>>> 2b2ecc301becb3fd04d9b4573d126650881f88bf
 }
 
 /* Responsive */
