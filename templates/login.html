@@ -251,14 +251,14 @@
     <!-- NORMAL LOGIN SECTION -->
     <section id="login">
         <h2>Login</h2>
-        
+{% comment %}         
         {% if messages %}
             {% for message in messages %}
                 <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
-        {% endif %}
+        {% endif %} {% endcomment %}
 
         <form id="login-form" method="POST">
             {% csrf_token %} 

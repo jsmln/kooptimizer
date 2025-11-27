@@ -21,7 +21,6 @@ class UserRoleEnum(models.TextChoices):
 class VerificationStatusEnum(models.TextChoices):
     PENDING = 'pending', 'Pending'
     VERIFIED = 'verified', 'Verified'
-    REJECTED = 'rejected', 'Rejected'
     # Add any other values your 'verification_status_enum' type has
 
 

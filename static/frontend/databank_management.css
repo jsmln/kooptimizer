@@ -92,6 +92,7 @@
     outline: none;
     box-shadow: 0 0 0 2px rgba(134, 0, 0, 0.1);
 }
+.search-bar input:focus { border-color: #a91e2c; background: #fff; }
 
 /* =========================================
    3. Table Styles (Fixed Layout logic)
@@ -113,6 +114,8 @@
     position: relative;
     height: 600px; /* Fallback height */
 }
+.table-wrapper::-webkit-scrollbar { width: 8px; height: 8px; }
+.table-wrapper::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
 
 table {
     width: 100%;

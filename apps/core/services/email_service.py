@@ -341,9 +341,9 @@ class EmailService:
         <body>
             <div class="email-container">
                 <div class="email-header">
-                    <img src="{logo_url}" alt="KoopTimizer Header" style="width: 100%; height: auto; display: block;">
+                    <img src="{'static/frontend/images/header.png'}" alt="KoopTimizer Header" style="width: 100%; height: auto; display: block;">
                     <div class="announcement-badge">
-                        📢 Official Cooperative Announcement
+                        Official Cooperative Announcement
                     </div>
                 </div>
                 <div class="email-body">
@@ -560,7 +560,7 @@ class EmailService:
 #         <body>
 #             <div class="email-container">
 #                 <div class="email-header">
-#                     <h1>📢 Cooperative Announcement</h1>
+#                     <h1>Cooperative Announcement</h1>
 #                 </div>
 #                 <div class="email-body">
 #                     <div class="email-content">

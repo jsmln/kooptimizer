@@ -249,7 +249,14 @@ BREVO_SENDER_NAME = config('BREVO_SENDER_NAME', default='Kooptimizer')
 # ====================================================================
 TICKETMASTER_API_KEY = config('TICKETMASTER_API_KEY', default='')
 
-
+# ====================================================================
+#  OPTIIC OCR API CONFIGURATION
+# ====================================================================
+OPTIIC_API_KEY = config('OPTIIC_API_KEY')
+OPTIIC_API_URL = config('OPTIIC_API_URL', default='https://api.optiic.dev/process')
+#-------FALLBACK  OCR SERVICE
+OCR_SPACE_API_KEY = config('OCR_SPACE_API_KEY')
+OCR_SPACE_API_URL = config('OCR_SPACE_API_URL', default='https://api.ocr.space/parse/image')
 
 
 

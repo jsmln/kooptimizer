@@ -99,9 +99,6 @@ def add_cooperative(request):
 def get_cooperative(request, coop_id):
     try:
         with connection.cursor() as cursor:
-            # We fetch all but filter in Python or modify SQL to accept ID. 
-            # Since your provided SQL doesn't accept an ID param, we fetch all and find one.
-            # *Note: For production, you should overload sp_get_all_cooperatives to accept an ID.*
             cursor.execute("SELECT * FROM sp_get_all_cooperatives()")
             columns = [col[0] for col in cursor.description]
             
@@ -154,7 +151,6 @@ def delete_cooperative(request, coop_id):
         return JsonResponse({'success': True, 'message': 'Cooperative deleted successfully'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
-    
 @require_http_methods(["POST"])
 def restore_cooperative(request, coop_id):
     try:
