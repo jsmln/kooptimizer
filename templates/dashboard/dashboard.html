@@ -14,28 +14,48 @@
 {% block main_body %}
 <div class="dashboard-layout">
 
-    <nav class="sidebar">
+    <nav class="sidebar" id="main-sidebar">
+        <script>
+            (function() {
+                const s = document.getElementById('main-sidebar');
+                if (localStorage.getItem('sidebar-state') === 'expanded') {
+                    s.classList.add('expanded');
+                }
+            })();
+        </script>
+
         <div class="logo-area">
-            <img src="{% static 'frontend/images/Logo.png' %}" alt="Logo" class="sidebar-logo">
-            <h3 class="logo-text">KoopTimizer</h3>
+            <div class="logo-content">
+                <img src="{% static 'frontend/images/Logo.png' %}" alt="Logo" class="sidebar-logo">
+                <h3 class="logo-text">KoopTimizer</h3>
+            </div>
+            <button id="desktop-sidebar-toggle" class="sidebar-toggle-btn" title="Toggle Sidebar">
+                <i class="bi bi-layout-sidebar"></i>
+            </button>
         </div>
 
         <ul class="nav-links">
+            {# Capture the current view name to compare against links #}
+            {% with route_name=request.resolver_match.view_name %}
+
             {% if request.session.role == 'admin' %}
                 <li>
-                    <a href="{% url 'dashboard:admin_dashboard' %}" class="nav-item active">
+                    <a href="{% url 'dashboard:admin_dashboard' %}" 
+                       class="nav-item {% if route_name == 'dashboard:admin_dashboard' %}active{% endif %}">
                         <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
             {% elif request.session.role == 'staff' %}
                 <li>
-                    <a href="{% url 'dashboard:staff_dashboard' %}" class="nav-item active">
+                    <a href="{% url 'dashboard:staff_dashboard' %}" 
+                       class="nav-item {% if route_name == 'dashboard:staff_dashboard' %}active{% endif %}">
                         <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
             {% elif request.session.role == 'officer' %}
                 <li>
-                    <a href="{% url 'dashboard:cooperative_dashboard' %}" class="nav-item active">
+                    <a href="{% url 'dashboard:cooperative_dashboard' %}" 
+                       class="nav-item {% if route_name == 'dashboard:cooperative_dashboard' %}active{% endif %}">
                         <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
                     </a>
                 </li>
@@ -45,12 +65,14 @@
 
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
                 <li>
-                    <a href="{% url 'account_management:account_management' %}" class="nav-item">
+                    <a href="{% url 'account_management:account_management' %}" 
+                       class="nav-item {% if 'account_management' in route_name %}active{% endif %}">
                         <i class="bi bi-people-fill"></i> <span class="nav-text">Accounts</span>
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'databank:databank_management' %}" class="nav-item">
+                    <a href="{% url 'databank:databank_management' %}" 
+                       class="nav-item {% if 'databank' in route_name %}active{% endif %}">
                         <i class="bi bi-database-fill"></i> <span class="nav-text">Data Bank</span>
                     </a>
                 </li>
@@ -58,25 +80,30 @@
 
             {% if request.session.role == 'officer' %}
                 <li>
-                    <a href="{% url 'cooperatives:profile_form' %}" class="nav-item">
+                    <a href="{% url 'cooperatives:profile_form' %}" 
+                       class="nav-item {% if 'cooperatives' in route_name %}active{% endif %}">
                         <i class="bi bi-building"></i> <span class="nav-text">Profile</span>
                     </a>
                 </li>
             {% endif %}
 
             <li>
-                <a href="{% url 'communications:message' %}" class="nav-item">
+                <a href="{% url 'communications:message' %}" 
+                   class="nav-item {% if 'communications:message' in route_name %}active{% endif %}">
                     <i class="bi bi-chat-dots-fill"></i> <span class="nav-text">Messages</span>
                 </a>
             </li>
             
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
             <li>
-                <a href="{% url 'communications:announcement_form' %}" class="nav-item">
+                <a href="{% url 'communications:announcement_form' %}" 
+                   class="nav-item {% if 'communications:announcement' in route_name %}active{% endif %}">
                     <i class="bi bi-megaphone-fill"></i> <span class="nav-text">Announcements</span>
                 </a>
             </li>
             {% endif %}
+            
+            {% endwith %}
         </ul>
 
         <div class="sidebar-widgets">
@@ -93,7 +120,6 @@
                 </div>
             </div>
 
-            <!-- FAQs widget moved into sidebar under Calendar -->
             <div class="mini-widget" id="sidebar-faq-widget">
                 <h4>
                     <i class="bi bi-question-circle"></i>
@@ -118,8 +144,6 @@
                 <div class="page-title">{% block page_header %}Dashboard Overview{% endblock %}</div>
             </div>
             
-            <!-- Search box removed per UX request -->
-
             <div class="user-menu">
                 <div class="user-info">
                     <span class="u-name">{{ request.session.username }}</span>
@@ -129,7 +153,6 @@
                     {{ request.session.username|first|upper }}
                 </div>
 
-                    <!-- Activity bell (shows recent activity dropdown) -->
                     <div class="notification-bell" id="notification-bell" style="position:relative;">
                         <button id="bell-btn" class="btn" title="Activity" style="background:transparent; border:none; color:var(--text-gray); font-size:1.3rem;">
                             <i class="bi bi-bell-fill"></i>
@@ -168,6 +191,36 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const desktopToggle = document.getElementById('desktop-sidebar-toggle');
+        const sidebar = document.getElementById('main-sidebar');
+
+        // 1. ENABLE ANIMATIONS 
+        // We wait a tiny bit to ensure the initial paint is done, then enable transitions
+        // This ensures the "load" was static, but future "clicks" will slide.
+        setTimeout(() => {
+            if(sidebar) sidebar.classList.add('sidebar-animated');
+        }, 100);
+
+        // 2. TOGGLE HANDLER
+        if (desktopToggle && sidebar) {
+            desktopToggle.addEventListener('click', function(e) {
+                e.preventDefault(); 
+                
+                sidebar.classList.toggle('expanded');
+
+                // Save New State
+                if (sidebar.classList.contains('expanded')) {
+                    localStorage.setItem('sidebar-state', 'expanded');
+                } else {
+                    localStorage.setItem('sidebar-state', 'collapsed');
+                }
+            });
+        }
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
         const toggleBtn = document.getElementById('sidebar-toggle-btn');
         const closeBtn = document.getElementById('sidebar-close-btn');
         const overlay = document.querySelector('.sidebar-overlay');
@@ -189,7 +242,7 @@
             const seconds = now.getSeconds();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; // the hour '0' should be '12'
+            hours = hours ? hours : 12; 
             
             const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
             
@@ -205,6 +258,7 @@
 </script>
 
 <script>
+// Activity Dropdown Script (Kept same as before)
 document.addEventListener('DOMContentLoaded', function() {
     const activityBadge = document.getElementById('activity-badge');
     const dropdownList = document.getElementById('activity-dropdown-list');
@@ -254,13 +308,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Toggle dropdown on bell click — load activity only when opening
     if(bellBtn && activityDropdown){
         bellBtn.addEventListener('click', function(e){
             e.stopPropagation();
             const isOpen = activityDropdown.style.display === 'block';
             if(!isOpen){
-                // Load latest activity on open
                 loadRecentActivity();
                 activityDropdown.style.display = 'block';
             } else {
@@ -268,7 +320,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Close when clicking outside
         document.addEventListener('click', function(e){
             if(!activityDropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)){
                 activityDropdown.style.display = 'none';
@@ -278,7 +329,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- FAQ Modal + mini-chat FAQ -->
 <div class="modal fade" id="faqModal" tabindex="-1" aria-labelledby="faqModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -290,7 +340,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="row">
                     <div class="col-md-4">
                         <div class="list-group" id="faq-list" role="tablist">
-                            <!-- Static FAQs inserted here -->
                             <button type="button" class="list-group-item list-group-item-action" data-answer="To reset your password, go to Settings → Password Reset and follow the instructions.">How do I reset my password?</button>
                             <button type="button" class="list-group-item list-group-item-action" data-answer="To create an announcement, go to Announcements in the sidebar and click 'New Announcement'.">How do I post an announcement?</button>
                             <button type="button" class="list-group-item list-group-item-action" data-answer="Messages appear in real-time; mark them as seen in the conversation to clear activities.">Why are some activities still showing?</button>
@@ -303,7 +352,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button type="button" class="list-group-item list-group-item-action" data-answer="To log out, click the logout button (arrow icon) in the top-right corner and confirm in the modal.">How do I log out?</button>
                         </div>
                     </div>
-
                     <div class="col-md-8">
                         <div id="faq-chat" style="min-height:300px; border:1px solid #e9ecef; border-radius:6px; padding:12px; background:#f8fafc; display:flex; flex-direction:column;">
                             <div id="faq-messages" style="flex:1; overflow:auto; margin-bottom:8px;"></div>
@@ -324,6 +372,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
+// FAQ Script (Kept same as before)
 document.addEventListener('DOMContentLoaded', function() {
         const openFaqBtn = document.getElementById('open-faq-btn');
         const openFaqSidebarBtn = document.getElementById('open-faq-from-sidebar');
@@ -365,14 +414,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         i++;
                         if(i >= text.length){
                                 clearInterval(interval);
-                                // Append final bubble to messages
                                 appendMessage(text, 'system');
                         }
                 }, speed);
         }
 
         function openFaqModalReset(){
-            // reset preview + messages
             faqInput.value = '';
             faqMessages.innerHTML = '';
             document.getElementById('faq-list').querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
@@ -386,14 +433,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 faqList.addEventListener('click', function(e){
                         const btn = e.target.closest('button');
                         if(!btn) return;
-                        // mark active
                         faqList.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
                         btn.classList.add('active');
-
-                        // show user question as a small user bubble
                         appendMessage(btn.textContent.trim(), 'user');
-
-                        // animate typing of answer in preview then append
                         const answer = btn.getAttribute('data-answer') || 'Sorry, no answer available.';
                         typeIntoPreview(answer);
                 });
