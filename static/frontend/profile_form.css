@@ -1,161 +1,402 @@
+/* =========================================
+   1. Variables & Global Settings
+   ========================================= */
 :root {
+    /* Brand Colors */
     --bg-main: #F4F7FE;
     --sidebar-bg: #FFFFFF;
     --text-dark: #2B3674;
+    --text-medium: #707EAE;
     --text-gray: #A3AED0;
     --brand-red: #a91e2c;
     --brand-red-light: #fff0f2;
+    --brand-red-hover: #8f1925;
+
+    /* Status Colors */
+    --success-bg: #E6F7ED;
+    --success-text: #009045;
+    --warning-bg: #FFF8E6;
+    --warning-text: #B98900;
+
+    /* Layout */
     --card-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08);
+    --radius-md: 10px;
+    --radius-lg: 15px;
+    --transition: all 0.2s ease;
 }
 
-/* --- Global Page Adjustments --- */
-.dashboard-main-content {
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
+body {
+    color: var(--text-dark);
+}
+
+/* =========================================
+   2. Dashboard Display View
+   ========================================= */
+.profile-list-container {
+    padding: 1.5rem;
+    width: 100%;
+    /* Forces container to fill available width */
+    max-width: 100%;
+    /* Prevents accidental constraining */
+    box-sizing: border-box;
+}
+
+/* Page Header */
+.page-header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    background-color: var(--bg-main); 
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    /* Allows wrapping on mobile */
+    gap: 1rem;
 }
 
-/* ----- Main Form Box ----- */
-.profile-form-container {
-    width: 95%;
-    max-width: 1000px;
-    height: 95%; /* Fills most of dashboard area */
-    background-color: var(--sidebar-bg);
-    border-radius: 15px;
+.page-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.page-header p {
+    color: var(--text-medium);
+    margin: 0;
+}
+
+.create-profile-btn {
+    background-color: var(--brand-red);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    display: inline-flex;
+    /* Ensures flex alignment for icon/text */
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(169, 30, 44, 0.2);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.create-profile-btn i {
+    font-size: 1.1rem;
+    /* Specific size for button icon */
+    line-height: 1;
+}
+
+.create-profile-btn:hover {
+    background-color: var(--brand-red-hover);
+    transform: translateY(-2px);
+}
+
+/* Profile Details Card */
+.profile-details-card {
+    background: var(--sidebar-bg);
+    border-radius: var(--radius-lg);
     box-shadow: var(--card-shadow);
-    padding: 0; /* Padding handled by header/form */
+    overflow: hidden;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+/* Header inside the card */
+.profile-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fff;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.header-left h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-approved {
+    background-color: var(--success-bg);
+    color: var(--success-text);
+}
+
+.status-pending {
+    background-color: var(--warning-bg);
+    color: var(--warning-text);
+}
+
+/* Edit Button */
+.btn-edit {
+    background: white;
+    border: 1px solid #e0e0e0;
+    color: var(--text-medium);
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.btn-edit:hover {
+    border-color: var(--brand-red);
+    color: var(--brand-red);
+    background-color: var(--brand-red-light);
+}
+
+/* Info Sections */
+.info-section {
+    padding: 2rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-section:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--brand-red);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem 2rem;
+}
+
+.info-item label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-gray);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.info-item p {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+/* =========================================
+   3. Tables (Display View) - "Show the Table"
+   ========================================= */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    /* Allows border radius on rows if needed */
+    border-spacing: 0;
+    min-width: 800px;
+    /* Ensures table doesn't squash too much */
+}
+
+.data-table th {
+    text-align: left;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    color: var(--text-medium);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    color: var(--text-dark);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background-color: #fcfcfc;
+}
+
+/* =========================================
+   4. Empty State (Fixed)
+   ========================================= */
+.empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevents box expansion */
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
-.form-header {
-    padding: 25px 40px;
-    border-bottom: 1px solid #f0f0f0;
-    background: var(--sidebar-bg);
-    flex-shrink: 0;
+/* FIX: Only target direct child icon to prevent affecting buttons */
+.empty-state>i {
+    font-size: 4rem;
+    color: var(--text-gray);
+    margin-bottom: 1.5rem;
+    display: block;
 }
 
-.form-header h2 {
-    margin: 0;
+.empty-state h3 {
+    margin-bottom: 0.5rem;
     color: var(--text-dark);
-    font-size: 1.5rem;
     font-weight: 700;
 }
 
-.form-header p {
-    margin: 5px 0 0 0;
-    color: var(--text-dark);
-    font-size: 0.9rem;
+.empty-state p {
+    color: var(--text-medium);
+    margin-bottom: 2rem;
+    max-width: 400px;
 }
 
-.profile-form-container form {
-    padding: 30px 40px;
-    overflow-y: auto; /* Scroll happens INSIDE the form area */
-    flex: 1;
+/* Ensure empty state button is normal size */
+.empty-state .create-profile-btn {
+    width: auto;
+    padding: 1rem 2rem;
+    /* Slightly larger for emphasis */
 }
 
-/* Fieldsets & Legends */
+/* =========================================
+   5. Modal & Form Styling
+   ========================================= */
+/* Clean up Bootstrap Modal Default */
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    /* Prevents modal from going off screen */
+}
+
+.modal-header {
+    background-color: var(--brand-red);
+    color: white;
+    padding: 1.2rem 2rem;
+    flex-shrink: 0;
+    /* Keeps header fixed */
+}
+
+.modal-body {
+    padding: 0;
+    overflow-y: auto;
+    /* Internal scrolling for form */
+}
+
+.profile-form-container {
+    width: 100%;
+    background-color: var(--sidebar-bg);
+}
+
+/* Fieldsets */
 fieldset {
     border: none;
-    padding: 0;
-    margin: 0 0 40px 0;
+    padding: 2rem 2.5rem;
+    margin: 0;
+    border-bottom: 8px solid #F4F7FE;
 }
 
 legend {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: var(--text-dark);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    width: 100%;
-    margin-bottom: 15px;
+    margin-bottom: 1.5rem;
     padding-left: 10px;
-    border-left: 4px solid var(--brand-red); 
+    border-left: 4px solid var(--brand-red);
+    display: inline-block;
+    width: auto;
 }
 
-.input-instruction {
-    font-size: 0.85rem;
-    color: var(--text-dark);
-    font-style: italic;
-    margin-bottom: 15px;
+/* Form Inputs */
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 1rem;
 }
 
-label.required::after,
-th.required::after {
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+label.required::after {
     content: " *";
     color: var(--brand-red);
     font-weight: bold;
-    margin-left: 2px;
 }
 
-/* ----- Form Groups ----- */
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-    flex: 1;
-}
-
-.form-group label {
-    font-size: 0.85rem;
-    color: var(--text-dark);
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.form-group input[type="text"],
-.form-group input[type="email"],
-.form-group input[type="tel"],
-.form-group input[type="date"],
-.form-group input[type="number"],
-.form-group select,
-.form-group textarea {
+input[type="text"], input[type="email"], input[type="tel"],
+input[type="date"], input[type="number"], select, textarea {
     width: 100%;
     padding: 12px 15px;
     border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    background-color: var(--sidebar-bg);
+    border-radius: var(--radius-md);
+    background-color: #fff;
     font-size: 0.95rem;
     color: var(--text-dark);
-    transition: border 0.2s, box-shadow 0.2s;
+    transition: var(--transition);
     font-family: inherit;
     box-sizing: border-box;
 }
 
-.form-group textarea {
-    resize: vertical;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+input:focus, select:focus {
     outline: none;
     border-color: var(--brand-red);
     box-shadow: 0 0 0 3px rgba(169, 30, 44, 0.1);
 }
 
-.form-group input::placeholder {
-    color: var(--text-gray);
-    opacity: 0.7;
-}
-
-/* ----- Layout Grid ----- */
-.form-row {
-    display: flex;
-    gap: 20px;
-    width: 100%;
-}
-
-/* ----- Custom Radio Buttons (Compliance/Tax) ----- */
+/* Custom Widgets */
 .form-check-group {
     display: flex;
     gap: 20px;
-    padding-top: 5px;
+    margin-top: 5px;
 }
 
 .radio-container {
@@ -166,7 +407,6 @@ th.required::after {
     cursor: pointer;
     font-size: 0.95rem;
     color: var(--text-dark);
-    user-select: none;
 }
 
 .radio-container input {
@@ -179,192 +419,66 @@ th.required::after {
     position: absolute;
     top: 0;
     left: 0;
-    height: 18px;
-    width: 18px;
-    background-color: #eee;
+    height: 20px;
+    width: 20px;
+    background-color: #fff;
+    border: 1px solid #d1d5db;
     border-radius: 50%;
     transition: 0.2s;
 }
 
-.radio-container:hover input ~ .checkmark {
-    background-color: #ccc;
-}
-
-.radio-container input:checked ~ .checkmark {
+.radio-container input:checked~.checkmark {
     background-color: var(--brand-red);
+    border-color: var(--brand-red);
 }
 
-.checkmark:after {
+.radio-container input:checked~.checkmark:after {
     content: "";
     position: absolute;
-    display: none;
-}
-
-.radio-container input:checked ~ .checkmark:after {
     display: block;
-}
-
-.radio-container .checkmark:after {
-    top: 6px;
-    left: 6px;
-    width: 6px;
-    height: 6px;
+    top: 5px;
+    left: 5px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: var(--sidebar-bg);
+    background: white;
 }
 
-/* ----- Custom File Input ----- */
-.file-upload-wrapper {
-    position: relative;
-}
-
-.file-input {
-    width: 0.1px;
-    height: 0.1px;
-    opacity: 0;
-    overflow: hidden;
-    position: absolute;
-    z-index: -1;
-}
-
+/* File Upload */
 .file-label {
     display: block;
     width: 100%;
-    padding: 10px 15px;
+    padding: 15px;
     background-color: #f8f9fa;
-    border: 1px dashed var(--brand-red);
-    border-radius: 10px;
+    border: 2px dashed var(--brand-red);
+    border-radius: var(--radius-md);
     text-align: center;
     cursor: pointer;
     font-weight: 500;
     color: var(--brand-red);
-    transition: all 0.2s;
-    font-size: 0.9rem;
-    box-sizing: border-box;
 }
 
-.file-label i {
-    margin-right: 6px;
-    font-size: 1.1rem;
-}
-
-.file-label:hover {
-    background-color: var(--brand-red-light);
-}
-
-/* --- FILE PREVIEW STYLES --- */
-/* --- UPDATED FILE PREVIEW STYLES --- */
-.file-preview-container {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.file-preview-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; /* Separates content from X button */
-    background: #f8f9fa;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    transition: background 0.2s;
-}
-
-.file-preview-item:hover {
-    background: #fff;
-    border-color: var(--brand-red);
-}
-
-.file-info-wrapper {
-    display: flex;
-    align-items: center;
-    overflow: hidden; /* Prevents long text overflow */
-    flex: 1;
-}
-
-.file-icon {
-    margin-right: 12px;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-}
-
-/* Specific Icon Colors */
-.icon-image { color: #9c27b0; }
-.icon-pdf { color: #e53935; }
-.icon-word { color: #1e88e5; }
-.icon-excel { color: #43a047; }
-.bi-file-earmark { color: var(--text-gray); }
-
-.file-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-right: 10px;
-    font-weight: 500;
-    max-width: 70%; /* Ensures name doesn't push size/x off screen */
-}
-
-.file-size {
-    font-size: 0.8rem;
-    color: var(--text-gray);
-    white-space: nowrap;
-}
-
-.no-files {
-    color: var(--text-gray);
-    font-size: 0.85rem;
-    font-style: italic;
-    padding-left: 5px;
-}
-
-/* Remove "X" Button */
-.remove-file-btn {
-    margin-left: 15px;
-    cursor: pointer;
-    color: #dc3545; /* Bootstrap Danger Red */
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-    background: transparent;
-}
-
-.remove-file-btn:hover {
-    background-color: #ffebee;
-    color: #b71c1c;
-    transform: scale(1.1);
-}
-
-/* ----- INPUT TABLE (Officers & Members) ----- */
+/* Input Table (Editable) */
 .input-table-container {
     overflow-x: auto;
-    margin-bottom: 10px;
     border: 1px solid #e0e0e0;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
+    margin-bottom: 10px;
 }
 
 .input-table {
     width: 100%;
+    min-width: 700px;
     border-collapse: collapse;
-    min-width: 600px; /* Forces scroll on small screens */
 }
 
 .input-table th {
-    background-color: #f8f9fa;
+    background: #f8f9fa;
     color: var(--text-dark);
+    padding: 12px 15px;
+    text-align: left;
     font-size: 0.8rem;
     text-transform: uppercase;
-    text-align: left;
-    padding: 12px 15px;
-    border-bottom: 1px solid #e0e0e0;
 }
 
 .input-table td {
@@ -373,72 +487,42 @@ th.required::after {
     background: #fff;
 }
 
-/* Input styling inside table */
-.input-table input,
-.input-table select {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid #eee;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    box-sizing: border-box;
-}
-
-.input-table input:focus,
-.input-table select:focus {
-    border-color: var(--brand-red);
-    outline: none;
-}
-
 .add-row-btn {
     margin-top: 10px;
-    background: none;
-    border: 1px dashed var(--text-dark);
-    color: var(--text-dark);
-    padding: 8px 15px;
-    border-radius: 8px;
+    background: transparent;
+    border: 1px dashed var(--text-gray);
+    color: var(--text-medium);
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.add-row-btn:hover {
-    border-color: var(--brand-red);
-    color: var(--brand-red);
-    background-color: var(--brand-red-light);
-}
-
-/* ----- Submit Button ----- */
-.form-actions {
-    padding: 20px 0;
-    border-top: 1px solid #f0f0f0;
-    margin-top: 10px;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.submit-btn {
-    padding: 12px 40px;
-    background-color: var(--brand-red);
-    color: var(--sidebar-bg);
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
 }
 
-.submit-btn:hover {
-    background-color: #8a1824; 
-    transform: translateY(-1px);
+/* Footer Actions */
+.form-actions {
+    padding: 20px 30px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: flex-end;
+    background-color: #fff;
+    flex-shrink: 0;
+    /* Keeps footer fixed at bottom of modal if needed */
+    gap: 1rem;
+}
+
+.submit-btn {
+    padding: 0.6rem 2rem;
+    background-color: var(--success-text);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* Responsive */
@@ -447,9 +531,22 @@ th.required::after {
         flex-direction: column;
         gap: 0;
     }
-    .profile-form-container {
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .submit-btn, .btn-secondary, .create-profile-btn {
         width: 100%;
-        height: 100%;
-        border-radius: 0;
     }
 }

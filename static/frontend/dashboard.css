@@ -210,7 +210,7 @@ a { text-decoration: none; }
 /* --- HIDE TEXT SPAN --- */
 .nav-text {
     /* Keep text in DOM for accessibility but visually collapse it in the compact sidebar.
-       We avoid changing `visibility` or `display` to preserve layout semantics. */
+       We avoid changing visibility or display to preserve layout semantics. */
     opacity: 0;
     width: 0;
     overflow: hidden;

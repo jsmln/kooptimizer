@@ -4,7 +4,12 @@ from . import views
 app_name = 'cooperatives' 
 
 urlpatterns = [
-    path('profile/', views.profile_view, name='profile'),  # Default - shows history table
-    path('profile_form/', views.profile_form_view, name='profile_form'),  # Legacy form view
-    path('profile_history/', views.profile_history_view, name='profile_history'),  # Explicit history view
+    # Main page to view form
+    path('profile_form/', views.profile_form_view, name='profile_form'),
+    
+    # Action to save the form (AJAX POST)
+    path('profiles/create/', views.create_profile, name='create_profile'),
+    
+    # Action to download files
+    path('profiles/<int:coop_id>/attachment/<str:which>/', views.download_attachment, name='download_attachment'),
 ]
