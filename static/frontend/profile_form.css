@@ -415,7 +415,7 @@ th.required::after {
 /* ----- Submit Button ----- */
 .form-actions {
     padding: 20px 0;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid rgb(0, 144, 0);
     margin-top: 10px;
     display: flex;
     justify-content: flex-end;
@@ -423,7 +423,7 @@ th.required::after {
 
 .submit-btn {
     padding: 12px 40px;
-    background-color: var(--brand-red);
+    background-color: green;
     color: var(--sidebar-bg);
     border: none;
     border-radius: 10px;
@@ -437,7 +437,7 @@ th.required::after {
 }
 
 .submit-btn:hover {
-    background-color: #8a1824; 
+    background-color: #005200; 
     transform: translateY(-1px);
 }
 
