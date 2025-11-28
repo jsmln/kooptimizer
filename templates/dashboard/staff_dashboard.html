@@ -56,14 +56,51 @@
 
     <div class="card-section chart-container" style="margin-bottom: 25px;">
         <div class="card-header-custom">
-            <h3>Asset Performance of Assigned Coops (Top 5)</h3>
-            <select class="form-select-sm" style="border: 1px solid #e0e0e0; border-radius: 6px;">
-                <option>This Year</option>
-                <option>Last Year</option>
-            </select>
+            <h3>Financial Growth Trend (Assigned Coops)</h3>
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="financeCurrentView" class="current-view-badge">All Data</span>
+
+                <div class="chart-filter-wrapper">
+                    <button id="financeFilterToggle" class="filter-icon-btn" type="button" title="Filter Metrics">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    
+                    <div id="financeFilterControls" class="chart-filter-dropdown" style="display: none;">
+                        <div class="dropdown-header-text">Select View:</div>
+                        
+                        <div class="filter-option active" onclick="applyFinancialFilter('all', this)">
+                            <span>All Data</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        
+                        <div class="filter-option" onclick="applyFinancialFilter('assets', this)">
+                            <span><span class="dot asset-dot"></span> Assets</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        
+                        <div class="filter-option" onclick="applyFinancialFilter('capital', this)">
+                            <span><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        
+                        <div class="filter-option" onclick="applyFinancialFilter('surplus', this)">
+                            <span><span class="dot surplus-dot"></span> Net Surplus</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div style="height: 300px; width: 100%;">
-            <canvas id="assetBarChart"></canvas>
+
+        <div class="chart-legend-inline">
+            <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
+            <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
+            <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="financialTrendChart"></canvas>
         </div>
     </div>
 
@@ -301,30 +338,6 @@
                                 <td>plaridelmpc@gmail.com</td>
                                 <td>1414-06140255</td>
                             </tr>
-                            <tr>
-                                <td>Agriculture Cooperative</td>
-                                <td>Sabang, Lipa City</td>
-                                <td>agricoop@gmail.com</td>
-                                <td>1414-06140256</td>
-                            </tr>
-                            <tr>
-                                <td>Housing Cooperative</td>
-                                <td>Inosluban, Lipa City</td>
-                                <td>housingcoop@gmail.com</td>
-                                <td>1414-06140258</td>
-                            </tr>
-                             <tr>
-                                <td>Transport Service Coop</td>
-                                <td>Tambo, Lipa City</td>
-                                <td>transportcoop@gmail.com</td>
-                                <td>1414-06140260</td>
-                            </tr>
-                            <tr>
-                                <td>Farmers Credit Coop</td>
-                                <td>Pinagtong-ulan, Lipa City</td>
-                                <td>farmerscredit@gmail.com</td>
-                                <td>1414-06140262</td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -339,6 +352,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // 2. Staff Table Logic
     const toggle = document.getElementById('filterToggleStaff');
     const controls = document.getElementById('filterControlsStaff');
     const category = document.getElementById('categoryFilterStaff');
@@ -347,7 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = () => Array.from(tableBody.querySelectorAll('tr'));
     const noResults = document.getElementById('noResultsMessageStaff');
 
-    // Apply filters across all rows dynamically
     function applyStaffFilters() {
         const catVal = (category?.value || '').trim();
         const distVal = (district?.value || '').trim();
@@ -356,111 +369,136 @@ document.addEventListener('DOMContentLoaded', () => {
         rows().forEach(r => {
             const rCat = (r.dataset.category || '').trim();
             const rDist = (r.dataset.district || '').trim();
-
-            const matches = (catVal === '' || rCat === catVal)
-                && (distVal === '' || rDist === distVal);
-
+            const matches = (catVal === '' || rCat === catVal) && (distVal === '' || rDist === distVal);
             r.style.display = matches ? '' : 'none';
             if (matches) found = true;
         });
-
         noResults.style.display = found ? 'none' : 'block';
     }
 
-    // Toggle inline filter controls
     toggle?.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!controls) return;
         controls.style.display = (controls.style.display === 'flex') ? 'none' : 'flex';
-        toggle.setAttribute('aria-expanded', String(controls.style.display === 'flex'));
     });
 
-    // Hide controls when clicking outside (do not clear)
     document.addEventListener('click', (ev) => {
-        if (!controls || !toggle) return;
-        if (!controls.contains(ev.target) && !toggle.contains(ev.target)) {
+        if (controls && !controls.contains(ev.target) && !toggle.contains(ev.target)) {
             controls.style.display = 'none';
-            toggle.setAttribute('aria-expanded', 'false');
         }
     });
 
-    // Wire change events so filtering is immediate
     [category, district].forEach(el => el?.addEventListener('change', applyStaffFilters));
-
-    // Initialize on load
     applyStaffFilters();
 
-    const ctx = document.getElementById('assetBarChart');
-    
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'bar',
+    // 3. FINANCIAL TREND CHART LOGIC (Replaces the old Asset Chart)
+    const ctxFin = document.getElementById('financialTrendChart');
+    let financialChart;
+
+    if (ctxFin) {
+        financialChart = new Chart(ctxFin.getContext('2d'), {
+            type: 'line',
             data: {
-                // Using names from your existing table data
-                labels: ['Consumer Coop', 'Plaridel MPC', 'Agriculture Coop', 'Transport Service', 'Housing Coop'],
-                datasets: [{
-                    label: 'Total Assets (in PHP)',
-                    data: [356964, 520000, 210500, 180000, 150000], // Dummy data matching "Top 5" logic
-                    backgroundColor: '#a91e2c', // var(--brand-red)
-                    borderRadius: 4,
-                    barThickness: 40, // Fixed width for cleaner look
-                }]
+                labels: ['2020', '2021', '2022', '2023', '2024'],
+                datasets: [
+                    {
+                        label: 'Assets', // Index 0
+                        data: [120, 135, 142, 258, 356],
+                        borderColor: '#2e7d32', backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        tension: 0.3, fill: false, hidden: false 
+                    },
+                    {
+                        label: 'Paid-Up Capital', // Index 1
+                        data: [80, 90, 95, 102, 108],
+                        borderColor: '#1565c0', backgroundColor: 'rgba(21, 101, 192, 0.1)',
+                        tension: 0.3, fill: false, hidden: false 
+                    },
+                    {
+                        label: 'Net Surplus', // Index 2
+                        data: [5, 6.2, 7.8, 9.5, 10.6],
+                        borderColor: '#ef6c00', backgroundColor: 'rgba(239, 108, 0, 0.1)',
+                        tension: 0.3, fill: false, hidden: false 
+                    }
+                ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false // Hide legend since title explains it
-                    },
-                    tooltip: {
-                        backgroundColor: '#2B3674',
-                        padding: 12,
-                        titleFont: { size: 13 },
-                        bodyFont: { size: 13 },
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(context.parsed.y);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#f0f0f0',
-                            drawBorder: false,
-                        },
-                        ticks: {
-                            color: '#A3AED0',
-                            font: { size: 11 },
-                            callback: function(value) {
-                                return '₱' + value / 1000 + 'k'; // Abbreviate large numbers
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false,
-                            drawBorder: false,
-                        },
-                        ticks: {
-                            color: '#2B3674',
-                            font: { size: 12, weight: 'bold' }
-                        }
-                    }
-                }
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
             }
         });
     }
+
+    // --- Financial Chart Filter Logic ---
+    const filterToggleBtn = document.getElementById('financeFilterToggle');
+    const filterDropdown = document.getElementById('financeFilterControls');
+
+    filterToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        if (filterDropdown.style.display === 'none' || filterDropdown.style.display === '') {
+            filterDropdown.style.display = 'flex'; 
+            filterToggleBtn.classList.add('active');     
+        } else {
+            filterDropdown.style.display = 'none'; 
+            filterToggleBtn.classList.remove('active');  
+        }
+    });
+
+    window.applyFinancialFilter = function(type, clickedElement) {
+        if(!financialChart) return;
+
+        // Logic
+        if (type === 'all') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = false;
+        } else if (type === 'assets') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'capital') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'surplus') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = false;
+        }
+        
+        financialChart.update();
+
+        // UI Updates
+        const allOptions = document.querySelectorAll('#financeFilterControls .filter-option');
+        allOptions.forEach(opt => opt.classList.remove('active'));
+        clickedElement.classList.add('active');
+
+        // Status Label
+        const labelMap = {
+            'all': 'All Data',
+            'assets': 'Assets',
+            'capital': 'Paid-Up Capital',
+            'surplus': 'Net Surplus'
+        };
+        document.getElementById('financeCurrentView').textContent = labelMap[type];
+
+        // Close
+        filterDropdown.style.display = 'none';
+        filterToggleBtn.classList.remove('active');
+    };
+
+    // Close on global click
+    document.addEventListener('click', () => {
+        if (filterDropdown && filterDropdown.style.display === 'flex') {
+            filterDropdown.style.display = 'none';
+            filterToggleBtn.classList.remove('active');
+        }
+    });
+
+    // Prevent clicks inside dropdown
+    filterDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
 });
 </script>
 {% endblock %}
