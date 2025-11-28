@@ -1442,8 +1442,8 @@ textarea:focus {
     border-bottom: 2px solid var(--brand-red);
     padding-bottom: 0.75rem;
 }
-    color: white;
-}
+    /* color: white;
+} */
 
 /* Enhanced General Information Layout */
 .info-grid-enhanced {
