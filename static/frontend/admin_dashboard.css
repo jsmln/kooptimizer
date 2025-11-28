@@ -42,10 +42,19 @@
 
 /* --- A. KPI Stats Grid --- */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
     margin-bottom: 25px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.stats-grid .stat-card {
+    flex: 1;
+    min-width: 200px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .stat-card {
@@ -179,34 +188,73 @@
 
 /* --- Section 1: Business & Ranking --- */
 .charts-section {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
     margin-bottom: 25px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.charts-section .chart-card {
+    flex: 1;
+    min-width: 300px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* --- Section 2: Secondary Analytics (3 cols) --- */
 .analytics-grid-secondary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
     margin-bottom: 25px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.analytics-grid-secondary .chart-card,
+.analytics-grid-secondary .table-card {
+    flex: 1;
+    min-width: 300px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* --- Section 3: Financials & Workload --- */
 .tables-grid-row {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
     margin-bottom: 25px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.tables-grid-row .chart-card,
+.tables-grid-row .table-card {
+    flex: 1;
+    min-width: 400px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* --- Section 4: Operations --- */
 .operations-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
     margin-bottom: 30px;
+    width: 100%;
+    max-width: 100%;
+}
+
+.operations-grid .table-card,
+.operations-grid .filter-section {
+    flex: 1;
+    min-width: 400px;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* --- Tables --- */
@@ -606,22 +654,73 @@
 }
 
 /* Responsive */
+@media (max-width: 1400px) {
+    .analytics-grid-secondary .chart-card,
+    .analytics-grid-secondary .table-card {
+        min-width: 280px;
+    }
+    .charts-section .chart-card {
+        min-width: 280px;
+    }
+}
 @media (max-width: 1200px) {
-    .tables-grid-row { grid-template-columns: 1fr; }
-    .charts-section { grid-template-columns: 1fr; }
+    .tables-grid-row .chart-card,
+    .tables-grid-row .table-card {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+    .charts-section .chart-card {
+        flex: 1 1 calc(50% - 0.75rem);
+        min-width: 300px;
+    }
+    .stats-grid .stat-card {
+        flex: 1 1 calc(50% - 0.75rem);
+        min-width: 180px;
+    }
+    .analytics-grid-secondary .chart-card,
+    .analytics-grid-secondary .table-card {
+        flex: 1 1 calc(50% - 0.75rem);
+        min-width: 250px;
+    }
+    .operations-grid .table-card,
+    .operations-grid .filter-section {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
 }
 @media (max-width: 992px) {
-    .analytics-grid-secondary, .operations-grid { grid-template-columns: 1fr; }
+    .analytics-grid-secondary .chart-card,
+    .analytics-grid-secondary .table-card {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+    .operations-grid .table-card,
+    .operations-grid .filter-section {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
 }
 @media (max-width: 768px) {
-    .analytics-grid-secondary {
-        grid-template-columns: 1fr;
-    }
     .dashboard-header {
         flex-direction: column;
         gap: 10px;
     }
-    .stats-grid {
-        grid-template-columns: 1fr;
+    .stats-grid .stat-card {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+    .analytics-grid-secondary .chart-card,
+    .analytics-grid-secondary .table-card {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+    .charts-section .chart-card {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+    .tables-grid-row .chart-card,
+    .tables-grid-row .table-card {
+        flex: 1 1 100%;
+        min-width: 100%;
     }
 }

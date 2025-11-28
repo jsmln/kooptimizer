@@ -4,15 +4,212 @@
 {% block dashboard_title %}Staff Dashboard{% endblock %}
 
 {% block extra_head %}
-    {{ block.super }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="{% static 'frontend/staff_dashboard.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
+<link rel="stylesheet" href="{% static 'frontend/staff_dashboard.css' %}">
+<style>
+    #staffDistrictMap {
+        height: 100%;
+        width: 100%;
+        border-radius: 8px;
+        z-index: 0;
+        min-height: 450px;
+    }
+
+    /* Special styling for map card - allow it to expand */
+    #staffDistrictMapCard {
+        height: auto !important;
+        min-height: 500px !important;
+        max-height: none !important;
+    }
+
+    #staffDistrictMapWrapper {
+        height: 450px !important;
+        min-height: 450px !important;
+        max-height: none !important;
+    }
+
+    #staffDistrictMap {
+        min-height: 450px !important;
+    }
+
+    .dashboard-section {
+        margin-bottom: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .dashboard-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .charts-section {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+
+    .charts-section .chart-card {
+        flex: 1;
+        min-width: 300px;
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-card {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-section {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .dashboard-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .card-header-custom h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #2B3674;
+        font-weight: 700;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        min-height: 0;
+    }
+
+    .content-split {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .card-section {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        height: 500px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08);
+    }
+
+    .card-section.main-list {
+        min-height: 500px;
+    }
+
+    .card-section.activity-feed {
+        min-height: 500px;
+    }
+
+    .table-responsive {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .timeline {
+        flex: 1;
+        overflow-y: auto;
+        max-height: calc(500px - 60px);
+    }
+
+    @media (max-width: 1200px) {
+        .content-split {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-card {
+            width: 100%;
+        }
+    }
+
+    .district-label {
+        font-size: 12px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        text-align: center;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px 8px;
+        border-radius: 4px;
+        pointer-events: none;
+    }
+
+    .map-legend {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        font-size: 11px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin: 3px 0;
+    }
+
+    .legend-color {
+        width: 20px;
+        height: 15px;
+        margin-right: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
 {% endblock %}
 
 {% block dashboard_content %}
 <div class="staff-dashboard-container">
-    
+
     <div class="dashboard-header">
         <div>
             <h4 class="subtitle">Workload Overview</h4>
@@ -33,13 +230,24 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box green-box">
-                <i class="bi bi-check-circle-fill"></i>
+            <div class="icon-box blue-box">
+                <i class="bi bi-people-fill"></i>
             </div>
             <div class="stat-info">
-                <p>Updated Profiles</p>
-                <h3 id="stat-updated-profiles">0</h3>
-                <small class="text-muted">Recently updated by coops</small>
+                <p>Total Members</p>
+                <h3 id="stat-total-members">0</h3>
+                <small class="text-muted">Across all cooperatives</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box purple-box">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stat-info">
+                <p>Total Assets</p>
+                <h3 id="stat-total-assets">₱ 0</h3>
+                <small class="text-muted">Combined financials</small>
             </div>
         </div>
 
@@ -48,14 +256,37 @@
                 <i class="bi bi-exclamation-triangle-fill"></i>
             </div>
             <div class="stat-info">
-                <p>Pending Submission</p>
-                <h3 id="stat-pending-submission">0</h3>
-                <small class="text-muted">Profiles not yet submitted</small>
+                <p>Pending Reviews</p>
+                <h3 id="stat-pending-reviews">0</h3>
+                <small class="text-muted">Requires attention</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box green-box">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Compliance Rate</p>
+                <h3 id="stat-compliance-rate">0%</h3>
+                <small class="text-muted">Active COC & COTE</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box teal-box">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-info">
+                <p>Updated Profiles</p>
+                <h3 id="stat-updated-profiles">0</h3>
+                <small class="text-muted">Recently updated</small>
             </div>
         </div>
     </div>
 
-    <div class="charts-section" style="margin-top: 2rem;">
+    <!-- Analytics Charts Row 1 -->
+    <div class="charts-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
         <div class="chart-card" style="flex: 1; min-width: 300px;">
             <div class="card-header-custom">
                 <h3>Assigned Cooperatives by Category</h3>
@@ -68,17 +299,113 @@
         <div class="chart-card" style="flex: 1; min-width: 300px;">
             <div class="card-header-custom">
                 <h3>Compliance Status</h3>
+                <div class="legend-box">
+                    <span class="dot active"></span> OK
+                    <span class="dot inactive"></span> Needs Action
+                </div>
             </div>
             <div class="chart-wrapper" style="height: 250px;">
                 <canvas id="staffComplianceChart"></canvas>
             </div>
         </div>
+
+        <div class="chart-card" style="flex: 1; min-width: 300px;">
+            <div class="card-header-custom">
+                <h3>Member Gender Distribution</h3>
+            </div>
+            <div class="chart-wrapper" style="height: 250px;">
+                <canvas id="staffMemberDemographicsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Charts Row 2 -->
+    <div class="charts-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="chart-card" style="flex: 1; min-width: 300px;">
+            <div class="card-header-custom">
+                <h3>Business Activity</h3>
+            </div>
+            <div class="chart-wrapper" style="height: 250px;">
+                <canvas id="staffBusinessActivityChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card" style="flex: 1; min-width: 300px;">
+            <div class="card-header-custom">
+                <h3>Financial Trend</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="staffFinanceFilterToggle" class="btn btn-sm btn-outline-secondary"
+                        style="font-size: 0.75rem;">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    <span id="staffFinanceCurrentView" style="font-size: 0.75rem; color: #6c757d;">All Data</span>
+                </div>
+            </div>
+            <div class="chart-wrapper" style="height: 250px;">
+                <canvas id="staffFinancialTrendChart"></canvas>
+            </div>
+            <div id="staffFinanceFilterControls" style="display: none; padding: 10px; gap: 5px; flex-wrap: wrap;">
+                <div class="filter-option" onclick="applyStaffFinancialFilter('all', this)">All Data</div>
+                <div class="filter-option" onclick="applyStaffFinancialFilter('assets', this)">Assets</div>
+                <div class="filter-option" onclick="applyStaffFinancialFilter('capital', this)">Paid-Up Capital</div>
+                <div class="filter-option" onclick="applyStaffFinancialFilter('surplus', this)">Net Surplus</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Geographic District Distribution - Fixed Size -->
+    <div class="dashboard-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="chart-card" id="staffDistrictMapCard"
+            style="width: 100%; max-width: 100%; height: auto !important; min-height: 500px !important; max-height: none !important; display: flex; flex-direction: row; gap: 1rem; padding: 20px;">
+            <!-- Map Section - 3/4 width -->
+            <div style="flex: 3; display: flex; flex-direction: column;">
+                <div class="card-header-custom" style="margin-bottom: 10px;">
+                    <h3>Geographic District Distribution</h3>
+                </div>
+                <div class="chart-wrapper" id="staffDistrictMapWrapper"
+                    style="position: relative; height: 450px !important; min-height: 450px !important; max-height: none !important; overflow: hidden; width: 100%; flex: 1;">
+                    <div id="staffDistrictMap" style="height: 100%; width: 100%;"></div>
+                    <div class="map-legend" style="bottom: 20px; right: 20px;">
+                        <strong>Cooperatives</strong>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #FFEDA0;"></div> 0-5
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #FD8D3C;"></div> 6-10
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #FC4E2A;"></div> 11-15
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #E31A1C;"></div> 16-20
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #BD0026;"></div> 21-25
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #800026;"></div> 25+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- District Info Sidebar - 1/4 width -->
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 0.75rem; min-width: 200px;">
+                <div style="font-weight: 700; color: #2B3674; margin-bottom: 0.5rem; font-size: 0.9rem;">District
+                    Summary</div>
+                <div id="staffDistrictInfoCards"
+                    style="display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; max-height: 450px;">
+                    <!-- District cards will be dynamically loaded here -->
+                    <div class="text-center text-muted p-3" style="font-size: 0.85rem;">Loading districts...</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="content-split">
-        
         <div class="card-section main-list">
-            <div class="card-header-custom">
+            <div class="card-header-custom"
+                style="border-bottom: 1px solid #edf2f7; padding-bottom: 10px; margin-bottom: 15px;">
                 <h3>My Assigned Cooperatives</h3>
                 <div class="header-actions" style="display:flex;align-items:center;gap:8px;">
 
@@ -87,7 +414,8 @@
                             <i class="bi bi-funnel"></i> <span>Filter</span>
                         </button>
 
-                        <div id="filterControlsStaff" class="filter-controls" style="display:none; gap:6px; align-items:center;">
+                        <div id="filterControlsStaff" class="filter-controls"
+                            style="display:none; gap:6px; align-items:center;">
                             <select class="form-select-sm" id="categoryFilterStaff" style="min-width:110px;">
                                 <option value="">All Categories</option>
                                 <option value="Micro">Micro</option>
@@ -106,8 +434,8 @@
                         </div>
                     </div>
                 </div>
-             </div>
-            
+            </div>
+
             <div class="table-responsive">
                 <table class="staff-table">
                     <thead>
@@ -119,17 +447,20 @@
                         </tr>
                     </thead>
                     <tbody id="staffCoopTableBody">
-                        <tr><td colspan="4" class="text-center text-muted p-3">Loading cooperatives...</td></tr>
+                        <tr>
+                            <td colspan="4" class="text-center text-muted p-3">Loading cooperatives...</td>
+                        </tr>
                     </tbody>
-                  </table>
+                </table>
                 <div id="noResultsMessageStaff" style="display:none;padding:12px;text-align:center;color:#6c757d;">
                     No cooperatives found matching the selected filters.
                 </div>
-             </div>
+            </div>
         </div>
 
         <div class="card-section activity-feed">
-            <div class="card-header-custom">
+            <div class="card-header-custom"
+                style="border-bottom: 1px solid #edf2f7; padding-bottom: 10px; margin-bottom: 15px;">
                 <h3>Recent Updates</h3>
             </div>
             <div class="timeline" id="recentActivityTimeline">
@@ -191,7 +522,9 @@
                             </tr>
                         </thead>
                         <tbody id="assignedCoopsTableBody">
-                            <tr><td colspan="4" class="text-center text-muted p-3">Loading...</td></tr>
+                            <tr>
+                                <td colspan="4" class="text-center text-muted p-3">Loading...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -205,18 +538,52 @@
 </div>
 
 <script>
-    let staffCategoryChart, staffComplianceChart;
+    let staffCategoryChart, staffComplianceChart, staffBusinessActivityChart, staffFinancialTrendChart, staffMemberDemographicsChart;
+    let staffFinancialChart;
+    let staffDistrictMap = null;
+    let staffDistrictLayers = {}; // Store district layer references
+    let staffDistrictMarkers = {}; // Store district marker references
+    let staffDistrictCardData = {}; // Store original district card data
+    let staffSelectedDistrict = null; // Currently selected district
 
     async function loadStaffDashboardData() {
         try {
             // Load stats
             const statsResponse = await fetch('{% url "dashboard:dashboard_stats_api" %}');
             const statsData = await statsResponse.json();
-            updateStaffStats(statsData);
 
-            // Load charts data
+            // Load pending reviews for stats
+            try {
+                const reviewsResponse = await fetch('{% url "dashboard:dashboard_pending_reviews_api" %}');
+                const reviewsData = await reviewsResponse.json();
+                statsData.pending_reviews = reviewsData.pending_reviews ? reviewsData.pending_reviews.length : 0;
+            } catch (e) {
+                statsData.pending_reviews = 0;
+            }
+
+            // Calculate updated profiles (profiles updated in last 30 days)
+            statsData.updated_profiles = statsData.total_cooperatives || 0; // Simplified for now
+
+            // Load charts data (which includes compliance data)
             const chartsResponse = await fetch('{% url "dashboard:dashboard_charts_api" %}');
+            if (!chartsResponse.ok) {
+                throw new Error(`Charts API error: ${chartsResponse.status}`);
+            }
             const chartsData = await chartsResponse.json();
+            
+            if (chartsData.error) {
+                console.error('Charts API error:', chartsData.error);
+            } else {
+                // Merge compliance data from charts into stats for updateStaffStats
+                if (chartsData.compliance) {
+                    statsData.compliance = chartsData.compliance;
+                    console.log('Compliance data loaded:', chartsData.compliance);
+                } else {
+                    console.warn('No compliance data in charts response');
+                }
+            }
+            
+            updateStaffStats(statsData);
             initializeStaffCharts(chartsData);
 
             // Load cooperatives list
@@ -235,10 +602,50 @@
 
     function updateStaffStats(data) {
         document.getElementById('stat-assigned-coops').textContent = data.total_cooperatives || 0;
-        // Calculate updated profiles (profiles with recent updates)
-        document.getElementById('stat-updated-profiles').textContent = data.total_cooperatives || 0;
-        // Calculate pending submissions
-        document.getElementById('stat-pending-submission').textContent = data.pending_users || 0;
+        document.getElementById('stat-total-members').textContent = (data.total_members || 0).toLocaleString();
+
+        // Format assets
+        const assets = parseFloat(data.total_assets || 0);
+        let assetsText;
+        if (assets >= 1000000) {
+            assetsText = `₱ ${(assets / 1000000).toFixed(1)}M`;
+        } else if (assets >= 1000) {
+            assetsText = `₱ ${(assets / 1000).toFixed(0)}K`;
+        } else {
+            assetsText = `₱ ${assets.toFixed(0)}`;
+        }
+        document.getElementById('stat-total-assets').textContent = assetsText;
+
+        document.getElementById('stat-pending-reviews').textContent = data.pending_reviews || 0;
+
+        // Calculate compliance rate
+        // Compliance rate = percentage of cooperatives with BOTH COC and COTE active
+        const compliance = data.compliance || { 
+            coc: { active: 0, inactive: 0 }, 
+            cote: { active: 0, inactive: 0 },
+            both_active: 0,
+            total_profiles: 0
+        };
+        
+        // Use the backend-calculated both_active count if available
+        const bothActive = compliance.both_active || 0;
+        const totalProfiles = compliance.total_profiles || 0;
+        
+        // Fallback calculation if backend doesn't provide both_active
+        let complianceRate = 0;
+        if (totalProfiles > 0 && bothActive > 0) {
+            complianceRate = Math.round((bothActive / totalProfiles) * 100);
+        } else if (totalProfiles > 0) {
+            // Fallback: calculate from individual counts (less accurate)
+            const totalProfilesCalc = (compliance.coc.active || 0) + (compliance.coc.inactive || 0);
+            const bothActiveCalc = Math.min(compliance.coc.active || 0, compliance.cote.active || 0);
+            complianceRate = totalProfilesCalc > 0 ? Math.round((bothActiveCalc / totalProfilesCalc) * 100) : 0;
+        }
+        
+        document.getElementById('stat-compliance-rate').textContent = `${complianceRate}%`;
+
+        // Updated profiles (recently updated)
+        document.getElementById('stat-updated-profiles').textContent = data.updated_profiles || 0;
     }
 
     function initializeStaffCharts(data) {
@@ -248,7 +655,7 @@
             const categoryLabels = Object.keys(data.categories || {});
             const categoryValues = Object.values(data.categories || {});
             const categoryColors = ['#a91e2c', '#e57373', '#42a5f5', '#26a69a', '#ff9800'];
-            
+
             if (staffCategoryChart) staffCategoryChart.destroy();
             staffCategoryChart = new Chart(ctxCat.getContext('2d'), {
                 type: 'doughnut',
@@ -267,28 +674,31 @@
             });
         }
 
+        // District Map Chart
+        initializeStaffDistrictMap(data.districts || {});
+
         // Compliance Chart
         const ctxComp = document.getElementById('staffComplianceChart');
         if (ctxComp) {
-            const compliance = data.compliance || {coc: {active: 0, inactive: 0}, cote: {active: 0, inactive: 0}};
-            
+            const compliance = data.compliance || { coc: { active: 0, inactive: 0 }, cote: { active: 0, inactive: 0 } };
+
             if (staffComplianceChart) staffComplianceChart.destroy();
             staffComplianceChart = new Chart(ctxComp.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: ['COC', 'COTE'],
                     datasets: [
-                        { 
-                            label: 'Active', 
-                            data: [compliance.coc.active || 0, compliance.cote.active || 0], 
-                            backgroundColor: '#4caf50', 
-                            barThickness: 20 
+                        {
+                            label: 'Active',
+                            data: [compliance.coc.active || 0, compliance.cote.active || 0],
+                            backgroundColor: '#4caf50',
+                            barThickness: 20
                         },
-                        { 
-                            label: 'Inactive', 
-                            data: [compliance.coc.inactive || 0, compliance.cote.inactive || 0], 
-                            backgroundColor: '#ef5350', 
-                            barThickness: 20 
+                        {
+                            label: 'Inactive',
+                            data: [compliance.coc.inactive || 0, compliance.cote.inactive || 0],
+                            backgroundColor: '#ef5350',
+                            barThickness: 20
                         }
                     ]
                 },
@@ -299,24 +709,919 @@
                 }
             });
         }
+
+        // Business Activity Chart
+        const ctxBiz = document.getElementById('staffBusinessActivityChart');
+        if (ctxBiz) {
+            const activityLabels = Object.keys(data.business_activities || {});
+            const activityValues = Object.values(data.business_activities || {});
+            const activityColors = ['#a71b20', '#7f0f12', '#d8443a', '#e95b4b', '#f27a6a', '#c62828', '#ff6b6b', '#4ecdc4'];
+
+            if (staffBusinessActivityChart) staffBusinessActivityChart.destroy();
+            staffBusinessActivityChart = new Chart(ctxBiz.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: activityLabels.length > 0 ? activityLabels : ['No Data'],
+                    datasets: [{
+                        label: 'Cooperatives',
+                        data: activityValues.length > 0 ? activityValues : [0],
+                        backgroundColor: activityColors.slice(0, activityLabels.length),
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // Financial Trend Chart
+        const ctxFin = document.getElementById('staffFinancialTrendChart');
+        if (ctxFin) {
+            const trend = data.financial_trend || {};
+            const assetsTrend = trend.assets || {};
+            const capitalTrend = trend.capital || {};
+            const surplusTrend = trend.surplus || {};
+
+            const allYears = new Set([
+                ...Object.keys(assetsTrend),
+                ...Object.keys(capitalTrend),
+                ...Object.keys(surplusTrend)
+            ]);
+            const trendLabels = Array.from(allYears).sort();
+
+            const assetsData = trendLabels.map(year => (assetsTrend[year] || 0) / 1000000);
+            const capitalData = trendLabels.map(year => (capitalTrend[year] || 0) / 1000000);
+            const surplusData = trendLabels.map(year => (surplusTrend[year] || 0) / 1000000);
+
+            if (staffFinancialTrendChart) staffFinancialTrendChart.destroy();
+            staffFinancialTrendChart = new Chart(ctxFin.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: trendLabels.length > 0 ? trendLabels : ['No Data'],
+                    datasets: [
+                        {
+                            label: 'Assets',
+                            data: assetsData.length > 0 ? assetsData : [0],
+                            borderColor: '#2e7d32',
+                            backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                            tension: 0.3,
+                            fill: false,
+                            hidden: false
+                        },
+                        {
+                            label: 'Paid-Up Capital',
+                            data: capitalData.length > 0 ? capitalData : [0],
+                            borderColor: '#1565c0',
+                            backgroundColor: 'rgba(21, 101, 192, 0.1)',
+                            tension: 0.3,
+                            fill: false,
+                            hidden: false
+                        },
+                        {
+                            label: 'Net Surplus',
+                            data: surplusData.length > 0 ? surplusData : [0],
+                            borderColor: '#ef6c00',
+                            backgroundColor: 'rgba(239, 108, 0, 0.1)',
+                            tension: 0.3,
+                            fill: false,
+                            hidden: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
+                }
+            });
+            staffFinancialChart = staffFinancialTrendChart;
+        }
+
+        // Member Demographics Chart
+        const ctxMem = document.getElementById('staffMemberDemographicsChart');
+        if (ctxMem) {
+            fetch('{% url "dashboard:dashboard_member_demographics_api" %}')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch member demographics');
+                    }
+                    return response.json();
+                })
+                .then(memberData => {
+                    // API returns demographics directly: {male: X, female: Y, others: Z, total: T}
+                    const maleCount = memberData.male || 0;
+                    const femaleCount = memberData.female || 0;
+                    const othersCount = memberData.others || 0;
+                    const total = maleCount + femaleCount + othersCount;
+
+                    if (staffMemberDemographicsChart) staffMemberDemographicsChart.destroy();
+
+                    // Only create chart if there's data
+                    if (total > 0) {
+                        staffMemberDemographicsChart = new Chart(ctxMem.getContext('2d'), {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Male', 'Female', 'Others'],
+                                datasets: [{
+                                    data: [maleCount, femaleCount, othersCount],
+                                    backgroundColor: ['#1565c0', '#c2185b', '#7b1fa2'],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: {
+                                            boxWidth: 12,
+                                            padding: 10,
+                                            font: {
+                                                size: 11
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function (context) {
+                                                const label = context.label || '';
+                                                const value = context.parsed || 0;
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                                return `${label}: ${value} (${percentage}%)`;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        // Show empty state
+                        const ctx = ctxMem.getContext('2d');
+                        ctx.clearRect(0, 0, ctxMem.width, ctxMem.height);
+                        ctx.font = '14px Inter';
+                        ctx.fillStyle = '#6c757d';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('No member data available', ctxMem.width / 2, ctxMem.height / 2);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading member demographics:', error);
+                    // Show error state
+                    if (ctxMem) {
+                        const ctx = ctxMem.getContext('2d');
+                        ctx.clearRect(0, 0, ctxMem.width, ctxMem.height);
+                        ctx.font = '14px Inter';
+                        ctx.fillStyle = '#dc3545';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Error loading data', ctxMem.width / 2, ctxMem.height / 2);
+                    }
+                });
+        }
+    }
+
+    // --- INITIALIZE STAFF DISTRICT MAP ---
+    function initializeStaffDistrictMap(districtData) {
+        const mapContainer = document.getElementById('staffDistrictMap');
+        if (!mapContainer) return;
+
+        // Clear existing map if it exists
+        if (staffDistrictMap) {
+            staffDistrictMap.remove();
+        }
+
+        // Initialize map centered on Lipa City
+        staffDistrictMap = L.map('staffDistrictMap').setView([13.9419, 121.1644], 12);
+
+        // Add tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '©OpenStreetMap, ©CartoDB',
+            maxZoom: 19
+        }).addTo(staffDistrictMap);
+
+        // District mapping (barangays to districts) - using actual names from GeoJSON
+        const districtMapping = {
+            "North": ["Balintawak", "Marauoy", "Dagatan", "Lumbang", "Talisay", "Bulacnin", "Pusil", "Bugtong Na Pulo", "Inosloban", "Plaridel", "San Lucas"],
+            "East": ["San Francisco", "San Celestino", "Malitlit", "Santo Toribio", "San Benito", "Santo Niño", "Munting Pulo", "Latag", "Sabang", "Tipacan", "San Jose", "Tangob", "Antipolo del Norte", "Antipolo del Sur", "Pinagkawitan"],
+            "West": ["Halang", "Duhatan", "Pinagtongulan", "Bulaklakan", "Pangao", "Bagong Pook", "Banaybanay", "Tambo", "Sico", "San Salvador", "Tanguay", "Tibig", "San Carlos", "Mataas Na Lupa", "Sapac"],
+            "South": ["Adya", "Lodlod", "Cumba", "Quezon", "Sampaguita", "San Sebastian", "Kayumanggi", "Anilao", "Anilao-Labac", "Pagolingin Bata", "Pagolingin East", "Pagolingin West", "Malagonlong", "Bolbok", "Rizal", "Mabini", "Calamias", "San Guillermo"],
+            "Urban": ["Poblacion Barangay 1", "Poblacion Barangay 2", "Poblacion Barangay 3", "Poblacion Barangay 4", "Poblacion Barangay 5", "Poblacion Barangay 6", "Poblacion Barangay 7", "Poblacion Barangay 8", "Poblacion Barangay 9", "Poblacion Barangay 9-A", "Poblacion Barangay 10", "Poblacion Barangay 11", "Barangay 12"]
+        };
+
+        // Color function based on count
+        function getColor(count) {
+            return count > 25 ? '#800026' :
+                count > 20 ? '#BD0026' :
+                    count > 15 ? '#E31A1C' :
+                        count > 10 ? '#FC4E2A' :
+                            count > 5 ? '#FD8D3C' :
+                                '#FFEDA0';
+        }
+
+        // Normalize district names (handle case variations)
+        const normalizedDistrictData = {};
+        Object.keys(districtData).forEach(key => {
+            const normalized = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+            normalizedDistrictData[normalized] = districtData[key];
+        });
+
+        // Load actual GeoJSON file from faeldon/philippines-json-maps
+        const geojsonPath = '{% static "geojson/barangays-municity-166-lipacity.json" %}';
+
+        fetch(geojsonPath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('GeoJSON file not found');
+                }
+                return response.json();
+            })
+            .then(barangayData => {
+                // Tag every feature with its District
+                barangayData.features.forEach(feature => {
+                    let bName = feature.properties.NAME_3 ||
+                        feature.properties.name ||
+                        feature.properties.NAME ||
+                        feature.properties.Barangay ||
+                        feature.properties.barangay ||
+                        '';
+
+                    // Normalize name for matching (handle special characters and case)
+                    let normalizedName = bName.trim();
+
+                    // Find which district this barangay belongs to (fuzzy match)
+                    let district = null;
+                    for (const [distName, barangays] of Object.entries(districtMapping)) {
+                        if (barangays.some(barangay => {
+                            // Exact match first
+                            if (normalizedName === barangay) return true;
+                            // Case-insensitive match
+                            if (normalizedName.toLowerCase() === barangay.toLowerCase()) return true;
+                            // Handle special characters - normalize ñ and remove accents
+                            let name1 = normalizedName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s]/g, '');
+                            let name2 = barangay.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w\s]/g, '');
+                            if (name1 === name2) return true;
+                            // Partial match (for "Poblacion Barangay X" vs "Barangay X")
+                            if (normalizedName.toLowerCase().includes(barangay.toLowerCase()) ||
+                                barangay.toLowerCase().includes(normalizedName.toLowerCase())) return true;
+                            return false;
+                        })) {
+                            district = distName;
+                            break;
+                        }
+                    }
+                    feature.properties.district = district;
+                });
+
+                // Filter out Unknown districts before dissolving
+                const filteredData = {
+                    type: "FeatureCollection",
+                    features: barangayData.features.filter(f => f.properties.district !== null && f.properties.district !== "Unknown")
+                };
+
+                // Dissolve (Merge) Barangays into Districts using Turf.js
+                const dissolved = turf.dissolve(filteredData, { propertyName: 'district' });
+
+                // Handle duplicate Urban districts - merge them into one
+                const districtGroups = {};
+                dissolved.features.forEach(feature => {
+                    const distName = feature.properties.district;
+                    if (distName && distName !== "Unknown") {
+                        if (!districtGroups[distName]) {
+                            districtGroups[distName] = [];
+                        }
+                        districtGroups[distName].push(feature);
+                    }
+                });
+
+                // Merge features with same district name using turf.union
+                const mergedFeatures = [];
+                Object.keys(districtGroups).forEach(distName => {
+                    const features = districtGroups[distName];
+                    if (features.length === 1) {
+                        mergedFeatures.push(features[0]);
+                    } else {
+                        // Merge multiple features into one
+                        let merged = features[0];
+                        for (let i = 1; i < features.length; i++) {
+                            try {
+                                merged = turf.union(merged, features[i]);
+                            } catch (e) {
+                                console.warn(`Could not merge ${distName} features:`, e);
+                                // If union fails, keep the first one (usually the center/main one)
+                            }
+                        }
+                        if (merged && merged.properties) {
+                            merged.properties.district = distName;
+                            mergedFeatures.push(merged);
+                        } else {
+                            // Fallback: use the first feature if merge failed
+                            mergedFeatures.push(features[0]);
+                        }
+                    }
+                });
+
+                const finalDissolved = {
+                    type: "FeatureCollection",
+                    features: mergedFeatures
+                };
+
+                // Add the merged shapes to the map
+                L.geoJSON(finalDissolved, {
+                    style: function (feature) {
+                        let distName = feature.properties.district;
+                        let count = normalizedDistrictData[distName] ||
+                            normalizedDistrictData[distName.toUpperCase()] ||
+                            normalizedDistrictData[distName.toLowerCase()] || 0;
+
+                        return {
+                            fillColor: getColor(count),
+                            weight: 2,
+                            opacity: 1,
+                            color: 'white',
+                            dashArray: '3',
+                            fillOpacity: 0.7
+                        };
+                    },
+                    onEachFeature: function (feature, layer) {
+                        // Store layer reference by district name
+                        const distName = feature.properties.district;
+                        if (distName && !staffDistrictLayers[distName]) {
+                            staffDistrictLayers[distName] = [];
+                        }
+                        if (distName) {
+                            staffDistrictLayers[distName].push(layer);
+                        }
+
+                        let count = normalizedDistrictData[distName] ||
+                            normalizedDistrictData[distName.toUpperCase()] ||
+                            normalizedDistrictData[distName.toLowerCase()] || 0;
+
+                        layer.bindPopup(`<strong>${distName} District</strong><br>Cooperatives: ${count}`);
+
+                        if (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon") {
+                            let labelPosition;
+
+                            // Special handling for Urban district - position in center of area, away from West
+                            if (distName === "Urban") {
+                                // Use Turf.js to get the centroid (geometric center) of the polygon
+                                try {
+                                    const centroid = turf.centroid(feature);
+                                    labelPosition = [centroid.geometry.coordinates[1], centroid.geometry.coordinates[0]];
+
+                                    // For Urban, shift slightly east and south to avoid West district overlap
+                                    // Lipa City center is approximately [13.9419, 121.1644]
+                                    const bounds = layer.getBounds();
+                                    const urbanCenter = bounds.getCenter();
+
+                                    // Shift towards the center of Lipa City (more east and slightly south)
+                                    const shiftLat = (13.9419 - urbanCenter.lat) * 0.3; // 30% towards city center
+                                    const shiftLng = (121.1644 - urbanCenter.lng) * 0.4; // 40% towards city center
+
+                                    labelPosition = [
+                                        urbanCenter.lat + shiftLat,
+                                        urbanCenter.lng + shiftLng
+                                    ];
+                                } catch (e) {
+                                    // Fallback to bounds center if centroid fails
+                                    const bounds = layer.getBounds();
+                                    labelPosition = bounds.getCenter();
+                                }
+                            } else if (distName === "West") {
+                                // For West district, position label away from Urban (shift west)
+                                const bounds = layer.getBounds();
+                                const westCenter = bounds.getCenter();
+                                // Shift slightly west to avoid Urban overlap
+                                labelPosition = [
+                                    westCenter.lat,
+                                    westCenter.lng - 0.01 // Shift west
+                                ];
+                            } else {
+                                // For other districts, use bounds center
+                                const bounds = layer.getBounds();
+                                labelPosition = bounds.getCenter();
+                            }
+
+                            L.marker(labelPosition, {
+                                icon: L.divIcon({
+                                    className: 'district-label',
+                                    html: `<div>${distName}<br/>(${count})</div>`,
+                                    iconSize: [100, 40]
+                                })
+                            }).addTo(staffDistrictMap);
+                        }
+                    }
+                }).addTo(staffDistrictMap);
+
+                // Fit map to show all districts
+                const group = new L.featureGroup();
+                finalDissolved.features.forEach(feature => {
+                    const layer = L.geoJSON(feature);
+                    group.addLayer(layer);
+                });
+                if (group.getBounds().isValid()) {
+                    staffDistrictMap.fitBounds(group.getBounds().pad(0.1));
+                }
+
+                // Load and add cooperative markers
+                loadStaffCooperativeMarkers(normalizedDistrictData, getColor);
+            })
+            .catch(error => {
+                console.warn('GeoJSON file not found, using simplified district shapes:', error);
+                // Fallback: Create simplified shapes if GeoJSON is not available
+                createSimplifiedStaffDistrictShapes(districtData, normalizedDistrictData, getColor);
+                // Still load markers even if GeoJSON fails
+                loadStaffCooperativeMarkers(normalizedDistrictData, getColor);
+            });
+    }
+
+    // --- LOAD COOPERATIVE MARKERS FOR STAFF ---
+    function loadStaffCooperativeMarkers(districtData, getColor) {
+        fetch('{% url "dashboard:dashboard_cooperative_locations_api" %}')
+            .then(response => response.json())
+            .then(data => {
+                const cooperatives = data.cooperatives || [];
+                const districts = data.districts || {};
+
+                // Create district info cards
+                updateStaffDistrictInfoCards(districts, districtData, getColor);
+
+                // Initialize district markers storage
+                staffDistrictMarkers = {};
+
+                // Add markers for each cooperative
+                cooperatives.forEach(coop => {
+                    const district = coop.district;
+                    const count = districtData[district] ||
+                        districtData[district.toUpperCase()] ||
+                        districtData[district.toLowerCase()] || 0;
+
+                    // Get district color
+                    const districtColor = getColor(count);
+
+                    // Create custom icon with district color
+                    const coopIcon = L.divIcon({
+                        className: 'cooperative-marker',
+                        html: `<div style="
+                            background-color: ${districtColor};
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 50%;
+                            border: 3px solid white;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-size: 14px;
+                            font-weight: bold;
+                        ">🏢</div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+
+                    // Add marker to map
+                    const marker = L.marker([coop.latitude, coop.longitude], {
+                        icon: coopIcon
+                    }).addTo(staffDistrictMap);
+
+                    // Store marker reference by district
+                    if (!staffDistrictMarkers[district]) {
+                        staffDistrictMarkers[district] = [];
+                    }
+                    staffDistrictMarkers[district].push({
+                        marker: marker,
+                        originalColor: districtColor
+                    });
+
+                    // Add popup with cooperative info
+                    marker.bindPopup(`
+                        <div style="min-width: 200px;">
+                            <strong style="color: ${districtColor}; font-size: 14px;">${coop.name}</strong><br>
+                            <small style="color: #666;">District: ${district}</small><br>
+                            <small style="color: #666;">${coop.address || 'Address not available'}</small>
+                        </div>
+                    `);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading cooperative locations:', error);
+            });
+    }
+
+    // --- UPDATE DISTRICT INFO CARDS FOR STAFF ---
+    function updateStaffDistrictInfoCards(districts, districtData, getColor) {
+        const container = document.getElementById('staffDistrictInfoCards');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // Store original card data
+        staffDistrictCardData = {};
+
+        // District order
+        const districtOrder = ['North', 'East', 'West', 'South', 'Urban'];
+
+        districtOrder.forEach(districtName => {
+            const count = districts[districtName] || 0;
+            const districtColor = getColor(count);
+
+            // Store original data
+            staffDistrictCardData[districtName] = {
+                color: districtColor,
+                count: count
+            };
+
+            const card = document.createElement('div');
+            card.className = 'staff-district-info-card';
+            card.dataset.district = districtName;
+            card.style.cssText = `
+                background: #fff;
+                border-radius: 12px;
+                padding: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                border-left: 4px solid ${districtColor};
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transition: transform 0.2s, opacity 0.3s;
+                cursor: pointer;
+            `;
+            card.onmouseenter = () => {
+                if (staffSelectedDistrict !== districtName) {
+                    card.style.transform = 'translateX(4px)';
+                }
+            };
+            card.onmouseleave = () => {
+                if (staffSelectedDistrict !== districtName) {
+                    card.style.transform = 'translateX(0)';
+                }
+            };
+
+            // Add click handler
+            card.onclick = () => toggleStaffDistrictFilter(districtName, districtData, getColor);
+
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'staff-district-icon';
+            iconDiv.dataset.district = districtName;
+            iconDiv.style.cssText = `
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+                background-color: ${districtColor};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 18px;
+                flex-shrink: 0;
+                transition: background-color 0.3s;
+            `;
+            iconDiv.textContent = districtName.charAt(0);
+
+            const textDiv = document.createElement('div');
+            textDiv.style.cssText = 'flex: 1; min-width: 0;';
+            textDiv.innerHTML = `
+                <div style="font-weight: 700; color: #2B3674; font-size: 0.9rem; margin-bottom: 4px;">${districtName}</div>
+                <div style="font-size: 0.85rem; color: #6c757d;">
+                    <strong class="staff-district-count" data-district="${districtName}" style="color: ${districtColor};">${count}</strong> ${count === 1 ? 'cooperative' : 'cooperatives'}
+                </div>
+            `;
+
+            card.appendChild(iconDiv);
+            card.appendChild(textDiv);
+            container.appendChild(card);
+        });
+    }
+
+    // --- TOGGLE DISTRICT FILTER FOR STAFF ---
+    function toggleStaffDistrictFilter(districtName, districtData, getColor) {
+        if (staffSelectedDistrict === districtName) {
+            // Deselect - restore all colors
+            staffSelectedDistrict = null;
+            restoreAllStaffDistricts(districtData, getColor);
+        } else {
+            // Select - grey out others
+            staffSelectedDistrict = districtName;
+            highlightStaffDistrict(districtName, districtData, getColor);
+        }
+    }
+
+    // --- HIGHLIGHT SELECTED DISTRICT FOR STAFF ---
+    function highlightStaffDistrict(selectedDistrictName, districtData, getColor) {
+        const greyColor = '#cccccc';
+        const greyBorder = '#999999';
+
+        // Update map layers
+        Object.keys(staffDistrictLayers).forEach(districtName => {
+            const layers = staffDistrictLayers[districtName] || [];
+            const isSelected = districtName === selectedDistrictName;
+
+            layers.forEach(layer => {
+                if (isSelected) {
+                    // Keep original color
+                    const count = districtData[districtName] ||
+                        districtData[districtName.toUpperCase()] ||
+                        districtData[districtName.toLowerCase()] || 0;
+                    layer.setStyle({
+                        fillColor: getColor(count),
+                        fillOpacity: 0.7
+                    });
+                } else {
+                    // Grey out
+                    layer.setStyle({
+                        fillColor: greyColor,
+                        fillOpacity: 0.3
+                    });
+                }
+            });
+        });
+
+        // Update markers
+        Object.keys(staffDistrictMarkers).forEach(districtName => {
+            const markers = staffDistrictMarkers[districtName] || [];
+            const isSelected = districtName === selectedDistrictName;
+
+            markers.forEach(markerData => {
+                const marker = markerData.marker;
+                if (isSelected) {
+                    // Keep original color
+                    const newIcon = L.divIcon({
+                        className: 'cooperative-marker',
+                        html: `<div style="
+                            background-color: ${markerData.originalColor};
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 50%;
+                            border: 3px solid white;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-size: 14px;
+                            font-weight: bold;
+                        ">🏢</div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+                    marker.setIcon(newIcon);
+                } else {
+                    // Grey out
+                    const greyIcon = L.divIcon({
+                        className: 'cooperative-marker',
+                        html: `<div style="
+                            background-color: ${greyColor};
+                            width: 24px;
+                            height: 24px;
+                            border-radius: 50%;
+                            border: 3px solid white;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: white;
+                            font-size: 14px;
+                            font-weight: bold;
+                        ">🏢</div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+                    marker.setIcon(greyIcon);
+                }
+            });
+        });
+
+        // Update district info cards
+        document.querySelectorAll('.staff-district-info-card').forEach(card => {
+            const cardDistrict = card.dataset.district;
+            const isSelected = cardDistrict === selectedDistrictName;
+            const cardData = staffDistrictCardData[cardDistrict];
+
+            if (!cardData) return;
+
+            const icon = card.querySelector('.staff-district-icon');
+            const countElement = card.querySelector('.staff-district-count');
+
+            if (isSelected) {
+                // Keep original color
+                card.style.borderLeftColor = cardData.color;
+                card.style.opacity = '1';
+                if (icon) icon.style.backgroundColor = cardData.color;
+                if (countElement) countElement.style.color = cardData.color;
+            } else {
+                // Grey out
+                card.style.borderLeftColor = greyBorder;
+                card.style.opacity = '0.5';
+                if (icon) icon.style.backgroundColor = greyColor;
+                if (countElement) countElement.style.color = greyColor;
+            }
+        });
+    }
+
+    // --- RESTORE ALL DISTRICTS FOR STAFF ---
+    function restoreAllStaffDistricts(districtData, getColor) {
+        // Restore map layers
+        Object.keys(staffDistrictLayers).forEach(districtName => {
+            const layers = staffDistrictLayers[districtName] || [];
+            const count = districtData[districtName] ||
+                districtData[districtName.toUpperCase()] ||
+                districtData[districtName.toLowerCase()] || 0;
+
+            layers.forEach(layer => {
+                layer.setStyle({
+                    fillColor: getColor(count),
+                    fillOpacity: 0.7
+                });
+            });
+        });
+
+        // Restore markers
+        Object.keys(staffDistrictMarkers).forEach(districtName => {
+            const markers = staffDistrictMarkers[districtName] || [];
+
+            markers.forEach(markerData => {
+                const newIcon = L.divIcon({
+                    className: 'cooperative-marker',
+                    html: `<div style="
+                        background-color: ${markerData.originalColor};
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-size: 14px;
+                        font-weight: bold;
+                    ">🏢</div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+                markerData.marker.setIcon(newIcon);
+            });
+        });
+
+        // Restore district info cards
+        document.querySelectorAll('.staff-district-info-card').forEach(card => {
+            const cardDistrict = card.dataset.district;
+            const cardData = staffDistrictCardData[cardDistrict];
+
+            if (!cardData) return;
+
+            const icon = card.querySelector('.staff-district-icon');
+            const countElement = card.querySelector('.staff-district-count');
+
+            card.style.borderLeftColor = cardData.color;
+            card.style.opacity = '1';
+            if (icon) icon.style.backgroundColor = cardData.color;
+            if (countElement) countElement.style.color = cardData.color;
+        });
+    }
+
+    // Fallback function for simplified shapes (if GeoJSON not available)
+    function createSimplifiedStaffDistrictShapes(districtData, normalizedDistrictData, getColor) {
+        const districtBounds = {
+            "North": [[13.96, 121.12], [14.00, 121.18]],
+            "East": [[13.92, 121.18], [13.98, 121.22]],
+            "West": [[13.92, 121.08], [13.98, 121.12]],
+            "South": [[13.86, 121.12], [13.94, 121.18]],
+            "Urban": [[13.92, 121.14], [13.96, 121.18]]
+        };
+
+        Object.keys(districtBounds).forEach(districtName => {
+            const count = normalizedDistrictData[districtName] ||
+                normalizedDistrictData[districtName.toUpperCase()] ||
+                normalizedDistrictData[districtName.toLowerCase()] || 0;
+            const bounds = districtBounds[districtName];
+
+            const polygon = L.rectangle(bounds, {
+                fillColor: getColor(count),
+                fillOpacity: 0.7,
+                color: 'white',
+                weight: 2,
+                dashArray: '3'
+            });
+
+            polygon.addTo(staffDistrictMap);
+            polygon.bindPopup(`<strong>${districtName} District</strong><br>Cooperatives: ${count}`);
+
+            const center = L.latLng(
+                (bounds[0][0] + bounds[1][0]) / 2,
+                (bounds[0][1] + bounds[1][1]) / 2
+            );
+
+            L.marker(center, {
+                icon: L.divIcon({
+                    className: 'district-label',
+                    html: `<div>${districtName}<br/>(${count})</div>`,
+                    iconSize: [100, 40]
+                })
+            }).addTo(staffDistrictMap);
+        });
+
+        const allBounds = Object.values(districtBounds);
+        if (allBounds.length > 0) {
+            const group = new L.featureGroup(
+                allBounds.map(b => L.rectangle(b))
+            );
+            staffDistrictMap.fitBounds(group.getBounds().pad(0.1));
+        }
+
+        // Load markers even in fallback mode
+        loadStaffCooperativeMarkers(normalizedDistrictData, getColor);
+    }
+
+    // Financial Chart Filter
+    function applyStaffFinancialFilter(type, clickedElement) {
+        if (!staffFinancialChart) return;
+
+        if (type === 'all') {
+            staffFinancialChart.getDatasetMeta(0).hidden = false;
+            staffFinancialChart.getDatasetMeta(1).hidden = false;
+            staffFinancialChart.getDatasetMeta(2).hidden = false;
+        } else if (type === 'assets') {
+            staffFinancialChart.getDatasetMeta(0).hidden = false;
+            staffFinancialChart.getDatasetMeta(1).hidden = true;
+            staffFinancialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'capital') {
+            staffFinancialChart.getDatasetMeta(0).hidden = true;
+            staffFinancialChart.getDatasetMeta(1).hidden = false;
+            staffFinancialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'surplus') {
+            staffFinancialChart.getDatasetMeta(0).hidden = true;
+            staffFinancialChart.getDatasetMeta(1).hidden = true;
+            staffFinancialChart.getDatasetMeta(2).hidden = false;
+        }
+
+        staffFinancialChart.update();
+
+        const allOptions = document.querySelectorAll('#staffFinanceFilterControls .filter-option');
+        allOptions.forEach(opt => opt.classList.remove('active'));
+        clickedElement.classList.add('active');
+
+        const labelMap = {
+            'all': 'All Data',
+            'assets': 'Assets',
+            'capital': 'Paid-Up Capital',
+            'surplus': 'Net Surplus'
+        };
+        document.getElementById('staffFinanceCurrentView').textContent = labelMap[type];
+
+        document.getElementById('staffFinanceFilterControls').style.display = 'none';
+        document.getElementById('staffFinanceFilterToggle').classList.remove('active');
     }
 
     function updateStaffCooperativesList(cooperatives) {
         const tbody = document.getElementById('staffCoopTableBody');
         const modalTbody = document.getElementById('assignedCoopsTableBody');
-        
+
         if (tbody) {
             tbody.innerHTML = '';
             cooperatives.forEach(coop => {
                 const row = document.createElement('tr');
-                row.setAttribute('data-category', coop.category || '');
-                row.setAttribute('data-district', coop.district || '');
-                row.setAttribute('data-bs-toggle', 'modal');
-                row.setAttribute('data-bs-target', '#coopProfileModal');
+                // Normalize category and district to match filter options (capitalize first letter)
+                const normalizeCategory = (cat) => {
+                    if (!cat) return '';
+                    const lower = cat.toLowerCase();
+                    if (lower === 'micro' || lower === 'small' || lower === 'medium' || lower === 'large') {
+                        return lower.charAt(0).toUpperCase() + lower.slice(1);
+                    }
+                    return cat; // Return as-is if not a standard category
+                };
+                const normalizeDistrict = (dist) => {
+                    if (!dist) return '';
+                    const lower = dist.toLowerCase();
+                    const districts = ['north', 'south', 'east', 'west', 'urban'];
+                    if (districts.includes(lower)) {
+                        return lower.charAt(0).toUpperCase() + lower.slice(1);
+                    }
+                    return dist; // Return as-is if not a standard district
+                };
+                const normalizedCategory = normalizeCategory(coop.category || '');
+                const normalizedDistrict = normalizeDistrict(coop.district || '');
+                row.setAttribute('data-category', normalizedCategory);
+                row.setAttribute('data-district', normalizedDistrict);
+                row.style.cursor = 'pointer';
+                row.onclick = () => {
+                    const modalCoopName = document.querySelector('#coopProfileModal .modal-body h4');
+                    if (modalCoopName) {
+                        modalCoopName.textContent = coop.name;
+                    }
+                    const modal = new bootstrap.Modal(document.getElementById('coopProfileModal'));
+                    modal.show();
+                };
                 const initials = (coop.name || 'C').substring(0, 1).toUpperCase();
                 const status = coop.approval_status === 'approved' ? 'success' : 'warning';
                 const statusText = coop.approval_status === 'approved' ? 'Updated' : 'Pending';
-                
+
                 row.innerHTML = `
                     <td>
                         <div class="coop-cell">
@@ -327,8 +1632,8 @@
                             </div>
                         </div>
                     </td>
-                    <td>${coop.category || 'N/A'}</td>
-                    <td>${coop.district || 'N/A'}</td>
+                    <td>${normalizedCategory || 'N/A'}</td>
+                    <td>${normalizedDistrict || 'N/A'}</td>
                     <td><span class="badge-status ${status}">${statusText}</span></td>
                 `;
                 tbody.appendChild(row);
@@ -353,9 +1658,9 @@
     function updateRecentActivity(activities) {
         const timeline = document.getElementById('recentActivityTimeline');
         if (!timeline) return;
-        
+
         timeline.innerHTML = '';
-        
+
         if (activities.length === 0) {
             timeline.innerHTML = '<div class="text-center text-muted p-3">No recent activity</div>';
             return;
@@ -390,10 +1695,38 @@
         return `${days} day${days > 1 ? 's' : ''} ago`;
     }
 
+    // Setup Staff Financial Filter Toggle
+    function setupStaffFinancialFilter() {
+        const filterToggle = document.getElementById('staffFinanceFilterToggle');
+        const filterControls = document.getElementById('staffFinanceFilterControls');
+
+        if (filterToggle && filterControls) {
+            filterToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (filterControls.style.display === 'none' || filterControls.style.display === '') {
+                    filterControls.style.display = 'flex';
+                    filterToggle.classList.add('active');
+                } else {
+                    filterControls.style.display = 'none';
+                    filterToggle.classList.remove('active');
+                }
+            });
+
+            // Close filter dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!filterControls.contains(e.target) && !filterToggle.contains(e.target)) {
+                    filterControls.style.display = 'none';
+                    filterToggle.classList.remove('active');
+                }
+            });
+        }
+    }
+
     // Filter functionality
     document.addEventListener('DOMContentLoaded', () => {
         loadStaffDashboardData();
-        
+        setupStaffFinancialFilter();
+
         const toggle = document.getElementById('filterToggleStaff');
         const controls = document.getElementById('filterControlsStaff');
         const category = document.getElementById('categoryFilterStaff');
@@ -410,8 +1743,13 @@
                 const rCat = (r.dataset.category || '').trim();
                 const rDist = (r.dataset.district || '').trim();
 
-                const matches = (catVal === '' || rCat === catVal)
-                    && (distVal === '' || rDist === distVal);
+                // Case-insensitive comparison
+                const categoryMatch = catVal === '' ||
+                    rCat.toLowerCase() === catVal.toLowerCase();
+                const districtMatch = distVal === '' ||
+                    rDist.toLowerCase() === distVal.toLowerCase();
+
+                const matches = categoryMatch && districtMatch;
 
                 r.style.display = matches ? '' : 'none';
                 if (matches) found = true;

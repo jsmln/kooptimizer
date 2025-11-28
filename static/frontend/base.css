@@ -39,6 +39,132 @@ body::after {
   z-index: -1;
 } */
 
+/* ============================================
+   UNIFIED PROFILE DROPDOWN STYLES
+   ============================================ */
+.profile-dropdown {
+    position: relative;
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.profile-trigger:hover {
+    background: #f7f9fc;
+}
+
+.profile-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #a91e2c;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #2B3674;
+}
+
+.profile-role {
+    font-size: 0.75rem;
+    color: #A3AED0;
+}
+
+.dropdown-arrow {
+    color: #A3AED0;
+    font-size: 0.8rem;
+    transition: transform 0.2s;
+}
+
+.profile-dropdown.active .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dropdown-menu-custom {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    min-width: 200px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.profile-dropdown.active .dropdown-menu-custom {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item-custom {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: #2B3674;
+    text-decoration: none;
+    transition: background 0.2s;
+    border-radius: 8px;
+    margin: 4px;
+}
+
+.dropdown-item-custom:first-child {
+    margin-top: 8px;
+}
+
+.dropdown-item-custom:last-child {
+    margin-bottom: 8px;
+}
+
+.dropdown-item-custom:hover {
+    background: #f7f9fc;
+    color: #2B3674;
+}
+
+.dropdown-item-custom i {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.dropdown-item-custom.logout {
+    color: #a91e2c;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 4px;
+}
+
+.dropdown-item-custom.logout:hover {
+    background: #fff0f2;
+    color: #a91e2c;
+}
+
 header {
   width: 100%;
   color: white;
@@ -425,54 +551,169 @@ header, main, footer {
   box-shadow: 0 0 10px #ffffff, 0 0 5px #ffffff !important;
 }
 
-#logoutModal .modal-content {
-  border-radius: 12px;
-  /* Matches your login card */
-  border: none;
-  background-color: #ffffff;
+/* Logout Modal Styles - Uniform across all pages */
+/* High specificity to override any other modal styles */
+.logout-modal-content,
+#logoutModal .modal-content,
+#logoutModal.modal .modal-content {
+  border-radius: 12px !important;
+  border: 1px solid #e0e0e0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+  background-color: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: none !important;
 }
 
-#logoutModal .modal-header {
-  border-bottom: none;
-  padding: 1.5rem 1.5rem 0.5rem;
+/* Modal backdrop blur effect */
+#logoutModal.modal.show .modal-backdrop {
+  backdrop-filter: blur(2px);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
+.logout-modal-header,
+#logoutModal .modal-header,
+#logoutModal.modal .modal-header {
+  border-bottom: 1px solid #f0f0f0 !important;
+  padding: 20px 24px !important;
+  position: relative !important;
+  background-color: transparent !important;
+  color: inherit !important;
+  flex-shrink: 0 !important;
+}
+
+.logout-modal-title,
 #logoutModal .modal-title {
-  color: #a91e2c;
-  /* Matches your "Login" title text */
+  font-size: 1.5rem;
   font-weight: 700;
-  font-size: 1.75rem;
+  color: #b71c1c;
+  margin: 0;
+  padding: 0;
 }
 
-#logoutModal .modal-body {
-  color: #333;
-  padding: 0.5rem 1.5rem 1.5rem;
+.logout-modal-close,
+#logoutModal .btn-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  opacity: 0.6;
+  font-size: 1.2rem;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.logout-modal-close:hover,
+#logoutModal .btn-close:hover {
+  opacity: 1;
+}
+
+.logout-modal-body,
+#logoutModal .modal-body,
+#logoutModal.modal .modal-body {
+  padding: 24px !important;
   font-size: 1rem;
+  color: #222;
+  line-height: 1.5;
+  overflow-y: visible !important;
 }
 
+.logout-modal-footer,
 #logoutModal .modal-footer {
-  border-top: none;
-  padding: 0 1.5rem 1.5rem;
+  border-top: 1px solid #f0f0f0;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
-/* Custom Red "Logout" Button */
-#btn-logout-confirm {
-  background-color: #a91e2c;
-  /* Matches your "Login" button */
-  border-color: #a91e2c;
-  color: #fff;
-  font-weight: 600;
-  padding: 0.5rem 1.25rem;
-}
-
-#btn-logout-confirm:hover {
-  background-color: #8c1823;
-  /* A slightly darker red */
-  border-color: #8c1823;
-}
-
-/* "Cancel" Button */
+.logout-btn-cancel,
 #btn-logout-cancel {
+  background: #ffffff;
+  color: #222;
+  border: 1px solid #d0d0d0;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.95rem;
   font-weight: 600;
-  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.logout-btn-cancel:hover,
+#btn-logout-cancel:hover {
+  background: #f5f5f5;
+  border-color: #b0b0b0;
+  color: #222;
+}
+
+.logout-btn-confirm,
+#btn-logout-confirm {
+  background: #b71c1c;
+  color: #ffffff;
+  border: 1px solid #b71c1c;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  text-align: center;
+}
+
+.logout-btn-confirm:hover,
+#btn-logout-confirm:hover {
+  background: #8a1515;
+  border-color: #8a1515;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* Responsive Logout Modal */
+@media (max-width: 576px) {
+  .logout-modal-content,
+  #logoutModal .modal-content {
+    margin: 10px;
+  }
+  
+  .logout-modal-header,
+  #logoutModal .modal-header {
+    padding: 16px 20px;
+  }
+  
+  .logout-modal-title,
+  #logoutModal .modal-title {
+    font-size: 1.25rem;
+  }
+  
+  .logout-modal-body,
+  #logoutModal .modal-body {
+    padding: 20px;
+    font-size: 0.95rem;
+  }
+  
+  .logout-modal-footer,
+  #logoutModal .modal-footer {
+    padding: 12px 20px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .logout-btn-cancel,
+  .logout-btn-confirm,
+  #btn-logout-cancel,
+  #btn-logout-confirm {
+    width: 100%;
+    min-width: auto;
+  }
 }

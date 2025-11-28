@@ -131,7 +131,7 @@
                     <button id="open-faq-from-sidebar" class="btn btn-outline-secondary btn-sm"
                         style="width:100%; text-align:left;">Open FAQs</button>
                 </div>
-                <div style="padding:8px 12px;">
+                <div id="push-notification-widget" style="padding:8px 12px;">
                     <div style="font-size:0.8rem; color:var(--text-gray); margin-bottom:6px;">
                         Get real-time updates?
                     </div>
@@ -154,15 +154,7 @@
                 <div class="page-title">{% block page_header %}Dashboard Overview{% endblock %}</div>
             </div>
 
-            <div class="user-menu">
-                <div class="user-info">
-                    <span class="u-name">{{ request.session.username }}</span>
-                    <span class="u-role">{{ request.session.role|capfirst }}</span>
-                </div>
-                <div class="avatar">
-                    {{ request.session.username|first|upper }}
-                </div>
-
+            <div class="user-menu" style="display: flex; align-items: center; gap: 15px;">
                 <div class="notification-bell" id="notification-bell" style="position:relative;">
                     <button id="bell-btn" class="btn" title="Activity"
                         style="background:transparent; border:none; color:var(--text-gray); font-size:1.3rem;">
@@ -179,13 +171,27 @@
                     </div>
                 </div>
 
-                <a href="{% url 'users:profile_settings' %}" class="settings-btn-mini" title="Settings">
-                    <i class="bi bi-three-dots-vertical"></i>
-                </a>
-
-                <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal" class="logout-btn-mini" title="Logout">
-                    <i class="bi bi-box-arrow-right"></i>
-                </a>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="profile-trigger">
+                        <div class="profile-avatar">{{ request.session.username|first|upper }}</div>
+                        <div class="profile-info">
+                            <span class="profile-name">{{ request.session.username }}</span>
+                            <span class="profile-role">{{ request.session.role|capfirst }}</span>
+                        </div>
+                        <i class="bi bi-chevron-down dropdown-arrow"></i>
+                    </div>
+                    
+                    <div class="dropdown-menu-custom">
+                        <a href="{% url 'users:profile_settings' %}" class="dropdown-item-custom">
+                            <i class="bi bi-gear"></i>
+                            <span>Settings</span>
+                        </a>
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal" class="dropdown-item-custom logout">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -487,7 +493,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         const enableBtn = document.getElementById('enable-notifs-btn');
-        const widget = document.getElementById('push-permission-widget');
+        const widget = document.getElementById('push-notification-widget');
 
         // 1. GET THE KEY safely
         const vapidPublicKey = "{{ webpush_settings.VAPID_PUBLIC_KEY|default:'' }}";
@@ -571,13 +577,41 @@
             return outputArray;
         }
 
-        // 5. LOGIC: Check permissions immediately to decide visibility
-        if ('serviceWorker' in navigator && 'PushManager' in window && widget) {
-            // Only show if permission is 'default' (user hasn't been asked yet)
-            // If 'granted' or 'denied', keep it hidden (display:none is default in HTML)
-            if (Notification.permission === 'default') {
-                widget.style.display = 'block';
-            }
+        // 5. LOGIC: Check database for push subscription and permissions to decide visibility
+        //const widget = document.getElementById('push-notification-widget');
+        if (widget) {
+            // Check database if user has push notifications enabled
+            fetch('{% url "dashboard:dashboard_check_push_subscription_api" %}')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.has_subscription === true) {
+                        // User has push notifications enabled in database, hide the widget permanently
+                        widget.style.display = 'none';
+                    } else if ('serviceWorker' in navigator && 'PushManager' in window) {
+                        // Only show if permission is 'default' (user hasn't been asked yet)
+                        // If 'granted' or 'denied', keep it hidden (display:none is default in HTML)
+                        if (Notification.permission === 'default') {
+                            widget.style.display = 'block';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking push subscription status:', error);
+                    // On error, fall back to localStorage check
+                    const pushNotificationsEnabled = localStorage.getItem('pushNotificationsEnabled');
+                    if (pushNotificationsEnabled === 'true') {
+                        widget.style.display = 'none';
+                    } else if ('serviceWorker' in navigator && 'PushManager' in window) {
+                        if (Notification.permission === 'default') {
+                            widget.style.display = 'block';
+                        }
+                    }
+                });
         }
 
         // 6. SUBSCRIBE ACTION
@@ -633,8 +667,10 @@
                     });
 
                     if (response.ok) {
-                        // F. SUCCESS: Hide the widget and reset button
+                        // F. SUCCESS: Hide the widget permanently (subscription saved in database)
+                        const widget = document.getElementById('push-notification-widget');
                         if (widget) {
+                            // Hide the widget - database check on next page load will keep it hidden
                             widget.style.display = 'none';
                         }
                         // Reset button state (widget is hidden, so button won't be visible anyway)
@@ -695,6 +731,30 @@
                 }
             });
         }
+    });
+</script>
+
+<script>
+    // ========================================
+    // Unified Profile Dropdown Functionality
+    // ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileTrigger = profileDropdown?.querySelector('.profile-trigger');
+        
+        if (profileTrigger) {
+            profileTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('active');
+            });
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (profileDropdown && !profileDropdown.contains(e.target)) {
+                profileDropdown.classList.remove('active');
+            }
+        });
     });
 </script>
 {% endblock %}

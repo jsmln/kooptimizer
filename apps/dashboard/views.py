@@ -11,6 +11,8 @@ import json
 from apps.account_management.models import Users, Staff as AccountStaff, Cooperatives, Officers, Admin
 from apps.cooperatives.models import ProfileData, FinancialData, Member, Staff as CoopStaff, Officer
 from apps.users.models import User
+from django.contrib.auth.models import User as DjangoUser
+from webpush.models import PushInformation
 
 def login_required(view_func):
     @wraps(view_func)
@@ -52,6 +54,57 @@ def get_user_cooperatives(user_id, role):
         except:
             return Cooperatives.objects.none()
     return Cooperatives.objects.none()
+
+def extract_district_from_address(address):
+    """Extract district from address by matching barangay names"""
+    if not address:
+        return None
+    
+    address_lower = address.lower()
+    
+    # District mapping (barangays to districts) - using actual names from GeoJSON
+    district_mapping = {
+        "North": ["balintawak", "marauoy", "dagatan", "lumbang", "talisay", "bulacnin", "pusil", "bugtong na pulo", "inosloban", "plaridel", "san lucas"],
+        "East": ["san francisco", "san celestino", "malitlit", "santo toribio", "san benito", "santo niño", "munting pulo", "latag", "sabang", "tipacan", "san jose", "tangob", "antipolo del norte", "antipolo del sur", "pinagkawitan"],
+        "West": ["halang", "duhatan", "pinagtongulan", "bulaklakan", "pangao", "bagong pook", "abanaybanay", "tambo", "sico", "san salvador", "tanguay", "tibig", "san carlos", "mataas na lupa", "sapac"],
+        "South": ["adya", "lodlod", "cumba", "quezon", "sampaguita", "san sebastian", "kayumanggi", "anilao", "anilao-labac", "pagolingin bata", "pagolingin east", "pagolingin west", "malagonlong", "bolbok", "rizal", "mabini", "calamias", "san guillermo"],
+        "Urban": ["poblacion barangay 1", "poblacion barangay 2", "poblacion barangay 3", "poblacion barangay 4", "poblacion barangay 5", "poblacion barangay 6", "poblacion barangay 7", "poblacion barangay 8", "poblacion barangay 9", "poblacion barangay 9-a", "poblacion barangay 10", "poblacion barangay 11", "barangay 12", "poblacion"]
+    }
+    
+    # Check each district's barangays
+    for district, barangays in district_mapping.items():
+        for barangay in barangays:
+            # Check if barangay name appears in address
+            if barangay in address_lower:
+                return district
+    
+    return None
+
+def get_districts_from_addresses(coop_ids):
+    """Get district counts from ProfileData addresses"""
+    districts = {}
+    
+    if not coop_ids:
+        return districts
+    
+    # Get latest profile for each cooperative
+    profiles = ProfileData.objects.filter(coop__coop_id__in=coop_ids).order_by('coop__coop_id', '-report_year')
+    
+    # Track which cooperatives we've already counted (use latest profile per coop)
+    counted_coops = set()
+    
+    for profile in profiles:
+        coop_id = profile.coop.coop_id
+        if coop_id in counted_coops:
+            continue
+        
+        counted_coops.add(coop_id)
+        district = extract_district_from_address(profile.address)
+        
+        if district:
+            districts[district] = districts.get(district, 0) + 1
+    
+    return districts
 
 @login_required
 @role_required(['admin'])
@@ -171,27 +224,32 @@ def dashboard_charts_api(request):
                 cat = c['category'] or 'Not Specified'
                 categories[cat] = c['count']
         
-        # District Distribution
-        districts = {}
-        if coop_ids:
-            district_data = user_coops.values('district').annotate(count=Count('coop_id'))
-            for d in district_data:
-                dist = d['district'] or 'Not Specified'
-                districts[dist] = d['count']
+        # District Distribution - based on address from ProfileData
+        districts = get_districts_from_addresses(coop_ids)
         
         # Compliance Status
-        compliance_data = {'coc': {'active': 0, 'inactive': 0}, 'cote': {'active': 0, 'inactive': 0}}
+        # Count certificates separately for chart display
+        compliance_data = {'coc': {'active': 0, 'inactive': 0}, 'cote': {'active': 0, 'inactive': 0}, 'both_active': 0, 'total_profiles': 0}
         if coop_ids:
             profiles = ProfileData.objects.filter(coop__coop_id__in=coop_ids)
+            compliance_data['total_profiles'] = profiles.count()
             for profile in profiles:
-                if profile.coc_renewal:
+                coc_active = bool(profile.coc_renewal)
+                cote_active = bool(profile.cote_renewal)
+                
+                if coc_active:
                     compliance_data['coc']['active'] += 1
                 else:
                     compliance_data['coc']['inactive'] += 1
-                if profile.cote_renewal:
+                    
+                if cote_active:
                     compliance_data['cote']['active'] += 1
                 else:
                     compliance_data['cote']['inactive'] += 1
+                
+                # Count cooperatives with BOTH certificates active
+                if coc_active and cote_active:
+                    compliance_data['both_active'] += 1
         
         # Financial Trend (last 5 years) - separate metrics
         financial_trend = {'assets': {}, 'capital': {}, 'surplus': {}}
@@ -616,31 +674,66 @@ def dashboard_cooperative_demographics_api(request):
         coop_ids = list(user_coops.values_list('coop_id', flat=True))
         
         # Get filter parameters
-        category_filter = request.GET.get('category', '')
-        district_filter = request.GET.get('district', '')
+        category_filter = request.GET.get('category', '').strip()
+        district_filter = request.GET.get('district', '').strip()
         
-        # Apply filters
+        # Start with all user cooperatives
         filtered_coops = user_coops
-        if category_filter:
-            filtered_coops = filtered_coops.filter(category=category_filter)
-        if district_filter:
-            filtered_coops = filtered_coops.filter(district=district_filter)
         
-        filtered_coop_ids = list(filtered_coops.values_list('coop_id', flat=True))
+        # Apply category filter (case-insensitive)
+        if category_filter:
+            # Normalize category filter to match database values
+            category_filter_lower = category_filter.lower()
+            filtered_coops = filtered_coops.filter(
+                Q(category__iexact=category_filter) | 
+                Q(category__iexact=category_filter_lower) |
+                Q(category__iexact=category_filter.capitalize())
+            )
+        
+        # Get initial filtered coop IDs
+        initial_coop_ids = list(filtered_coops.values_list('coop_id', flat=True))
+        
+        # Apply district filter based on addresses from ProfileData
+        filtered_coop_ids = initial_coop_ids
+        if district_filter:
+            # Filter cooperatives by district extracted from addresses
+            if initial_coop_ids:
+                # Get latest profile for each cooperative to extract district
+                latest_profiles = ProfileData.objects.filter(
+                    coop__coop_id__in=initial_coop_ids
+                ).order_by('coop__coop_id', '-report_year').distinct('coop__coop_id')
+                
+                district_matched_coop_ids = []
+                district_filter_lower = district_filter.lower()
+                
+                for profile in latest_profiles:
+                    address = profile.address or ''
+                    extracted_district = extract_district_from_address(address)
+                    extracted_district_lower = extracted_district.lower() if extracted_district else ''
+                    
+                    # Case-insensitive district matching
+                    if (extracted_district_lower == district_filter_lower or
+                        extracted_district == district_filter or
+                        extracted_district == district_filter.capitalize()):
+                        district_matched_coop_ids.append(profile.coop.coop_id)
+                
+                filtered_coop_ids = district_matched_coop_ids
+            else:
+                filtered_coop_ids = []
+        
+        # Get final filtered cooperatives
+        final_filtered_coops = user_coops.filter(coop_id__in=filtered_coop_ids) if filtered_coop_ids else user_coops.none()
         
         # Category distribution
         categories = {}
-        category_data = filtered_coops.values('category').annotate(count=Count('coop_id'))
-        for c in category_data:
-            cat = c['category'] or 'Not Specified'
-            categories[cat] = c['count']
+        if filtered_coop_ids:
+            category_data = final_filtered_coops.values('category').annotate(count=Count('coop_id'))
+            for c in category_data:
+                cat = c['category'] or 'Not Specified'
+                categories[cat] = c['count']
         
-        # District distribution
-        districts = {}
-        district_data = filtered_coops.values('district').annotate(count=Count('coop_id'))
-        for d in district_data:
-            dist = d['district'] or 'Not Specified'
-            districts[dist] = d['count']
+        # District distribution - based on address from ProfileData
+        districts = get_districts_from_addresses(filtered_coop_ids) if filtered_coop_ids else {}
         
         # Business activity distribution
         business_activities = {}
@@ -698,8 +791,209 @@ def dashboard_cooperative_demographics_api(request):
             'member_demographics': member_demo,
             'financial_summary': financial_summary,
             'compliance': compliance,
-            'total_cooperatives': filtered_coops.count()
+            'total_cooperatives': len(filtered_coop_ids) if filtered_coop_ids else 0
         })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def dashboard_officer_data_api(request):
+    """Get comprehensive data for officer dashboard (their cooperative only)"""
+    try:
+        user_id = request.session.get('user_id')
+        role = request.session.get('role')
+        
+        if not user_id or role != 'officer':
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+        # Get officer's cooperative
+        officer = Officers.objects.filter(user_id=user_id).first()
+        if not officer or not officer.coop_id:
+            return JsonResponse({'error': 'No cooperative found'}, status=404)
+        
+        coop_id = officer.coop_id
+        
+        # Document Status (from latest ProfileData)
+        latest_profile = ProfileData.objects.filter(coop__coop_id=coop_id).order_by('-report_year', '-created_at').first()
+        document_status = {
+            'coc': {
+                'active': bool(latest_profile.coc_renewal) if latest_profile else False,
+                'needs_renewal': not bool(latest_profile.coc_renewal) if latest_profile else True
+            },
+            'cote': {
+                'active': bool(latest_profile.cote_renewal) if latest_profile else False,
+                'needs_renewal': not bool(latest_profile.cote_renewal) if latest_profile else True
+            },
+            'lccdc': {
+                'active': bool(latest_profile.lccdc_membership) if latest_profile else False
+            }
+        }
+        
+        # Officers List
+        officers_list = []
+        officers = Officers.objects.filter(coop_id=coop_id).select_related('user')
+        for off in officers:
+            officers_list.append({
+                'name': off.fullname or (off.user.username if off.user else 'N/A'),
+                'position': off.position or 'N/A',
+                'gender': (off.gender or 'N/A').title()
+            })
+        
+        # Financial Year-over-Year Growth (last 5 years)
+        financial_growth = {'assets': {}, 'capital': {}, 'surplus': {}}
+        current_year = datetime.now().year
+        for year in range(current_year - 4, current_year + 1):
+            year_data = FinancialData.objects.filter(
+                coop__coop_id=coop_id,
+                report_year=year
+            ).first()
+            
+            if year_data:
+                financial_growth['assets'][str(year)] = float(year_data.assets)
+                financial_growth['capital'][str(year)] = float(year_data.paid_up_capital)
+                financial_growth['surplus'][str(year)] = float(year_data.net_surplus)
+            else:
+                financial_growth['assets'][str(year)] = 0
+                financial_growth['capital'][str(year)] = 0
+                financial_growth['surplus'][str(year)] = 0
+        
+        # KPI Data from ProfileData
+        kpi_data = {
+            'total_employees': latest_profile.salaried_employees_count if latest_profile and latest_profile.salaried_employees_count else 0,
+            'board_directors': latest_profile.board_of_directors_count if latest_profile and latest_profile.board_of_directors_count else 0,
+            'profile_status': latest_profile.approval_status if latest_profile else 'pending',
+            'report_year': latest_profile.report_year if latest_profile else None,
+            'profile_created': latest_profile.created_at.strftime('%Y-%m-%d') if latest_profile and latest_profile.created_at else None,
+            'profile_updated': latest_profile.updated_at.strftime('%Y-%m-%d') if latest_profile and latest_profile.updated_at else None,
+        }
+        
+        # Latest Financial Data
+        latest_financial = FinancialData.objects.filter(
+            coop__coop_id=coop_id
+        ).order_by('-report_year', '-created_at').first()
+        
+        financial_kpis = {
+            'total_assets': float(latest_financial.assets) if latest_financial else 0,
+            'paid_up_capital': float(latest_financial.paid_up_capital) if latest_financial else 0,
+            'net_surplus': float(latest_financial.net_surplus) if latest_financial else 0,
+            'financial_year': latest_financial.report_year if latest_financial else None,
+        }
+        
+        # Count Members
+        total_members = Member.objects.filter(coop__coop_id=coop_id).count()
+        
+        return JsonResponse({
+            'document_status': document_status,
+            'officers': officers_list,
+            'financial_growth': financial_growth,
+            'kpi_data': kpi_data,
+            'financial_kpis': financial_kpis,
+            'total_members': total_members,
+            'total_officers': len(officers_list)
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def dashboard_cooperative_locations_api(request):
+    """Get cooperative locations with district information for map markers"""
+    try:
+        user_id = request.session.get('user_id')
+        role = request.session.get('role')
+        
+        if not user_id or not role:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+        user_coops = get_user_cooperatives(user_id, role)
+        coop_ids = list(user_coops.values_list('coop_id', flat=True))
+        
+        if not coop_ids:
+            return JsonResponse({'cooperatives': [], 'districts': {}})
+        
+        # District center coordinates (approximate centers for Lipa City districts)
+        district_centers = {
+            "North": [13.98, 121.14],
+            "East": [13.92, 121.20],
+            "West": [13.92, 121.10],
+            "South": [13.88, 121.15],
+            "Urban": [13.9419, 121.1644]  # Lipa City center
+        }
+        
+        # Get latest profile for each cooperative
+        profiles = ProfileData.objects.filter(coop__coop_id__in=coop_ids).order_by('coop__coop_id', '-report_year')
+        
+        # Track which cooperatives we've already processed (use latest profile per coop)
+        processed_coops = set()
+        cooperatives = []
+        district_counts = {}
+        
+        # Small random offset to spread markers in same district
+        import random
+        random.seed(42)  # For consistent positioning
+        
+        for profile in profiles:
+            coop_id = profile.coop.coop_id
+            if coop_id in processed_coops:
+                continue
+            
+            processed_coops.add(coop_id)
+            district = extract_district_from_address(profile.address)
+            
+            if district and district in district_centers:
+                # Get base coordinates for district
+                base_lat, base_lng = district_centers[district]
+                
+                # Add small random offset to spread markers (max 0.01 degrees ~1km)
+                offset_lat = random.uniform(-0.008, 0.008)
+                offset_lng = random.uniform(-0.008, 0.008)
+                
+                cooperatives.append({
+                    'coop_id': coop_id,
+                    'name': profile.coop.cooperative_name if profile.coop else 'Unknown',
+                    'district': district,
+                    'address': profile.address or '',
+                    'latitude': base_lat + offset_lat,
+                    'longitude': base_lng + offset_lng
+                })
+                
+                # Count cooperatives per district
+                district_counts[district] = district_counts.get(district, 0) + 1
+        
+        return JsonResponse({
+            'cooperatives': cooperatives,
+            'districts': district_counts
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def dashboard_check_push_subscription_api(request):
+    """Check if user has push notifications enabled"""
+    try:
+        user_id = request.session.get('user_id')
+        role = request.session.get('role')
+        
+        if not user_id or not role:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        
+        # Get custom user
+        try:
+            custom_user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({'has_subscription': False})
+        
+        # Check if there's a Django User mapped to this custom user
+        try:
+            django_user = DjangoUser.objects.get(username=custom_user.username)
+            # Check if user has any push subscriptions
+            has_subscription = PushInformation.objects.filter(user=django_user).exists()
+            return JsonResponse({'has_subscription': has_subscription})
+        except DjangoUser.DoesNotExist:
+            return JsonResponse({'has_subscription': False})
+        
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

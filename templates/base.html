@@ -150,15 +150,15 @@
     {% if request.session.user_id and not request.session.pending_verification_user_id %}
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered"> 
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Logout</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content logout-modal-content">
+                <div class="modal-header logout-modal-header">
+                    <h5 class="modal-title logout-modal-title">Logout</h5>
+                    <button type="button" class="btn-close logout-modal-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">Are you sure you want to log out?</div>
-                <div class="modal-footer">
-                    <button id="btn-logout-cancel" type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <a id="btn-logout-confirm" href="{% url 'users:logout' %}" class="btn btn-primary">Continue Logout</a>
+                <div class="modal-body logout-modal-body">Are you sure you want to log out?</div>
+                <div class="modal-footer logout-modal-footer">
+                    <button id="btn-logout-cancel" type="button" class="btn logout-btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                    <a id="btn-logout-confirm" href="{% url 'users:logout' %}" class="btn logout-btn-confirm">Continue Logout</a>
                 </div>
             </div>
         </div>
