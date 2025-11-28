@@ -4,15 +4,15 @@
 {% block dashboard_title %}Admin Dashboard{% endblock %}
 
 {% block extra_head %}
-    {{ block.super }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="{% static 'frontend/admin_dashboard.css' %}">
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link rel="stylesheet" href="{% static 'frontend/admin_dashboard.css' %}">
 {% endblock %}
 
 {% block dashboard_content %}
 <div class="admin-dashboard-container">
-    
+
     <div class="dashboard-header">
         <div>
             <h4 class="subtitle">Lipa City Cooperatives Office</h4>
@@ -21,6 +21,7 @@
     </div>
 
     <div class="stats-grid">
+
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#adminListModal">
             <div class="icon-box red-box"><i class="bi bi-shield-lock-fill"></i></div>
             <div class="stat-info">
@@ -39,6 +40,17 @@
             </div>
         </div>
 
+        <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#officersListModal">
+            <div class="icon-box yellow-box">
+                <i class="bi bi-person-badge-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Cooperative Officers</p>
+                <h3>174</h3>
+                <span class="link-text">View Details <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </div>
+
         <div class="stat-card">
             <div class="icon-box green-box"><i class="bi bi-building"></i></div>
             <div class="stat-info">
@@ -49,7 +61,9 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box orange-box"><i class="bi bi-person-hearts"></i></div>
+            <div class="icon-box orange-box">
+                <i class="bi bi-person-hearts"></i>
+            </div>
             <div class="stat-info">
                 <p>Total Members</p>
                 <h3>12,450</h3>
@@ -58,7 +72,9 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box purple-box"><i class="bi bi-cash-stack"></i></div>
+            <div class="icon-box purple-box">
+                <i class="bi bi-cash-stack"></i>
+            </div>
             <div class="stat-info">
                 <p>Total Assets</p>
                 <h3>₱ 845M</h3>
@@ -67,7 +83,9 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box teal-box"><i class="bi bi-person-check-fill"></i></div>
+            <div class="icon-box teal-box">
+                <i class="bi bi-person-check-fill"></i>
+            </div>
             <div class="stat-info">
                 <p>Pending Users</p>
                 <h3>15</h3>
@@ -79,509 +97,1521 @@
             <div class="stat-info text-white">
                 <p>LCCDC Members</p>
                 <h3>42</h3>
-                <small>Active Member Coops</small>
+                <small>Active Member Cooperatives</small>
             </div>
             <div class="icon-bg"><i class="bi bi-award"></i></div>
         </div>
     </div>
 
-    <div class="charts-section">
-        <div class="chart-card main-chart">
-            <div class="card-header-custom">
-                <h3>Business Activity Analytics</h3>
-                <select class="form-select-sm">
-                    <option>2025</option>
-                    <option>2024</option>
+    <!-- User Demographics Section -->
+    <div class="dashboard-section" style="margin-top: 2rem; margin-bottom: 2rem;">
+        <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">User Demographics &
+            Traffic</h2>
+
+        <div class="dashboard-card"
+            style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <h3 style="color: #2B3674; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">User Traffic (Last 30
+                Days)</h3>
+            <div style="height: 300px; position: relative;">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+
+        <div class="analytics-grid-secondary" style="margin-top: 1.5rem;">
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>User Distribution by Role</h3>
+                </div>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="userRoleChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>User Gender Distribution</h3>
+                </div>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="userGenderChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>Verification Status</h3>
+                </div>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="verificationChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cooperative Demographics Section -->
+    <div class="dashboard-section" style="margin-top: 2rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700;">Cooperative Demographics</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <select id="coopDemoCategoryFilter" class="form-select-sm" style="min-width: 120px;">
+                    <option value="">All Categories</option>
+                    <option value="Micro">Micro</option>
+                    <option value="Small">Small</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Large">Large</option>
                 </select>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="businessActivityChart"></canvas>
+                <select id="coopDemoDistrictFilter" class="form-select-sm" style="min-width: 120px;">
+                    <option value="">All Districts</option>
+                    <option value="East">East</option>
+                    <option value="West">West</option>
+                    <option value="North">North</option>
+                    <option value="South">South</option>
+                    <option value="Urban">Urban</option>
+                </select>
+                <button id="applyCoopDemoFilters" class="btn btn-sm btn-primary">Apply Filters</button>
             </div>
         </div>
 
-        <div class="chart-card ranking-card">
-            <div class="card-header-custom">
-                <h3>Top 20 Ranking</h3>
-                <span class="badge-red">By Assets</span>
+        <div class="analytics-grid-secondary">
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>Cooperatives by Category</h3>
+                </div>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="coopCategoryChart"></canvas>
+                </div>
             </div>
-            <div class="ranking-list">
-                <div class="rank-item">
-                    <span class="rank-num">1</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Multi-Purpose Coop</span>
-                        <span class="coop-asset">₱ 520M</span>
-                    </div>
+
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>Geographic District</h3>
                 </div>
-                <div class="rank-item">
-                    <span class="rank-num">2</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Batangas Health Care MPC</span>
-                        <span class="coop-asset">₱ 480M</span>
-                    </div>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="coopDistrictChart"></canvas>
                 </div>
-                <div class="rank-item">
-                    <span class="rank-num">3</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Metro Lipa Water District</span>
-                        <span class="coop-asset">₱ 350M</span>
-                    </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>Member Gender Distribution</h3>
                 </div>
-                <div class="rank-item">
-                    <span class="rank-num">4</span>
-                    <div class="rank-info">
-                        <span class="coop-name">De La Salle Lipa Coop</span>
-                        <span class="coop-asset">₱ 210M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">5</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Feed Millers Cooperative</span>
-                        <span class="coop-asset">₱ 180M</span>
-                    </div>
+                <div class="chart-wrapper" style="height: 250px;">
+                    <canvas id="memberGenderChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="analytics-grid-secondary">
-        <div class="chart-card">
-            <div class="card-header-custom">
-                <h3>Coops by Category</h3>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="categoryChart"></canvas>
-            </div>
-        </div>
+    <!-- Statistical Analytics Section -->
+    <div class="dashboard-section" style="margin-top: 2rem; margin-bottom: 2rem;">
+        <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Statistical Analytics
+        </h2>
 
-        <div class="chart-card">
-            <div class="card-header-custom">
-                <h3>Geographic Dist.</h3>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="districtChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <div class="card-header-custom">
-                <h3>Compliance Status</h3>
-                <div class="legend-box">
-                    <span class="dot active"></span> OK
-                    <span class="dot inactive"></span> Exp
+        <div class="charts-section">
+            <div class="chart-card main-chart">
+                <div class="card-header-custom">
+                    <h3>Business Activity Analytics</h3>
+                    <select id="businessActivityYearFilter" class="form-select-sm">
+                        <option value="">All Years</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="businessActivityChart"></canvas>
                 </div>
             </div>
-            <div class="chart-wrapper">
-                <canvas id="complianceChart"></canvas>
-            </div>
-        </div>
-    </div>
 
-    <div class="tables-grid-row">
-        <div class="chart-card wide-chart">
-            <div class="card-header-custom">
-                <h3>Financial Growth Trend (Net Surplus)</h3>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="financialTrendChart"></canvas>
-            </div>
-        </div>
-
-        <div class="table-card">
-            <div class="card-header-custom">
-                <h3>Pending Reviews</h3>
-                <span class="badge bg-warning text-dark">Action Needed</span>
-            </div>
-            <div class="table-responsive">
-                <table class="admin-table">
-                    <thead>
-                        <tr><th>Cooperative</th><th>Year</th><th>Assets</th><th>Action</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="fw-bold">Consumer Coop</td>
-                            <td>2024</td>
-                            <td>₱ 356k</td>
-                            <td><button class="btn-action">Review</button></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">Housing Coop</td>
-                            <td>2024</td>
-                            <td>₱ 16M</td>
-                            <td><button class="btn-action">Review</button></td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">Farmers Credit</td>
-                            <td>2023</td>
-                            <td>₱ 890k</td>
-                            <td><button class="btn-action">Review</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div class="operations-grid">
-        
-        <div class="table-card workload-card">
-            <div class="card-header-custom">
-                <h3>Staff Workload</h3>
-            </div>
-            <div class="table-responsive">
-                <table class="admin-table">
-                    <thead>
-                        <tr><th>Staff</th><th>Assigned</th><th>Status</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="user-cell"><div class="avatar-xs" style="background:#1976d2;">AR</div> Ana Reyes</div>
-                            </td>
-                            <td class="text-center fw-bold">12</td>
-                            <td><span class="badge bg-danger">Heavy</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell"><div class="avatar-xs" style="background:#388e3c;">JR</div> Jose Rizal</div>
-                            </td>
-                            <td class="text-center fw-bold">6</td>
-                            <td><span class="badge bg-success">Balanced</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell"><div class="avatar-xs" style="background:#fbc02d; color:#333;">CR</div> Clara Recto</div>
-                            </td>
-                            <td class="text-center fw-bold">8</td>
-                            <td><span class="badge bg-warning text-dark">Moderate</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="filter-section">
-            <div class="card-header-custom">
-                <h3>All Cooperatives List</h3>
-
-                <div class="header-actions" style="display:flex;align-items:center;gap:0.5rem;">
-                    <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters">
-                        <i class="bi bi-funnel"></i>
-                        <span>Filter</span>
-                    </button>
-
-                    <div class="filter-controls hidden">
-                        <select class="form-select-sm" id="categoryFilter">
-                            <option value="">All Categories</option>
-                            <option value="Micro">Micro</option>
-                            <option value="Small">Small</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Large">Large</option>
-                        </select>
-                        <select class="form-select-sm" id="districtFilter">
-                            <option value="">All Districts</option>
-                            <option value="East">East</option>
-                            <option value="West">West</option>
-                            <option value="North">North</option>
-                            <option value="South">South</option>
-                            <option value="Urban">Urban</option>
-                        </select>
-                    </div>
+            <div class="chart-card ranking-card">
+                <div class="card-header-custom">
+                    <h3>Top 20 Ranking</h3>
                 </div>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="coop-list-table">
-                    <thead>
-                        <tr>
-                            <th>Cooperative Name</th>
-                            <th>Category</th>
-                            <th>District</th>
-                        </tr>
-                    </thead>
-                    <tbody id="coopTableBody">
-                        <tr data-category="Micro" data-district="East" onclick="openProfileModal('Consumer Cooperative')">
-                            <td><span class="fw-bold text-dark">Consumer Cooperative</span></td>
-                            <td><span class="badge-category">Micro</span></td>
-                            <td>East</td>
-                        </tr>
-                        <tr data-category="Large" data-district="West" onclick="openProfileModal('Plaridel MPC')">
-                            <td><span class="fw-bold text-dark">Plaridel MPC</span></td>
-                            <td><span class="badge-category">Large</span></td>
-                            <td>West</td>
-                        </tr>
-                        <tr data-category="Small" data-district="Urban" onclick="openProfileModal('Agriculture Cooperative')">
-                            <td><span class="fw-bold text-dark">Agriculture Cooperative</span></td>
-                            <td><span class="badge-category">Small</span></td>
-                            <td>Urban</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div id="noResultsMessage" style="display: none; padding: 20px; text-align: center; color: #6c757d;">No cooperatives found matching the selected filters.</div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<div class="modal fade" id="adminListModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">System Administrators</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <table class="modal-table">
-                    <thead><tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr></thead>
-                    <tbody>
-                        <tr><td>Juan Dela Cruz</td><td>Head Admin</td><td>Male</td><td>juan.admin@lipa.gov.ph</td></tr>
-                        <tr><td>Maria Santos</td><td>System Maintainer</td><td>Female</td><td>maria.s@lipa.gov.ph</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="staffListModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Office Staff</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <table class="modal-table">
-                    <thead><tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr></thead>
-                    <tbody>
-                        <tr><td>Ana Reyes</td><td>Encoder</td><td>Female</td><td>ana.reyes@lipa.gov.ph</td></tr>
-                        <tr><td>Jose Rizal</td><td>Clerk</td><td>Male</td><td>jose.r@lipa.gov.ph</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="coopProfileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cooperative Profile</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            
-            <div class="modal-body">
-                <div id="printable-area">
-                    <div class="text-center mb-4">
-                        <div class="avatar-circle mb-2">C</div>
-                        <h4 id="modalCoopName">Consumer Cooperative</h4>
-                        <span class="badge bg-success">Active</span>
-                        <p class="text-muted mt-2">Sabang, Lipa City, Batangas</p>
-                    </div>
-
-                    <section class="info-section mb-4">
-                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">General Information</h6>
-                        <div class="info-grid">
-                            <div><strong>CDA No:</strong> 1414-060923055</div>
-                            <div><strong>Category:</strong> Micro</div>
-                            <div><strong>District:</strong> East</div>
-                            <div><strong>Email:</strong> consumercoop@gmail.com</div>
-                            <div><strong>Contact:</strong> 09929380925</div>
-                            <div><strong>Compliance:</strong> <span class="text-success fw-bold">Yes</span></div>
+                <div class="ranking-list">
+                    <div class="rank-item">
+                        <span class="rank-num">1</span>
+                        <div class="rank-info">
+                            <span class="coop-name">Lipa City Multi-Purpose Coop</span>
+                            <span class="coop-asset">₱ 520M</span>
                         </div>
-                    </section>
-
-                    <section class="info-section mb-4">
-                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">Financials (2024)</h6>
-                        <div class="info-grid">
-                            <div><strong>Assets:</strong> ₱ 356,964.68</div>
-                            <div><strong>Paid Up Capital:</strong> ₱ 108,243.78</div>
-                            <div><strong>Net Surplus:</strong> ₱ 10,653.54</div>
+                    </div>
+                    <div class="rank-item">
+                        <span class="rank-num">2</span>
+                        <div class="rank-info">
+                            <span class="coop-name">Batangas Health Care MPC</span>
+                            <span class="coop-asset">₱ 480M</span>
                         </div>
-                    </section>
-
-                    <section class="info-section">
-                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">Officers</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light"><tr><th>Name</th><th>Position</th></tr></thead>
-                                <tbody>
-                                    <tr><td>Isabel Delacion</td><td>Chairperson</td></tr>
-                                    <tr><td>Jasmin Esperida</td><td>Vice Chairperson</td></tr>
-                                    <tr><td>Maria Lopez</td><td>Secretary</td></tr>
-                                </tbody>
-                            </table>
+                    </div>
+                    <div class="rank-item">
+                        <span class="rank-num">3</span>
+                        <div class="rank-info">
+                            <span class="coop-name">Metro Lipa Water District</span>
+                            <span class="coop-asset">₱ 350M</span>
                         </div>
-                    </section>
+                    </div>
+                    <div class="rank-item">
+                        <span class="rank-num">4</span>
+                        <div class="rank-info">
+                            <span class="coop-name">De La Salle Lipa Coop</span>
+                            <span class="coop-asset">₱ 210M</span>
+                        </div>
+                    </div>
+                    <div class="rank-item">
+                        <span class="rank-num">5</span>
+                        <div class="rank-info">
+                            <span class="coop-name">Feed Millers Cooperative</span>
+                            <span class="coop-asset">₱ 180M</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-grid-secondary">
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>Cooperatives by Category</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>Geographic District</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="districtChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="card-header-custom">
+                    <h3>Compliance Status</h3>
+                    <div class="legend-box">
+                        <span class="dot active"></span> OK
+                        <span class="dot inactive"></span> Exp
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="complianceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="tables-grid-row">
+
+            <div class="chart-card wide-chart">
+                <div class="card-header-custom">
+                    <h3>Financial Growth Trend</h3>
+
+                    <div style="display: flex; align-items: center; gap: 10px;">
+
+                        <span id="financeCurrentView" class="current-view-badge">All Data</span>
+
+                        <div class="chart-filter-wrapper">
+                            <button id="financeFilterToggle" class="filter-icon-btn" type="button"
+                                title="Filter Metrics">
+                                <i class="bi bi-funnel"></i>
+                            </button>
+
+                            <div id="financeFilterControls" class="chart-filter-dropdown" style="display: none;">
+                                <div class="dropdown-header-text">Select View:</div>
+
+                                <div class="filter-option active" onclick="applyFinancialFilter('all', this)">
+                                    <span>All Data</span>
+                                    <i class="bi bi-check-lg check-icon"></i>
+                                </div>
+
+                                <div class="filter-option" onclick="applyFinancialFilter('assets', this)">
+                                    <span><span class="dot asset-dot"></span> Assets</span>
+                                    <i class="bi bi-check-lg check-icon"></i>
+                                </div>
+
+                                <div class="filter-option" onclick="applyFinancialFilter('capital', this)">
+                                    <span><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                                    <i class="bi bi-check-lg check-icon"></i>
+                                </div>
+
+                                <div class="filter-option" onclick="applyFinancialFilter('surplus', this)">
+                                    <span><span class="dot surplus-dot"></span> Net Surplus</span>
+                                    <i class="bi bi-check-lg check-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mt-4 text-end">
-                    <button class="btn btn-sm btn-outline-secondary" id="downloadPdfBtn">
-                        <i class="bi bi-file-earmark-pdf"></i> Download PDF
-                    </button>
-                    <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="chart-legend-inline">
+                    <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
+                    <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                    <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
+                </div>
+
+                <div class="chart-wrapper">
+                    <canvas id="financialTrendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="card-header-custom">
+                    <h3>Pending Reviews</h3>
+                    <span class="badge bg-warning text-dark">Action Needed</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Cooperative</th>
+                                <th>Year</th>
+                                <th>Assets</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">Consumer Coop</td>
+                                <td>2024</td>
+                                <td>₱ 356k</td>
+                                <td><button class="btn-action">Review</button></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Housing Coop</td>
+                                <td>2024</td>
+                                <td>₱ 16M</td>
+                                <td><button class="btn-action">Review</button></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Farmers Credit</td>
+                                <td>2023</td>
+                                <td>₱ 890k</td>
+                                <td><button class="btn-action">Review</button></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">Lipa Transport</td>
+                                <td>2024</td>
+                                <td>₱ 5.2M</td>
+                                <td><button class="btn-action">Review</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="operations-grid">
+
+            <div class="table-card workload-card">
+                <div class="card-header-custom">
+                    <h3>Staff Workload</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Staff</th>
+                                <th>Assigned</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="avatar-xs" style="background:#1976d2;">AR</div> Ana Reyes
+                                    </div>
+                                </td>
+                                <td class="text-center fw-bold">12</td>
+                                <td><span class="badge bg-danger">Heavy</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="avatar-xs" style="background:#388e3c;">JR</div> Jose Rizal
+                                    </div>
+                                </td>
+                                <td class="text-center fw-bold">6</td>
+                                <td><span class="badge bg-success">Balanced</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <div class="avatar-xs" style="background:#fbc02d; color:#333;">CR</div> Clara
+                                        Recto
+                                    </div>
+                                </td>
+                                <td class="text-center fw-bold">8</td>
+                                <td><span class="badge bg-warning text-dark">Moderate</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="card-header-custom">
+                    <h3>All Cooperatives List</h3>
+
+                    <div class="header-actions" style="display:flex;align-items:center;gap:0.5rem;">
+                        <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters">
+                            <i class="bi bi-funnel"></i>
+                            <span>Filter</span>
+                        </button>
+
+                        <div class="filter-controls hidden">
+                            <select class="form-select-sm" id="categoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="Micro">Micro</option>
+                                <option value="Small">Small</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Large">Large</option>
+                            </select>
+                            <select class="form-select-sm" id="districtFilter">
+                                <option value="">All Districts</option>
+                                <option value="East">East</option>
+                                <option value="West">West</option>
+                                <option value="North">North</option>
+                                <option value="South">South</option>
+                                <option value="Urban">Urban</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="coop-list-table">
+                        <thead>
+                            <tr>
+                                <th>Cooperative Name</th>
+                                <th>Category</th>
+                                <th>District</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coopTableBody">
+                            <tr data-category="Micro" data-district="East"
+                                onclick="openProfileModal('Consumer Cooperative')">
+                                <td><span class="fw-bold text-dark">Consumer Cooperative</span></td>
+                                <td><span class="badge-category">Micro</span></td>
+                                <td>East</td>
+                            </tr>
+                            <tr data-category="Large" data-district="West" onclick="openProfileModal('Plaridel MPC')">
+                                <td><span class="fw-bold text-dark">Plaridel MPC</span></td>
+                                <td><span class="badge-category">Large</span></td>
+                                <td>West</td>
+                            </tr>
+                            <tr data-category="Small" data-district="Urban"
+                                onclick="openProfileModal('Agriculture Cooperative')">
+                                <td><span class="fw-bold text-dark">Agriculture Cooperative</span></td>
+                                <td><span class="badge-category">Small</span></td>
+                                <td>Urban</td>
+                            </tr>
+                            <tr data-category="Medium" data-district="North"
+                                onclick="openProfileModal('Housing Cooperative')">
+                                <td><span class="fw-bold text-dark">Housing Cooperative</span></td>
+                                <td><span class="badge-category">Medium</span></td>
+                                <td>North</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div id="noResultsMessage"
+                        style="display: none; padding: 20px; text-align: center; color: #6c757d;">
+                        No cooperatives found matching the selected filters.
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // --- CHARTS INITIALIZATION ---
-    
-    // 1. Business Activity (Bar)
-    const ctx = document.getElementById('businessActivityChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Lending', 'Service', 'Consumer', 'Producers', 'Marketing', 'Multi-Purpose'],
-            datasets: [{
-                label: 'Cooperatives',
-                data: [12, 19, 8, 5, 4, 10],
-                backgroundColor: ['#a71b20', '#7f0f12', '#d8443a', '#e95b4b', '#f27a6a', '#c62828'],
-                borderRadius: 6,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
-        }
-    });
+    <div class="modal fade" id="adminListModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">System Administrators</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Gender</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminListModalBody">
+                            <!-- Data will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // 2. Category (Doughnut)
-    const ctxCat = document.getElementById('categoryChart').getContext('2d');
-    new Chart(ctxCat, {
-        type: 'doughnut',
-        data: {
-            labels: ['Micro', 'Small', 'Medium', 'Large'],
-            datasets: [{
-                data: [25, 15, 10, 8],
-                backgroundColor: ['#a91e2c', '#e57373', '#42a5f5', '#26a69a'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
-        }
-    });
+    <div class="modal fade" id="staffListModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Office Staff</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Gender</th>
+                                <th>Email</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffListModalBody">
+                            <!-- Data will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // 3. District (Bar)
-    const ctxDist = document.getElementById('districtChart').getContext('2d');
-    new Chart(ctxDist, {
-        type: 'bar',
-        data: {
-            labels: ['N', 'S', 'E', 'W', 'Urb'],
-            datasets: [{
-                data: [12, 19, 8, 15, 4],
-                backgroundColor: '#a91e2c',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { display: false }, x: { grid: { display: false } } }
-        }
-    });
+    <div class="modal fade" id="officersListModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cooperative Officers</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Cooperative</th>
+                            </tr>
+                        </thead>
+                        <tbody id="officersListModalBody">
+                            <!-- Data will be loaded dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // 4. Compliance (Stacked Bar)
-    const ctxComp = document.getElementById('complianceChart').getContext('2d');
-    new Chart(ctxComp, {
-        type: 'bar',
-        data: {
-            labels: ['COC', 'COTE'],
-            datasets: [
-                { label: 'Active', data: [45, 38], backgroundColor: '#4caf50', barThickness: 20 },
-                { label: 'Inactive', data: [13, 20], backgroundColor: '#ef5350', barThickness: 20 }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-            scales: { x: { stacked: true, display: false }, y: { stacked: true, grid: { display: false } } },
-            plugins: { legend: { display: false } }
-        }
-    });
+    <div class="modal fade" id="coopProfileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cooperative Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-    // 5. Financial Trend (Line)
-    const ctxFin = document.getElementById('financialTrendChart').getContext('2d');
-    new Chart(ctxFin, {
-        type: 'line',
-        data: {
-            labels: ['2020', '2021', '2022', '2023', '2024'],
-            datasets: [{
-                label: 'Net Surplus (M)',
-                data: [12, 15, 14, 22, 28],
-                borderColor: '#1a237e', backgroundColor: 'rgba(26, 35, 126, 0.1)',
-                tension: 0.4, fill: true, pointRadius: 3
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
-        }
-    });
+                <div class="modal-body">
+                    <div id="printable-area">
+                        <div class="text-center mb-4">
+                            <div class="avatar-circle mb-2">C</div>
+                            <h4 id="modalCoopName">Consumer Cooperative</h4>
+                            <span class="badge bg-success">Active</span>
+                            <p class="text-muted mt-2">Sabang, Lipa City, Batangas</p>
+                        </div>
 
-    // --- INTERACTIVITY ---
+                        <section class="info-section mb-4">
+                            <h6
+                                class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">
+                                General Information</h6>
+                            <div class="info-grid">
+                                <div><strong>CDA No:</strong> 1414-060923055</div>
+                                <div><strong>Category:</strong> Micro</div>
+                                <div><strong>District:</strong> East</div>
+                                <div><strong>Email:</strong> consumercoop@gmail.com</div>
+                                <div><strong>Contact:</strong> 09929380925</div>
+                                <div><strong>Compliance:</strong> <span class="text-success fw-bold">Yes</span></div>
+                            </div>
+                        </section>
 
-    // Filter Toggle
-    const filterToggle = document.getElementById('filterToggle');
-    const filterControls = document.querySelector('.filter-controls');
-    
-    filterToggle.addEventListener('click', () => {
-        filterControls.classList.toggle('hidden');
-    });
+                        <section class="info-section mb-4">
+                            <h6
+                                class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">
+                                Financials (2024)</h6>
+                            <div class="info-grid">
+                                <div><strong>Assets:</strong> ₱ 356,964.68</div>
+                                <div><strong>Paid Up Capital:</strong> ₱ 108,243.78</div>
+                                <div><strong>Net Surplus:</strong> ₱ 10,653.54</div>
+                            </div>
+                        </section>
 
-    // Table Filtering Logic
-    function filterTable() {
-        const categoryFilter = document.getElementById('categoryFilter').value;
-        const districtFilter = document.getElementById('districtFilter').value;
-        const rows = document.querySelectorAll('#coopTableBody tr');
-        let hasResults = false;
+                        <section class="info-section">
+                            <h6
+                                class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">
+                                Officers</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Position</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Isabel Delacion</td>
+                                            <td>Chairperson</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Jasmin Esperida</td>
+                                            <td>Vice Chairperson</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Maria Lopez</td>
+                                            <td>Secretary</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
 
-        rows.forEach(row => {
-            const category = row.getAttribute('data-category');
-            const district = row.getAttribute('data-district');
+                    <div class="mt-4 text-end">
+                        <button class="btn btn-sm btn-outline-secondary" id="downloadPdfBtn">
+                            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                        </button>
+                        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            if ((categoryFilter === '' || category === categoryFilter) &&
-                (districtFilter === '' || district === districtFilter)) {
-                row.style.display = '';
-                hasResults = true;
-            } else {
-                row.style.display = 'none';
+    <script>
+        // --- GLOBAL CHART INSTANCES ---
+        let businessActivityChart, categoryChart, districtChart, complianceChart, financialTrendChart;
+        let trafficChart, userRoleChart, userGenderChart, verificationChart;
+        let coopCategoryChart, coopDistrictChart, memberGenderChart;
+        let financialChart = null;
+
+        // --- LOAD ALL DASHBOARD DATA ---
+        async function loadDashboardData() {
+            try {
+                // Load stats
+                const statsResponse = await fetch('{% url "dashboard:dashboard_stats_api" %}');
+                const statsData = await statsResponse.json();
+                updateStats(statsData);
+
+                // Load charts data
+                const chartsResponse = await fetch('{% url "dashboard:dashboard_charts_api" %}');
+                const chartsData = await chartsResponse.json();
+                initializeCharts(chartsData);
+
+                // Load user traffic
+                try {
+                    const trafficResponse = await fetch('{% url "dashboard:dashboard_user_traffic_api" %}');
+                    const trafficData = await trafficResponse.json();
+                    initializeTrafficChart(trafficData);
+                } catch (error) {
+                    console.error('Error loading traffic data:', error);
+                    initializeTrafficChart({ labels: [], data: [] });
+                }
+
+                // Load user demographics
+                const userDemoResponse = await fetch('{% url "dashboard:dashboard_user_demographics_api" %}');
+                const userDemoData = await userDemoResponse.json();
+                initializeUserDemographics(userDemoData);
+
+                // Load cooperative demographics
+                await loadCooperativeDemographics();
+
+                // Load cooperatives list
+                const coopsResponse = await fetch('{% url "dashboard:dashboard_cooperatives_list_api" %}');
+                const coopsData = await coopsResponse.json();
+                updateCooperativesList(coopsData.cooperatives);
+
+                // Load staff workload
+                const workloadResponse = await fetch('{% url "dashboard:dashboard_staff_workload_api" %}');
+                const workloadData = await workloadResponse.json();
+                updateStaffWorkload(workloadData.staff_workload);
+
+                // Load pending reviews
+                const reviewsResponse = await fetch('{% url "dashboard:dashboard_pending_reviews_api" %}');
+                const reviewsData = await reviewsResponse.json();
+                updatePendingReviews(reviewsData.pending_reviews);
+
+                // Load top rankings
+                updateTopRankings(chartsData.top_cooperatives);
+
+                // Officers list will be loaded when modal opens
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
             }
+        }
+
+        // --- UPDATE STATISTICS ---
+        function updateStats(data) {
+            // Map stat cards by their content/position
+            const statCards = document.querySelectorAll('.stat-card');
+
+            statCards.forEach((card, index) => {
+                const h3 = card.querySelector('h3');
+                const p = card.querySelector('p');
+
+                if (!h3) return;
+
+                // Identify card by its label text
+                const label = p ? p.textContent.trim() : '';
+
+                if (label.includes('System Admins') || label.includes('Admins')) {
+                    h3.textContent = data.total_admins || 0;
+                } else if (label.includes('Office Staff') || label.includes('Staff')) {
+                    h3.textContent = data.total_staff || 0;
+                } else if (label.includes('Cooperative Officers') || label.includes('Officers')) {
+                    h3.textContent = data.total_officers || 0;
+                } else if (label.includes('Total Cooperatives') || label.includes('Cooperatives')) {
+                    h3.textContent = data.total_cooperatives || 0;
+                } else if (label.includes('Total Members') && !label.includes('LCCDC')) {
+                    h3.textContent = (data.total_members || 0).toLocaleString();
+                } else if (label.includes('Total Assets')) {
+                    const assets = parseFloat(data.total_assets || 0);
+                    let assetsText;
+                    if (assets >= 1000000) {
+                        assetsText = `₱ ${(assets / 1000000).toFixed(1)}M`;
+                    } else if (assets >= 1000) {
+                        assetsText = `₱ ${(assets / 1000).toFixed(0)}K`;
+                    } else {
+                        assetsText = `₱ ${assets.toFixed(0)}`;
+                    }
+                    h3.textContent = assetsText;
+                } else if (label.includes('Pending Users')) {
+                    h3.textContent = data.pending_users || 0;
+                } else if (label.includes('LCCDC Members')) {
+                    h3.textContent = data.lccdc_members || 0;
+                }
+            });
+        }
+
+        // --- INITIALIZE TRAFFIC CHART ---
+        function initializeTrafficChart(data) {
+            const ctx = document.getElementById('trafficChart');
+            if (!ctx) return;
+
+            const labels = data.labels || [];
+            const trafficData = data.data || [];
+
+            // Use placeholder if no data
+            const finalLabels = labels.length > 0 ? labels : Array.from({ length: 30 }, (_, i) => {
+                const date = new Date();
+                date.setDate(date.getDate() - (29 - i));
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            const finalData = trafficData.length > 0 ? trafficData : Array.from({ length: 30 }, () => Math.floor(Math.random() * 30) + 10);
+
+            if (trafficChart) trafficChart.destroy();
+
+            trafficChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: finalLabels,
+                    datasets: [{
+                        label: 'Active Users',
+                        data: finalData,
+                        borderColor: '#a91e2c',
+                        backgroundColor: 'rgba(169, 30, 44, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#a91e2c'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { borderDash: [5, 5] }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- INITIALIZE USER DEMOGRAPHICS ---
+        function initializeUserDemographics(data) {
+            // User Role Distribution
+            const ctxRole = document.getElementById('userRoleChart');
+            if (ctxRole) {
+                const roleData = {
+                    labels: ['Admins', 'Staff', 'Officers'],
+                    data: [
+                        data.admins?.total || 0,
+                        data.staff?.total || 0,
+                        data.officers?.total || 0
+                    ]
+                };
+
+                if (userRoleChart) userRoleChart.destroy();
+                userRoleChart = new Chart(ctxRole.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: roleData.labels,
+                        datasets: [{
+                            data: roleData.data,
+                            backgroundColor: ['#a91e2c', '#1976d2', '#fbc02d'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+
+            // User Gender Distribution
+            const ctxGender = document.getElementById('userGenderChart');
+            if (ctxGender) {
+                const totalMale = (data.admins?.male || 0) + (data.staff?.male || 0) + (data.officers?.male || 0);
+                const totalFemale = (data.admins?.female || 0) + (data.staff?.female || 0) + (data.officers?.female || 0);
+                const totalOthers = (data.admins?.others || 0) + (data.staff?.others || 0) + (data.officers?.others || 0);
+
+                if (userGenderChart) userGenderChart.destroy();
+                userGenderChart = new Chart(ctxGender.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Male', 'Female', 'Others'],
+                        datasets: [{
+                            data: [totalMale, totalFemale, totalOthers],
+                            backgroundColor: ['#1565c0', '#c2185b', '#7b1fa2']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                    }
+                });
+            }
+
+            // Verification Status
+            const ctxVer = document.getElementById('verificationChart');
+            if (ctxVer) {
+                const totalVerified = (data.admins?.verified || 0) + (data.staff?.verified || 0) + (data.officers?.verified || 0);
+                const totalPending = (data.admins?.pending || 0) + (data.staff?.pending || 0) + (data.officers?.pending || 0);
+
+                if (verificationChart) verificationChart.destroy();
+                verificationChart = new Chart(ctxVer.getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: ['Verified', 'Pending'],
+                        datasets: [{
+                            data: [totalVerified, totalPending],
+                            backgroundColor: ['#4caf50', '#ff9800']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+        }
+
+        // --- INITIALIZE COOPERATIVE DEMOGRAPHICS ---
+        async function loadCooperativeDemographics() {
+            const categoryFilter = document.getElementById('coopDemoCategoryFilter')?.value || '';
+            const districtFilter = document.getElementById('coopDemoDistrictFilter')?.value || '';
+
+            const url = `{% url "dashboard:dashboard_cooperative_demographics_api" %}?category=${categoryFilter}&district=${districtFilter}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            initializeCooperativeDemographics(data);
+        }
+
+        function initializeCooperativeDemographics(data) {
+            // Category Chart
+            const ctxCat = document.getElementById('coopCategoryChart');
+            if (ctxCat) {
+                const categoryLabels = Object.keys(data.categories || {});
+                const categoryValues = Object.values(data.categories || {});
+
+                if (coopCategoryChart) coopCategoryChart.destroy();
+                coopCategoryChart = new Chart(ctxCat.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: categoryLabels.length > 0 ? categoryLabels : ['No Data'],
+                        datasets: [{
+                            data: categoryValues.length > 0 ? categoryValues : [0],
+                            backgroundColor: ['#a91e2c', '#e57373', '#42a5f5', '#26a69a'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+
+            // District Chart
+            const ctxDist = document.getElementById('coopDistrictChart');
+            if (ctxDist) {
+                const districtLabels = Object.keys(data.districts || {});
+                const districtValues = Object.values(data.districts || {});
+
+                if (coopDistrictChart) coopDistrictChart.destroy();
+                coopDistrictChart = new Chart(ctxDist.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: districtLabels.length > 0 ? districtLabels.map(d => d.substring(0, 3).toUpperCase()) : ['No Data'],
+                        datasets: [{
+                            data: districtValues.length > 0 ? districtValues : [0],
+                            backgroundColor: '#a91e2c',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                    }
+                });
+            }
+
+            // Member Gender Chart
+            const ctxMem = document.getElementById('memberGenderChart');
+            if (ctxMem) {
+                const memberDemo = data.member_demographics || {};
+
+                if (memberGenderChart) memberGenderChart.destroy();
+                memberGenderChart = new Chart(ctxMem.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Male', 'Female', 'Others'],
+                        datasets: [{
+                            data: [
+                                memberDemo.male || 0,
+                                memberDemo.female || 0,
+                                memberDemo.others || 0
+                            ],
+                            backgroundColor: ['#1565c0', '#c2185b', '#7b1fa2']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+        }
+
+        // --- INITIALIZE CHARTS ---
+        function initializeCharts(data) {
+            // 1. Business Activity Chart
+            const ctx = document.getElementById('businessActivityChart');
+            if (ctx) {
+                const activityLabels = Object.keys(data.business_activities || {});
+                const activityValues = Object.values(data.business_activities || {});
+                const activityColors = ['#a71b20', '#7f0f12', '#d8443a', '#e95b4b', '#f27a6a', '#c62828', '#ff6b6b', '#4ecdc4'];
+
+                if (businessActivityChart) businessActivityChart.destroy();
+                businessActivityChart = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: activityLabels.length > 0 ? activityLabels : ['No Data'],
+                        datasets: [{
+                            label: 'Cooperatives',
+                            data: activityValues.length > 0 ? activityValues : [0],
+                            backgroundColor: activityColors.slice(0, activityLabels.length),
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+                    }
+                });
+            }
+
+            // 2. Category Chart
+            const ctxCat = document.getElementById('categoryChart');
+            if (ctxCat) {
+                const categoryLabels = Object.keys(data.categories || {});
+                const categoryValues = Object.values(data.categories || {});
+                const categoryColors = ['#a91e2c', '#e57373', '#42a5f5', '#26a69a', '#ff9800', '#9c27b0'];
+
+                if (categoryChart) categoryChart.destroy();
+                categoryChart = new Chart(ctxCat.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: categoryLabels.length > 0 ? categoryLabels : ['No Data'],
+                        datasets: [{
+                            data: categoryValues.length > 0 ? categoryValues : [0],
+                            backgroundColor: categoryColors.slice(0, categoryLabels.length),
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
+                    }
+                });
+            }
+
+            // 3. District Chart
+            const ctxDist = document.getElementById('districtChart');
+            if (ctxDist) {
+                const districtLabels = Object.keys(data.districts || {});
+                const districtValues = Object.values(data.districts || {});
+
+                if (districtChart) districtChart.destroy();
+                districtChart = new Chart(ctxDist.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: districtLabels.length > 0 ? districtLabels.map(d => d.substring(0, 3).toUpperCase()) : ['No Data'],
+                        datasets: [{
+                            data: districtValues.length > 0 ? districtValues : [0],
+                            backgroundColor: '#a91e2c',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { display: false }, x: { grid: { display: false } } }
+                    }
+                });
+            }
+
+            // 4. Compliance Chart
+            const ctxComp = document.getElementById('complianceChart');
+            if (ctxComp) {
+                const compliance = data.compliance || { coc: { active: 0, inactive: 0 }, cote: { active: 0, inactive: 0 } };
+
+                if (complianceChart) complianceChart.destroy();
+                complianceChart = new Chart(ctxComp.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['COC', 'COTE'],
+                        datasets: [
+                            {
+                                label: 'Active',
+                                data: [compliance.coc.active || 0, compliance.cote.active || 0],
+                                backgroundColor: '#4caf50',
+                                barThickness: 20
+                            },
+                            {
+                                label: 'Inactive',
+                                data: [compliance.coc.inactive || 0, compliance.cote.inactive || 0],
+                                backgroundColor: '#ef5350',
+                                barThickness: 20
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                        scales: { x: { stacked: true, display: false }, y: { stacked: true, grid: { display: false } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // 5. Financial Trend Chart
+            const ctxFin = document.getElementById('financialTrendChart');
+            if (ctxFin) {
+                const trend = data.financial_trend || {};
+                const assetsTrend = trend.assets || {};
+                const capitalTrend = trend.capital || {};
+                const surplusTrend = trend.surplus || {};
+
+                // Get all years from any of the trends
+                const allYears = new Set([
+                    ...Object.keys(assetsTrend),
+                    ...Object.keys(capitalTrend),
+                    ...Object.keys(surplusTrend)
+                ]);
+                const trendLabels = Array.from(allYears).sort();
+
+                // Get financial data for all metrics (convert to millions)
+                const assetsData = trendLabels.map(year => (assetsTrend[year] || 0) / 1000000);
+                const capitalData = trendLabels.map(year => (capitalTrend[year] || 0) / 1000000);
+                const surplusData = trendLabels.map(year => (surplusTrend[year] || 0) / 1000000);
+
+                if (financialTrendChart) financialTrendChart.destroy();
+                financialTrendChart = new Chart(ctxFin.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels.length > 0 ? trendLabels : ['No Data'],
+                        datasets: [
+                            {
+                                label: 'Assets',
+                                data: assetsData.length > 0 ? assetsData : [0],
+                                borderColor: '#2e7d32',
+                                backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                                tension: 0.3,
+                                fill: false,
+                                hidden: false
+                            },
+                            {
+                                label: 'Paid-Up Capital',
+                                data: capitalData.length > 0 ? capitalData : [0],
+                                borderColor: '#1565c0',
+                                backgroundColor: 'rgba(21, 101, 192, 0.1)',
+                                tension: 0.3,
+                                fill: false,
+                                hidden: false
+                            },
+                            {
+                                label: 'Net Surplus',
+                                data: surplusData.length > 0 ? surplusData : [0],
+                                borderColor: '#ef6c00',
+                                backgroundColor: 'rgba(239, 108, 0, 0.1)',
+                                tension: 0.3,
+                                fill: false,
+                                hidden: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
+                    }
+                });
+                financialChart = financialTrendChart;
+            }
+        }
+
+        // --- UPDATE COOPERATIVES LIST ---
+        function updateCooperativesList(cooperatives) {
+            const tbody = document.getElementById('coopTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            cooperatives.forEach(coop => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-category', coop.category || '');
+                row.setAttribute('data-district', coop.district || '');
+                row.onclick = () => openProfileModal(coop.name);
+                row.innerHTML = `
+                <td><span class="fw-bold text-dark">${coop.name}</span></td>
+                <td><span class="badge-category">${coop.category || 'N/A'}</span></td>
+                <td>${coop.district || 'N/A'}</td>
+            `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- UPDATE STAFF WORKLOAD ---
+        function updateStaffWorkload(staffList) {
+            const tbody = document.querySelector('.workload-card tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            staffList.forEach(staff => {
+                const row = document.createElement('tr');
+                const initials = staff.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                row.innerHTML = `
+                <td>
+                    <div class="user-cell">
+                        <div class="avatar-xs" style="background:#1976d2;">${initials}</div>
+                        ${staff.name}
+                    </div>
+                </td>
+                <td class="text-center fw-bold">${staff.assigned_count}</td>
+                <td><span class="badge bg-${staff.badge_class}">${staff.status}</span></td>
+            `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- UPDATE PENDING REVIEWS ---
+        function updatePendingReviews(reviews) {
+            const tbody = document.querySelector('.table-card:has(.admin-table) tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (reviews.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">No pending reviews</td></tr>';
+                return;
+            }
+
+            reviews.forEach(review => {
+                const row = document.createElement('tr');
+                const assetsText = review.assets >= 1000000
+                    ? `₱ ${(review.assets / 1000000).toFixed(1)}M`
+                    : `₱ ${(review.assets / 1000).toFixed(0)}K`;
+                row.innerHTML = `
+                <td class="fw-bold">${review.coop_name}</td>
+                <td>${review.year}</td>
+                <td>${assetsText}</td>
+                <td><button class="btn-action">Review</button></td>
+            `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- UPDATE TOP RANKINGS ---
+        function updateTopRankings(topCoops) {
+            const rankingList = document.querySelector('.ranking-list');
+            if (!rankingList) return;
+            rankingList.innerHTML = '';
+
+            if (topCoops.length === 0) {
+                rankingList.innerHTML = '<div class="text-center text-muted p-3">No data available</div>';
+                return;
+            }
+
+            topCoops.slice(0, 20).forEach((coop, index) => {
+                const item = document.createElement('div');
+                item.className = 'rank-item';
+                const assetsText = coop.assets >= 1000000
+                    ? `₱ ${(coop.assets / 1000000).toFixed(1)}M`
+                    : `₱ ${(coop.assets / 1000).toFixed(0)}K`;
+                item.innerHTML = `
+                <span class="rank-num">${index + 1}</span>
+                <div class="rank-info">
+                    <span class="coop-name">${coop.name}</span>
+                    <span class="coop-asset">${assetsText}</span>
+                </div>
+            `;
+                rankingList.appendChild(item);
+            });
+        }
+
+        // --- UPDATE ADMINS LIST ---
+        function updateAdminsList(admins) {
+            const tbody = document.getElementById('adminListModalBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (admins.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">No administrators found</td></tr>';
+                return;
+            }
+
+            admins.forEach(admin => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${admin.name || 'N/A'}</td>
+                    <td>${admin.position || 'N/A'}</td>
+                    <td>${admin.gender || 'N/A'}</td>
+                    <td>${admin.email || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- UPDATE STAFF LIST ---
+        function updateStaffList(staff) {
+            const tbody = document.getElementById('staffListModalBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (staff.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted p-3">No staff found</td></tr>';
+                return;
+            }
+
+            staff.forEach(member => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.name || 'N/A'}</td>
+                    <td>${member.position || 'N/A'}</td>
+                    <td>${member.gender || 'N/A'}</td>
+                    <td>${member.email || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- UPDATE OFFICERS LIST ---
+        function updateOfficersList(officers) {
+            const tbody = document.getElementById('officersListModalBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (officers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted p-3">No officers found</td></tr>';
+                return;
+            }
+
+            officers.forEach(officer => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${officer.name || 'N/A'}</td>
+                    <td>${officer.position || 'N/A'}</td>
+                    <td>${officer.cooperative || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- LOAD MODAL DATA ---
+        async function loadAdminsList() {
+            try {
+                const response = await fetch('{% url "dashboard:dashboard_admins_list_api" %}');
+                const data = await response.json();
+                if (data.admins) {
+                    updateAdminsList(data.admins);
+                }
+            } catch (error) {
+                console.error('Error loading admins list:', error);
+                const tbody = document.getElementById('adminListModalBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger p-3">Error loading data</td></tr>';
+                }
+            }
+        }
+
+        async function loadStaffList() {
+            try {
+                const response = await fetch('{% url "dashboard:dashboard_staff_list_api" %}');
+                const data = await response.json();
+                if (data.staff) {
+                    updateStaffList(data.staff);
+                }
+            } catch (error) {
+                console.error('Error loading staff list:', error);
+                const tbody = document.getElementById('staffListModalBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger p-3">Error loading data</td></tr>';
+                }
+            }
+        }
+
+        async function loadOfficersList() {
+            try {
+                const response = await fetch('{% url "dashboard:dashboard_officers_list_api" %}');
+                const data = await response.json();
+                if (data.officers) {
+                    updateOfficersList(data.officers);
+                }
+            } catch (error) {
+                console.error('Error loading officers list:', error);
+                const tbody = document.getElementById('officersListModalBody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger p-3">Error loading data</td></tr>';
+                }
+            }
+        }
+
+        // --- SETUP MODAL EVENT LISTENERS ---
+        function setupModalListeners() {
+            // Admin List Modal
+            const adminModal = document.getElementById('adminListModal');
+            if (adminModal) {
+                adminModal.addEventListener('show.bs.modal', () => {
+                    loadAdminsList();
+                });
+            }
+
+            // Staff List Modal
+            const staffModal = document.getElementById('staffListModal');
+            if (staffModal) {
+                staffModal.addEventListener('show.bs.modal', () => {
+                    loadStaffList();
+                });
+            }
+
+            // Officers List Modal
+            const officersModal = document.getElementById('officersListModal');
+            if (officersModal) {
+                officersModal.addEventListener('show.bs.modal', () => {
+                    loadOfficersList();
+                });
+            }
+        }
+
+        // --- FINANCIAL CHART FILTER LOGIC ---
+        function setupFinancialChartFilter() {
+            const filterToggle = document.getElementById('financeFilterToggle');
+            const filterControls = document.getElementById('financeFilterControls');
+
+            if (filterToggle && filterControls) {
+                filterToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (filterControls.style.display === 'none' || filterControls.style.display === '') {
+                        filterControls.style.display = 'flex';
+                        filterToggle.classList.add('active');
+                    } else {
+                        filterControls.style.display = 'none';
+                        filterToggle.classList.remove('active');
+                    }
+                });
+            }
+
+            window.applyFinancialFilter = function (type, clickedElement) {
+                if (!financialChart) return;
+
+                if (type === 'all') {
+                    financialChart.getDatasetMeta(0).hidden = false;
+                    financialChart.getDatasetMeta(1).hidden = false;
+                    financialChart.getDatasetMeta(2).hidden = false;
+                } else if (type === 'assets') {
+                    financialChart.getDatasetMeta(0).hidden = false;
+                    financialChart.getDatasetMeta(1).hidden = true;
+                    financialChart.getDatasetMeta(2).hidden = true;
+                } else if (type === 'capital') {
+                    financialChart.getDatasetMeta(0).hidden = true;
+                    financialChart.getDatasetMeta(1).hidden = false;
+                    financialChart.getDatasetMeta(2).hidden = true;
+                } else if (type === 'surplus') {
+                    financialChart.getDatasetMeta(0).hidden = true;
+                    financialChart.getDatasetMeta(1).hidden = true;
+                    financialChart.getDatasetMeta(2).hidden = false;
+                }
+
+                financialChart.update();
+
+                const allOptions = document.querySelectorAll('#financeFilterControls .filter-option');
+                allOptions.forEach(opt => opt.classList.remove('active'));
+                clickedElement.classList.add('active');
+
+                const labelMap = {
+                    'all': 'All Data',
+                    'assets': 'Assets',
+                    'capital': 'Paid-Up Capital',
+                    'surplus': 'Net Surplus'
+                };
+                const currentView = document.getElementById('financeCurrentView');
+                if (currentView) {
+                    currentView.textContent = labelMap[type];
+                }
+
+                if (filterControls) {
+                    filterControls.style.display = 'none';
+                    if (filterToggle) filterToggle.classList.remove('active');
+                }
+            };
+        }
+
+        // --- COOPERATIVE DEMOGRAPHICS FILTER ---
+        function setupCooperativeDemographicsFilter() {
+            const applyBtn = document.getElementById('applyCoopDemoFilters');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', () => {
+                    loadCooperativeDemographics();
+                });
+            }
+        }
+
+        // --- COOPERATIVE LIST FILTER ---
+        function setupCooperativeListFilter() {
+            const filterToggle = document.getElementById('filterToggle');
+            const filterControls = document.querySelector('.filter-controls');
+
+            if (filterToggle && filterControls) {
+                filterToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    filterControls.classList.toggle('hidden');
+                });
+            }
+
+            function filterTable() {
+                const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+                const districtFilter = document.getElementById('districtFilter')?.value || '';
+                const rows = document.querySelectorAll('#coopTableBody tr');
+                let hasResults = false;
+
+                rows.forEach(row => {
+                    const category = row.getAttribute('data-category') || '';
+                    const district = row.getAttribute('data-district') || '';
+
+                    if ((categoryFilter === '' || category === categoryFilter) &&
+                        (districtFilter === '' || district === districtFilter)) {
+                        row.style.display = '';
+                        hasResults = true;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                const noResultsMsg = document.getElementById('noResultsMessage');
+                if (noResultsMsg) {
+                    noResultsMsg.style.display = hasResults ? 'none' : 'block';
+                }
+            }
+
+            const categoryFilter = document.getElementById('categoryFilter');
+            const districtFilter = document.getElementById('districtFilter');
+            if (categoryFilter) categoryFilter.addEventListener('change', filterTable);
+            if (districtFilter) districtFilter.addEventListener('change', filterTable);
+        }
+
+        // --- MODAL LOGIC ---
+        window.openProfileModal = function (coopName) {
+            const modalCoopName = document.getElementById('modalCoopName');
+            if (modalCoopName) {
+                modalCoopName.textContent = coopName;
+                const modal = new bootstrap.Modal(document.getElementById('coopProfileModal'));
+                modal.show();
+            }
+        }
+
+        // --- PDF DOWNLOAD LOGIC ---
+        function setupPdfDownload() {
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            if (downloadPdfBtn) {
+                downloadPdfBtn.addEventListener('click', function () {
+                    const element = document.getElementById('printable-area');
+                    const coopName = document.getElementById('modalCoopName')?.textContent.trim() || 'Cooperative';
+                    const btn = this;
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = 'Generating...';
+                    btn.disabled = true;
+
+                    const opt = {
+                        margin: 0.5,
+                        filename: `${coopName}_Profile.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2 },
+                        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                    };
+
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }).catch(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    });
+                });
+            }
+        }
+
+        // --- INITIALIZE ON PAGE LOAD ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+            setupFinancialChartFilter();
+            setupCooperativeDemographicsFilter();
+            setupCooperativeListFilter();
+            setupPdfDownload();
+            setupModalListeners();
+
+            // Update financial chart reference after initialization
+            setTimeout(() => {
+                financialChart = financialTrendChart;
+            }, 1000);
         });
-        document.getElementById('noResultsMessage').style.display = hasResults ? 'none' : 'block';
-    }
+    </script>
 
-    document.getElementById('categoryFilter').addEventListener('change', filterTable);
-    document.getElementById('districtFilter').addEventListener('change', filterTable);
-
-    // Open Modal Logic (Global for HTML onclick)
-    window.openProfileModal = function(coopName) {
-        document.getElementById('modalCoopName').textContent = coopName;
-        const modal = new bootstrap.Modal(document.getElementById('coopProfileModal'));
-        modal.show();
-    }
-
-    // PDF Download Logic
-    document.getElementById('downloadPdfBtn').addEventListener('click', function() {
-        const element = document.getElementById('printable-area');
-        const coopName = document.getElementById('modalCoopName').textContent.trim();
-        const btn = this;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = 'Generating...';
-        btn.disabled = true;
-
-        const opt = { margin: 0.5, filename: `${coopName}_Profile.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-        html2pdf().set(opt).from(element).save().then(() => {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        });
-    });
-</script>
-{% endblock %}
+    {% endblock %}

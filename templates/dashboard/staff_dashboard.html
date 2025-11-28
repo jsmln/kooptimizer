@@ -5,6 +5,7 @@
 
 {% block extra_head %}
     {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{% static 'frontend/staff_dashboard.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
@@ -26,7 +27,7 @@
             </div>
             <div class="stat-info">
                 <p>Assigned Cooperatives</p>
-                <h3>6</h3>
+                <h3 id="stat-assigned-coops">0</h3>
                 <span class="link-text">View List <i class="bi bi-arrow-right"></i></span>
             </div>
         </div>
@@ -37,7 +38,7 @@
             </div>
             <div class="stat-info">
                 <p>Updated Profiles</p>
-                <h3>4</h3>
+                <h3 id="stat-updated-profiles">0</h3>
                 <small class="text-muted">Recently updated by coops</small>
             </div>
         </div>
@@ -48,22 +49,29 @@
             </div>
             <div class="stat-info">
                 <p>Pending Submission</p>
-                <h3>2</h3>
+                <h3 id="stat-pending-submission">0</h3>
                 <small class="text-muted">Profiles not yet submitted</small>
             </div>
         </div>
     </div>
 
-    <div class="card-section chart-container" style="margin-bottom: 25px;">
-        <div class="card-header-custom">
-            <h3>Asset Performance of Assigned Coops (Top 5)</h3>
-            <select class="form-select-sm" style="border: 1px solid #e0e0e0; border-radius: 6px;">
-                <option>This Year</option>
-                <option>Last Year</option>
-            </select>
+    <div class="charts-section" style="margin-top: 2rem;">
+        <div class="chart-card" style="flex: 1; min-width: 300px;">
+            <div class="card-header-custom">
+                <h3>Assigned Cooperatives by Category</h3>
+            </div>
+            <div class="chart-wrapper" style="height: 250px;">
+                <canvas id="staffCategoryChart"></canvas>
+            </div>
         </div>
-        <div style="height: 300px; width: 100%;">
-            <canvas id="assetBarChart"></canvas>
+
+        <div class="chart-card" style="flex: 1; min-width: 300px;">
+            <div class="card-header-custom">
+                <h3>Compliance Status</h3>
+            </div>
+            <div class="chart-wrapper" style="height: 250px;">
+                <canvas id="staffComplianceChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -110,92 +118,9 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr data-category="Micro" data-district="East" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
-                             <td>
-                                 <div class="coop-cell">
-                                     <div class="avatar-sm">C</div>
-                                     <div>
-                                         <span class="fw-bold">Consumer Cooperative</span>
-                                         <small class="d-block text-muted">Sabang, Lipa City</small>
-                                     </div>
-                                 </div>
-                             </td>
-                             <td>Micro</td>
-                             <td>East</td>
-                             <td><span class="badge-status success">Updated</span></td>
-                          </tr>
-                        <tr data-category="Large" data-district="West" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
-                             <td>
-                                 <div class="coop-cell">
-                                     <div class="avatar-sm">P</div>
-                                     <div>
-                                         <span class="fw-bold">Plaridel MPC</span>
-                                         <small class="d-block text-muted">Balintawak, Lipa City</small>
-                                     </div>
-                                 </div>
-                             </td>
-                             <td>Large</td>
-                             <td>West</td>
-                             <td><span class="badge-status success">Updated</span></td>
-                          </tr>
-                        <tr data-category="Small" data-district="South" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
-                             <td>
-                                 <div class="coop-cell">
-                                     <div class="avatar-sm" style="background: #f0ad4e;">A</div>
-                                     <div>
-                                         <span class="fw-bold">Agriculture Cooperative</span>
-                                         <small class="d-block text-muted">Sabang, Lipa City</small>
-                                     </div>
-                                 </div>
-                             </td>
-                             <td>Small</td>
-                             <td>District 4</td>
-                             <td><span class="badge-status warning">Pending</span></td>
-                          </tr>
-                        <tr data-category="Medium" data-district="District 3" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
-                             <td>
-                                 <div class="coop-cell">
-                                     <div class="avatar-sm">H</div>
-                                     <div>
-                                         <span class="fw-bold">Housing Cooperative</span>
-                                         <small class="d-block text-muted">Inosluban, Lipa City</small>
-                                     </div>
-                                 </div>
-                             </td>
-                             <td>Medium</td>
-                             <td>North</td>
-                             <td><span class="badge-status warning">Pending</span></td>
-                          </tr>
-                        <tr data-category="Medium" data-district="East" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
-                             <td>
-                                 <div class="coop-cell">
-                                     <div class="avatar-sm">T</div>
-                                     <div>
-                                         <span class="fw-bold">Transport Service Coop</span>
-                                         <small class="d-block text-muted">Tambo, Lipa City</small>
-                                     </div>
-                                 </div>
-                             </td>
-                             <td>Medium</td>
-                             <td>East</td>
-                             <td><span class="badge-status success">Updated</span></td>
-                          </tr>
-                        <tr data-category="Micro" data-district="Urban" data-bs-toggle="modal" data-bs-target="#coopProfileModal">
-                             <td>
-                                 <div class="coop-cell">
-                                     <div class="avatar-sm">F</div>
-                                     <div>
-                                         <span class="fw-bold">Farmers Credit Coop</span>
-                                         <small class="d-block text-muted">Pinagtong-ulan, Lipa City</small>
-                                     </div>
-                                 </div>
-                             </td>
-                             <td>Micro</td>
-                             <td>District 5</td>
-                             <td><span class="badge-status success">Updated</span></td>
-                          </tr>
-                      </tbody>
+                    <tbody id="staffCoopTableBody">
+                        <tr><td colspan="4" class="text-center text-muted p-3">Loading cooperatives...</td></tr>
+                    </tbody>
                   </table>
                 <div id="noResultsMessageStaff" style="display:none;padding:12px;text-align:center;color:#6c757d;">
                     No cooperatives found matching the selected filters.
@@ -207,31 +132,8 @@
             <div class="card-header-custom">
                 <h3>Recent Updates</h3>
             </div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-icon bg-blue"><i class="bi bi-file-earmark-text"></i></div>
-                    <div class="timeline-content">
-                        <p class="text-dark fw-bold">Financial Report Uploaded</p>
-                        <p class="text-muted small">Consumer Cooperative uploaded 2024 Assets.</p>
-                        <span class="time-ago">2 hours ago</span>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-icon bg-red"><i class="bi bi-pencil-square"></i></div>
-                    <div class="timeline-content">
-                        <p class="text-dark fw-bold">Profile Updated</p>
-                        <p class="text-muted small">Agriculture Cooperative updated officer list.</p>
-                        <span class="time-ago">1 day ago</span>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-icon bg-green"><i class="bi bi-check-circle"></i></div>
-                    <div class="timeline-content">
-                        <p class="text-dark fw-bold">Compliance Verified</p>
-                        <p class="text-muted small">You marked Plaridel MPC as compliant.</p>
-                        <span class="time-ago">2 days ago</span>
-                    </div>
-                </div>
+            <div class="timeline" id="recentActivityTimeline">
+                <div class="text-center text-muted p-3">Loading activities...</div>
             </div>
         </div>
 
@@ -288,43 +190,8 @@
                                 <th>CDA Registration No.</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>Consumer Cooperative</td>
-                                <td>Sabang, Lipa City</td>
-                                <td>consumercoop@gmail.com</td>
-                                <td>1414-060923055</td>
-                            </tr>
-                            <tr>
-                                <td>Plaridel MPC</td>
-                                <td>Balintawak, Lipa City</td>
-                                <td>plaridelmpc@gmail.com</td>
-                                <td>1414-06140255</td>
-                            </tr>
-                            <tr>
-                                <td>Agriculture Cooperative</td>
-                                <td>Sabang, Lipa City</td>
-                                <td>agricoop@gmail.com</td>
-                                <td>1414-06140256</td>
-                            </tr>
-                            <tr>
-                                <td>Housing Cooperative</td>
-                                <td>Inosluban, Lipa City</td>
-                                <td>housingcoop@gmail.com</td>
-                                <td>1414-06140258</td>
-                            </tr>
-                             <tr>
-                                <td>Transport Service Coop</td>
-                                <td>Tambo, Lipa City</td>
-                                <td>transportcoop@gmail.com</td>
-                                <td>1414-06140260</td>
-                            </tr>
-                            <tr>
-                                <td>Farmers Credit Coop</td>
-                                <td>Pinagtong-ulan, Lipa City</td>
-                                <td>farmerscredit@gmail.com</td>
-                                <td>1414-06140262</td>
-                            </tr>
+                        <tbody id="assignedCoopsTableBody">
+                            <tr><td colspan="4" class="text-center text-muted p-3">Loading...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -338,129 +205,239 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('filterToggleStaff');
-    const controls = document.getElementById('filterControlsStaff');
-    const category = document.getElementById('categoryFilterStaff');
-    const district = document.getElementById('districtFilterStaff');
-    const tableBody = document.querySelector('.staff-table tbody');
-    const rows = () => Array.from(tableBody.querySelectorAll('tr'));
-    const noResults = document.getElementById('noResultsMessageStaff');
+    let staffCategoryChart, staffComplianceChart;
 
-    // Apply filters across all rows dynamically
-    function applyStaffFilters() {
-        const catVal = (category?.value || '').trim();
-        const distVal = (district?.value || '').trim();
-        let found = false;
+    async function loadStaffDashboardData() {
+        try {
+            // Load stats
+            const statsResponse = await fetch('{% url "dashboard:dashboard_stats_api" %}');
+            const statsData = await statsResponse.json();
+            updateStaffStats(statsData);
 
-        rows().forEach(r => {
-            const rCat = (r.dataset.category || '').trim();
-            const rDist = (r.dataset.district || '').trim();
+            // Load charts data
+            const chartsResponse = await fetch('{% url "dashboard:dashboard_charts_api" %}');
+            const chartsData = await chartsResponse.json();
+            initializeStaffCharts(chartsData);
 
-            const matches = (catVal === '' || rCat === catVal)
-                && (distVal === '' || rDist === distVal);
+            // Load cooperatives list
+            const coopsResponse = await fetch('{% url "dashboard:dashboard_cooperatives_list_api" %}');
+            const coopsData = await coopsResponse.json();
+            updateStaffCooperativesList(coopsData.cooperatives);
 
-            r.style.display = matches ? '' : 'none';
-            if (matches) found = true;
-        });
-
-        noResults.style.display = found ? 'none' : 'block';
+            // Load recent activity
+            const activityResponse = await fetch('{% url "dashboard:dashboard_recent_activity_api" %}');
+            const activityData = await activityResponse.json();
+            updateRecentActivity(activityData.activities);
+        } catch (error) {
+            console.error('Error loading staff dashboard data:', error);
+        }
     }
 
-    // Toggle inline filter controls
-    toggle?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (!controls) return;
-        controls.style.display = (controls.style.display === 'flex') ? 'none' : 'flex';
-        toggle.setAttribute('aria-expanded', String(controls.style.display === 'flex'));
-    });
+    function updateStaffStats(data) {
+        document.getElementById('stat-assigned-coops').textContent = data.total_cooperatives || 0;
+        // Calculate updated profiles (profiles with recent updates)
+        document.getElementById('stat-updated-profiles').textContent = data.total_cooperatives || 0;
+        // Calculate pending submissions
+        document.getElementById('stat-pending-submission').textContent = data.pending_users || 0;
+    }
 
-    // Hide controls when clicking outside (do not clear)
-    document.addEventListener('click', (ev) => {
-        if (!controls || !toggle) return;
-        if (!controls.contains(ev.target) && !toggle.contains(ev.target)) {
-            controls.style.display = 'none';
-            toggle.setAttribute('aria-expanded', 'false');
-        }
-    });
-
-    // Wire change events so filtering is immediate
-    [category, district].forEach(el => el?.addEventListener('change', applyStaffFilters));
-
-    // Initialize on load
-    applyStaffFilters();
-
-    const ctx = document.getElementById('assetBarChart');
-    
-    if (ctx) {
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                // Using names from your existing table data
-                labels: ['Consumer Coop', 'Plaridel MPC', 'Agriculture Coop', 'Transport Service', 'Housing Coop'],
-                datasets: [{
-                    label: 'Total Assets (in PHP)',
-                    data: [356964, 520000, 210500, 180000, 150000], // Dummy data matching "Top 5" logic
-                    backgroundColor: '#a91e2c', // var(--brand-red)
-                    borderRadius: 4,
-                    barThickness: 40, // Fixed width for cleaner look
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false // Hide legend since title explains it
-                    },
-                    tooltip: {
-                        backgroundColor: '#2B3674',
-                        padding: 12,
-                        titleFont: { size: 13 },
-                        bodyFont: { size: 13 },
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(context.parsed.y);
-                                }
-                                return label;
-                            }
-                        }
-                    }
+    function initializeStaffCharts(data) {
+        // Category Chart
+        const ctxCat = document.getElementById('staffCategoryChart');
+        if (ctxCat) {
+            const categoryLabels = Object.keys(data.categories || {});
+            const categoryValues = Object.values(data.categories || {});
+            const categoryColors = ['#a91e2c', '#e57373', '#42a5f5', '#26a69a', '#ff9800'];
+            
+            if (staffCategoryChart) staffCategoryChart.destroy();
+            staffCategoryChart = new Chart(ctxCat.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels.length > 0 ? categoryLabels : ['No Data'],
+                    datasets: [{
+                        data: categoryValues.length > 0 ? categoryValues : [0],
+                        backgroundColor: categoryColors.slice(0, categoryLabels.length),
+                        borderWidth: 0
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#f0f0f0',
-                            drawBorder: false,
-                        },
-                        ticks: {
-                            color: '#A3AED0',
-                            font: { size: 11 },
-                            callback: function(value) {
-                                return '₱' + value / 1000 + 'k'; // Abbreviate large numbers
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false,
-                            drawBorder: false,
-                        },
-                        ticks: {
-                            color: '#2B3674',
-                            font: { size: 12, weight: 'bold' }
-                        }
-                    }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
                 }
+            });
+        }
+
+        // Compliance Chart
+        const ctxComp = document.getElementById('staffComplianceChart');
+        if (ctxComp) {
+            const compliance = data.compliance || {coc: {active: 0, inactive: 0}, cote: {active: 0, inactive: 0}};
+            
+            if (staffComplianceChart) staffComplianceChart.destroy();
+            staffComplianceChart = new Chart(ctxComp.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['COC', 'COTE'],
+                    datasets: [
+                        { 
+                            label: 'Active', 
+                            data: [compliance.coc.active || 0, compliance.cote.active || 0], 
+                            backgroundColor: '#4caf50', 
+                            barThickness: 20 
+                        },
+                        { 
+                            label: 'Inactive', 
+                            data: [compliance.coc.inactive || 0, compliance.cote.inactive || 0], 
+                            backgroundColor: '#ef5350', 
+                            barThickness: 20 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    scales: { x: { stacked: true, display: false }, y: { stacked: true, grid: { display: false } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }
+
+    function updateStaffCooperativesList(cooperatives) {
+        const tbody = document.getElementById('staffCoopTableBody');
+        const modalTbody = document.getElementById('assignedCoopsTableBody');
+        
+        if (tbody) {
+            tbody.innerHTML = '';
+            cooperatives.forEach(coop => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-category', coop.category || '');
+                row.setAttribute('data-district', coop.district || '');
+                row.setAttribute('data-bs-toggle', 'modal');
+                row.setAttribute('data-bs-target', '#coopProfileModal');
+                const initials = (coop.name || 'C').substring(0, 1).toUpperCase();
+                const status = coop.approval_status === 'approved' ? 'success' : 'warning';
+                const statusText = coop.approval_status === 'approved' ? 'Updated' : 'Pending';
+                
+                row.innerHTML = `
+                    <td>
+                        <div class="coop-cell">
+                            <div class="avatar-sm">${initials}</div>
+                            <div>
+                                <span class="fw-bold">${coop.name}</span>
+                                <small class="d-block text-muted">${coop.address || 'N/A'}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${coop.category || 'N/A'}</td>
+                    <td>${coop.district || 'N/A'}</td>
+                    <td><span class="badge-status ${status}">${statusText}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        if (modalTbody) {
+            modalTbody.innerHTML = '';
+            cooperatives.forEach(coop => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${coop.name}</td>
+                    <td>${coop.address || 'N/A'}</td>
+                    <td>${coop.email || 'N/A'}</td>
+                    <td>${coop.cda_number || 'N/A'}</td>
+                `;
+                modalTbody.appendChild(row);
+            });
+        }
+    }
+
+    function updateRecentActivity(activities) {
+        const timeline = document.getElementById('recentActivityTimeline');
+        if (!timeline) return;
+        
+        timeline.innerHTML = '';
+        
+        if (activities.length === 0) {
+            timeline.innerHTML = '<div class="text-center text-muted p-3">No recent activity</div>';
+            return;
+        }
+
+        activities.slice(0, 5).forEach(activity => {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            const timeAgo = activity.time ? getTimeAgo(new Date(activity.time)) : 'Recently';
+            item.innerHTML = `
+                <div class="timeline-icon bg-${activity.color || 'blue'}">
+                    <i class="bi bi-${activity.icon || 'circle'}"></i>
+                </div>
+                <div class="timeline-content">
+                    <p class="text-dark fw-bold">${activity.title}</p>
+                    <p class="text-muted small">${activity.description}</p>
+                    <span class="time-ago">${timeAgo}</span>
+                </div>
+            `;
+            timeline.appendChild(item);
+        });
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+
+    // Filter functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStaffDashboardData();
+        
+        const toggle = document.getElementById('filterToggleStaff');
+        const controls = document.getElementById('filterControlsStaff');
+        const category = document.getElementById('categoryFilterStaff');
+        const district = document.getElementById('districtFilterStaff');
+        const noResults = document.getElementById('noResultsMessageStaff');
+
+        function applyStaffFilters() {
+            const catVal = (category?.value || '').trim();
+            const distVal = (district?.value || '').trim();
+            const rows = document.querySelectorAll('#staffCoopTableBody tr');
+            let found = false;
+
+            rows.forEach(r => {
+                const rCat = (r.dataset.category || '').trim();
+                const rDist = (r.dataset.district || '').trim();
+
+                const matches = (catVal === '' || rCat === catVal)
+                    && (distVal === '' || rDist === distVal);
+
+                r.style.display = matches ? '' : 'none';
+                if (matches) found = true;
+            });
+
+            if (noResults) {
+                noResults.style.display = found ? 'none' : 'block';
+            }
+        }
+
+        toggle?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!controls) return;
+            controls.style.display = (controls.style.display === 'flex') ? 'none' : 'flex';
+            toggle.setAttribute('aria-expanded', String(controls.style.display === 'flex'));
+        });
+
+        document.addEventListener('click', (ev) => {
+            if (!controls || !toggle) return;
+            if (!controls.contains(ev.target) && !toggle.contains(ev.target)) {
+                controls.style.display = 'none';
+                toggle.setAttribute('aria-expanded', 'false');
             }
         });
-    }
-});
+
+        [category, district].forEach(el => el?.addEventListener('change', applyStaffFilters));
+    });
 </script>
 {% endblock %}
