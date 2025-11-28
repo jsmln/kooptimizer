@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from functools import wraps
+from .analytics import get_analytics_data
 
 def login_required(view_func):
     @wraps(view_func)
@@ -26,9 +27,20 @@ def role_required(allowed_roles):
 @login_required
 @role_required(['admin'])
 def admin_dashboard(request):
-    return render(request, 'dashboard/admin_dashboard.html', {
-        'page_title': 'Admin Dashboard'
-    })
+    
+    # 1. Fetch Analytics Data (Runs in background)
+    analytics_data = get_analytics_data()
+
+    # 2. Prepare Context
+    context = {
+        'page_title': 'Admin Dashboard',
+        
+        # Pass the data to the template
+        'chart_labels': analytics_data['labels'],
+        'chart_data': analytics_data['data'],
+    }
+    
+    return render(request, 'dashboard/admin_dashboard.html', context)
 
 @login_required
 @role_required(['officer'])
@@ -36,6 +48,7 @@ def cooperative_dashboard(request):
     return render(request, 'dashboard/cooperative_dashboard.html', {
         'page_title': 'Cooperative Dashboard'
     })
+
 
 @login_required
 @role_required(['staff'])

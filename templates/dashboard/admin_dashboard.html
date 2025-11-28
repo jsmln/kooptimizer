@@ -6,6 +6,7 @@
 {% block extra_head %}
     {{ block.super }}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="{% static 'frontend/admin_dashboard.css' %}">
 {% endblock %}
 
@@ -15,16 +16,13 @@
     <div class="dashboard-header">
         <div>
             <h4 class="subtitle">Lipa City Cooperatives Office</h4>
-            <h1>Welcome back, Admin!</h1>
+            <h1>Admin Dashboard</h1>
         </div>
-
     </div>
 
     <div class="stats-grid">
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#adminListModal">
-            <div class="icon-box red-box">
-                <i class="bi bi-shield-lock-fill"></i>
-            </div>
+            <div class="icon-box red-box"><i class="bi bi-shield-lock-fill"></i></div>
             <div class="stat-info">
                 <p>System Admins</p>
                 <h3>3</h3>
@@ -33,9 +31,7 @@
         </div>
 
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#staffListModal">
-            <div class="icon-box blue-box">
-                <i class="bi bi-people-fill"></i>
-            </div>
+            <div class="icon-box blue-box"><i class="bi bi-people-fill"></i></div>
             <div class="stat-info">
                 <p>Office Staff</p>
                 <h3>12</h3>
@@ -44,13 +40,38 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box green-box">
-                <i class="bi bi-building"></i>
-            </div>
+            <div class="icon-box green-box"><i class="bi bi-building"></i></div>
             <div class="stat-info">
                 <p>Total Cooperatives</p>
                 <h3>58</h3>
                 <small class="text-muted">Registered in Lipa City</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box orange-box"><i class="bi bi-person-hearts"></i></div>
+            <div class="stat-info">
+                <p>Total Members</p>
+                <h3>12,450</h3>
+                <small class="text-muted">City-wide Base</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box purple-box"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-info">
+                <p>Total Assets</p>
+                <h3>₱ 845M</h3>
+                <small class="text-muted">Combined Financials</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box teal-box"><i class="bi bi-person-check-fill"></i></div>
+            <div class="stat-info">
+                <p>Pending Users</p>
+                <h3>15</h3>
+                <span class="link-text">Verify Now <i class="bi bi-arrow-right"></i></span>
             </div>
         </div>
 
@@ -60,22 +81,24 @@
                 <h3>42</h3>
                 <small>Active Member Coops</small>
             </div>
-            <div class="icon-bg">
-                <i class="bi bi-award"></i>
-            </div>
+            <div class="icon-bg"><i class="bi bi-award"></i></div>
+        </div>
+    </div>
+
+    <div class="dashboard-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+        <h3 style="color: #2B3674; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">User Traffic (Last 30 Days)</h3>
+        <div style="height: 300px; position: relative;">
+            <canvas id="trafficChart"></canvas>
         </div>
     </div>
 
     <div class="charts-section">
-        
         <div class="chart-card main-chart">
             <div class="card-header-custom">
                 <h3>Business Activity Analytics</h3>
                 <select class="form-select-sm">
                     <option>2025</option>
                     <option>2024</option>
-                    <option>2023</option>
-                    <option>2022</option>
                 </select>
             </div>
             <div class="chart-wrapper">
@@ -106,7 +129,7 @@
                 <div class="rank-item">
                     <span class="rank-num">3</span>
                     <div class="rank-info">
-                        <span class="coop-name">Metro Lipa Water District Ecoop</span>
+                        <span class="coop-name">Metro Lipa Water District</span>
                         <span class="coop-asset">₱ 350M</span>
                     </div>
                 </div>
@@ -124,180 +147,188 @@
                         <span class="coop-asset">₱ 180M</span>
                     </div>
                 </div>
-                <div class="rank-item">
-                    <span class="rank-num">6</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Agricultural Cooperative</span>
-                        <span class="coop-asset">₱ 150M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">7</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Credit Cooperative</span>
-                        <span class="coop-asset">₱ 140M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">8</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Transport Cooperative</span>
-                        <span class="coop-asset">₱ 130M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">9</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Fishermen's Cooperative</span>
-                        <span class="coop-asset">₱ 120M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">10</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Women's Cooperative</span>
-                        <span class="coop-asset">₱ 110M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">11</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Consumer Cooperative</span>
-                        <span class="coop-asset">₱ 100M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">12</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Livestock Cooperative</span>
-                        <span class="coop-asset">₱ 90M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">13</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Handicraft Cooperative</span>
-                        <span class="coop-asset">₱ 80M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">14</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Marketing Cooperative</span>
-                        <span class="coop-asset">₱ 70M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">15</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Housing Cooperative</span>
-                        <span class="coop-asset">₱ 60M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">16</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Bakery Cooperative</span>
-                        <span class="coop-asset">₱ 50M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">17</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Eco-Tourism Cooperative</span>
-                        <span class="coop-asset">₱ 40M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">18</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Renewable Energy Cooperative</span>
-                        <span class="coop-asset">₱ 30M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">19</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Youth Cooperative</span>
-                        <span class="coop-asset">₱ 20M</span>
-                    </div>
-                </div>
-                <div class="rank-item">
-                    <span class="rank-num">20</span>
-                    <div class="rank-info">
-                        <span class="coop-name">Lipa City Organic Farming Cooperative</span>
-                        <span class="coop-asset">₱ 10M</span>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <div class="filter-section">
-        <div class="card-header-custom">
-            <h3>Filter Cooperatives</h3>
-
-            <div class="header-actions" style="display:flex;align-items:center;gap:0.5rem;">
-                <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters">
-                    <i class="bi bi-funnel"></i>
-                    <span class="visually-hidden">Toggle filters</span>
-                </button>
-
-                <div class="filter-controls">
-                    <select class="form-select-sm" id="categoryFilter">
-                        <option value="">All Categories</option>
-                        <option value="Micro">Micro</option>
-                        <option value="Small">Small</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Large">Large</option>
-                    </select>
-                    <select class="form-select-sm" id="districtFilter">
-                        <option value="">All Districts</option>
-                        <option value="East">East</option>
-                        <option value="West">West</option>
-                        <option value="North">North</option>
-                        <option value="South">South</option>
-                        <option value="Urban">Urban</option>
-                    </select>
-                </div>
+    <div class="analytics-grid-secondary">
+        <div class="chart-card">
+            <div class="card-header-custom">
+                <h3>Coops by Category</h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="categoryChart"></canvas>
             </div>
         </div>
+
+        <div class="chart-card">
+            <div class="card-header-custom">
+                <h3>Geographic Dist.</h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="districtChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="card-header-custom">
+                <h3>Compliance Status</h3>
+                <div class="legend-box">
+                    <span class="dot active"></span> OK
+                    <span class="dot inactive"></span> Exp
+                </div>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="complianceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="tables-grid-row">
+        <div class="chart-card wide-chart">
+            <div class="card-header-custom">
+                <h3>Financial Growth Trend (Net Surplus)</h3>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="financialTrendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="card-header-custom">
+                <h3>Pending Reviews</h3>
+                <span class="badge bg-warning text-dark">Action Needed</span>
+            </div>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Cooperative</th><th>Year</th><th>Assets</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">Consumer Coop</td>
+                            <td>2024</td>
+                            <td>₱ 356k</td>
+                            <td><button class="btn-action">Review</button></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Housing Coop</td>
+                            <td>2024</td>
+                            <td>₱ 16M</td>
+                            <td><button class="btn-action">Review</button></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Farmers Credit</td>
+                            <td>2023</td>
+                            <td>₱ 890k</td>
+                            <td><button class="btn-action">Review</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="operations-grid">
         
-        <div class="table-responsive">
-            <table class="coop-list-table">
-                <thead>
-                    <tr>
-                        <th>Cooperative Name</th>
-                        <th>Category</th>
-                        <th>District</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="coopTableBody">
-                    <tr data-category="Micro" data-district="East">
-                        <td><span class="fw-bold text-dark">Consumer Cooperative</span></td>
-                        <td><span class="badge-category">Micro</span></td>
-                        <td>East</td>
-                        <td><button class="btn-view-profile" data-bs-toggle="modal" data-bs-target="#coopProfileModal">View Profile</button></td>
-                    </tr>
-                    <tr data-category="Large" data-district="West">
-                        <td><span class="fw-bold text-dark">Plaridel MPC</span></td>
-                        <td><span class="badge-category">Large</span></td>
-                        <td>West</td>
-                        <td><button class="btn-view-profile">View Profile</button></td>
-                    </tr>
-                    <tr data-category="Small" data-district="Urban">
-                        <td><span class="fw-bold text-dark">Agriculture Cooperative</span></td>
-                        <td><span class="badge-category">Small</span></td>
-                        <td>Urban</td>
-                        <td><button class="btn-view-profile">View Profile</button></td>
-                    </tr>
-                </tbody>
-            </table>
-            <div id="noResultsMessage" style="display: none;">No cooperatives found matching the selected filters.</div>
+        <div class="table-card workload-card">
+            <div class="card-header-custom">
+                <h3>Staff Workload</h3>
+            </div>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Staff</th><th>Assigned</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="user-cell"><div class="avatar-xs" style="background:#1976d2;">AR</div> Ana Reyes</div>
+                            </td>
+                            <td class="text-center fw-bold">12</td>
+                            <td><span class="badge bg-danger">Heavy</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="user-cell"><div class="avatar-xs" style="background:#388e3c;">JR</div> Jose Rizal</div>
+                            </td>
+                            <td class="text-center fw-bold">6</td>
+                            <td><span class="badge bg-success">Balanced</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="user-cell"><div class="avatar-xs" style="background:#fbc02d; color:#333;">CR</div> Clara Recto</div>
+                            </td>
+                            <td class="text-center fw-bold">8</td>
+                            <td><span class="badge bg-warning text-dark">Moderate</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
+        <div class="filter-section">
+            <div class="card-header-custom">
+                <h3>All Cooperatives List</h3>
+
+                <div class="header-actions" style="display:flex;align-items:center;gap:0.5rem;">
+                    <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters">
+                        <i class="bi bi-funnel"></i>
+                        <span>Filter</span>
+                    </button>
+
+                    <div class="filter-controls hidden">
+                        <select class="form-select-sm" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="Micro">Micro</option>
+                            <option value="Small">Small</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Large">Large</option>
+                        </select>
+                        <select class="form-select-sm" id="districtFilter">
+                            <option value="">All Districts</option>
+                            <option value="East">East</option>
+                            <option value="West">West</option>
+                            <option value="North">North</option>
+                            <option value="South">South</option>
+                            <option value="Urban">Urban</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="coop-list-table">
+                    <thead>
+                        <tr>
+                            <th>Cooperative Name</th>
+                            <th>Category</th>
+                            <th>District</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coopTableBody">
+                        <tr data-category="Micro" data-district="East" onclick="openProfileModal('Consumer Cooperative')">
+                            <td><span class="fw-bold text-dark">Consumer Cooperative</span></td>
+                            <td><span class="badge-category">Micro</span></td>
+                            <td>East</td>
+                        </tr>
+                        <tr data-category="Large" data-district="West" onclick="openProfileModal('Plaridel MPC')">
+                            <td><span class="fw-bold text-dark">Plaridel MPC</span></td>
+                            <td><span class="badge-category">Large</span></td>
+                            <td>West</td>
+                        </tr>
+                        <tr data-category="Small" data-district="Urban" onclick="openProfileModal('Agriculture Cooperative')">
+                            <td><span class="fw-bold text-dark">Agriculture Cooperative</span></td>
+                            <td><span class="badge-category">Small</span></td>
+                            <td>Urban</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="noResultsMessage" style="display: none; padding: 20px; text-align: center; color: #6c757d;">No cooperatives found matching the selected filters.</div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <div class="modal fade" id="adminListModal" tabindex="-1" aria-hidden="true">
@@ -309,18 +340,10 @@
             </div>
             <div class="modal-body p-0">
                 <table class="modal-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Position</th>
-                            <th>Gender</th>
-                            <th>Email</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr></thead>
                     <tbody>
                         <tr><td>Juan Dela Cruz</td><td>Head Admin</td><td>Male</td><td>juan.admin@lipa.gov.ph</td></tr>
                         <tr><td>Maria Santos</td><td>System Maintainer</td><td>Female</td><td>maria.s@lipa.gov.ph</td></tr>
-                        <tr><td>Pedro Penduko</td><td>IT Support</td><td>Male</td><td>pedro.p@lipa.gov.ph</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -337,19 +360,11 @@
             </div>
             <div class="modal-body p-0">
                 <table class="modal-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Position</th>
-                            <th>Gender</th>
-                            <th>Email</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr></thead>
                     <tbody>
                         <tr><td>Ana Reyes</td><td>Encoder</td><td>Female</td><td>ana.reyes@lipa.gov.ph</td></tr>
                         <tr><td>Jose Rizal</td><td>Clerk</td><td>Male</td><td>jose.r@lipa.gov.ph</td></tr>
-                        <tr><td>Clara Recto</td><td>Secretary</td><td>Female</td><td>clara.recto@lipa.gov.ph</td></tr>
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -363,67 +378,221 @@
                 <h5 class="modal-title">Cooperative Profile</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            
             <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="avatar-circle mb-2">C</div>
-                    <h4>Consumer Cooperative</h4>
-                    <p class="text-muted">Sabang, Lipa City, Batangas</p>
+                <div id="printable-area">
+                    <div class="text-center mb-4">
+                        <div class="avatar-circle mb-2">C</div>
+                        <h4 id="modalCoopName">Consumer Cooperative</h4>
+                        <span class="badge bg-success">Active</span>
+                        <p class="text-muted mt-2">Sabang, Lipa City, Batangas</p>
+                    </div>
+
+                    <section class="info-section mb-4">
+                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">General Information</h6>
+                        <div class="info-grid">
+                            <div><strong>CDA No:</strong> 1414-060923055</div>
+                            <div><strong>Category:</strong> Micro</div>
+                            <div><strong>District:</strong> East</div>
+                            <div><strong>Email:</strong> consumercoop@gmail.com</div>
+                            <div><strong>Contact:</strong> 09929380925</div>
+                            <div><strong>Compliance:</strong> <span class="text-success fw-bold">Yes</span></div>
+                        </div>
+                    </section>
+
+                    <section class="info-section mb-4">
+                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">Financials (2024)</h6>
+                        <div class="info-grid">
+                            <div><strong>Assets:</strong> ₱ 356,964.68</div>
+                            <div><strong>Paid Up Capital:</strong> ₱ 108,243.78</div>
+                            <div><strong>Net Surplus:</strong> ₱ 10,653.54</div>
+                        </div>
+                    </section>
+
+                    <section class="info-section">
+                        <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">Officers</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light"><tr><th>Name</th><th>Position</th></tr></thead>
+                                <tbody>
+                                    <tr><td>Isabel Delacion</td><td>Chairperson</td></tr>
+                                    <tr><td>Jasmin Esperida</td><td>Vice Chairperson</td></tr>
+                                    <tr><td>Maria Lopez</td><td>Secretary</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
-                <div class="info-grid">
-                    <div><strong>CDA No:</strong> 1414-060923055</div>
-                    <div><strong>Category:</strong> Micro</div>
-                    <div><strong>Assets:</strong> ₱ 356,964.68</div>
-                    <div><strong>Members:</strong> 120</div>
+
+                <div class="mt-4 text-end">
+                    <button class="btn btn-sm btn-outline-secondary" id="downloadPdfBtn">
+                        <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                    </button>
+                    <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    // Chart.js Implementation
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        
+        // Use Django template tags to inject data safely
+        const labels = {{ chart_labels|safe }};
+        const data = {{ chart_data|safe }};
+
+        new Chart(ctx, {
+            type: 'line', // Line chart is best for trends
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Active Users',
+                    data: data,
+                    borderColor: '#a91e2c', // Your Brand Red
+                    backgroundColor: 'rgba(169, 30, 44, 0.1)', // Soft red fill
+                    borderWidth: 2,
+                    tension: 0.4, // Smooth curves
+                    fill: true,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#a91e2c'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false } // Hide legend for cleaner look
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5], color: '#f0f0f0' },
+                        ticks: { color: '#A3AED0' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#A3AED0' }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<script>
+    // --- CHARTS INITIALIZATION ---
+    
+    // 1. Business Activity (Bar)
     const ctx = document.getElementById('businessActivityChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['Lending', 'Service', 'Consumer', 'Producers', 'Marketing', 'Multi-Purpose'],
             datasets: [{
-                label: 'Number of Cooperatives',
+                label: 'Cooperatives',
                 data: [12, 19, 8, 5, 4, 10],
-                backgroundColor: [
-                             // darkest red
-                    '#a71b20',
-                    '#7f0f12',
-                    '#d8443a',
-                    '#e95b4b',
-                    '#f27a6a',
-                    '#c62828'  // lightest red
-                ],
+                backgroundColor: ['#a71b20', '#7f0f12', '#d8443a', '#e95b4b', '#f27a6a', '#c62828'],
                 borderRadius: 6,
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: { beginAtZero: true, grid: { display: false } },
-                x: { grid: { display: false } }
-            }
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
         }
     });
 
-    // Filter functionality
-    document.getElementById('categoryFilter').addEventListener('change', filterTable);
-    document.getElementById('districtFilter').addEventListener('change', filterTable);
-
-    // Toggle filter controls visibility when clicking the icon
-    document.getElementById('filterToggle').addEventListener('click', function(){
-        document.querySelector('.filter-controls').classList.toggle('hidden');
+    // 2. Category (Doughnut)
+    const ctxCat = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+            labels: ['Micro', 'Small', 'Medium', 'Large'],
+            datasets: [{
+                data: [25, 15, 10, 8],
+                backgroundColor: ['#a91e2c', '#e57373', '#42a5f5', '#26a69a'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
+        }
     });
 
+    // 3. District (Bar)
+    const ctxDist = document.getElementById('districtChart').getContext('2d');
+    new Chart(ctxDist, {
+        type: 'bar',
+        data: {
+            labels: ['N', 'S', 'E', 'W', 'Urb'],
+            datasets: [{
+                data: [12, 19, 8, 15, 4],
+                backgroundColor: '#a91e2c',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { display: false }, x: { grid: { display: false } } }
+        }
+    });
+
+    // 4. Compliance (Stacked Bar)
+    const ctxComp = document.getElementById('complianceChart').getContext('2d');
+    new Chart(ctxComp, {
+        type: 'bar',
+        data: {
+            labels: ['COC', 'COTE'],
+            datasets: [
+                { label: 'Active', data: [45, 38], backgroundColor: '#4caf50', barThickness: 20 },
+                { label: 'Inactive', data: [13, 20], backgroundColor: '#ef5350', barThickness: 20 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+            scales: { x: { stacked: true, display: false }, y: { stacked: true, grid: { display: false } } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // 5. Financial Trend (Line)
+    const ctxFin = document.getElementById('financialTrendChart').getContext('2d');
+    new Chart(ctxFin, {
+        type: 'line',
+        data: {
+            labels: ['2020', '2021', '2022', '2023', '2024'],
+            datasets: [{
+                label: 'Net Surplus (M)',
+                data: [12, 15, 14, 22, 28],
+                borderColor: '#1a237e', backgroundColor: 'rgba(26, 35, 126, 0.1)',
+                tension: 0.4, fill: true, pointRadius: 3
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+        }
+    });
+
+    // --- INTERACTIVITY ---
+
+    // Filter Toggle
+    const filterToggle = document.getElementById('filterToggle');
+    const filterControls = document.querySelector('.filter-controls');
+    
+    filterToggle.addEventListener('click', () => {
+        filterControls.classList.toggle('hidden');
+    });
+
+    // Table Filtering Logic
     function filterTable() {
         const categoryFilter = document.getElementById('categoryFilter').value;
         const districtFilter = document.getElementById('districtFilter').value;
@@ -442,8 +611,33 @@
                 row.style.display = 'none';
             }
         });
-
         document.getElementById('noResultsMessage').style.display = hasResults ? 'none' : 'block';
     }
+
+    document.getElementById('categoryFilter').addEventListener('change', filterTable);
+    document.getElementById('districtFilter').addEventListener('change', filterTable);
+
+    // Open Modal Logic (Global for HTML onclick)
+    window.openProfileModal = function(coopName) {
+        document.getElementById('modalCoopName').textContent = coopName;
+        const modal = new bootstrap.Modal(document.getElementById('coopProfileModal'));
+        modal.show();
+    }
+
+    // PDF Download Logic
+    document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+        const element = document.getElementById('printable-area');
+        const coopName = document.getElementById('modalCoopName').textContent.trim();
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = 'Generating...';
+        btn.disabled = true;
+
+        const opt = { margin: 0.5, filename: `${coopName}_Profile.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    });
 </script>
 {% endblock %}

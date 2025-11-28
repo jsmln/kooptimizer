@@ -249,7 +249,9 @@ BREVO_SENDER_NAME = config('BREVO_SENDER_NAME', default='Kooptimizer')
 # ====================================================================
 TICKETMASTER_API_KEY = config('TICKETMASTER_API_KEY', default='')
 
-
+# settings.py
+GA_KEY_FILE_PATH = os.path.join(BASE_DIR, 'cred.json')
+GA_PROPERTY_ID = 514533439
 
 
 
