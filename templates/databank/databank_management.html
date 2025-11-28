@@ -5,48 +5,298 @@
 {% block page_header %}Data Bank Management{% endblock %}
 
 {% block extra_head %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'frontend/databank_management.css' %}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'frontend/databank_management.css' %}">
+<link rel="stylesheet" href="{% static 'frontend/profile_form.css' %}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+<style>
+    .action-buttons {
+        display: none;
+        gap: 10px;
+        margin-top: 15px;
+        justify-content: flex-end;
+    }
+
+    tbody tr.selected {
+        background-color: #e3f2fd !important;
+        border-left: 4px solid #860000;
+    }
+
+    tbody tr {
+        cursor: pointer;
+    }
+
+    .edit-btn,
+    .delete-btn,
+    .approve-btn,
+    .cancel-approve-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .edit-btn {
+        background: #860000;
+        color: white;
+    }
+
+    .edit-btn:hover {
+        background: #a00000;
+    }
+
+    .delete-btn {
+        background: #dc3545;
+        color: white;
+    }
+
+    .delete-btn:hover {
+        background: #c82333;
+    }
+
+    .approve-btn {
+        background: #28a745;
+        color: white;
+    }
+
+    .approve-btn:hover {
+        background: #218838;
+    }
+
+    .cancel-approve-btn {
+        background: #ffc107;
+        color: #212529;
+    }
+
+    .cancel-approve-btn:hover {
+        background: #e0a800;
+    }
+
+    .tab-btn {
+        background: #e0e0e0;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s;
+        color: #333;
+    }
+
+    .tab-btn:hover {
+        background: #ccc;
+        transform: translateY(-1px);
+    }
+
+    .tab-btn.active {
+        background: #860000;
+        color: #fff;
+        box-shadow: 0 3px 8px rgba(134, 0, 0, 0.3);
+    }
+
+    .table-section {
+        display: none;
+    }
+
+    .table-section.active {
+        display: block;
+    }
+
+    .reactivate-btn {
+        background: #28a745;
+        color: white;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .reactivate-btn:hover {
+        background: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+</style>
 {% endblock %}
 
 {% block dashboard_content %}
 
 <div class="databank-container">
-    
+
     {% if error %}
     <div class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-triangle-fill"></i> <strong>System Error:</strong> {{ error }}
     </div>
     {% endif %}
 
-    <div class="databank-header">
-        <div class="tab-buttons">
-            <button class="add-btn" id="addCoopBtn">
+    <!-- Top Table: Cooperatives Management -->
+    <div class="overview-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+            <h5 class="section-divider-title" style="margin: 0;">Cooperatives Management</h5>
+            {% if user_role == 'admin' %}
+            <button class="add-btn" id="addCoopBtn" style="display: {% if current_filter == 'deactivated' %}none{% else %}flex{% endif %} !important; align-items: center; gap: 6px; padding: 10px 20px; font-size: 0.95rem; white-space: nowrap; visibility: visible !important; opacity: 1 !important; z-index: 10; position: relative;">
                 <i class="bi bi-plus-circle"></i> Add Cooperative
             </button>
-            <button class="filter-btn" title="Filter">
-                <i class="bi bi-funnel"></i> Filter
+            {% endif %}
+        </div>
+
+        {% if user_role == 'admin' %}
+        <div class="tab-buttons" style="margin-bottom: 15px; display: flex; gap: 10px;">
+            <button class="tab-btn {% if current_filter == 'active' %}active{% endif %}" data-target="active-coops" data-filter="active">
+                Active
+            </button>
+            <button class="tab-btn {% if current_filter == 'deactivated' %}active{% endif %}" data-target="deactivated-coops" data-filter="deactivated">
+                Deactivated
             </button>
         </div>
+        {% endif %}
 
-        <div class="table-controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search cooperatives...">
+        <div class="databank-header">
+            <div class="table-controls">
+                <input type="text" id="searchCoopInput" class="search-input"
+                    placeholder="Search Cooperative Name, Category, District...">
+            </div>
         </div>
+
+        <!-- Active Cooperatives Table -->
+        <div class="table-section {% if current_filter != 'deactivated' %}active{% endif %}" id="active-coops" style="{% if current_filter == 'deactivated' %}display: none;{% endif %}">
+            <div class="table-wrapper summary-wrapper">
+                <table id="cooperatives-table">
+                    <thead>
+                        <tr>
+                            <th class="sticky-col">Cooperative Name</th>
+                            <th>Category</th>
+                            <th>District</th>
+                            {% if user_role == 'admin' %}
+                            <th>Assigned Staff</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for coop in cooperatives %}
+                        <tr data-coop-id="{{ coop.coop_id }}" data-coop-name="{{ coop.cooperative_name }}">
+                            <td class="sticky-col"><strong>{{ coop.cooperative_name }}</strong></td>
+                            <td>
+                                {% if coop.category %}
+                                <span class="badge-category">{{ coop.category }}</span>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ coop.district|default:"N/A" }}</td>
+                            {% if user_role == 'admin' %}
+                            <td>
+                                {% if coop.staff_name %}
+                                {{ coop.staff_name }}
+                                {% else %}
+                                <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{% if user_role == 'admin' %}4{% else %}3{% endif %}" class="text-center py-4">No
+                                active cooperatives found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="action-buttons" id="coop-action-buttons" style="display: none;">
+                <button class="edit-btn"><i class="bi bi-pencil"></i> Edit</button>
+                {% if user_role == 'admin' %}
+                <button class="delete-btn"><i class="bi bi-trash"></i> Delete</button>
+                {% endif %}
+            </div>
+            <div class="table-footer">
+                <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> active cooperatives
+                </div>
+            </div>
+        </div>
+
+        <!-- Deactivated Cooperatives Table (Admin Only) -->
+        {% if user_role == 'admin' %}
+        <div class="table-section {% if current_filter == 'deactivated' %}active{% endif %}" id="deactivated-coops" style="{% if current_filter != 'deactivated' %}display: none;{% endif %}">
+            <div class="table-wrapper summary-wrapper">
+                <table id="deactivated-cooperatives-table">
+                    <thead>
+                        <tr>
+                            <th class="sticky-col">Cooperative Name</th>
+                            <th>Category</th>
+                            <th>District</th>
+                            <th>Assigned Staff</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for coop in deactivated_cooperatives %}
+                        <tr data-coop-id="{{ coop.coop_id }}" data-coop-name="{{ coop.cooperative_name }}">
+                            <td class="sticky-col"><strong>{{ coop.cooperative_name }}</strong></td>
+                            <td>
+                                {% if coop.category %}
+                                <span class="badge-category">{{ coop.category }}</span>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ coop.district|default:"N/A" }}</td>
+                            <td>
+                                {% if coop.staff_name %}
+                                {{ coop.staff_name }}
+                                {% else %}
+                                <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4">No deactivated cooperatives found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="action-buttons" id="deactivated-coop-action-buttons" style="display: none;">
+                <button class="reactivate-btn"><i class="bi bi-arrow-counterclockwise"></i> Reactivate</button>
+            </div>
+            <div class="table-footer">
+                <div>Showing <strong>{{ deactivated_cooperatives|length }}</strong> of <strong>{{ deactivated_count }}</strong> deactivated cooperatives
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    <div class="table-section active">
-        <div class="table-wrapper">
-            <table id="coop-table">
+    <!-- Bottom Table: Submitted Cooperative Profiles -->
+    <div class="detailed-panel">
+        <h5 class="section-divider-title">Submitted Cooperative Profiles</h5>
+
+        <div class="table-controls" style="margin-bottom: 15px;">
+            <input type="text" id="searchProfileInput" class="search-input" placeholder="Search Profile Data...">
+        </div>
+
+        <div class="table-wrapper detailed-wrapper">
+            <table id="profiles-table">
                 <thead>
                     <tr>
                         <th class="sticky-col">Cooperative Name</th>
-                        <th>Category</th>
-                        <th>District</th>
+                        <th>Report Year</th>
                         <th>Address</th>
                         <th>Mobile Number</th>
                         <th>Email</th>
@@ -56,449 +306,1663 @@
                         <th>LCCDC Membership Date</th>
                         <th>Operation Area</th>
                         <th>Business Activity</th>
-                        <th>Board of Directors Count</th>
-                        <th>Salaried Employees Count</th>
-                        <th>COC Attachment</th>
-                        <th>COTE Attachment</th>
-                        <th>Assets (₱)</th>
-                        <th>Paid-Up Capital (₱)</th>
-                        <th>Net Surplus (₱)</th>
-                        <th>Financial Attachments</th>
-                        <th>Reporting Year</th>
+                        <th>Board of Directors</th>
+                        <th>Salaried Employees</th>
                         <th>Approval Status</th>
+                        <th>Submitted Date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for coop in cooperatives %}
-                    <tr data-modal-target="profile-modal" data-coop-id="{{ coop.coop_id }}">
-                        <td class="sticky-col"><strong>{{ coop.cooperative_name }}</strong></td>
-                        <td>{% if coop.category %}<span class="badge-category">{{ coop.category }}</span>{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
-                        <td>{{ coop.district|default:"N/A" }}</td>
-                        <td class="address-cell" title="{{ coop.address }}">{{ coop.address|default:"N/A" }}</td>
-                        <td class="contact-cell">{{ coop.mobile_number|default:"N/A" }}</td>
-                        <td>{{ coop.email|default:"N/A" }}</td>
-                        <td>{{ coop.cda_registration_number|default:"N/A" }}</td>
-                        <td>{{ coop.cda_registration_date|date:"M d, Y"|default:"-" }}</td>
-                        
+                    {% for profile in profiles %}
+                    <tr data-profile-id="{{ profile.profile_id }}" data-coop-id="{{ profile.coop_id }}"
+                        data-approval-status="{{ profile.approval_status }}">
+                        <td class="sticky-col"><strong>{{ profile.cooperative_name }}</strong></td>
+                        <td class="text-center">{{ profile.report_year|default:"-" }}</td>
+                        <td class="address-cell" title="{{ profile.address }}">{{ profile.address|default:"N/A" }}</td>
+                        <td>{{ profile.mobile_number|default:"N/A" }}</td>
+                        <td>{{ profile.email_address|default:"N/A" }}</td>
+                        <td>{{ profile.cda_registration_number|default:"N/A" }}</td>
+                        <td>{{ profile.cda_registration_date|date:"M d, Y"|default:"-" }}</td>
                         <td class="text-center">
-                            {% if coop.lccdc_membership %}
-                                <i class="bi bi-check-circle-fill text-success"></i>
+                            {% if profile.lccdc_membership %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
                             {% else %}
-                                <i class="bi bi-x-circle-fill text-danger"></i>
+                            <i class="bi bi-x-circle-fill text-danger"></i>
                             {% endif %}
                         </td>
-                        <td>{{ coop.lccdc_membership_date|date:"M d, Y"|default:"-" }}</td>
-                        
-                        <td>{{ coop.operation_area|default:"-" }}</td>
-                        <td>{{ coop.business_activity|default:"-" }}</td>
-                        <td class="text-center">{{ coop.board_of_directors_count|default:0 }}</td>
-                        <td class="text-center">{{ coop.salaried_employees_count|default:0 }}</td>
-
-                        <td class="text-center">
-                            {% if coop.coc_attachment_exists %}
-                                <button class="btn-view-attach" onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'coc' %}', 'COC - {{ coop.cooperative_name }}', 'application/pdf')">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                            {% else %}
-                                <span class="status-no">No File</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-center">
-                            {% if coop.cote_attachment_exists %}
-                                <button class="btn-view-attach" onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'cote' %}', 'COTE - {{ coop.cooperative_name }}', 'application/pdf')">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                            {% else %}
-                                <span class="status-no">No File</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-end">{{ coop.assets|default:"0.00" }}</td>
-                        <td class="text-end">{{ coop.paid_up_capital|default:"0.00" }}</td>
-                        <td class="text-end">{{ coop.net_surplus|default:"0.00" }}</td>
-
-                        <td class="text-center">
-                            {% if coop.financial_attachment_exists %}
-                                <button class="btn-view-attach" onclick="event.stopPropagation(); openPreviewDocument('{% url 'databank:view_attachment' coop.coop_id 'financial' %}', 'Financials - {{ coop.cooperative_name }}', 'application/pdf')">
-                                    <i class="bi bi-eye"></i> View
-                                </button>
-                            {% else %}
-                                <span class="status-no">No File</span>
-                            {% endif %}
-                        </td>
-
-                        <td class="text-center">{{ coop.reporting_year|default:"-" }}</td>
+                        <td>{{ profile.lccdc_membership_date|date:"M d, Y"|default:"-" }}</td>
+                        <td>{{ profile.operation_area|default:"-" }}</td>
+                        <td>{{ profile.business_activity|default:"-" }}</td>
+                        <td class="text-center">{{ profile.board_of_directors_count|default:0 }}</td>
+                        <td class="text-center">{{ profile.salaried_employees_count|default:0 }}</td>
                         <td>
-                            {% if coop.approval_status == 'Approved' %}
-                                <span class="badge bg-success">Approved</span>
-                            {% elif coop.approval_status == 'Pending' %}
-                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% if profile.approval_status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                            {% elif profile.approval_status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
                             {% else %}
-                                <span class="badge bg-secondary">{{ coop.approval_status }}</span>
+                            <span class="badge bg-secondary">{{ profile.approval_status|default:"N/A" }}</span>
                             {% endif %}
                         </td>
+                        <td>{{ profile.created_at|date:"M d, Y"|default:"-" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="22" class="text-center py-4">No data found in the database.</td>
+                        <td colspan="15" class="text-center py-4">No profile data submitted yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        <div class="action-buttons" id="profile-action-buttons">
+            <button class="approve-btn"><i class="bi bi-check-circle"></i> Approve</button>
+            <button class="cancel-approve-btn"><i class="bi bi-x-circle"></i> Cancel Approval</button>
+        </div>
         <div class="table-footer">
-            <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
+            <div>Showing <strong>{{ profiles|length }}</strong> profile submissions</div>
         </div>
     </div>
 </div>
 
-<button class="ocr-toggle-btn" id="ocrToggleBtn" title="Open OCR Assistant">
-    <i class="bi bi-upc-scan"></i>
-</button>
+<!-- Cooperative Add/Edit Modal -->
+<div id="coop-modal" class="modal-overlay hidden">
+    <div class="onboard-form-container">
+        <div class="form-scroll-wrapper">
+            <span class="close-btn modal-close">&times;</span>
+            <h3 class="modal-title" id="coop-modal-title">Add Cooperative</h3>
+            <p class="input-instruction">Please input information</p>
 
-<div class="ocr-drawer-wrapper">
-    <div class="ocr-drawer" id="ocrDrawer">
-        <div class="ocr-drawer-header">
-            <h3><i class="bi bi-upc-scan me-2"></i>OCR Assistant</h3>
-            <button class="ocr-drawer-close" id="ocrDrawerClose">&times;</button>
+            <form id="coop-form" class="onboard-form">
+                {% csrf_token %}
+                <input type="hidden" id="coop-id" name="coop_id">
+
+                <div class="form-group">
+                    <label for="coop-name">Cooperative Name <span class="text-danger">*</span></label>
+                    <input type="text" id="coop-name" name="cooperative_name" placeholder="Enter cooperative name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="coop-category">Category</label>
+                    <input type="text" id="coop-category" name="category" placeholder="Enter category">
+                </div>
+
+                <div class="form-group">
+                    <label for="coop-district">District</label>
+                    <input type="text" id="coop-district" name="district" placeholder="Enter district">
+                </div>
+
+                {% if user_role == 'admin' %}
+                <div class="form-group">
+                    <label for="coop-staff">Assigned Staff</label>
+                    <select id="coop-staff" name="staff_id">
+                        <option value="" disabled selected>Choose Staff</option>
+                        <option value="">-- Unassigned --</option>
+                        {% for staff in staff_list %}
+                        <option value="{{ staff.staff_id }}">{% if staff.fullname %}{{ staff.fullname }}{% else %}Staff #{{ staff.staff_id }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div id="form-buttons-add">
+                    <button type="submit" class="submit-btn">Create Cooperative</button>
+                </div>
+                <div id="form-buttons-edit" style="display: none;">
+                    <button type="submit" class="submit-btn">Save Changes</button>
+                    <button type="button" id="edit-cancel-btn" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
         </div>
-        
-        <div class="ocr-drawer-body">
-            <div id="camera-container" style="display: none; margin-bottom: 20px; text-align: center;">
-                <video id="camera-video" autoplay playsinline style="width: 100%; border-radius: 12px; border: 2px solid #a91e2c; background: black;"></video>
-                <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
-                    <button id="capture-btn" class="btn-apply" style="padding: 8px 20px;">Capture</button>
-                    <button id="cancel-camera-btn" class="btn-clear" style="padding: 8px 20px;">Cancel</button>
-                </div>
-            </div>
+    </div>
+</div>
 
-            <div id="upload-container">
-                <p class="text-muted small mb-3" style="border-left: 3px solid #a91e2c; padding-left: 10px; background: #fff5f6; padding: 8px; border-radius: 4px;">
-                    Scan documents using your phone camera or upload an image to auto-fill forms.
-                </p>
+<!-- Password Verification Modal -->
+<div class="modal-overlay hidden" id="password-verify-modal">
+    <div class="confirm-modal-container">
+        <h3 id="password-verify-title">Verify Your Password</h3>
+        <p id="password-verify-desc">Please enter your password to confirm this action.</p>
+        <div style="margin: 20px 0;">
+            <input 
+                type="password" 
+                id="password-verify-input" 
+                placeholder="Enter your password" 
+                class="form-input"
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"
+            >
+            <p id="password-verify-error" style="color: #dc3545; margin-top: 10px; display: none;"></p>
+        </div>
+        <div class="confirm-actions">
+            <button id="password-verify-confirm-btn" class="modal-button primary-btn">Verify Password</button>
+            <button id="password-verify-cancel-btn" class="modal-button secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
 
-                <div class="ocr-upload-area" id="ocrUploadArea">
-                    <i class="bi bi-cloud-upload"></i>
-                    <h5>Drag & Drop Image</h5>
-                    <p class="text-muted small mb-0">or click to browse</p>
-                    <input type="file" id="ocrFileInput" accept="image/*" style="display: none;">
-                    <input type="file" id="mobileCameraInput" accept="image/*" capture="environment" style="display: none;">
-                </div>
-                
-                <div class="ocr-btn-group">
-                    <button class="ocr-action-btn" id="ocrUploadBtn">
-                        <i class="bi bi-upload"></i> <span>Upload Image</span>
-                    </button>
-                    <button class="ocr-action-btn" id="ocrCameraBtn">
-                        <i class="bi bi-camera-fill"></i> <span>Scan / Camera</span>
-                    </button>
-                    <button class="ocr-action-btn" id="ocrPasteBtn">
-                        <i class="bi bi-clipboard"></i> <span>Paste</span>
-                    </button>
-                    <button class="ocr-action-btn" id="ocrScreenshotBtn">
-                        <i class="bi bi-display"></i> <span>Screenshot</span>
-                    </button>
-                </div>
+<!-- Deactivate Confirmation Modal -->
+<div class="modal-overlay hidden" id="deactivate-confirm-modal">
+    <div class="confirm-modal-container">
+        <h3>Deactivate Cooperative</h3>
+        <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
+            <p style="color: #155724; margin: 0;">✓ Password Verified</p>
+        </div>
+        <p id="deactivate-confirm-text">Are you sure you want to deactivate this cooperative?</p>
+        <div class="confirm-actions">
+            <button id="deactivate-confirm-btn" class="modal-button primary-btn">Deactivate</button>
+            <button id="deactivate-cancel-btn" class="modal-button secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reactivate Confirmation Modal -->
+<div class="modal-overlay hidden" id="reactivate-confirm-modal">
+    <div class="confirm-modal-container">
+        <h3>Reactivate Cooperative</h3>
+        <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin-bottom: 15px;">
+            <p style="color: #155724; margin: 0;">✓ Password Verified</p>
+        </div>
+        <p id="reactivate-confirm-text">Are you sure you want to reactivate this cooperative?</p>
+        <div class="confirm-actions">
+            <button id="reactivate-confirm-btn" class="modal-button primary-btn">Reactivate</button>
+            <button id="reactivate-cancel-btn" class="modal-button secondary-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Generic Confirmation Modal (Bootstrap style like logout modal) -->
+<div class="modal fade" id="genericConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="genericConfirmTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
-            <div class="ocr-loading" id="ocrLoading">
-                <div class="spinner-border" role="status"></div>
-                <p class="mt-2 text-muted">Scanning text...</p>
+            <div class="modal-body" id="genericConfirmBody">
+                Are you sure you want to proceed?
             </div>
-            
-            <div class="ocr-result-area" id="ocrResultArea" style="display: none;">
-                <label class="form-label fw-bold">Extracted Data:</label>
-                <textarea class="ocr-result-text" id="ocrResultText"></textarea>
-                <div class="ocr-result-actions">
-                    <button class="btn-apply" id="ocrApplyBtn">Apply</button>
-                    <button class="btn-clear" id="ocrClearBtn">Clear</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" id="genericConfirmCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="genericConfirmOk">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile View Modal -->
+<div id="profile-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 95%; max-height: 95vh; display: flex; flex-direction: column;">
+        <div class="modal-top-bar" style="flex-shrink: 0;">
+            <h3>Cooperative Profile</h3>
+            <button class="modal-close-btn" id="profile-modal-close">&times;</button>
+        </div>
+        <div class="modal-scroll-area" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
+            <div class="modal-body" id="profile-modal-body" style="padding: 20px;">
+                <div class="text-center" style="padding: 40px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading profile details...</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="preview-modal" class="preview-overlay">
+<!-- File Preview Modal -->
+<div id="preview-modal" class="preview-overlay" style="display: none; z-index: 10000;">
     <div class="preview-content">
         <div class="preview-header">
-            <span class="preview-title" id="preview-title">Document Preview</span>
+            <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                <button id="toggleSidebar" title="Toggle thumbnails" style="border:none; display:inline-flex;"><i
+                        class="bi bi-layout-sidebar" style="font-size:1.25rem;"></i></button>
+                <div class="preview-title" id="preview-title">Preview</div>
+            </div>
             <div class="preview-controls">
-                <button id="zoomOut"><i class="bi bi-dash"></i></button>
-                <span id="zoomLevel">100%</span>
-                <button id="zoomIn"><i class="bi bi-plus"></i></button>
-                <button id="preview-close"><i class="bi bi-x-lg"></i></button>
+                <button id="rotateLeft" title="Rotate left" style="display:inline-flex;"><i
+                        class="bi bi-arrow-counterclockwise"></i></button>
+                <button id="rotateRight" title="Rotate right" style="display:inline-flex;"><i
+                        class="bi bi-arrow-clockwise"></i></button>
+                <button id="fitWidth" title="Fit to width" style="display:inline-flex;"><i
+                        class="bi bi-arrows-expand"></i></button>
+                <button id="fitHeight" title="Fit to height" style="display:inline-flex;"><i
+                        class="bi bi-arrows-expand-vertical"></i></button>
+                <button id="zoomOut" style="display:inline-flex;">−</button>
+                <span class="preview-zoom-level" id="zoomLevel" style="display:inline-block;">100%</span>
+                <button id="zoomIn" style="display:inline-flex;">+</button>
+                <div id="page-controls" style="display:none; gap:8px; align-items:center;">
+                    <button id="prevPage" style="background:#666;">‹</button>
+                    <input type="number" id="pageInput" min="1"
+                        style="width:50px; padding:4px 6px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:0.85rem;" />
+                    <span class="preview-zoom-level" style="min-width:auto;">of <span id="totalPages">1</span></span>
+                    <button id="nextPage" style="background:#666;">›</button>
+                </div>
+                <a id="preview-download-main" class="btn-download-main" href="#" download>Download</a>
+                <button id="preview-close" style="background:#666;">✕</button>
             </div>
         </div>
-        <div id="preview-body" class="preview-body"></div>
-    </div>
-</div>
-
-<!-- Modal overlay (copied as requested) -->
-<div id="profile-modal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-top-bar">
-            <h3>Cooperative Profile</h3>
-            <button class="modal-close-btn">&times;</button>
-        </div>
-        <div class="modal-scroll-area">
-            <div class="modal-body">
-                <section class="info-section">
-                    <h5 class="section-title">Cooperative Details</h5>
-                    <p>Loading details...</p>
-                </section>
+        <div class="preview-main-container">
+            <button id="prev-file-btn" class="file-nav-btn file-nav-prev" style="display:none;" title="Previous file">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button id="next-file-btn" class="file-nav-btn file-nav-next" style="display:none;" title="Next file">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+            <div id="preview-sidebar" class="preview-sidebar" style="display:none;">
+                <div id="preview-thumbnails"></div>
             </div>
+            <div id="preview-body" class="preview-body"></div>
         </div>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // --- OCR LOGIC ---
-    const ocrToggleBtn = document.getElementById('ocrToggleBtn');
-    const ocrDrawer = document.getElementById('ocrDrawer');
-    const ocrDrawerClose = document.getElementById('ocrDrawerClose');
-    const uploadContainer = document.getElementById('upload-container');
-    const cameraContainer = document.getElementById('camera-container');
-    const videoElement = document.getElementById('camera-video');
-    const captureBtn = document.getElementById('capture-btn');
-    const cancelCameraBtn = document.getElementById('cancel-camera-btn');
-    const ocrUploadArea = document.getElementById('ocrUploadArea');
-    const ocrFileInput = document.getElementById('ocrFileInput');
-    const mobileCameraInput = document.getElementById('mobileCameraInput');
-    const ocrUploadBtn = document.getElementById('ocrUploadBtn');
-    const ocrCameraBtn = document.getElementById('ocrCameraBtn');
-    const ocrPasteBtn = document.getElementById('ocrPasteBtn');
-    const ocrLoading = document.getElementById('ocrLoading');
-    const ocrResultArea = document.getElementById('ocrResultArea');
-    const ocrResultText = document.getElementById('ocrResultText');
-    const ocrClearBtn = document.getElementById('ocrClearBtn');
-
-    let videoStream = null;
-
-    function toggleDrawer(open) {
-        if (open) ocrDrawer.classList.add('open');
-        else { ocrDrawer.classList.remove('open'); stopCamera(); }
+    // Fix MutationObserver error - ensure elements exist before observing
+    if (typeof MutationObserver !== 'undefined') {
+        const originalObserve = MutationObserver.prototype.observe;
+        MutationObserver.prototype.observe = function(target, options) {
+            if (target && target.nodeType === Node.ELEMENT_NODE) {
+                return originalObserve.call(this, target, options);
+            } else {
+                console.warn('MutationObserver.observe called with invalid target:', target);
+                return;
+            }
+        };
     }
     
-    if(ocrToggleBtn) ocrToggleBtn.addEventListener('click', () => toggleDrawer(true));
-    if(ocrDrawerClose) ocrDrawerClose.addEventListener('click', () => toggleDrawer(false));
-
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    if(ocrCameraBtn) ocrCameraBtn.addEventListener('click', () => {
-        if (isMobile) mobileCameraInput.click();
-        else startWebcam();
-    });
-
-    if(mobileCameraInput) mobileCameraInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) processImageFile(e.target.files[0]);
-    });
-
-    async function startWebcam() {
-        try {
-            uploadContainer.style.display = 'none';
-            ocrResultArea.style.display = 'none';
-            cameraContainer.style.display = 'block';
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            videoElement.srcObject = videoStream;
-        } catch (err) { alert("Camera access denied."); stopCamera(); }
+    const USER_ROLE = '{{ user_role }}';
+    let selectedCoopRow = null;
+    let selectedDeactivatedCoopRow = null;
+    let selectedProfileRow = null;
+    let currentAction = null; // 'deactivate' or 'reactivate'
+    let tempPassword = ''; // Store password temporarily after verification
+    
+    // Modal elements
+    const el = {
+        passwordVerifyModal: document.getElementById('password-verify-modal'),
+        deactivateModal: document.getElementById('deactivate-confirm-modal'),
+        reactivateModal: document.getElementById('reactivate-confirm-modal'),
+    };
+    
+    function getCsrfToken() {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]');
+        return token ? token.value : '';
     }
 
-    function stopCamera() {
-        if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
-        if(cameraContainer) cameraContainer.style.display = 'none';
-        if(uploadContainer) uploadContainer.style.display = 'block';
+    // ===== DJANGO MESSAGE NOTIFICATION =====
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('django-messages');
+        if (!container) {
+            console.warn('Django messages container not found');
+            return;
+        }
+
+        // Map type to dj-message tag
+        const tagMap = {
+            'success': 'success',
+            'error': 'error',
+            'warning': 'warning',
+            'info': 'info'
+        };
+        const tag = tagMap[type] || 'info';
+
+        // Create message element
+        const messageEl = document.createElement('div');
+        messageEl.className = `dj-message dj-${tag}`;
+        messageEl.setAttribute('role', 'status');
+        messageEl.innerHTML = `
+            <div class="dj-message-left">
+                <div class="dj-message-icon" aria-hidden="true">!</div>
+            </div>
+            <div class="dj-message-body">
+                <div class="dj-message-text">${message}</div>
+            </div>
+            <button class="dj-message-close" aria-label="Close message">×</button>
+        `;
+
+        // Add dismiss functionality
+        const closeBtn = messageEl.querySelector('.dj-message-close');
+        function dismiss() {
+            messageEl.style.transition = 'opacity 240ms ease, transform 240ms ease';
+            messageEl.style.opacity = '0';
+            messageEl.style.transform = 'translateX(18px)';
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.parentNode.removeChild(messageEl);
+                }
+            }, 260);
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', dismiss);
+        }
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (document.body.contains(messageEl)) {
+                dismiss();
+            }
+        }, 5000);
+
+        // Append to container
+        container.appendChild(messageEl);
     }
 
-    if(cancelCameraBtn) cancelCameraBtn.addEventListener('click', stopCamera);
+    // ===== MODAL FUNCTIONS =====
+    function openModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('hidden');
+    }
 
-    if(captureBtn) captureBtn.addEventListener('click', () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        canvas.getContext('2d').drawImage(videoElement, 0, 0);
-        stopCamera();
-        processBase64Image(canvas.toDataURL('image/jpeg'));
+    function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.add('hidden');
+    }
+
+    // ===== GENERIC CONFIRMATION MODAL (Bootstrap style like logout) =====
+    let currentConfirmCallback = null;
+    
+    function showConfirmModal(title, message, onConfirm) {
+        const modal = document.getElementById('genericConfirmModal');
+        const modalTitle = document.getElementById('genericConfirmTitle');
+        const modalBody = document.getElementById('genericConfirmBody');
+        const confirmBtn = document.getElementById('genericConfirmOk');
+        const cancelBtn = document.getElementById('genericConfirmCancel');
+        
+        if (!modal || !modalTitle || !modalBody || !confirmBtn || !cancelBtn) {
+            // Fallback to native confirm if modal elements not found
+            if (confirm(message)) {
+                onConfirm();
+            }
+            return;
+        }
+
+        // Set modal content
+        modalTitle.textContent = title;
+        modalBody.textContent = message;
+
+        // Store the callback
+        currentConfirmCallback = onConfirm;
+
+        // Show modal using Bootstrap
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    // Set up event listeners once for the confirmation modal buttons
+    document.getElementById('genericConfirmOk')?.addEventListener('click', function() {
+        const modal = document.getElementById('genericConfirmModal');
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) {
+            bsModal.hide();
+        }
+        if (currentConfirmCallback) {
+            currentConfirmCallback();
+            currentConfirmCallback = null;
+        }
     });
 
-    if(ocrUploadArea) ocrUploadArea.addEventListener('click', () => ocrFileInput.click());
-    if(ocrUploadBtn) ocrUploadBtn.addEventListener('click', () => ocrFileInput.click());
-    if(ocrFileInput) ocrFileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) processImageFile(e.target.files[0]);
+    document.getElementById('genericConfirmCancel')?.addEventListener('click', function() {
+        const modal = document.getElementById('genericConfirmModal');
+        const bsModal = bootstrap.Modal.getInstance(modal);
+        if (bsModal) {
+            bsModal.hide();
+        }
+        currentConfirmCallback = null;
     });
 
-    if (ocrPasteBtn) ocrPasteBtn.addEventListener('click', async () => {
-        try {
-            const items = await navigator.clipboard.read();
-            for (const item of items) {
-                for (const type of item.types) {
-                    if (type.startsWith('image/')) {
-                        const blob = await item.getType(type);
-                        const reader = new FileReader();
-                        reader.onload = (e) => processBase64Image(e.target.result);
-                        reader.readAsDataURL(blob);
-                        return;
+    // ===== TAB SWITCHING HANDLER =====
+    if (USER_ROLE === 'admin') {
+        document.querySelectorAll('.tab-btn[data-target]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const target = this.dataset.target;
+                const filter = this.dataset.filter;
+                
+                // Update active tab
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show/hide table sections
+                document.querySelectorAll('.table-section').forEach(section => {
+                    section.classList.remove('active');
+                    section.style.display = 'none';
+                });
+                
+                const targetSection = document.getElementById(target);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    targetSection.style.display = 'block';
+                }
+                
+                // Show/hide Add button
+                const addBtn = document.getElementById('addCoopBtn');
+                if (addBtn) {
+                    addBtn.style.display = filter === 'deactivated' ? 'none' : 'flex';
+                }
+                
+                // Clear selected rows
+                selectedCoopRow = null;
+                selectedDeactivatedCoopRow = null;
+                document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');
+                document.querySelectorAll('tr.selected').forEach(row => row.classList.remove('selected'));
+                
+                // Reload page with filter parameter
+                window.location.href = `?filter=${filter}`;
+            });
+        });
+    }
+
+    // ===== ACTIVE COOPERATIVES TABLE ROW CLICK HANDLER =====
+    const coopTableBody = document.querySelector('#cooperatives-table tbody');
+    const coopActionButtons = document.getElementById('coop-action-buttons');
+
+        if (coopTableBody) {
+            coopTableBody.addEventListener('click', function (e) {
+                const row = e.target.closest('tr[data-coop-id]');
+                if (!row || row.querySelector('td[colspan]')) return;
+
+                if (selectedCoopRow === row) {
+                    row.classList.remove('selected');
+                    coopActionButtons.style.display = 'none';
+                    selectedCoopRow = null;
+                } else {
+                    if (selectedCoopRow) {
+                        selectedCoopRow.classList.remove('selected');
+                    }
+                    row.classList.add('selected');
+                    coopActionButtons.style.display = 'flex';
+                    selectedCoopRow = row;
+                }
+            });
+        }
+
+        // ===== PROFILE TABLE ROW CLICK HANDLER =====
+        const profileTableBody = document.querySelector('#profiles-table tbody');
+        const profileActionButtons = document.getElementById('profile-action-buttons');
+        const profileModal = document.getElementById('profile-modal');
+
+        if (profileTableBody) {
+            profileTableBody.addEventListener('click', function (e) {
+                const row = e.target.closest('tr[data-profile-id]');
+                if (!row || row.querySelector('td[colspan]')) return;
+
+                if (selectedProfileRow === row) {
+                    row.classList.remove('selected');
+                    profileActionButtons.style.display = 'none';
+                    selectedProfileRow = null;
+                } else {
+                    if (selectedProfileRow) {
+                        selectedProfileRow.classList.remove('selected');
+                    }
+                    row.classList.add('selected');
+                    profileActionButtons.style.display = 'flex';
+                    selectedProfileRow = row;
+
+                    // Load and show profile modal
+                    loadProfileModal(row.dataset.profileId, row.dataset.coopId);
+                }
+            });
+        }
+
+        // ===== LOAD PROFILE MODAL =====
+        async function loadProfileModal(profileId, coopId) {
+            if (!profileModal) return;
+
+            openModal(profileModal);
+
+            const modalBody = document.getElementById('profile-modal-body');
+            modalBody.innerHTML = '<div class="text-center" style="padding: 40px;"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading profile details...</p></div>';
+
+            try {
+                const response = await fetch(`/databank/api/get-profile-details/${profileId}/`, {
+                    headers: { 'X-CSRFToken': getCsrfToken() }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    modalBody.innerHTML = data.html;
+                    // Initialize file preview handlers
+                    initializeFilePreviewHandlers(coopId);
+                } else {
+                    modalBody.innerHTML = `<div class="alert alert-danger">Error: ${data.error || 'Failed to load profile'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                modalBody.innerHTML = `<div class="alert alert-danger">Error loading profile details.</div>`;
+            }
+        }
+
+        // ===== FILE PREVIEW HANDLERS =====
+        function initializeFilePreviewHandlers(coopId) {
+            // Remove existing listeners by cloning and replacing buttons
+            document.querySelectorAll('.btn-certificate-preview, .btn-preview-docs').forEach(button => {
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                newButton.addEventListener('click', function() {
+                    const attachmentType = this.getAttribute('data-attachment-type');
+                    const filename = this.getAttribute('data-filename') || 'Document';
+                    
+                    if (!coopId && !attachmentType) return;
+
+                    // Build preview URL
+                    let previewUrl = `/cooperatives/profiles/${coopId}/attachment/${attachmentType}/?preview=true`;
+                    
+                    // For financial documents, check if year is needed
+                    if (attachmentType === 'financial') {
+                        const year = document.querySelector('.current-year-badge strong')?.textContent;
+                        if (year) {
+                            previewUrl += `&year=${year}`;
+                        }
+                    }
+
+                    // Reset file navigation
+                    totalFiles = 0;
+                    currentFileIndex = 0;
+                    currentPreviewUrl = previewUrl;
+                    currentFilename = filename;
+                    fileList = [];
+
+                    // Show modal
+                    previewModal.style.display = 'flex';
+                    setTimeout(() => previewModal.classList.add('show'), 10);
+                    previewTitle.textContent = filename;
+                    previewDownload.href = previewUrl.replace('?preview=true', '?download=1');
+                    previewDownload.download = filename;
+
+                    // Check if file needs conversion
+                    const isCsvGz = filename.toLowerCase().endsWith('.csv.gz');
+                    const isPdfGz = filename.toLowerCase().endsWith('.pdf.gz');
+                    const needsConversion = filename.toLowerCase().match(/\.(docx?|xlsx?|xlsm|xlsb|pptx?|txt|csv)$/i);
+                    
+                    if (isCsvGz || isPdfGz || needsConversion) {
+                        // Show loading message
+                        previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Converting document to PDF...</p>';
+                        convertAndPreviewProfile(previewUrl, filename, 0);
+                    } else {
+                        // Try to load as PDF directly
+                        loadPdfPreview(previewUrl, filename, 0);
+                    }
+                });
+            });
+        }
+
+        // ===== EDIT COOPERATIVE =====
+        document.querySelector('#coop-action-buttons .edit-btn')?.addEventListener('click', function () {
+            if (!selectedCoopRow) {
+                showNotification('Please select a cooperative first.', 'error');
+                return;
+            }
+            const coopId = selectedCoopRow.dataset.coopId;
+            openCoopModal(coopId);
+        });
+
+        // ===== DELETE/DEACTIVATE COOPERATIVE =====
+        document.querySelector('#coop-action-buttons .delete-btn')?.addEventListener('click', function () {
+            if (!selectedCoopRow) {
+                showNotification('Please select a cooperative first.', 'error');
+                return;
+            }
+
+            currentAction = 'deactivate';
+            document.getElementById('password-verify-title').textContent = 'Verify Deactivation';
+            document.getElementById('password-verify-desc').textContent = 'Please enter your password to confirm deactivation.';
+            document.getElementById('password-verify-input').value = '';
+            document.getElementById('password-verify-error').style.display = 'none';
+            tempPassword = '';
+            openModal(document.getElementById('password-verify-modal'));
+        });
+
+    // ===== DEACTIVATED COOPERATIVES TABLE ROW CLICK HANDLER =====
+    const deactivatedTableBody = document.querySelector('#deactivated-cooperatives-table tbody');
+    const deactivatedActionButtons = document.getElementById('deactivated-coop-action-buttons');
+
+    if (deactivatedTableBody) {
+        deactivatedTableBody.addEventListener('click', function (e) {
+            const row = e.target.closest('tr[data-coop-id]');
+            if (!row || row.querySelector('td[colspan]')) return;
+
+            if (selectedDeactivatedCoopRow === row) {
+                row.classList.remove('selected');
+                deactivatedActionButtons.style.display = 'none';
+                selectedDeactivatedCoopRow = null;
+            } else {
+                if (selectedDeactivatedCoopRow) {
+                    selectedDeactivatedCoopRow.classList.remove('selected');
+                }
+                row.classList.add('selected');
+                deactivatedActionButtons.style.display = 'flex';
+                selectedDeactivatedCoopRow = row;
+            }
+        });
+    }
+
+    // ===== REACTIVATE COOPERATIVE =====
+    document.querySelector('#deactivated-coop-action-buttons .reactivate-btn')?.addEventListener('click', function () {
+        if (!selectedDeactivatedCoopRow) {
+            showNotification('Please select a deactivated cooperative first.', 'error');
+            return;
+        }
+
+        currentAction = 'reactivate';
+        document.getElementById('password-verify-title').textContent = 'Verify Reactivation';
+        document.getElementById('password-verify-desc').textContent = 'Please enter your password to confirm reactivation.';
+        document.getElementById('password-verify-input').value = '';
+        document.getElementById('password-verify-error').style.display = 'none';
+        tempPassword = '';
+        openModal(el.passwordVerifyModal);
+    });
+
+    // ===== PASSWORD VERIFICATION HANDLERS =====
+    document.getElementById('password-verify-cancel-btn')?.addEventListener('click', () => {
+        closeModal(el.passwordVerifyModal);
+        document.getElementById('password-verify-input').value = '';
+        document.getElementById('password-verify-error').style.display = 'none';
+        tempPassword = '';
+        currentAction = null;
+    });
+
+    document.getElementById('password-verify-confirm-btn')?.addEventListener('click', () => handlePasswordVerification(el));
+
+    document.getElementById('password-verify-input')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handlePasswordVerification(el);
+        }
+    });
+
+    // ===== PASSWORD VERIFICATION FUNCTION =====
+    function handlePasswordVerification(el) {
+        const passwordInput = document.getElementById('password-verify-input');
+        const errorEl = document.getElementById('password-verify-error');
+        const verifyBtn = document.getElementById('password-verify-confirm-btn');
+        const password = passwordInput.value.trim();
+        
+        if (!password) {
+            errorEl.textContent = 'Enter password.';
+            errorEl.style.display = 'block';
+            return;
+        }
+        
+        verifyBtn.disabled = true;
+        verifyBtn.textContent = 'Verifying...';
+        errorEl.style.display = 'none';
+        
+        fetch('/databank/api/verify-password/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ password: password })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.valid) {
+                // Store password temporarily
+                tempPassword = password;
+                
+                closeModal(el.passwordVerifyModal);
+                passwordInput.value = '';
+                
+                const selectedRow = currentAction === 'deactivate' ? selectedCoopRow : selectedDeactivatedCoopRow;
+                const coopName = selectedRow ? (selectedRow.dataset.coopName || 'this cooperative') : 'this cooperative';
+                const confirmMessage = `Are you sure you want to ${currentAction} ${coopName}?`;
+
+                if (currentAction === 'deactivate') {
+                    document.getElementById('deactivate-confirm-text').textContent = confirmMessage;
+                    openModal(el.deactivateModal);
+                } else if (currentAction === 'reactivate') {
+                    document.getElementById('reactivate-confirm-text').textContent = confirmMessage;
+                    openModal(el.reactivateModal);
+                }
+            } else {
+                errorEl.textContent = data.message || 'Incorrect password.';
+                errorEl.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+                tempPassword = '';
+            }
+        })
+        .catch(e => {
+            errorEl.textContent = 'Error occurred.';
+            errorEl.style.display = 'block';
+        })
+        .finally(() => {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify Password';
+        });
+    }
+
+    // ===== DEACTIVATE CONFIRM HANDLER =====
+    document.getElementById('deactivate-confirm-btn')?.addEventListener('click', () => handleDeactivateConfirm(el));
+    document.getElementById('deactivate-cancel-btn')?.addEventListener('click', () => {
+        closeModal(el.deactivateModal);
+        tempPassword = '';
+        currentAction = null;
+    });
+
+    function handleDeactivateConfirm(el) {
+        if (!selectedCoopRow) return;
+        
+        const coopId = selectedCoopRow.dataset.coopId;
+        if (!coopId) return;
+        
+        fetch(`{% url 'databank:delete_cooperative' 0 %}`.replace('0', coopId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ password: tempPassword })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Cooperative deactivated successfully', 'success');
+                location.reload();
+            } else {
+                showNotification(data.error || 'Error deactivating cooperative', 'error');
+            }
+        })
+        .catch(e => {
+            showNotification('Error deactivating cooperative', 'error');
+        })
+        .finally(() => {
+            closeModal(el.deactivateModal);
+            tempPassword = '';
+            currentAction = null;
+        });
+    }
+
+    // ===== REACTIVATE CONFIRM HANDLER =====
+    document.getElementById('reactivate-confirm-btn')?.addEventListener('click', () => handleReactivateConfirm(el));
+    document.getElementById('reactivate-cancel-btn')?.addEventListener('click', () => {
+        closeModal(el.reactivateModal);
+        tempPassword = '';
+        currentAction = null;
+    });
+
+    function handleReactivateConfirm(el) {
+        if (!selectedDeactivatedCoopRow) return;
+        
+        const coopId = selectedDeactivatedCoopRow.dataset.coopId;
+        if (!coopId) return;
+
+        fetch(`{% url 'databank:restore_cooperative' 0 %}`.replace('0', coopId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ password: tempPassword })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Cooperative reactivated successfully', 'success');
+                location.reload();
+            } else {
+                showNotification(data.error || 'Error reactivating cooperative', 'error');
+            }
+        })
+        .catch(e => {
+            showNotification('Error reactivating cooperative', 'error');
+        })
+        .finally(() => {
+            closeModal(el.reactivateModal);
+            tempPassword = '';
+            currentAction = null;
+        });
+    }
+
+        // ===== APPROVE PROFILE =====
+        document.querySelector('#profile-action-buttons .approve-btn')?.addEventListener('click', async function () {
+            if (!selectedProfileRow) {
+                showNotification('Please select a profile first.', 'error');
+                return;
+            }
+
+            const profileId = selectedProfileRow.dataset.profileId;
+            const currentStatus = selectedProfileRow.dataset.approvalStatus;
+
+            if (currentStatus === 'approved') {
+                showNotification('This profile is already approved.', 'info');
+                return;
+            }
+
+            // Show confirmation modal
+            showConfirmModal(
+                'Approve Profile',
+                'Are you sure you want to approve this cooperative profile?',
+                async () => {
+                    try {
+                const response = await fetch(`/databank/api/approve-profile/${profileId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'approve' })
+                });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showNotification('Profile approved successfully', 'success');
+                            location.reload();
+                        } else {
+                            showNotification('Error: ' + (result.error || 'Unknown error'), 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error approving profile:', error);
+                        showNotification('Error approving profile', 'error');
                     }
                 }
-            }
-            alert("No image found.");
-        } catch (e) { alert("Clipboard access denied."); }
-    });
-
-    function compressImage(fileOrBlob, maxWidth = 1000, quality = 0.7) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(fileOrBlob);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width; let height = img.height;
-                    if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
-                    canvas.width = width; canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob((blob) => { if (blob) resolve(blob); else reject(new Error("Compression failed")); }, 'image/jpeg', quality);
-                };
-            };
+            );
         });
-    }
 
-    function showLoading(show) {
-        if (show) { ocrLoading.style.display = 'block'; ocrResultArea.style.display = 'none'; }
-        else { ocrLoading.style.display = 'none'; }
-    }
+        // ===== CANCEL APPROVAL =====
+        document.querySelector('#profile-action-buttons .cancel-approve-btn')?.addEventListener('click', async function () {
+            if (!selectedProfileRow) {
+                showNotification('Please select a profile first.', 'error');
+                return;
+            }
 
-    function displayResult(text) { ocrResultText.value = text; ocrResultArea.style.display = 'block'; }
+            const profileId = selectedProfileRow.dataset.profileId;
+            const currentStatus = selectedProfileRow.dataset.approvalStatus;
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+            if (currentStatus !== 'approved') {
+                showNotification('This profile is not approved.', 'info');
+                return;
+            }
+
+            // Show confirmation modal
+            showConfirmModal(
+                'Cancel Approval',
+                'Are you sure you want to cancel the approval of this cooperative profile?',
+                async () => {
+                    try {
+                const response = await fetch(`/databank/api/approve-profile/${profileId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'cancel' })
+                });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showNotification('Approval cancelled successfully', 'success');
+                            location.reload();
+                        } else {
+                            showNotification('Error: ' + (result.error || 'Unknown error'), 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error cancelling approval:', error);
+                        showNotification('Error cancelling approval', 'error');
+                    }
+                }
+            );
+        });
+
+        // ===== COOPERATIVE MODAL FUNCTIONS =====
+        const coopModal = document.getElementById('coop-modal');
+        const coopForm = document.getElementById('coop-form');
+        const addCoopBtn = document.getElementById('addCoopBtn');
+
+        function openCoopModal(coopId = null) {
+            if (coopId) {
+                document.getElementById('coop-modal-title').textContent = 'Edit Cooperative';
+                document.getElementById('coop-id').value = coopId;
+                document.getElementById('form-buttons-add').style.display = 'none';
+                document.getElementById('form-buttons-edit').style.display = 'flex';
+                loadCooperativeData(coopId);
+            } else {
+                document.getElementById('coop-modal-title').textContent = 'Add Cooperative';
+                document.getElementById('coop-id').value = '';
+                document.getElementById('form-buttons-add').style.display = 'block';
+                document.getElementById('form-buttons-edit').style.display = 'none';
+                coopForm.reset();
+            }
+            openModal(coopModal);
+        }
+
+        function closeCoopModal() {
+            closeModal(coopModal);
+            coopForm.reset();
+        }
+
+        // Close modal on close button click
+        document.querySelector('#coop-modal .modal-close')?.addEventListener('click', closeCoopModal);
+        document.getElementById('edit-cancel-btn')?.addEventListener('click', closeCoopModal);
+
+        async function loadCooperativeData(coopId) {
+            try {
+                const response = await fetch(`{% url 'databank:get_cooperative' 0 %}`.replace('0', coopId));
+                const result = await response.json();
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('coop-name').value = data.cooperative_name || '';
+                    document.getElementById('coop-category').value = data.category || '';
+                    document.getElementById('coop-district').value = data.district || '';
+                    if (USER_ROLE === 'admin' && document.getElementById('coop-staff')) {
+                        document.getElementById('coop-staff').value = data.staff_id || '';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading cooperative:', error);
+                showNotification('Error loading cooperative data', 'error');
+            }
+        }
+
+        if (addCoopBtn) {
+            addCoopBtn.addEventListener('click', () => openCoopModal());
+        }
+
+        if (coopForm) {
+            coopForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const coopId = document.getElementById('coop-id').value;
+                const formData = {
+                    cooperative_name: document.getElementById('coop-name').value,
+                    category: document.getElementById('coop-category').value,
+                    district: document.getElementById('coop-district').value
+                };
+
+                if (USER_ROLE === 'admin' && document.getElementById('coop-staff')) {
+                    formData.staff_id = document.getElementById('coop-staff').value || null;
+                }
+
+                try {
+                    let url, method;
+                    if (coopId) {
+                        url = `{% url 'databank:update_cooperative' 0 %}`.replace('0', coopId);
+                        method = 'POST';
+                    } else {
+                        url = '{% url "databank:add_cooperative" %}';
+                        method = 'POST';
+                    }
+
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'X-CSRFToken': getCsrfToken(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        showNotification(result.message || 'Cooperative saved successfully', 'success');
+                        closeCoopModal();
+                        location.reload();
+                    } else {
+                        showNotification('Error: ' + (result.error || 'Unknown error'), 'error');
+                    }
+                } catch (error) {
+                    console.error('Error saving cooperative:', error);
+                    showNotification('Error saving cooperative', 'error');
+                }
+            });
+        }
+
+        // Close profile modal
+        document.getElementById('profile-modal-close')?.addEventListener('click', () => {
+            closeModal(profileModal);
+        });
+
+        // Close modals (generic handler for modals that don't have specific handlers)
+        document.querySelectorAll('.modal-close-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modal = e.target.closest('.modal-overlay');
+                if (modal && modal.id !== 'profile-modal') {
+                    closeModal(modal);
+                }
+            });
+        });
+
+        // ===== SEARCH FUNCTIONALITY =====
+        const searchCoopInput = document.getElementById('searchCoopInput');
+        if (searchCoopInput) {
+            searchCoopInput.addEventListener('input', function (e) {
+                const searchTerm = e.target.value.toLowerCase();
+                
+                // Search in active cooperatives table
+                const activeRows = document.querySelectorAll('#cooperatives-table tbody tr');
+                activeRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+                
+                // Search in deactivated cooperatives table
+                const deactivatedRows = document.querySelectorAll('#deactivated-cooperatives-table tbody tr');
+                deactivatedRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        }
+
+        const searchProfileInput = document.getElementById('searchProfileInput');
+        if (searchProfileInput) {
+            searchProfileInput.addEventListener('input', function (e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('#profiles-table tbody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        }
+
+        // ===== FILE PREVIEW FUNCTIONALITY (Complete from profile management) =====
+        const previewModal = document.getElementById('preview-modal');
+        const previewBody = document.getElementById('preview-body');
+        const previewTitle = document.getElementById('preview-title');
+        const previewClose = document.getElementById('preview-close');
+        const previewDownload = document.getElementById('preview-download-main');
+        
+        let pdfDoc = null;
+        let currentPage = 1;
+        let totalPages = 0;
+        let currentZoom = 100;
+        let currentRotation = 0;
+        let isPdfOpen = false;
+        const previewSidebar = document.getElementById('preview-sidebar');
+        const previewThumbnails = document.getElementById('preview-thumbnails');
+        
+        // Multiple file navigation
+        let totalFiles = 0;
+        let currentFileIndex = 0;
+        let currentPreviewUrl = '';
+        let currentFilename = '';
+        let fileList = [];
+
+        // Close preview modal
+        if (previewClose) {
+            previewClose.addEventListener('click', () => {
+                previewModal.style.display = 'none';
+                previewModal.classList.remove('show');
+                if (pdfDoc) {
+                    pdfDoc.destroy();
+                    pdfDoc = null;
+                }
+            });
+        }
+
+        // Close on overlay click
+        if (previewModal) {
+            previewModal.addEventListener('click', (e) => {
+                if (e.target === previewModal) {
+                    previewModal.style.display = 'none';
+                    previewModal.classList.remove('show');
+                    if (pdfDoc) {
+                        pdfDoc.destroy();
+                        pdfDoc = null;
+                    }
+                }
+            });
+        }
+
+        // Escape key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && previewModal && previewModal.style.display !== 'none') {
+                previewModal.style.display = 'none';
+                previewModal.classList.remove('show');
+                if (pdfDoc) {
+                    pdfDoc.destroy();
+                    pdfDoc = null;
+                }
+            }
+        });
+
+        // Load PDF with PDF.js
+        async function loadPdfPreview(url, title, fileIndex = 0) {
+            previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
+            
+            try {
+                if (!window.pdfjsLib) {
+                    throw new Error('PDF.js library not loaded');
+                }
+
+                // First, fetch the URL to check if it's accessible
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    let errorMsg = `Unexpected server response (${response.status})`;
+                    try {
+                        const text = await response.text();
+                        if (text) {
+                            try {
+                                const data = JSON.parse(text);
+                                errorMsg = data.message || errorMsg;
+                            } catch (e) {
+                                errorMsg = `Server error: ${response.status}`;
+                            }
+                        }
+                    } catch (e) {
+                        errorMsg = `Server error: ${response.status}`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                // Check content type
+                const contentType = response.headers.get('Content-Type') || '';
+                if (!contentType.includes('pdf')) {
+                    // Try to get blob and create object URL
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    loadPdfFromBlob(blobUrl, title);
+                    return;
+                }
+
+                // Check for multiple files header
+                const fileCount = response.headers.get('X-File-Count');
+                const currentIndex = response.headers.get('X-Current-File-Index');
+                
+                if (fileCount) {
+                    totalFiles = parseInt(fileCount);
+                    if (currentIndex !== null) {
+                        currentFileIndex = parseInt(currentIndex);
+                    }
+                    updateFileNavigation();
+                }
+
+                const loadingTask = window.pdfjsLib.getDocument(url);
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+                currentPage = 1;
+                currentZoom = 100;
+                currentRotation = 0;
+                isPdfOpen = true;
+
+                document.getElementById('page-controls').style.display = 'flex';
+                document.getElementById('toggleSidebar').style.display = 'inline-flex';
+                document.getElementById('rotateLeft').style.display = 'inline-flex';
+                document.getElementById('rotateRight').style.display = 'inline-flex';
+                document.getElementById('fitWidth').style.display = 'inline-flex';
+                document.getElementById('fitHeight').style.display = 'inline-flex';
+                document.getElementById('zoomOut').style.display = 'inline-flex';
+                document.getElementById('zoomLevel').style.display = 'inline-block';
+                document.getElementById('zoomIn').style.display = 'inline-flex';
+                document.getElementById('totalPages').textContent = totalPages;
+                document.getElementById('pageInput').value = 1;
+                document.getElementById('zoomLevel').textContent = '100%';
+                
+                // Update title if multiple files
+                if (totalFiles > 1) {
+                    previewTitle.textContent = `${title} (${currentFileIndex + 1} of ${totalFiles})`;
+                }
+
+                await renderPdfPage(1);
+                await generateThumbnails();
+            } catch (error) {
+                console.error('PDF loading error:', error);
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">Failed to Load Document</h4>
+                        <p style="color: #6c757d; margin-bottom: 20px;">${escapeHtml(error.message)}</p>
+                        <a href="${url.replace('?preview=true', '?download=1')}" class="btn btn-primary mt-3" download="${title}">
+                            <i class="bi bi-download"></i> Download Instead
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        async function renderPdfPage(pageNum) {
+            if (!pdfDoc) return;
+            
+            try {
+                const page = await pdfDoc.getPage(pageNum);
+                const baseScale = 1.5;
+                const finalScale = (currentZoom / 100) * baseScale;
+                const viewport = page.getViewport({ scale: finalScale, rotation: currentRotation });
+                
+                let canvas = previewBody.querySelector('canvas');
+                if (!canvas) {
+                    canvas = document.createElement('canvas');
+                    previewBody.innerHTML = '';
+                    previewBody.appendChild(canvas);
+                }
+                
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                canvas.style.display = 'block';
+                canvas.style.maxWidth = 'none';
+                canvas.style.maxHeight = 'none';
+                canvas.style.width = viewport.width + 'px';
+                canvas.style.height = viewport.height + 'px';
+                canvas.style.margin = '20px auto';
+                canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+                canvas.style.background = 'white';
+
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+
+                await page.render(renderContext).promise;
+                
+                previewBody.scrollTop = 0;
+                previewBody.scrollLeft = 0;
+                document.getElementById('pageInput').value = pageNum;
+                updateThumbnailActive();
+            } catch (error) {
+                console.error('Page render error:', error);
+                previewBody.innerHTML = `<p style="color:#d32f2f;">Error rendering page: ${error.message}</p>`;
+            }
+        }
+        
+        function applyZoom() {
+            document.getElementById('zoomLevel').textContent = currentZoom + '%';
+            if (isPdfOpen && pdfDoc) {
+                renderPdfPage(currentPage);
+            }
+        }
+        
+        function updateThumbnailActive() {
+            if (!previewThumbnails) return;
+            const thumbnails = previewThumbnails.querySelectorAll('.thumbnail-item');
+            thumbnails.forEach((thumb, index) => {
+                if (index + 1 === currentPage) {
+                    thumb.classList.add('active');
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+        }
+        
+        async function generateThumbnails() {
+            if (!pdfDoc || !previewThumbnails) return;
+            
+            previewThumbnails.innerHTML = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                try {
+                    const page = await pdfDoc.getPage(i);
+                    const viewport = page.getViewport({ scale: 0.2 });
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    const context = canvas.getContext('2d');
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    const thumbnail = document.createElement('div');
+                    thumbnail.className = 'thumbnail-item';
+                    if (i === currentPage) thumbnail.classList.add('active');
+                    thumbnail.dataset.page = i;
+                    
+                    thumbnail.innerHTML = `
+                        <div class="thumbnail-number">${i}</div>
+                        <img src="${canvas.toDataURL()}" alt="Page ${i}" />
+                    `;
+                    
+                    thumbnail.addEventListener('click', () => {
+                        currentPage = i;
+                        renderPdfPage(currentPage);
+                        updateThumbnailActive();
+                    });
+                    
+                    previewThumbnails.appendChild(thumbnail);
+                } catch (error) {
+                    console.error(`Error generating thumbnail for page ${i}:`, error);
                 }
             }
         }
-        return cookieValue;
-    }
 
-    async function processImageFile(file) {
-        showLoading(true);
-        try {
-            const compressedBlob = await compressImage(file);
-            const formData = new FormData();
-            formData.append('image', compressedBlob, "scan.jpg");
-            const res = await fetch('{% url "databank:process_ocr" %}', {
-                method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: formData
+        // Page navigation
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInput = document.getElementById('pageInput');
+
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                }
             });
-            const data = await res.json();
-            if (data.success) displayResult(data.text);
-            else alert('OCR Failed: ' + (data.error || 'Unknown error'));
-        } catch (e) { console.error(e); alert('Error processing image.'); } 
-        finally { showLoading(false); }
-    }
-
-    async function processBase64Image(base64) {
-        const res = await fetch(base64);
-        const blob = await res.blob();
-        processImageFile(blob);
-    }
-
-    if(ocrClearBtn) ocrClearBtn.addEventListener('click', () => {
-        ocrResultText.value = ''; ocrResultArea.style.display = 'none';
-        if(ocrFileInput) ocrFileInput.value = '';
-    });
-
-    // --- TABLE SEARCH ---
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#coop-table tbody tr');
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
-        });
-    }
-
-    // --- MODAL LOGIC ---
-    const profileModal = document.getElementById('profile-modal');
-    const previewModal = document.getElementById('preview-modal');
-    
-    document.querySelectorAll('.modal-close-btn, #preview-close').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const modal = e.target.closest('.modal-overlay') || e.target.closest('.preview-overlay');
-            if(modal) { modal.classList.remove('show'); modal.style.display = 'none'; }
-        });
-    });
-
-    if (profileModal) {
-        document.querySelector('#coop-table tbody').addEventListener('click', function(e) {
-            if (e.target.closest('button') || e.target.closest('a')) return;
-            const row = e.target.closest('tr[data-modal-target]');
-            if (row) { profileModal.style.display = 'flex'; setTimeout(() => profileModal.classList.add('show'), 10); }
-        });
-    }
-
-    // --- PDF PREVIEW ---
-    const previewBody = document.getElementById('preview-body');
-    const zoomInBtn = document.getElementById('zoomIn');
-    const zoomOutBtn = document.getElementById('zoomOut');
-    let currentZoom = 100; let pdfDoc = null;
-
-    window.openPreviewDocument = async function(src, title, contentType) {
-        currentZoom = 100;
-        document.getElementById('preview-title').textContent = title;
-        document.getElementById('zoomLevel').textContent = '100%';
-        previewModal.style.display = 'flex';
-        setTimeout(() => previewModal.classList.add('show'), 10);
-        previewBody.innerHTML = '<p style="color:#6c757d;">Loading...</p>';
-
-        if (contentType === 'application/pdf') loadPdfPreview(src);
-        else if (contentType.startsWith('image/')) previewBody.innerHTML = `<img src="${src}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
-        else previewBody.innerHTML = `<iframe src="${src}" style="width:100%; height:100%; border:0;"></iframe>`;
-    };
-
-    async function loadPdfPreview(src) {
-        if (window.pdfjsLib) {
-            try {
-                const loadingTask = window.pdfjsLib.getDocument(src);
-                pdfDoc = await loadingTask.promise;
-                renderPdfPage(1);
-            } catch (err) { previewBody.innerHTML = `<p class="text-danger">Error loading PDF.</p>`; }
         }
-    }
 
-    async function renderPdfPage(num) {
-        if (!pdfDoc) return;
-        const page = await pdfDoc.getPage(num);
-        const scale = currentZoom / 100;
-        const viewport = page.getViewport({ scale: scale });
-        previewBody.innerHTML = ''; 
-        const canvas = document.createElement('canvas');
-        previewBody.appendChild(canvas);
-        const context = canvas.getContext('2d');
-        canvas.height = viewport.height; canvas.width = viewport.width;
-        await page.render({ canvasContext: context, viewport: viewport }).promise;
-    }
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                }
+            });
+        }
 
-    if(zoomInBtn) zoomInBtn.addEventListener('click', () => {
-        currentZoom += 10; document.getElementById('zoomLevel').textContent = currentZoom + '%';
-        if(pdfDoc) renderPdfPage(1); else { const img = previewBody.querySelector('img'); if(img) img.style.transform = `scale(${currentZoom/100})`; }
+        if (pageInput) {
+            pageInput.addEventListener('change', () => {
+                const page = parseInt(pageInput.value);
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                } else {
+                    pageInput.value = currentPage;
+                }
+            });
+            
+            pageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const page = parseInt(pageInput.value);
+                    if (page >= 1 && page <= totalPages) {
+                        currentPage = page;
+                        renderPdfPage(currentPage);
+                        updateThumbnailActive();
+                    } else {
+                        pageInput.value = currentPage;
+                    }
+                }
+            });
+        }
+        
+        // Sidebar toggle
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        if (toggleSidebarBtn) {
+            toggleSidebarBtn.addEventListener('click', () => {
+                const icon = toggleSidebarBtn.querySelector('i');
+                if (previewSidebar && previewSidebar.style.display === 'none') {
+                    previewSidebar.style.display = 'flex';
+                    if (icon) icon.className = 'bi bi-layout-sidebar-inset';
+                } else if (previewSidebar) {
+                    previewSidebar.style.display = 'none';
+                    if (icon) icon.className = 'bi bi-layout-sidebar';
+                }
+            });
+        }
+        
+        // Rotation controls
+        const rotateLeftBtn = document.getElementById('rotateLeft');
+        const rotateRightBtn = document.getElementById('rotateRight');
+        
+        if (rotateLeftBtn) {
+            rotateLeftBtn.addEventListener('click', () => {
+                currentRotation = (currentRotation - 90 + 360) % 360;
+                applyZoom();
+            });
+        }
+        
+        if (rotateRightBtn) {
+            rotateRightBtn.addEventListener('click', () => {
+                currentRotation = (currentRotation + 90) % 360;
+                applyZoom();
+            });
+        }
+        
+        // Zoom controls
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                currentZoom = Math.min(300, currentZoom + 10);
+                applyZoom();
+            });
+        }
+        
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                currentZoom = Math.max(10, currentZoom - 10);
+                applyZoom();
+            });
+        }
+        
+        // Fit controls
+        const fitWidthBtn = document.getElementById('fitWidth');
+        const fitHeightBtn = document.getElementById('fitHeight');
+        
+        async function fitToWidth() {
+            if (isPdfOpen && pdfDoc) {
+                const page = await pdfDoc.getPage(currentPage);
+                const viewport = page.getViewport({ scale: 1.5, rotation: currentRotation });
+                const containerWidth = previewBody.clientWidth - 40;
+                const scaleToFit = containerWidth / viewport.width;
+                currentZoom = Math.round(scaleToFit * 100);
+                currentZoom = Math.max(10, Math.min(300, currentZoom));
+                applyZoom();
+            }
+        }
+        
+        async function fitToHeight() {
+            if (isPdfOpen && pdfDoc) {
+                const page = await pdfDoc.getPage(currentPage);
+                const viewport = page.getViewport({ scale: 1.5, rotation: currentRotation });
+                const containerHeight = previewBody.clientHeight - 40;
+                const scaleToFit = containerHeight / viewport.height;
+                currentZoom = Math.round(scaleToFit * 100);
+                currentZoom = Math.max(10, Math.min(300, currentZoom));
+                applyZoom();
+            }
+        }
+        
+        if (fitWidthBtn) {
+            fitWidthBtn.addEventListener('click', fitToWidth);
+        }
+        
+        if (fitHeightBtn) {
+            fitHeightBtn.addEventListener('click', fitToHeight);
+        }
+
+        // File navigation buttons
+        const prevFileBtn = document.getElementById('prev-file-btn');
+        const nextFileBtn = document.getElementById('next-file-btn');
+        
+        function updateFileNavigation() {
+            if (totalFiles > 1) {
+                if (prevFileBtn) prevFileBtn.style.display = 'flex';
+                if (nextFileBtn) nextFileBtn.style.display = 'flex';
+                if (prevFileBtn) prevFileBtn.disabled = currentFileIndex === 0;
+                if (nextFileBtn) nextFileBtn.disabled = currentFileIndex === totalFiles - 1;
+            } else {
+                if (prevFileBtn) prevFileBtn.style.display = 'none';
+                if (nextFileBtn) nextFileBtn.style.display = 'none';
+            }
+        }
+        
+        function loadFileByIndex(index) {
+            if (index < 0 || index >= totalFiles) return;
+            
+            currentFileIndex = index;
+            const url = currentPreviewUrl + (currentPreviewUrl.includes('?') ? '&' : '?') + `file_index=${index}`;
+            const filename = fileList[index] || currentFilename;
+            
+            previewTitle.textContent = totalFiles > 1 ? `${filename} (${index + 1} of ${totalFiles})` : filename;
+            previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
+            
+            // Check if file needs conversion
+            const isCsvGz = filename.toLowerCase().endsWith('.csv.gz');
+            const isPdfGz = filename.toLowerCase().endsWith('.pdf.gz');
+            const needsConversion = filename.toLowerCase().match(/\.(docx?|xlsx?|xlsm|xlsb|pptx?|txt|csv)$/i);
+            
+            if (isCsvGz || isPdfGz || needsConversion) {
+                convertAndPreviewProfile(url, filename, index);
+            } else {
+                loadPdfPreview(url, filename, index);
+            }
+        }
+        
+        if (prevFileBtn) {
+            prevFileBtn.addEventListener('click', () => {
+                if (currentFileIndex > 0) {
+                    loadFileByIndex(currentFileIndex - 1);
+                }
+            });
+        }
+        
+        if (nextFileBtn) {
+            nextFileBtn.addEventListener('click', () => {
+                if (currentFileIndex < totalFiles - 1) {
+                    loadFileByIndex(currentFileIndex + 1);
+                }
+            });
+        }
+
+        async function convertAndPreviewProfile(url, title, fileIndex = 0) {
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    let errorMsg = 'Failed to load document';
+                    try {
+                        const data = await response.json();
+                        errorMsg = data.message || errorMsg;
+                    } catch (e) {
+                        errorMsg = `Server error: ${response.status}`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                // Check for multiple files header
+                const fileCount = response.headers.get('X-File-Count');
+                const currentIndex = response.headers.get('X-Current-File-Index');
+                
+                if (fileCount) {
+                    totalFiles = parseInt(fileCount);
+                    if (currentIndex !== null) {
+                        currentFileIndex = parseInt(currentIndex);
+                    }
+                    updateFileNavigation();
+                }
+
+                // Check conversion status
+                const conversionStatus = response.headers.get('X-Conversion-Status');
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const contentType = response.headers.get('Content-Type') || '';
+                
+                // Check if it's a decompressed or converted PDF
+                const isPdfGz = title && title.toLowerCase().endsWith('.pdf.gz');
+                const isDecompressedPdf = conversionStatus === 'decompressed' || conversionStatus === 'converted' || isPdfGz;
+
+                // If it's a converted/decompressed PDF, load it
+                if (isDecompressedPdf && contentType.includes('pdf')) {
+                    const pdfFilename = title.replace(/\.gz$/i, '').replace(/\.[^.]+$/, '.pdf');
+                    previewDownload.href = blobUrl;
+                    previewDownload.download = pdfFilename;
+                    if (totalFiles > 1) {
+                        previewTitle.textContent = `${pdfFilename} (${currentFileIndex + 1} of ${totalFiles})`;
+                    }
+                    loadPdfFromBlob(blobUrl, pdfFilename);
+                    return;
+                }
+
+                // If conversion failed, show error with download option
+                if (conversionStatus === 'failed' || !contentType.includes('pdf')) {
+                    previewBody.innerHTML = `
+                        <div style="padding: 40px; text-align: center;">
+                            <i class="bi bi-file-earmark" style="font-size: 4rem; color: #6c757d; margin-bottom: 20px;"></i>
+                            <h4 style="color: #495057; margin-bottom: 10px;">${escapeHtml(title)}</h4>
+                            <p style="color: #6c757d; margin-bottom: 20px;">This file cannot be previewed in the browser.</p>
+                            <p style="color: #6c757d; font-size: 0.9rem;">Please download the file to view it.</p>
+                        </div>
+                    `;
+                    previewDownload.href = url.replace('?preview=true', '?download=1');
+                    previewDownload.download = title;
+                    return;
+                }
+
+                // Try to load as PDF
+                loadPdfFromBlob(blobUrl, title);
+            } catch (error) {
+                console.error('Conversion error:', error);
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">Failed to Load Document</h4>
+                        <p style="color: #6c757d; margin-bottom: 20px;">${escapeHtml(error.message)}</p>
+                        <a href="${url.replace('?preview=true', '?download=1')}" class="btn btn-primary mt-3" download="${title}">
+                            <i class="bi bi-download"></i> Download Instead
+                        </a>
+                    </div>
+                `;
+            }
+        }
+        
+        function loadPdfFromBlob(blobUrl, title) {
+            previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
+            
+            if (!window.pdfjsLib) {
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">PDF.js library not loaded</h4>
+                    </div>
+                `;
+                return;
+            }
+
+            const loadingTask = window.pdfjsLib.getDocument(blobUrl);
+            loadingTask.promise.then(doc => {
+                pdfDoc = doc;
+                totalPages = pdfDoc.numPages;
+                currentPage = 1;
+                currentZoom = 100;
+                currentRotation = 0;
+                isPdfOpen = true;
+
+                document.getElementById('page-controls').style.display = 'flex';
+                document.getElementById('toggleSidebar').style.display = 'inline-flex';
+                document.getElementById('rotateLeft').style.display = 'inline-flex';
+                document.getElementById('rotateRight').style.display = 'inline-flex';
+                document.getElementById('fitWidth').style.display = 'inline-flex';
+                document.getElementById('fitHeight').style.display = 'inline-flex';
+                document.getElementById('zoomOut').style.display = 'inline-flex';
+                document.getElementById('zoomLevel').style.display = 'inline-block';
+                document.getElementById('zoomIn').style.display = 'inline-flex';
+                document.getElementById('totalPages').textContent = totalPages;
+                document.getElementById('pageInput').value = 1;
+                document.getElementById('zoomLevel').textContent = '100%';
+                
+                // Update title if multiple files
+                if (totalFiles > 1) {
+                    previewTitle.textContent = `${title} (${currentFileIndex + 1} of ${totalFiles})`;
+                }
+
+                renderPdfPage(1).then(() => {
+                    generateThumbnails();
+                });
+            }).catch(error => {
+                console.error('PDF loading error:', error);
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">Failed to Load Document</h4>
+                        <p style="color: #6c757d;">${error.message}</p>
+                        <a href="${blobUrl}" class="btn btn-primary mt-3" download="${title}">
+                            <i class="bi bi-download"></i> Download Instead
+                        </a>
+                    </div>
+                `;
+            });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     });
-
-    if(zoomOutBtn) zoomOutBtn.addEventListener('click', () => {
-        if(currentZoom > 10) currentZoom -= 10;
-        document.getElementById('zoomLevel').textContent = currentZoom + '%';
-        if(pdfDoc) renderPdfPage(1); else { const img = previewBody.querySelector('img'); if(img) img.style.transform = `scale(${currentZoom/100})`; }
-    });
-});
 </script>
 {% endblock %}
