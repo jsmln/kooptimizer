@@ -22,4 +22,7 @@ urlpatterns = [
     path('api/staff-list/', views.dashboard_staff_list_api, name='dashboard_staff_list_api'),
     path('api/officers-list/', views.dashboard_officers_list_api, name='dashboard_officers_list_api'),
     path('api/cooperative-demographics/', views.dashboard_cooperative_demographics_api, name='dashboard_cooperative_demographics_api'),
+    path('api/cooperative-locations/', views.dashboard_cooperative_locations_api, name='dashboard_cooperative_locations_api'),
+    path('api/check-push-subscription/', views.dashboard_check_push_subscription_api, name='dashboard_check_push_subscription_api'),
+    path('api/officer-data/', views.dashboard_officer_data_api, name='dashboard_officer_data_api'),
 ]

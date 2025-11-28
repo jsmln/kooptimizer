@@ -507,6 +507,259 @@
     </div>
 </div>
 
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileLabel" aria-hidden="true" style="z-index: 10050;">
+    <div class="modal-backdrop fade show" style="z-index: 10040; background-color: rgba(0, 0, 0, 0.7);"></div>
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" style="z-index: 10050;">
+        <div class="modal-content" style="border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);">
+            <div class="modal-header" style="background: #860000; color: white; border-bottom: 2px solid #6B0000; padding: 1rem 1.5rem;">
+                <h5 class="modal-title" id="editProfileLabel" style="font-size: 1.25rem; font-weight: 600; color: white; margin: 0;">
+                    <i class="bi bi-pencil-square"></i> Edit Cooperative Profile
+                    <span id="edit-profile-year" style="font-size: 0.9rem; font-weight: normal; margin-left: 10px; opacity: 0.9;"></span>
+                </h5>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="btn btn-sm" id="undo-btn" title="Undo" disabled 
+                            style="background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.3);">
+                        <i class="bi bi-arrow-counterclockwise"></i> Undo
+                    </button>
+                    <button type="button" class="btn btn-sm" id="redo-btn" title="Redo" disabled
+                            style="background: rgba(255, 255, 255, 0.2); color: white; border: 1px solid rgba(255, 255, 255, 0.3);">
+                        <i class="bi bi-arrow-clockwise"></i> Redo
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem; background: #F8F9FA; max-height: calc(100vh - 200px); overflow-y: auto;">
+                <div class="profile-form-container" id="edit-profile-form-container" style="background: white; padding: 1.5rem; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                    <div class="text-center" style="padding: 40px;">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-3">Loading form...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Edit Modal Overrides */
+    #editProfileModal {
+        z-index: 10050 !important;
+    }
+    
+    #editProfileModal .modal-backdrop {
+        z-index: 10040 !important;
+    }
+    
+    /* Form Styling Improvements */
+    #edit-profile-form-container .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #E0E0E0;
+    }
+    
+    #edit-profile-form-container .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #860000;
+    }
+    
+    #edit-profile-form-container .section-header i {
+        font-size: 1.25rem;
+        color: #860000;
+    }
+    
+    #edit-profile-form-container .section-header h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2B3674;
+        margin: 0;
+    }
+    
+    #edit-profile-form-container .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    #edit-profile-form-container .form-group label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #2B3674;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    #edit-profile-form-container .form-group label.required::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    #edit-profile-form-container .form-group input[type="text"],
+    #edit-profile-form-container .form-group input[type="email"],
+    #edit-profile-form-container .form-group input[type="tel"],
+    #edit-profile-form-container .form-group input[type="date"],
+    #edit-profile-form-container .form-group input[type="number"],
+    #edit-profile-form-container .form-group select,
+    #edit-profile-form-container .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.95rem;
+        color: #2B3674;
+        background: white;
+        border: 1.5px solid #E0E0E0;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    
+    #edit-profile-form-container .form-group input:focus,
+    #edit-profile-form-container .form-group select:focus,
+    #edit-profile-form-container .form-group textarea:focus {
+        outline: none;
+        border-color: #860000;
+        box-shadow: 0 0 0 3px rgba(134, 0, 0, 0.1);
+    }
+    
+    #edit-profile-form-container .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    #edit-profile-form-container .form-check-group {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    #edit-profile-form-container .radio-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        color: #2B3674;
+        cursor: pointer;
+    }
+    
+    #edit-profile-form-container .input-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    #edit-profile-form-container .input-table th {
+        background: #860000;
+        color: white;
+        padding: 0.75rem;
+        text-align: left;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    #edit-profile-form-container .input-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #E0E0E0;
+    }
+    
+    #edit-profile-form-container .input-table td input,
+    #edit-profile-form-container .input-table td select {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        border: 1px solid #E0E0E0;
+        border-radius: 4px;
+    }
+    
+    #edit-profile-form-container .add-row-btn {
+        margin-top: 1rem;
+        padding: 0.75rem 1.5rem;
+        background: #860000;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    #edit-profile-form-container .add-row-btn:hover {
+        background: #6B0000;
+    }
+    
+    #edit-profile-form-container .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 2px solid #E0E0E0;
+    }
+    
+    #edit-profile-form-container .submit-btn {
+        padding: 0.75rem 2rem;
+        background: #860000;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    #edit-profile-form-container .submit-btn:hover {
+        background: #6B0000;
+    }
+    
+    #edit-profile-form-container .input-instruction {
+        font-size: 0.9rem;
+        color: #6B6B6B;
+        margin-bottom: 1rem;
+        font-style: italic;
+    }
+    
+    /* File upload styling */
+    #edit-profile-form-container .file-upload-area-single,
+    #edit-profile-form-container .file-upload-area {
+        border: 2px dashed #E0E0E0;
+        border-radius: 6px;
+        padding: 2rem;
+        text-align: center;
+        background: #F8F9FA;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    #edit-profile-form-container .file-upload-area-single:hover,
+    #edit-profile-form-container .file-upload-area:hover {
+        border-color: #860000;
+        background: #FFF0F0;
+    }
+    
+    #edit-profile-form-container .upload-text-single,
+    #edit-profile-form-container .upload-text {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #2B3674;
+        margin: 0.5rem 0;
+    }
+    
+    #edit-profile-form-container .upload-hint-single,
+    #edit-profile-form-container .upload-hint {
+        font-size: 0.85rem;
+        color: #6B6B6B;
+        margin: 0;
+    }
+</style>
+
 <!-- File Preview Modal -->
 <div id="preview-modal" class="preview-overlay" style="display: none; z-index: 10000;">
     <div class="preview-content">
@@ -557,16 +810,27 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Fix MutationObserver error - ensure elements exist before observing
-    if (typeof MutationObserver !== 'undefined') {
+    if (typeof MutationObserver !== 'undefined' && MutationObserver.prototype) {
         const originalObserve = MutationObserver.prototype.observe;
-        MutationObserver.prototype.observe = function(target, options) {
-            if (target && target.nodeType === Node.ELEMENT_NODE) {
-                return originalObserve.call(this, target, options);
-            } else {
-                console.warn('MutationObserver.observe called with invalid target:', target);
-                return;
-            }
-        };
+        if (originalObserve && !MutationObserver.prototype._observePatched) {
+            MutationObserver.prototype.observe = function(target, options) {
+                if (!target) {
+                    console.warn('MutationObserver.observe called with null/undefined target');
+                    return;
+                }
+                if (typeof target.nodeType === 'undefined' || target.nodeType !== Node.ELEMENT_NODE) {
+                    console.warn('MutationObserver.observe called with invalid target type:', target);
+                    return;
+                }
+                try {
+                    return originalObserve.call(this, target, options);
+                } catch (e) {
+                    console.warn('MutationObserver.observe error:', e);
+                    return;
+                }
+            };
+            MutationObserver.prototype._observePatched = true;
+        }
     }
     
     const USER_ROLE = '{{ user_role }}';
@@ -1320,6 +1584,842 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // ===== EDIT PROFILE FUNCTIONALITY =====
+        let editProfileHistory = [];
+        let editProfileHistoryIndex = -1;
+        let currentEditProfileId = null;
+        let currentEditFormData = null;
+
+        // Undo/Redo functionality
+        function saveFormState() {
+            const form = document.getElementById('editProfileForm');
+            if (!form) return;
+            
+            const formData = new FormData(form);
+            const state = {};
+            for (let [key, value] of formData.entries()) {
+                if (key.includes('[]')) {
+                    if (!state[key]) state[key] = [];
+                    state[key].push(value);
+                } else {
+                    state[key] = value;
+                }
+            }
+            
+            // Also capture file inputs
+            const fileInputs = form.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                if (input.files && input.files.length > 0) {
+                    state[input.name + '_files'] = Array.from(input.files).map(f => f.name);
+                }
+            });
+            
+            // Remove old future states if we're not at the end
+            editProfileHistory = editProfileHistory.slice(0, editProfileHistoryIndex + 1);
+            editProfileHistory.push(JSON.parse(JSON.stringify(state)));
+            editProfileHistoryIndex = editProfileHistory.length - 1;
+            
+            // Limit history to 50 states
+            if (editProfileHistory.length > 50) {
+                editProfileHistory.shift();
+                editProfileHistoryIndex--;
+            }
+            
+            updateUndoRedoButtons();
+        }
+
+        function restoreFormState(state) {
+            const form = document.getElementById('editProfileForm');
+            if (!form) return;
+            
+            Object.keys(state).forEach(key => {
+                if (key.endsWith('_files')) return; // Skip file arrays
+                
+                const elements = form.querySelectorAll(`[name="${key}"]`);
+                elements.forEach(el => {
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        el.checked = (el.value === state[key]);
+                    } else if (el.tagName === 'SELECT') {
+                        el.value = state[key];
+                    } else {
+                        el.value = state[key];
+                    }
+                });
+            });
+        }
+
+        function undoFormState() {
+            if (editProfileHistoryIndex > 0) {
+                editProfileHistoryIndex--;
+                restoreFormState(editProfileHistory[editProfileHistoryIndex]);
+                updateUndoRedoButtons();
+            }
+        }
+
+        function redoFormState() {
+            if (editProfileHistoryIndex < editProfileHistory.length - 1) {
+                editProfileHistoryIndex++;
+                restoreFormState(editProfileHistory[editProfileHistoryIndex]);
+                updateUndoRedoButtons();
+            }
+        }
+
+        function updateUndoRedoButtons() {
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+            if (undoBtn) undoBtn.disabled = editProfileHistoryIndex <= 0;
+            if (redoBtn) redoBtn.disabled = editProfileHistoryIndex >= editProfileHistory.length - 1;
+        }
+
+        // Handle edit button click (delegated event listener)
+        document.addEventListener('click', async function(e) {
+            const editBtn = e.target.closest('.edit-profile-btn');
+            if (editBtn) {
+                const profileId = editBtn.getAttribute('data-profile-id');
+                const coopId = editBtn.getAttribute('data-coop-id');
+                
+                if (!profileId || profileId === '' || profileId === 'None') {
+                    console.error('Profile ID not found. Button data:', {
+                        profileId: profileId,
+                        coopId: coopId,
+                        button: editBtn
+                    });
+                    showNotification('Profile ID not found. Please refresh and try again.', 'error');
+                    return;
+                }
+                
+                currentEditProfileId = profileId;
+                await loadEditProfileForm(profileId, coopId);
+            }
+        });
+
+        // Load edit profile form
+        async function loadEditProfileForm(profileId, coopId) {
+            const editModalElement = document.getElementById('editProfileModal');
+            const editModal = new bootstrap.Modal(editModalElement, {
+                backdrop: true,
+                keyboard: true
+            });
+            const formContainer = document.getElementById('edit-profile-form-container');
+            
+            // Ensure modal appears above profile modal
+            editModalElement.style.zIndex = '10050';
+            
+            formContainer.innerHTML = '<div class="text-center" style="padding: 40px;"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading form...</p></div>';
+            editModal.show();
+            
+            // After modal is shown, adjust backdrop z-index
+            setTimeout(() => {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach((backdrop, index) => {
+                    if (index === backdrops.length - 1) {
+                        // Last backdrop (for edit modal) should be on top
+                        backdrop.style.zIndex = '10040';
+                    }
+                });
+            }, 100);
+            
+            try {
+                const response = await fetch(`/databank/api/get-profile-for-edit/${profileId}/`, {
+                    headers: { 'X-CSRFToken': getCsrfToken() }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reset history
+                    editProfileHistory = [];
+                    editProfileHistoryIndex = -1;
+                    
+                    // Render form (we'll create this dynamically)
+                    renderEditProfileForm(data, coopId);
+                    
+                    // Initialize form state tracking
+                    setTimeout(() => {
+                        saveFormState();
+                        // Add event listeners for undo/redo
+                        const form = document.getElementById('editProfileForm');
+                        if (form) {
+                            form.addEventListener('input', () => saveFormState());
+                            form.addEventListener('change', () => saveFormState());
+                        }
+                    }, 100);
+                } else {
+                    formContainer.innerHTML = `<div class="alert alert-danger">Error: ${data.error || 'Failed to load profile'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading profile for edit:', error);
+                formContainer.innerHTML = `<div class="alert alert-danger">Error loading profile details.</div>`;
+            }
+        }
+
+        // Render edit profile form (copied from profile_form.html structure)
+        function renderEditProfileForm(data, coopId) {
+            const formContainer = document.getElementById('edit-profile-form-container');
+            const profile = data.profile;
+            const financial = data.financial;
+            const officers = data.officers;
+            const members = data.members;
+            
+            const yearSpan = document.getElementById('edit-profile-year');
+            if (yearSpan && profile.report_year) {
+                yearSpan.textContent = `(Year: ${profile.report_year})`;
+            }
+            
+            // Create form HTML (simplified version - you may need to copy the full form structure)
+            formContainer.innerHTML = `
+                <form method="POST" enctype="multipart/form-data" id="editProfileForm" action="/databank/api/update-profile/${currentEditProfileId}/">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+                    <input type="hidden" name="report_year" value="${profile.report_year || ''}">
+                    
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="bi bi-info-circle"></i>
+                            <h5>General Information</h5>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-coop-name" class="required">Name of Cooperative</label>
+                            <input type="text" id="edit-coop-name" name="coop_name" value="${profile.coop_name || ''}" readonly style="background-color: #f8f9fa;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="edit-coop-address" class="required">Cooperative Address</label>
+                            <input type="text" id="edit-coop-address" name="coop_address" value="${profile.address || ''}" placeholder="Enter Cooperative Address" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-area-operation" class="required">Area of Operation</label>
+                                <select id="edit-area-operation" name="area_operation" required>
+                                    <option value="">Select area</option>
+                                    <option value="city" ${profile.operation_area === 'city' ? 'selected' : ''}>City</option>
+                                    <option value="municipal" ${profile.operation_area === 'municipal' ? 'selected' : ''}>Municipal</option>
+                                    <option value="provincial" ${profile.operation_area === 'provincial' ? 'selected' : ''}>Provincial</option>
+                                    <option value="regional" ${profile.operation_area === 'regional' ? 'selected' : ''}>Regional</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-business-activity" class="required">Business Activity</label>
+                                <input type="text" id="edit-business-activity" name="business_activity" value="${profile.business_activity || ''}" placeholder="e.g. Transport, Service" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-coop-contact" class="required">Contact Number</label>
+                                <input type="tel" id="edit-coop-contact" name="coop_contact" value="${profile.mobile_number || ''}" placeholder="09*********" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-coop-email" class="required">Email Address</label>
+                                <input type="email" id="edit-coop-email" name="coop_email" value="${profile.email_address || ''}" placeholder="sample@gmail.com" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-cda-reg-num" class="required">CDA Registration No.</label>
+                                <input type="text" id="edit-cda-reg-num" name="cda_reg_num" value="${profile.cda_registration_number || ''}" placeholder="****-*********" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-cda-reg-date" class="required">Registration Date</label>
+                                <input type="date" id="edit-cda-reg-date" name="cda_reg_date" value="${profile.cda_registration_date || ''}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">LCCDC Membership</label>
+                                <div class="form-check-group">
+                                    <label class="radio-container">Yes
+                                        <input type="radio" name="lccdc_membership" value="yes" ${profile.lccdc_membership ? 'checked' : ''} required>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <label class="radio-container">No
+                                        <input type="radio" name="lccdc_membership" value="no" ${!profile.lccdc_membership ? 'checked' : ''} required>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group lccdc-membership-date" style="display: ${profile.lccdc_membership ? 'block' : 'none'};">
+                                <label for="edit-lccdc-membership-date" class="required">LCCDC Membership Date</label>
+                                <input type="date" id="edit-lccdc-membership-date" name="lccdc_membership_date" value="${profile.lccdc_membership_date || ''}">
+                            </div>
+                            
+                            <div class="form-group lccdc-not-member" style="display: ${!profile.lccdc_membership ? 'block' : 'none'};">
+                                <p style="font-size:0.9rem; font-style:italic; margin:0;">Not an LCCDC member.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="edit-num-bod" class="required">No. of Board Directors</label>
+                                <input type="number" id="edit-num-bod" name="num_bod" value="${profile.board_of_directors_count || 0}" placeholder="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-num-se" class="required">No. of Salaried Employees</label>
+                                <input type="number" id="edit-num-se" name="num_se" value="${profile.salaried_employees_count || 0}" placeholder="0" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row checkbox-row">
+                            <div class="form-group">
+                                <label class="required">Certificate of Compliance</label>
+                                <div class="form-check-group">
+                                    <label class="radio-container">Yes
+                                        <input type="radio" name="coc" value="yes" ${profile.coc_renewal ? 'checked' : ''} required>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <label class="radio-container">No
+                                        <input type="radio" name="coc" value="no" ${!profile.coc_renewal ? 'checked' : ''} required>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="file-upload-single-modern coc-file-group" style="display: ${profile.coc_renewal ? 'block' : 'none'}; margin-top: 1rem;">
+                                    <div class="file-upload-area-single" id="edit-coc-upload-area">
+                                        <input type="file" id="edit-coc-file" name="coc_file" class="file-input-hidden" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" ${profile.coc_attachment_exists ? 'data-has-file="true"' : ''}>
+                                        <div class="file-upload-content-single">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                            <p class="upload-text-single">Upload Certificate of Compliance</p>
+                                            <p class="upload-hint-single">PDF, DOC, DOCX, XLS, XLSX, Images</p>
+                                            ${profile.coc_attachment_exists ? '<p class="upload-note"><i class="bi bi-check-circle"></i> File already uploaded (upload new to replace)</p>' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="file-name-display" id="edit-coc-file-name"></div>
+                                    ${profile.coc_attachment_exists ? '<button type="button" class="btn btn-sm btn-danger mt-2" onclick="document.getElementById(\'remove-coc-flag\').value=\'true\'">Remove Current File</button><input type="hidden" id="remove-coc-flag" name="remove_coc" value="false">' : ''}
+                                </div>
+                                <div class="not-available coc-not-available" style="display: ${!profile.coc_renewal ? 'block' : 'none'}; margin-top:.5rem;">
+                                    <p style="font-size:0.9rem; font-style:italic; margin:0;">Please upload renewed certificate ASAP.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="required">Certificate of Tax Exemption</label>
+                                <div class="form-check-group">
+                                    <label class="radio-container">Yes
+                                        <input type="radio" name="cte" value="yes" ${profile.cote_renewal ? 'checked' : ''} required>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <label class="radio-container">No
+                                        <input type="radio" name="cte" value="no" ${!profile.cote_renewal ? 'checked' : ''} required>
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="file-upload-single-modern cte-file-group" style="display: ${profile.cote_renewal ? 'block' : 'none'}; margin-top: 1rem;">
+                                    <div class="file-upload-area-single" id="edit-cte-upload-area">
+                                        <input type="file" id="edit-cte-file" name="cte_file" class="file-input-hidden" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" ${profile.cote_attachment_exists ? 'data-has-file="true"' : ''}>
+                                        <div class="file-upload-content-single">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                            <p class="upload-text-single">Upload Certificate of Tax Exemption</p>
+                                            <p class="upload-hint-single">PDF, DOC, DOCX, XLS, XLSX, Images</p>
+                                            ${profile.cote_attachment_exists ? '<p class="upload-note"><i class="bi bi-check-circle"></i> File already uploaded (upload new to replace)</p>' : ''}
+                                        </div>
+                                    </div>
+                                    <div class="file-name-display" id="edit-cte-file-name"></div>
+                                    ${profile.cote_attachment_exists ? '<button type="button" class="btn btn-sm btn-danger mt-2" onclick="document.getElementById(\'remove-cte-flag\').value=\'true\'">Remove Current File</button><input type="hidden" id="remove-cte-flag" name="remove_cte" value="false">' : ''}
+                                </div>
+                                <div class="not-available cte-not-available" style="display: ${!profile.cote_renewal ? 'block' : 'none'}; margin-top:.5rem;">
+                                    <p style="font-size:0.9rem; font-style:italic; margin:0;">Please upload renewed certificate ASAP.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="bi bi-currency-dollar"></i>
+                            <h5>Financial Records</h5>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="required">Please upload documents for Assets, Net Surplus, and Paid Up Capital AND enter the amounts below.</label>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="edit-assets-value" class="required">Assets (PHP)</label>
+                                    <input type="text" id="edit-assets-value" name="assets_value" value="${financial.assets || '0.00'}" inputmode="decimal" placeholder="0.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-paid-up-capital-value" class="required">Paid Up Capital (PHP)</label>
+                                    <input type="text" id="edit-paid-up-capital-value" name="paid_up_capital_value" value="${financial.paid_up_capital || '0.00'}" inputmode="decimal" placeholder="0.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit-net-surplus-value" class="required">Net Surplus (PHP)</label>
+                                    <input type="text" id="edit-net-surplus-value" name="net_surplus_value" value="${financial.net_surplus || '0.00'}" inputmode="decimal" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            
+                            <div class="file-upload-modern">
+                                <div class="file-upload-area" id="edit-financial-upload-area">
+                                    <input type="file" id="edit-financial-docs" name="financial_documents" class="file-input-hidden" multiple accept=".pdf,image/*,.doc,.docx,.xls,.xlsx">
+                                    <div class="file-upload-content">
+                                        <i class="bi bi-cloud-upload"></i>
+                                        <p class="upload-text">Click to upload or drag and drop</p>
+                                        <p class="upload-hint">PDF, DOC, DOCX, XLS, XLSX, Images (Multiple files allowed)</p>
+                                        ${financial.financial_attachments_exist ? '<p class="upload-note"><i class="bi bi-info-circle"></i> Previous documents exist. Uploading new files will append to the record.</p>' : ''}
+                                    </div>
+                                </div>
+                                <div id="edit-file-preview-container" class="file-preview-container">
+                                    <div class="no-files">No files selected</div>
+                                </div>
+                                ${financial.financial_attachments_exist ? '<button type="button" class="btn btn-sm btn-danger mt-2" onclick="document.getElementById(\'remove-financial-flag\').value=\'true\'">Remove Current Files</button><input type="hidden" id="remove-financial-flag" name="remove_financial" value="false">' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="bi bi-people"></i>
+                            <h5>Cooperative Officers</h5>
+                        </div>
+                        <p class="input-instruction">These officers are already registered. (Read-only)</p>
+                        <div class="input-table-container">
+                            <table class="input-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                        <th>Gender</th>
+                                        <th>Mobile Number</th>
+                                        <th>Email</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${officers.map(o => `
+                                        <tr>
+                                            <td><input type="text" value="${o.fullname || ''}" readonly style="background-color: #f8f9fa;"></td>
+                                            <td><input type="text" value="${o.position || ''}" readonly style="background-color: #f8f9fa;"></td>
+                                            <td><input type="text" value="${o.gender || ''}" readonly style="background-color: #f8f9fa;"></td>
+                                            <td><input type="text" value="${o.mobile_number || ''}" readonly style="background-color: #f8f9fa;"></td>
+                                            <td><input type="email" value="${o.email || ''}" readonly style="background-color: #f8f9fa;"></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="section-header">
+                            <i class="bi bi-person-badge"></i>
+                            <h5>Cooperative Members</h5>
+                        </div>
+                        <p class="input-instruction">List of members. (At least one entry required)</p>
+                        <div class="input-table-container">
+                            <table class="input-table">
+                                <thead>
+                                    <tr>
+                                        <th class="required">Name</th>
+                                        <th class="required">Gender</th>
+                                        <th class="required">Mobile Number</th>
+                                        <th style="width: 50px; text-align: center;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit-members-tbody">
+                                    ${members.map(m => `
+                                        <tr>
+                                            <td><input type="text" name="member_name[]" value="${m.fullname || ''}" placeholder="Full Name" required></td>
+                                            <td>
+                                                <select name="member_gender[]" required>
+                                                    <option value="">Select</option>
+                                                    <option value="Male" ${(m.gender || '').toLowerCase() === 'male' ? 'selected' : ''}>Male</option>
+                                                    <option value="Female" ${(m.gender || '').toLowerCase() === 'female' ? 'selected' : ''}>Female</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" name="member_mobile[]" value="${m.mobile_number || ''}" placeholder="09xxxxxxxxx" required></td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                    ${members.length === 0 ? `
+                                        <tr>
+                                            <td><input type="text" name="member_name[]" placeholder="Full Name" required></td>
+                                            <td>
+                                                <select name="member_gender[]" required>
+                                                    <option value="">Select</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" name="member_mobile[]" placeholder="09xxxxxxxxx" required></td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ` : ''}
+                                </tbody>
+                            </table>
+                            <button type="button" class="add-row-btn"><i class="bi bi-plus-circle"></i> Add Row</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="submit-btn" id="saveEditProfileBtn">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <i class="bi bi-save"></i> Save Profile
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            // Initialize form handlers
+            initializeEditFormHandlers();
+            
+            // Also set up event listener for add row button (backup method)
+            setTimeout(() => {
+                const addRowBtn = document.querySelector('#edit-profile-form-container .add-row-btn');
+                if (addRowBtn) {
+                    // Remove existing onclick and add event listener
+                    addRowBtn.removeAttribute('onclick');
+                    addRowBtn.addEventListener('click', function() {
+                        window.addMemberRow();
+                    });
+                }
+            }, 100);
+        }
+
+        // Make addMemberRow globally accessible
+        window.addMemberRow = function() {
+            const tbody = document.getElementById('edit-members-tbody');
+            if (!tbody) {
+                console.error('edit-members-tbody not found');
+                return;
+            }
+            const firstRow = tbody.querySelector('tr');
+            if (!firstRow) {
+                console.error('No rows found in tbody');
+                return;
+            }
+            const newRow = firstRow.cloneNode(true);
+            newRow.querySelectorAll('input').forEach(input => {
+                input.value = '';
+                // Remove any validation states
+                input.classList.remove('is-invalid', 'is-valid');
+            });
+            newRow.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+                select.classList.remove('is-invalid', 'is-valid');
+            });
+            // Ensure remove button is present in new row
+            const actionCell = newRow.querySelector('td:last-child');
+            if (actionCell && !actionCell.querySelector('.remove-row-btn')) {
+                actionCell.innerHTML = '<button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;"><i class="bi bi-x-circle"></i></button>';
+                actionCell.style.textAlign = 'center';
+            }
+            tbody.appendChild(newRow);
+            updateRemoveButtonsVisibility(tbody);
+        };
+        
+        // Function to update remove button visibility
+        function updateRemoveButtonsVisibility(tbody) {
+            const rows = tbody.querySelectorAll('tr');
+            const rowCount = rows.length;
+            rows.forEach(row => {
+                const removeBtn = row.querySelector('.remove-row-btn');
+                if (removeBtn) {
+                    if (rowCount <= 1) {
+                        removeBtn.style.display = 'none';
+                    } else {
+                        removeBtn.style.display = 'inline-block';
+                    }
+                }
+            });
+        }
+
+        function initializeEditFormHandlers() {
+            // Add row button event listener (using same approach as profile_form.html)
+            const addRowBtn = document.querySelector('#edit-profile-form-container .add-row-btn');
+            if (addRowBtn) {
+                addRowBtn.addEventListener('click', function() {
+                    // Use the same logic as profile_form.html
+                    const tableBody = this.previousElementSibling.querySelector('tbody');
+                    if (!tableBody) {
+                        // Fallback to using the ID
+                        const tbody = document.getElementById('edit-members-tbody');
+                        if (tbody) {
+                            const firstRow = tbody.querySelector('tr');
+                            if (firstRow) {
+                                const newRow = firstRow.cloneNode(true);
+                                newRow.querySelectorAll('input').forEach(input => {
+                                    input.value = '';
+                                    input.classList.remove('is-invalid', 'is-valid');
+                                });
+                                newRow.querySelectorAll('select').forEach(select => {
+                                    select.selectedIndex = 0;
+                                    select.classList.remove('is-invalid', 'is-valid');
+                                });
+                                // Ensure remove button is present in new row
+                                const actionCell = newRow.querySelector('td:last-child');
+                                if (actionCell && !actionCell.querySelector('.remove-row-btn')) {
+                                    actionCell.innerHTML = '<button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;"><i class="bi bi-x-circle"></i></button>';
+                                    actionCell.style.textAlign = 'center';
+                                }
+                                tbody.appendChild(newRow);
+                                updateRemoveButtonsVisibility(tbody);
+                            }
+                        }
+                        return;
+                    }
+                    const firstRow = tableBody.querySelector('tr');
+                    if (!firstRow) return;
+                    
+                    const newRow = firstRow.cloneNode(true);
+                    newRow.querySelectorAll('input').forEach(input => {
+                        input.value = '';
+                        input.classList.remove('is-invalid', 'is-valid');
+                    });
+                    newRow.querySelectorAll('select').forEach(select => {
+                        select.selectedIndex = 0;
+                        select.classList.remove('is-invalid', 'is-valid');
+                    });
+                    // Ensure remove button is present in new row
+                    const actionCell = newRow.querySelector('td:last-child');
+                    if (actionCell && !actionCell.querySelector('.remove-row-btn')) {
+                        actionCell.innerHTML = '<button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;"><i class="bi bi-x-circle"></i></button>';
+                        actionCell.style.textAlign = 'center';
+                    }
+                    tableBody.appendChild(newRow);
+                    updateRemoveButtonsVisibility(tableBody);
+                });
+            }
+            
+            // LCCDC membership toggle
+            const lccdcRadios = document.querySelectorAll('#editProfileForm input[name="lccdc_membership"]');
+            const lccdcDateGroup = document.querySelector('#editProfileForm .lccdc-membership-date');
+            const lccdcNotMember = document.querySelector('#editProfileForm .lccdc-not-member');
+            
+            lccdcRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'yes') {
+                        if (lccdcDateGroup) lccdcDateGroup.style.display = 'block';
+                        if (lccdcNotMember) lccdcNotMember.style.display = 'none';
+                    } else {
+                        if (lccdcDateGroup) lccdcDateGroup.style.display = 'none';
+                        if (lccdcNotMember) lccdcNotMember.style.display = 'block';
+                    }
+                });
+            });
+            
+            // Certificate toggles
+            const cocRadios = document.querySelectorAll('#editProfileForm input[name="coc"]');
+            const cocFileGroup = document.querySelector('#editProfileForm .coc-file-group');
+            const cocNotAvail = document.querySelector('#editProfileForm .coc-not-available');
+            
+            cocRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'yes') {
+                        if (cocFileGroup) cocFileGroup.style.display = 'block';
+                        if (cocNotAvail) cocNotAvail.style.display = 'none';
+                    } else {
+                        if (cocFileGroup) cocFileGroup.style.display = 'none';
+                        if (cocNotAvail) cocNotAvail.style.display = 'block';
+                    }
+                });
+            });
+            
+            const cteRadios = document.querySelectorAll('#editProfileForm input[name="cte"]');
+            const cteFileGroup = document.querySelector('#editProfileForm .cte-file-group');
+            const cteNotAvail = document.querySelector('#editProfileForm .cte-not-available');
+            
+            cteRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'yes') {
+                        if (cteFileGroup) cteFileGroup.style.display = 'block';
+                        if (cteNotAvail) cteNotAvail.style.display = 'none';
+                    } else {
+                        if (cteFileGroup) cteFileGroup.style.display = 'none';
+                        if (cteNotAvail) cteNotAvail.style.display = 'block';
+                    }
+                });
+            });
+            
+            // File upload handlers (similar to profile_form.html)
+            setupFileUploadHandlers();
+            
+            // Set up remove row button handlers using event delegation
+            const formContainer = document.getElementById('edit-profile-form-container');
+            if (formContainer) {
+                formContainer.addEventListener('click', function(e) {
+                    const removeBtn = e.target.closest('.remove-row-btn');
+                    if (removeBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const row = removeBtn.closest('tr');
+                        if (!row) return;
+                        
+                        const tbody = row.closest('tbody');
+                        if (!tbody) return;
+                        
+                        // Check if this is the last row
+                        const rowCount = tbody.querySelectorAll('tr').length;
+                        if (rowCount <= 1) {
+                            showNotification('At least one member is required', 'warning');
+                            return;
+                        }
+                        
+                        // Remove the row
+                        row.remove();
+                        updateRemoveButtonsVisibility(tbody);
+                    }
+                });
+            }
+            
+            // Update remove button visibility on initial load
+            const membersTbody = document.getElementById('edit-members-tbody');
+            if (membersTbody) {
+                updateRemoveButtonsVisibility(membersTbody);
+            }
+            
+            // Form submission
+            const form = document.getElementById('editProfileForm');
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const saveBtn = document.getElementById('saveEditProfileBtn');
+                    const spinner = saveBtn.querySelector('.spinner-border');
+                    
+                    saveBtn.disabled = true;
+                    if (spinner) spinner.classList.remove('d-none');
+                    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                    
+                    const formData = new FormData(form);
+                    
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRFToken': getCsrfToken()
+                            },
+                            credentials: 'include'
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            showNotification('Profile updated successfully!', 'success');
+                            bootstrap.Modal.getInstance(document.getElementById('editProfileModal')).hide();
+                            // Reload profile modal if open
+                            if (currentEditProfileId) {
+                                setTimeout(() => {
+                                    loadProfileModal(currentEditProfileId, null);
+                                }, 500);
+                            }
+                            location.reload();
+                        } else {
+                            showNotification('Error: ' + (data.error || 'Failed to update profile'), 'error');
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';
+                            if (spinner) spinner.classList.add('d-none');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showNotification('An error occurred while saving. Please try again.', 'error');
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';
+                        if (spinner) spinner.classList.add('d-none');
+                    }
+                });
+            }
+        }
+
+        function setupFileUploadHandlers() {
+            // Single file uploads (CoC, CTE) - similar to profile_form.html
+            const cocFile = document.getElementById('edit-coc-file');
+            const cteFile = document.getElementById('edit-cte-file');
+            
+            [cocFile, cteFile].forEach(fileInput => {
+                if (!fileInput) return;
+                const display = fileInput.parentElement.querySelector('.file-name-display');
+                
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) {
+                        if (display) {
+                            display.innerHTML = `
+                                <div class="file-name-item">
+                                    <div class="file-name-content">
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="file-name-text">${this.files[0].name}</span>
+                                    </div>
+                                    <button type="button" class="remove-single-file-btn" onclick="this.parentElement.parentElement.remove(); this.closest('input[type=file]').value='';">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            `;
+                            display.classList.add('has-file');
+                        }
+                    }
+                });
+            });
+            
+            // Financial documents (multiple files)
+            const financialFileInput = document.getElementById('edit-financial-docs');
+            const previewContainer = document.getElementById('edit-file-preview-container');
+            
+            if (financialFileInput && previewContainer) {
+                window.editFinancialFiles = [];
+                
+                financialFileInput.addEventListener('change', function() {
+                    const newFiles = Array.from(this.files);
+                    newFiles.forEach(file => {
+                        if (!window.editFinancialFiles.some(f => f.name === file.name && f.size === file.size)) {
+                            window.editFinancialFiles.push(file);
+                        }
+                    });
+                    updateFinancialFileInput();
+                    renderFinancialPreviews();
+                });
+                
+                function updateFinancialFileInput() {
+                    const dt = new DataTransfer();
+                    window.editFinancialFiles.forEach(file => dt.items.add(file));
+                    financialFileInput.files = dt.files;
+                }
+                
+                function renderFinancialPreviews() {
+                    previewContainer.innerHTML = '';
+                    if (window.editFinancialFiles.length === 0) {
+                        previewContainer.innerHTML = '<div class="no-files">No files selected</div>';
+                        return;
+                    }
+                    window.editFinancialFiles.forEach((file, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'file-preview-item';
+                        item.innerHTML = `
+                            <div class="file-info-wrapper">
+                                <i class="bi bi-file-earmark-text"></i>
+                                <span class="file-name">${file.name}</span>
+                            </div>
+                            <button type="button" class="remove-file-btn" data-index="${index}">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        `;
+                        const removeBtn = item.querySelector('.remove-file-btn');
+                        removeBtn.addEventListener('click', function() {
+                            window.editFinancialFiles.splice(parseInt(this.getAttribute('data-index')), 1);
+                            updateFinancialFileInput();
+                            renderFinancialPreviews();
+                        });
+                        previewContainer.appendChild(item);
+                    });
+                }
+            }
+        }
+
+        // Undo/Redo button handlers
+        document.getElementById('undo-btn')?.addEventListener('click', undoFormState);
+        document.getElementById('redo-btn')?.addEventListener('click', redoFormState);
 
         // ===== SEARCH FUNCTIONALITY =====
         const searchCoopInput = document.getElementById('searchCoopInput');

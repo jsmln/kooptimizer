@@ -856,6 +856,7 @@
                                             <th class="required">Name</th>
                                             <th class="required">Gender</th>
                                             <th class="required">Mobile Number</th>
+                                            <th style="width: 50px; text-align: center;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -875,6 +876,11 @@
                                             <td><input type="text" name="member_mobile[]"
                                                     value="{{ member.mobile_number }}" placeholder="09xxxxxxxxx"
                                                     required></td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                         {# Create Mode: Show empty rows #}
@@ -891,6 +897,11 @@
                                             </td>
                                             <td><input type="text" name="member_mobile[]" placeholder="09xxxxxxxxx"
                                                     required></td>
+                                            <td style="text-align: center;">
+                                                <button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                         {% endif %}
                                     </tbody>
@@ -1265,13 +1276,73 @@
                     const newRow = firstRow.cloneNode(true);
                     newRow.querySelectorAll('input').forEach(input => {
                         input.value = '';
+                        input.classList.remove('is-invalid', 'is-valid');
                     });
                     newRow.querySelectorAll('select').forEach(select => {
                         select.selectedIndex = 0;
+                        select.classList.remove('is-invalid', 'is-valid');
                     });
+                    // Ensure remove button is present in new row
+                    const actionCell = newRow.querySelector('td:last-child');
+                    if (actionCell && !actionCell.querySelector('.remove-row-btn')) {
+                        actionCell.innerHTML = '<button type="button" class="remove-row-btn" title="Remove row" style="background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.9rem;"><i class="bi bi-x-circle"></i></button>';
+                        actionCell.style.textAlign = 'center';
+                    }
                     tableBody.appendChild(newRow);
+                    updateRemoveButtonsVisibilityProfile(tableBody);
                 });
             });
+            
+            // Function to update remove button visibility
+            function updateRemoveButtonsVisibilityProfile(tbody) {
+                const rows = tbody.querySelectorAll('tr');
+                const rowCount = rows.length;
+                rows.forEach(row => {
+                    const removeBtn = row.querySelector('.remove-row-btn');
+                    if (removeBtn) {
+                        if (rowCount <= 1) {
+                            removeBtn.style.display = 'none';
+                        } else {
+                            removeBtn.style.display = 'inline-block';
+                        }
+                    }
+                });
+            }
+            
+            // Set up remove row button handlers using event delegation
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                profileForm.addEventListener('click', function(e) {
+                    const removeBtn = e.target.closest('.remove-row-btn');
+                    if (removeBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const row = removeBtn.closest('tr');
+                        if (!row) return;
+                        
+                        const tbody = row.closest('tbody');
+                        if (!tbody) return;
+                        
+                        // Check if this is the last row
+                        const rowCount = tbody.querySelectorAll('tr').length;
+                        if (rowCount <= 1) {
+                            alert('At least one member is required');
+                            return;
+                        }
+                        
+                        // Remove the row
+                        row.remove();
+                        updateRemoveButtonsVisibilityProfile(tbody);
+                    }
+                });
+                
+                // Update remove button visibility on initial load
+                const membersTbody = profileForm.querySelector('.input-table tbody');
+                if (membersTbody) {
+                    updateRemoveButtonsVisibilityProfile(membersTbody);
+                }
+            }
         })();
 
         // --- File upload additive + preview for financial docs ---

@@ -63,24 +63,71 @@
         </div>
     </div>
 
+    <!-- KPI Cards Grid -->
     <div class="stats-grid">
-        
         <div class="stat-card">
             <div class="card-icon red-bg"><i class="bi bi-person-badge-fill"></i></div>
             <div class="card-content">
                 <p class="label">Total Officers</p>
                 <h3 class="value" id="stat-officers">0</h3>
+                <small class="text-muted">Active officers</small>
             </div>
         </div>
 
-        <div class="stat-card wide-card">
+        <div class="stat-card">
             <div class="card-icon blue-bg"><i class="bi bi-people-fill"></i></div>
             <div class="card-content">
                 <p class="label">Total Members</p>
                 <h3 class="value" id="stat-members">0</h3>
+                <small class="text-muted">Registered members</small>
             </div>
-            
-            <div class="gender-breakdown" id="genderBreakdown">
+        </div>
+
+        <div class="stat-card">
+            <div class="card-icon green-bg"><i class="bi bi-briefcase-fill"></i></div>
+            <div class="card-content">
+                <p class="label">Employees</p>
+                <h3 class="value" id="stat-employees">0</h3>
+                <small class="text-muted">Salaried staff</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="card-icon orange-bg"><i class="bi bi-person-badge"></i></div>
+            <div class="card-content">
+                <p class="label">Board of Directors</p>
+                <h3 class="value" id="stat-board-directors">0</h3>
+                <small class="text-muted">Board members</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="card-icon purple-bg"><i class="bi bi-wallet2"></i></div>
+            <div class="card-content">
+                <p class="label">Total Assets</p>
+                <h3 class="value" id="stat-assets">₱0</h3>
+                <small class="text-muted" id="stat-assets-year">Latest financial year</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="card-icon teal-bg"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="card-content">
+                <p class="label">Net Surplus</p>
+                <h3 class="value" id="stat-surplus">₱0</h3>
+                <small class="text-muted" id="stat-surplus-year">Latest financial year</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Gender Distribution Card -->
+    <div class="card-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="card-header-custom">
+            <h3>Member Gender Distribution</h3>
+        </div>
+        <div style="display: flex; gap: 30px; align-items: center;">
+            <!-- Progress Bars on Left -->
+            <div class="gender-breakdown-full" id="genderBreakdown" style="flex: 1;">
                 <div class="gender-item">
                     <div class="gender-label"><i class="bi bi-gender-male"></i> Male</div>
                     <div class="gender-bar-container">
@@ -95,12 +142,66 @@
                     </div>
                     <span class="gender-count" id="femaleCount">0</span>
                 </div>
+                <div class="gender-item">
+                    <div class="gender-label"><i class="bi bi-gender-ambiguous"></i> Others</div>
+                    <div class="gender-bar-container">
+                        <div class="gender-bar others-bar" id="othersBar" style="width: 0%;"></div>
+                    </div>
+                    <span class="gender-count" id="othersCount">0</span>
+                </div>
+            </div>
+            
+            <!-- Donut Chart on Right -->
+            <div class="chart-container-small" style="flex: 1; max-width: 300px;">
+                <canvas id="genderRatioChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="content-split">
-        
+    <!-- Year-over-Year Growth Chart - Separate Row -->
+    <div class="card-section chart-container" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+        <div class="card-header-custom">
+            <h3>Year-over-Year Growth</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="financeCurrentView" class="current-view-badge">All Data</span>
+                <div class="chart-filter-wrapper">
+                    <button id="financeFilterToggle" class="filter-icon-btn" type="button" title="Filter Metrics">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <div id="financeFilterControls" class="chart-filter-dropdown" style="display: none;">
+                        <div class="dropdown-header-text">Select View:</div>
+                        <div class="filter-option active" onclick="applyFinancialFilter('all', this)">
+                            <span>All Data</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        <div class="filter-option" onclick="applyFinancialFilter('assets', this)">
+                            <span><span class="dot asset-dot"></span> Assets</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        <div class="filter-option" onclick="applyFinancialFilter('capital', this)">
+                            <span><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        <div class="filter-option" onclick="applyFinancialFilter('surplus', this)">
+                            <span><span class="dot surplus-dot"></span> Net Surplus</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-legend-inline">
+            <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
+            <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
+            <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
+        </div>
+        <div class="chart-wrapper" style="height: 350px;">
+            <canvas id="financialTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Quick Actions and Recent Activity -->
+    <div class="content-split" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
         <div class="card-section">
             <div class="section-header">
                 <h3>Quick Actions</h3>
@@ -121,31 +222,67 @@
         <div class="card-section">
             <div class="section-header">
                 <h3>Recent Activity</h3>
-                <a href="#" class="view-all">View All</a>
+                <a href="{% url 'cooperatives:profile_form' %}" class="view-all">View All</a>
             </div>
             <div class="timeline" id="coopActivityTimeline">
                 <div class="text-center text-muted p-3">Loading activities...</div>
             </div>
         </div>
-
     </div>
 
-    <div class="charts-section" style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-        <div class="chart-card" style="min-height: 300px;">
-            <div class="card-header-custom">
-                <h3>Financial Trend (Last 5 Years)</h3>
+    <div class="content-split" style="margin-top: 1.5rem;">
+        <!-- Document Status and Gender Demographics -->
+        <div style="display: flex; flex-direction: column; gap: 25px;">
+            <!-- Document Status -->
+            <div class="card-section">
+                <div class="card-header-custom">
+                    <h3>Document Status</h3>
+                </div>
+                <div class="compliance-list" id="documentStatusList">
+                    <div class="compliance-item clickable-compliance" data-doc-type="coc" style="cursor: pointer;">
+                        <div class="compliance-info">
+                            <span class="compliance-label">Certificate of Compliance (COC)</span>
+                            <small class="text-muted">Required for operation</small>
+                        </div>
+                        <span class="status-pill" id="cocStatus">Loading...</span>
+                    </div>
+                    <div class="compliance-item clickable-compliance" data-doc-type="cote" style="cursor: pointer;">
+                        <div class="compliance-info">
+                            <span class="compliance-label">Tax Exemption (COTE)</span>
+                            <small class="text-muted">Bureau of Internal Revenue</small>
+                        </div>
+                        <span class="status-pill" id="coteStatus">Loading...</span>
+                    </div>
+                    <div class="compliance-item clickable-compliance" data-doc-type="lccdc" style="cursor: pointer;">
+                        <div class="compliance-info">
+                            <span class="compliance-label">LCCDC Membership</span>
+                            <small class="text-muted">Council Membership</small>
+                        </div>
+                        <span class="status-pill" id="lccdcStatus">Loading...</span>
+                    </div>
+                </div>
             </div>
-            <div class="chart-wrapper" style="height: 250px;">
-                <canvas id="coopFinancialChart"></canvas>
-            </div>
+
         </div>
 
-        <div class="chart-card" style="min-height: 300px;">
+        <!-- Officers List -->
+        <div class="card-section">
             <div class="card-header-custom">
-                <h3>Assets Growth</h3>
+                <h3>Officers</h3>
+                <a href="#" class="link-text" id="viewProfileBtnOfficers">View Full Profile</a>
             </div>
-            <div class="chart-wrapper" style="height: 250px;">
-                <canvas id="coopAssetsChart"></canvas>
+            <div class="table-responsive">
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody id="officersTableBody">
+                        <tr><td colspan="2" class="text-center text-muted">Loading officers...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -252,113 +389,331 @@
 </div>
 
 <script>
-    let coopFinancialChart, coopAssetsChart;
+    let financialChart;
+    let genderChart;
+
+    // Global function for financial filter
+    window.applyFinancialFilter = function(type, clickedElement) {
+        if (!financialChart) return;
+
+        // Visibility Logic
+        if (type === 'all') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = false;
+        } else if (type === 'assets') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'capital') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'surplus') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = false;
+        }
+
+        financialChart.update();
+
+        // UI Updates
+        const allOptions = document.querySelectorAll('#financeFilterControls .filter-option');
+        allOptions.forEach(opt => opt.classList.remove('active'));
+        clickedElement.classList.add('active');
+
+        // Label Update
+        const labelMap = { 'all': 'All Data', 'assets': 'Assets', 'capital': 'Paid-Up Capital', 'surplus': 'Net Surplus' };
+        document.getElementById('financeCurrentView').textContent = labelMap[type];
+
+        // Close Dropdown
+        document.getElementById('financeFilterControls').style.display = 'none';
+        document.getElementById('financeFilterToggle').classList.remove('active');
+    };
 
     async function loadCooperativeDashboardData() {
         try {
             // Load stats
             const statsResponse = await fetch('{% url "dashboard:dashboard_stats_api" %}');
+            if (!statsResponse.ok) {
+                throw new Error(`Stats API error: ${statsResponse.status}`);
+            }
             const statsData = await statsResponse.json();
-            updateCooperativeStats(statsData);
+            if (statsData.error) {
+                console.error('Stats API error:', statsData.error);
+            } else {
+                updateCooperativeStats(statsData);
+            }
 
             // Load member demographics
             const demographicsResponse = await fetch('{% url "dashboard:dashboard_member_demographics_api" %}');
+            if (!demographicsResponse.ok) {
+                throw new Error(`Demographics API error: ${demographicsResponse.status}`);
+            }
             const demographicsData = await demographicsResponse.json();
-            updateMemberDemographics(demographicsData);
+            if (demographicsData.error) {
+                console.error('Demographics API error:', demographicsData.error);
+            } else {
+                updateMemberDemographics(demographicsData);
+            }
 
-            // Load charts data
-            const chartsResponse = await fetch('{% url "dashboard:dashboard_charts_api" %}');
-            const chartsData = await chartsResponse.json();
-            initializeCooperativeCharts(chartsData);
+            // Load officer-specific data (document status, officers, financial growth)
+            const officerDataResponse = await fetch('{% url "dashboard:dashboard_officer_data_api" %}');
+            if (!officerDataResponse.ok) {
+                throw new Error(`Officer Data API error: ${officerDataResponse.status}`);
+            }
+            const officerData = await officerDataResponse.json();
+            if (officerData.error) {
+                console.error('Officer Data API error:', officerData.error);
+            } else {
+                updateDocumentStatus(officerData.document_status);
+                updateOfficersList(officerData.officers);
+                initializeFinancialChart(officerData.financial_growth);
+                updateKPICards(officerData);
+            }
 
             // Load recent activity
             const activityResponse = await fetch('{% url "dashboard:dashboard_recent_activity_api" %}');
-            const activityData = await activityResponse.json();
-            updateCooperativeActivity(activityData.activities);
+            if (activityResponse.ok) {
+                const activityData = await activityResponse.json();
+                if (!activityData.error) {
+                    updateCooperativeActivity(activityData.activities);
+                }
+            }
         } catch (error) {
             console.error('Error loading cooperative dashboard data:', error);
         }
     }
 
     function updateCooperativeStats(data) {
+        // This function is kept for backward compatibility but may not be used
+        // KPI cards are now updated via updateKPICards
+    }
+
+    function updateKPICards(data) {
+        // Update KPI cards with comprehensive data
         document.getElementById('stat-officers').textContent = data.total_officers || 0;
         document.getElementById('stat-members').textContent = data.total_members || 0;
+        document.getElementById('stat-employees').textContent = data.kpi_data?.total_employees || 0;
+        document.getElementById('stat-board-directors').textContent = data.kpi_data?.board_directors || 0;
+        
+        // Format and display financial KPIs
+        const assets = parseFloat(data.financial_kpis?.total_assets || 0);
+        const surplus = parseFloat(data.financial_kpis?.net_surplus || 0);
+        const financialYear = data.financial_kpis?.financial_year || 'N/A';
+        
+        let assetsText;
+        if (assets >= 1000000) {
+            assetsText = `₱ ${(assets / 1000000).toFixed(1)}M`;
+        } else if (assets >= 1000) {
+            assetsText = `₱ ${(assets / 1000).toFixed(0)}K`;
+        } else {
+            assetsText = `₱ ${assets.toFixed(0)}`;
+        }
+        
+        let surplusText;
+        if (Math.abs(surplus) >= 1000000) {
+            surplusText = `₱ ${(surplus / 1000000).toFixed(1)}M`;
+        } else if (Math.abs(surplus) >= 1000) {
+            surplusText = `₱ ${(surplus / 1000).toFixed(0)}K`;
+        } else {
+            surplusText = `₱ ${surplus.toFixed(0)}`;
+        }
+        
+        document.getElementById('stat-assets').textContent = assetsText;
+        document.getElementById('stat-surplus').textContent = surplusText;
+        document.getElementById('stat-assets-year').textContent = `Year ${financialYear}`;
+        document.getElementById('stat-surplus-year').textContent = `Year ${financialYear}`;
     }
 
     function updateMemberDemographics(data) {
         const total = data.total || 1;
         const malePercent = total > 0 ? (data.male / total) * 100 : 0;
         const femalePercent = total > 0 ? (data.female / total) * 100 : 0;
+        const othersPercent = total > 0 ? (data.others / total) * 100 : 0;
 
         document.getElementById('maleCount').textContent = data.male || 0;
         document.getElementById('femaleCount').textContent = data.female || 0;
+        document.getElementById('othersCount').textContent = data.others || 0;
         document.getElementById('maleBar').style.width = `${malePercent}%`;
         document.getElementById('femaleBar').style.width = `${femalePercent}%`;
+        document.getElementById('othersBar').style.width = `${othersPercent}%`;
+
+        // Update gender chart
+        const ctxGender = document.getElementById('genderRatioChart');
+        if (ctxGender) {
+            if (genderChart) genderChart.destroy();
+            genderChart = new Chart(ctxGender, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Male', 'Female', 'Others'],
+                    datasets: [{
+                        data: [data.male || 0, data.female || 0, data.others || 0],
+                        backgroundColor: ['#4299e1', '#ed64a6', '#a0aec0'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
     }
 
-    function initializeCooperativeCharts(data) {
-        // Financial Trend Chart
-        const ctxFin = document.getElementById('coopFinancialChart');
-        if (ctxFin) {
-            const trend = data.financial_trend || {};
-            const trendLabels = Object.keys(trend).sort();
-            const trendValues = trendLabels.map(year => (trend[year] || 0) / 1000000);
-            
-            if (coopFinancialChart) coopFinancialChart.destroy();
-            coopFinancialChart = new Chart(ctxFin.getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: trendLabels.length > 0 ? trendLabels : ['No Data'],
-                    datasets: [{
-                        label: 'Net Surplus (M)',
-                        data: trendValues.length > 0 ? trendValues : [0],
-                        borderColor: '#1a237e',
-                        backgroundColor: 'rgba(26, 35, 126, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
-                }
-            });
+    function updateDocumentStatus(status) {
+        // COC Status
+        const cocStatusEl = document.getElementById('cocStatus');
+        if (status.coc.active) {
+            cocStatusEl.textContent = 'Active';
+            cocStatusEl.className = 'status-pill success';
+        } else {
+            cocStatusEl.textContent = 'Needs Renewal';
+            cocStatusEl.className = 'status-pill danger';
         }
 
-        // Assets Growth Chart
-        const ctxAssets = document.getElementById('coopAssetsChart');
-        if (ctxAssets) {
-            const trend = data.financial_trend || {};
-            const trendLabels = Object.keys(trend).sort();
-            // Get assets data (we'll need to add this to the API, for now use net surplus as proxy)
-            const assetsValues = trendLabels.map(year => {
-                // This is a placeholder - ideally we'd have separate assets data
-                return ((trend[year] || 0) * 10) / 1000000; // Approximate
-            });
-            
-            if (coopAssetsChart) coopAssetsChart.destroy();
-            coopAssetsChart = new Chart(ctxAssets.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: trendLabels.length > 0 ? trendLabels : ['No Data'],
-                    datasets: [{
-                        label: 'Assets (M)',
-                        data: assetsValues.length > 0 ? assetsValues : [0],
-                        backgroundColor: '#a91e2c',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+        // COTE Status
+        const coteStatusEl = document.getElementById('coteStatus');
+        if (status.cote.active) {
+            coteStatusEl.textContent = 'Active';
+            coteStatusEl.className = 'status-pill success';
+        } else {
+            coteStatusEl.textContent = 'Needs Renewal';
+            coteStatusEl.className = 'status-pill danger';
+        }
+
+        // LCCDC Status
+        const lccdcStatusEl = document.getElementById('lccdcStatus');
+        if (status.lccdc.active) {
+            lccdcStatusEl.textContent = 'Member';
+            lccdcStatusEl.className = 'status-pill success';
+        } else {
+            lccdcStatusEl.textContent = 'Not Member';
+            lccdcStatusEl.className = 'status-pill danger';
+        }
+    }
+
+    function updateOfficersList(officers) {
+        const tbody = document.getElementById('officersTableBody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+        
+        if (officers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No officers found</td></tr>';
+            return;
+        }
+
+        officers.forEach(officer => {
+            const row = document.createElement('tr');
+            row.style.cursor = 'pointer';
+            row.className = 'officer-row';
+            row.innerHTML = `
+                <td class="fw-bold">${officer.name}</td>
+                <td><span class="badge-position">${officer.position}</span></td>
+            `;
+            row.addEventListener('click', function() {
+                const modal = document.getElementById('profile-modal');
+                if (modal) {
+                    modal.classList.add('visible');
                 }
             });
-        }
+            tbody.appendChild(row);
+        });
+    }
+
+    function initializeFinancialChart(financialData) {
+        const ctxFinance = document.getElementById('financialTrendChart');
+        if (!ctxFinance) return;
+
+        // Prepare data
+        const years = Object.keys(financialData.assets || {}).sort();
+        const assetsData = years.map(year => financialData.assets[year] || 0);
+        const capitalData = years.map(year => financialData.capital[year] || 0);
+        const surplusData = years.map(year => financialData.surplus[year] || 0);
+
+        if (financialChart) financialChart.destroy();
+
+        financialChart = new Chart(ctxFinance.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: years.length > 0 ? years : ['No Data'],
+                datasets: [
+                    {
+                        label: 'Assets',
+                        data: assetsData.length > 0 ? assetsData : [0],
+                        borderColor: '#2e7d32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        tension: 0.3,
+                        fill: false,
+                        hidden: false
+                    },
+                    {
+                        label: 'Paid-Up Capital',
+                        data: capitalData.length > 0 ? capitalData : [0],
+                        borderColor: '#1565c0',
+                        backgroundColor: 'rgba(21, 101, 192, 0.1)',
+                        tension: 0.3,
+                        fill: false,
+                        hidden: false
+                    },
+                    {
+                        label: 'Net Surplus',
+                        data: surplusData.length > 0 ? surplusData : [0],
+                        borderColor: '#ef6c00',
+                        backgroundColor: 'rgba(239, 108, 0, 0.1)',
+                        tension: 0.3,
+                        fill: false,
+                        hidden: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y || 0;
+                                return `${context.dataset.label}: ₱${value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5] },
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + value.toLocaleString('en-US');
+                            }
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     }
 
     function updateCooperativeActivity(activities) {
@@ -375,6 +730,11 @@
         activities.slice(0, 5).forEach(activity => {
             const item = document.createElement('div');
             item.className = 'timeline-item';
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', function() {
+                // Redirect to profile form when activity is clicked
+                window.location.href = '{% url "cooperatives:profile_form" %}';
+            });
             const timeAgo = activity.time ? getTimeAgo(new Date(activity.time)) : 'Recently';
             const markerClass = activity.color === 'red' ? 'bg-danger' : 
                                activity.color === 'green' ? 'bg-success' : 
@@ -401,18 +761,58 @@
         return `${days} day${days > 1 ? 's' : ''} ago`;
     }
 
-    // Modal Logic
+    // Modal Logic and Filter Toggle
     document.addEventListener('DOMContentLoaded', () => {
         loadCooperativeDashboardData();
         
-        const viewProfileBtn = document.getElementById('viewProfileBtn');
+        // Filter Toggle Event
+        const filterToggleBtn = document.getElementById('financeFilterToggle');
+        const filterDropdown = document.getElementById('financeFilterControls');
+        
+        if (filterToggleBtn) {
+            filterToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (filterDropdown.style.display === 'none' || filterDropdown.style.display === '') {
+                    filterDropdown.style.display = 'flex';
+                    filterToggleBtn.classList.add('active');
+                } else {
+                    filterDropdown.style.display = 'none';
+                    filterToggleBtn.classList.remove('active');
+                }
+            });
+        }
+
+        // Global Close for Dropdown
+        document.addEventListener('click', () => {
+            if (filterDropdown && filterDropdown.style.display === 'flex') {
+                filterDropdown.style.display = 'none';
+                if (filterToggleBtn) filterToggleBtn.classList.remove('active');
+            }
+        });
+
+        if (filterDropdown) filterDropdown.addEventListener('click', (e) => e.stopPropagation());
+        
+        // Handle document status clicks - redirect to profile form
+        document.querySelectorAll('.clickable-compliance').forEach(item => {
+            item.addEventListener('click', function() {
+                window.location.href = '{% url "cooperatives:profile_form" %}';
+            });
+        });
+        
+        // Handle View Profile buttons (multiple instances)
+        const viewProfileBtns = document.querySelectorAll('#viewProfileBtn, #viewProfileBtnOfficers');
         const modal = document.getElementById('profile-modal');
         const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-close-btn-bottom');
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
 
-        if (modal && viewProfileBtn) {
-            viewProfileBtn.addEventListener('click', () => {
-                modal.classList.add('visible');
+        if (modal) {
+            viewProfileBtns.forEach(btn => {
+                if (btn) {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        modal.classList.add('visible');
+                    });
+                }
             });
 
             const closeModal = () => {

@@ -13,6 +13,16 @@
             </div>
             {% endif %}
         </div>
+        <div class="header-right" style="display: flex; gap: 10px; align-items: center;">
+            {% if profile.profile_id %}
+            <button type="button" class="edit-profile-btn" 
+                    data-profile-id="{{ profile.profile_id }}" 
+                    data-coop-id="{{ profile.coop_id|default:'' }}"
+                    style="background: #860000; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="bi bi-pencil"></i> Edit Profile
+            </button>
+            {% endif %}
+        </div>
     </div>
 
     <div class="info-section">

@@ -551,6 +551,7 @@ def get_profile_details(request, profile_id):
         # Prepare context similar to profile_form_view
         context = {
             'profile': {
+                'profile_id': profile.profile_id,  # Add profile_id for edit button
                 'coop_name': coop.cooperative_name if coop else 'N/A',
                 'coop_id': coop.coop_id if coop else None,
                 'address': profile.address,
@@ -636,6 +637,231 @@ def approve_profile(request, profile_id):
                     'success': False, 
                     'error': 'Profile is not approved, cannot cancel'
                 }, status=400)
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@require_http_methods(["GET"])
+def get_profile_for_edit(request, profile_id):
+    """Get profile data in JSON format for editing"""
+    try:
+        user_role = request.session.get('role')
+        if user_role not in ['admin', 'staff']:
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+        
+        profile = get_object_or_404(ProfileData, profile_id=profile_id)
+        coop = profile.coop
+        
+        # Get financial data
+        financial_data = FinancialData.objects.filter(
+            coop=coop, 
+            report_year=profile.report_year
+        ).first()
+        
+        # Get officers and members
+        officers = Officer.objects.filter(coop=coop).values(
+            'fullname', 'position', 'gender', 'mobile_number', 'email'
+        )
+        members = Member.objects.filter(coop=coop).values(
+            'fullname', 'gender', 'mobile_number'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'profile': {
+                'coop_name': coop.cooperative_name if coop else 'N/A',
+                'coop_id': coop.coop_id if coop else None,
+                'address': profile.address or '',
+                'operation_area': profile.operation_area or '',
+                'mobile_number': profile.mobile_number or '',
+                'email_address': profile.email_address or '',
+                'cda_registration_number': profile.cda_registration_number or '',
+                'cda_registration_date': profile.cda_registration_date.strftime('%Y-%m-%d') if profile.cda_registration_date else '',
+                'lccdc_membership': profile.lccdc_membership,
+                'lccdc_membership_date': profile.lccdc_membership_date.strftime('%Y-%m-%d') if profile.lccdc_membership_date else '',
+                'business_activity': profile.business_activity or '',
+                'board_of_directors_count': profile.board_of_directors_count or 0,
+                'salaried_employees_count': profile.salaried_employees_count or 0,
+                'coc_renewal': profile.coc_renewal,
+                'cote_renewal': profile.cote_renewal,
+                'coc_attachment_exists': bool(profile.coc_attachment),
+                'cote_attachment_exists': bool(profile.cote_attachment),
+                'report_year': profile.report_year or None,
+            },
+            'financial': {
+                'assets': str(financial_data.assets) if financial_data and financial_data.assets else '0.00',
+                'paid_up_capital': str(financial_data.paid_up_capital) if financial_data and financial_data.paid_up_capital else '0.00',
+                'net_surplus': str(financial_data.net_surplus) if financial_data and financial_data.net_surplus else '0.00',
+                'financial_attachments_exist': bool(financial_data and financial_data.attachments),
+            },
+            'officers': list(officers),
+            'members': list(members),
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@require_http_methods(["POST"])
+def update_profile_from_databank(request, profile_id):
+    """Update profile data from admin/staff in databank"""
+    try:
+        user_role = request.session.get('role')
+        if user_role not in ['admin', 'staff']:
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+        
+        profile = get_object_or_404(ProfileData, profile_id=profile_id)
+        coop = profile.coop
+        
+        # Verify staff has access to this cooperative
+        if user_role == 'staff':
+            user_id = request.session.get('user_id')
+            try:
+                if isinstance(user_id, str):
+                    try:
+                        user_id = int(user_id)
+                    except ValueError:
+                        pass
+                staff = Staff.objects.get(user_id=user_id)
+                if coop.staff_id != staff.staff_id:
+                    return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+            except Staff.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Staff profile not found'}, status=403)
+        
+        # Data cleaning
+        def clean_dec(val):
+            if not val: return 0
+            val = str(val).replace(',', '').strip()
+            try:
+                return float(val) if val else 0
+            except ValueError:
+                return 0
+        
+        # File handling
+        coc_binary = None
+        cte_binary = None
+        remove_coc = request.POST.get('remove_coc') == 'true'
+        remove_cte = request.POST.get('remove_cte') == 'true'
+        
+        if 'coc_file' in request.FILES:
+            coc_file = request.FILES['coc_file']
+            if coc_file.size > 10 * 1024 * 1024:
+                return JsonResponse({'success': False, 'error': 'CoC file size exceeds 10MB limit'}, status=400)
+            coc_binary = coc_file.read()
+        elif remove_coc:
+            coc_binary = b''  # Empty bytes to remove file
+        
+        if 'cte_file' in request.FILES:
+            cte_file = request.FILES['cte_file']
+            if cte_file.size > 10 * 1024 * 1024:
+                return JsonResponse({'success': False, 'error': 'CTE file size exceeds 10MB limit'}, status=400)
+            cte_binary = cte_file.read()
+        elif remove_cte:
+            cte_binary = b''  # Empty bytes to remove file
+        
+        financial_blob = None
+        remove_financial = request.POST.get('remove_financial') == 'true'
+        fin_files = request.FILES.getlist('financial_documents')
+        if fin_files:
+            total_size = sum(f.size for f in fin_files)
+            if total_size > 50 * 1024 * 1024:
+                return JsonResponse({'success': False, 'error': 'Total financial documents size exceeds 50MB limit'}, status=400)
+            parts = []
+            for f in fin_files:
+                f.seek(0)
+                header = f"--FILE--{f.name}--START--".encode('utf-8')
+                footer = b"--END--"
+                parts.append(header + f.read() + footer)
+            financial_blob = b"\n".join(parts)
+        elif remove_financial:
+            financial_blob = b''  # Empty bytes to remove files
+        
+        # Update profile
+        profile.address = request.POST.get('coop_address', profile.address)
+        profile.mobile_number = request.POST.get('coop_contact', profile.mobile_number)
+        profile.email_address = request.POST.get('coop_email', profile.email_address)
+        profile.cda_registration_number = request.POST.get('cda_reg_num', profile.cda_registration_number)
+        cda_date = request.POST.get('cda_reg_date')
+        profile.cda_registration_date = cda_date if cda_date else profile.cda_registration_date
+        profile.lccdc_membership = request.POST.get('lccdc_membership') == 'yes'
+        lccdc_date = request.POST.get('lccdc_membership_date')
+        profile.lccdc_membership_date = lccdc_date if lccdc_date else profile.lccdc_membership_date
+        profile.operation_area = request.POST.get('area_operation', profile.operation_area)
+        profile.business_activity = request.POST.get('business_activity', profile.business_activity)
+        profile.board_of_directors_count = int(request.POST.get('num_bod', profile.board_of_directors_count or 0))
+        profile.salaried_employees_count = int(request.POST.get('num_se', profile.salaried_employees_count or 0))
+        profile.coc_renewal = request.POST.get('coc') == 'yes'
+        profile.cote_renewal = request.POST.get('cte') == 'yes'
+        
+        if coc_binary is not None:
+            if coc_binary == b'':
+                profile.coc_attachment = None
+            else:
+                profile.coc_attachment = coc_binary
+        if cte_binary is not None:
+            if cte_binary == b'':
+                profile.cote_attachment = None
+            else:
+                profile.cote_attachment = cte_binary
+        
+        profile.save()
+        
+        # Update financial data
+        financial_data = FinancialData.objects.filter(
+            coop=coop, 
+            report_year=profile.report_year
+        ).first()
+        
+        if financial_data:
+            financial_data.assets = clean_dec(request.POST.get('assets_value'))
+            financial_data.paid_up_capital = clean_dec(request.POST.get('paid_up_capital_value'))
+            financial_data.net_surplus = clean_dec(request.POST.get('net_surplus_value'))
+            if financial_blob is not None:
+                if financial_blob == b'':
+                    financial_data.attachments = None
+                else:
+                    financial_data.attachments = financial_blob
+            financial_data.save()
+        else:
+            # Create new financial data if doesn't exist
+            financial_data = FinancialData.objects.create(
+                coop=coop,
+                report_year=profile.report_year,
+                assets=clean_dec(request.POST.get('assets_value')),
+                paid_up_capital=clean_dec(request.POST.get('paid_up_capital_value')),
+                net_surplus=clean_dec(request.POST.get('net_surplus_value')),
+                attachments=financial_blob if financial_blob else None,
+                approval_status='pending'
+            )
+        
+        # Update members
+        names = request.POST.getlist('member_name[]')
+        genders = request.POST.getlist('member_gender[]')
+        mobiles = request.POST.getlist('member_mobile[]')
+        
+        valid_members = [name for name in names if name and name.strip()]
+        if not valid_members:
+            return JsonResponse({'success': False, 'error': 'At least one member is required'}, status=400)
+        
+        if names:
+            Member.objects.filter(coop=coop).delete()
+            with connection.cursor() as cursor:
+                for i in range(len(names)):
+                    if names[i].strip():
+                        if len(names[i].strip()) < 2:
+                            return JsonResponse({'success': False, 'error': f'Member name at row {i+1} is too short'}, status=400)
+                        fullname = names[i].strip()
+                        gender_raw = genders[i] if i < len(genders) and genders[i] else None
+                        gender = gender_raw.lower() if gender_raw else None
+                        mobile_number = mobiles[i].strip() if i < len(mobiles) and mobiles[i] else None
+                        cursor.execute("""
+                            INSERT INTO members (coop_id, fullname, gender, mobile_number, created_at)
+                            VALUES (%s, %s, %s, %s, NOW())
+                        """, [coop.coop_id, fullname, gender, mobile_number])
+        
+        return JsonResponse({'success': True, 'message': 'Profile updated successfully'})
         
     except Exception as e:
         import traceback

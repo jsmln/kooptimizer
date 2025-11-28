@@ -8,6 +8,8 @@ from .models import User
 import requests
 from apps.core.services.otp_service import OTPService
 import random
+import time
+import logging
 
 # ============================================
 # LOGIN & LOGOUT VIEWS
@@ -48,18 +50,66 @@ def login_view(request):
             return redirect('access_denied')
 
         recaptcha_response = request.POST.get('g-recaptcha-response')
+        if not recaptcha_response:
+            messages.error(request, 'Please complete the reCAPTCHA verification.')
+            return render(request, 'login.html')
+        
         data = {'secret': settings.RECAPTCHA_SECRET_KEY, 'response': recaptcha_response}
-        try:
-            r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
-            r.raise_for_status()
-            result = r.json()
-        except requests.exceptions.RequestException as e:
-            messages.error(request, f'Server error during verification: {e}')
-            return render(request, 'login.html') # Fixed Path
+        result = None
+        
+        # Retry logic for reCAPTCHA verification
+        max_retries = 3
+        timeout = 10  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                r = requests.post(
+                    'https://www.google.com/recaptcha/api/siteverify',
+                    data=data,
+                    timeout=timeout,
+                    verify=True,  # Enable SSL verification
+                    headers={
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                )
+                r.raise_for_status()
+                result = r.json()
+                break  # Success, exit retry loop
+            except requests.exceptions.SSLError as e:
+                if attempt < max_retries - 1:
+                    # Retry with exponential backoff
+                    time.sleep(0.5 * (attempt + 1))
+                    continue
+                else:
+                    # Last attempt failed, log and show user-friendly message
+                    logger = logging.getLogger(__name__)
+                    logger.error(f'reCAPTCHA SSL Error: {e}')
+                    messages.error(request, 'Unable to verify reCAPTCHA due to a connection issue. Please check your internet connection and try again.')
+                    return render(request, 'login.html')
+            except requests.exceptions.Timeout:
+                if attempt < max_retries - 1:
+                    time.sleep(0.5 * (attempt + 1))
+                    continue
+                else:
+                    messages.error(request, 'reCAPTCHA verification timed out. Please try again.')
+                    return render(request, 'login.html')
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    time.sleep(0.5 * (attempt + 1))
+                    continue
+                else:
+                    logger = logging.getLogger(__name__)
+                    logger.error(f'reCAPTCHA Request Error: {e}')
+                    messages.error(request, 'Unable to verify reCAPTCHA. Please try again later.')
+                    return render(request, 'login.html')
+        
+        if not result:
+            messages.error(request, 'Unable to verify reCAPTCHA. Please try again.')
+            return render(request, 'login.html')
 
         if not result.get('success'):
             messages.error(request, 'Invalid reCAPTCHA. Please try again.')
-            return render(request, 'login.html') # Fixed Path
+            return render(request, 'login.html')
 
         try:
             login_result = User.login_user(username, password)

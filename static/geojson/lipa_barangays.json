@@ -1,0 +1,581 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Balintawak", "name": "Balintawak"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.10, 13.97], [121.12, 13.96], [121.14, 13.97], [121.13, 13.99], [121.11, 13.99], [121.10, 13.97]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Marawoy", "name": "Marawoy"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.12, 13.96], [121.15, 13.95], [121.16, 13.97], [121.14, 13.98], [121.12, 13.97], [121.12, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Dagatan", "name": "Dagatan"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.08, 13.98], [121.10, 13.97], [121.12, 13.98], [121.11, 14.00], [121.09, 14.00], [121.08, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Lumbang", "name": "Lumbang"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.98], [121.17, 13.97], [121.18, 13.99], [121.16, 14.00], [121.14, 13.99], [121.14, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Talisay", "name": "Talisay"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.10, 13.99], [121.12, 13.98], [121.14, 13.99], [121.13, 14.01], [121.11, 14.01], [121.10, 13.99]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Bulacnin", "name": "Bulacnin"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.12, 13.99], [121.15, 13.98], [121.16, 14.00], [121.14, 14.01], [121.12, 14.00], [121.12, 13.99]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Pusil", "name": "Pusil"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.97], [121.17, 13.96], [121.18, 13.98], [121.16, 13.99], [121.14, 13.98], [121.14, 13.97]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Bugtong na Pulo", "name": "Bugtong na Pulo"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.08, 13.96], [121.10, 13.95], [121.12, 13.96], [121.11, 13.98], [121.09, 13.98], [121.08, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Inosluban", "name": "Inosluban"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.16, 13.98], [121.19, 13.97], [121.20, 13.99], [121.18, 14.00], [121.16, 13.99], [121.16, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Plaridel", "name": "Plaridel"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.10, 13.95], [121.12, 13.94], [121.14, 13.95], [121.13, 13.97], [121.11, 13.97], [121.10, 13.95]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Lucas", "name": "San Lucas"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.95], [121.17, 13.94], [121.18, 13.96], [121.16, 13.97], [121.14, 13.96], [121.14, 13.95]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Francisco", "name": "San Francisco"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.18, 13.92], [121.20, 13.91], [121.22, 13.92], [121.21, 13.94], [121.19, 13.94], [121.18, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Celestino", "name": "San Celestino"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.20, 13.94], [121.23, 13.93], [121.24, 13.95], [121.22, 13.96], [121.20, 13.95], [121.20, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Malitlit", "name": "Malitlit"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.18, 13.94], [121.20, 13.93], [121.22, 13.94], [121.21, 13.96], [121.19, 13.96], [121.18, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Sto. Toribio", "name": "Sto. Toribio"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.20, 13.92], [121.23, 13.91], [121.24, 13.93], [121.22, 13.94], [121.20, 13.93], [121.20, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Benito", "name": "San Benito"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.22, 13.94], [121.25, 13.93], [121.26, 13.95], [121.24, 13.96], [121.22, 13.95], [121.22, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Sto. Niño", "name": "Sto. Niño"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.18, 13.96], [121.20, 13.95], [121.22, 13.96], [121.21, 13.98], [121.19, 13.98], [121.18, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Isidro", "name": "San Isidro"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.20, 13.96], [121.23, 13.95], [121.24, 13.97], [121.22, 13.98], [121.20, 13.97], [121.20, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Munting Pulo", "name": "Munting Pulo"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.22, 13.96], [121.25, 13.95], [121.26, 13.97], [121.24, 13.98], [121.22, 13.97], [121.22, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Latag", "name": "Latag"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.18, 13.98], [121.20, 13.97], [121.22, 13.98], [121.21, 14.00], [121.19, 14.00], [121.18, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Sabang", "name": "Sabang"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.20, 13.98], [121.23, 13.97], [121.24, 13.99], [121.22, 14.00], [121.20, 13.99], [121.20, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Tipacan", "name": "Tipacan"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.22, 13.98], [121.25, 13.97], [121.26, 13.99], [121.24, 14.00], [121.22, 13.99], [121.22, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Jose", "name": "San Jose"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.24, 13.94], [121.27, 13.93], [121.28, 13.95], [121.26, 13.96], [121.24, 13.95], [121.24, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Tangob", "name": "Tangob"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.24, 13.96], [121.27, 13.95], [121.28, 13.97], [121.26, 13.98], [121.24, 13.97], [121.24, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Antipolo del Norte", "name": "Antipolo del Norte"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.24, 13.98], [121.27, 13.97], [121.28, 13.99], [121.26, 14.00], [121.24, 13.99], [121.24, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Antipolo del Sur", "name": "Antipolo del Sur"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.26, 13.96], [121.29, 13.95], [121.30, 13.97], [121.28, 13.98], [121.26, 13.97], [121.26, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Pinagkawitan", "name": "Pinagkawitan"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.26, 13.98], [121.29, 13.97], [121.30, 13.99], [121.28, 14.00], [121.26, 13.99], [121.26, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Halang", "name": "Halang"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.08, 13.92], [121.10, 13.91], [121.12, 13.92], [121.11, 13.94], [121.09, 13.94], [121.08, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Duhatan", "name": "Duhatan"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.06, 13.94], [121.08, 13.93], [121.10, 13.94], [121.09, 13.96], [121.07, 13.96], [121.06, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Pinagtong-ulan", "name": "Pinagtong-ulan"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.08, 13.94], [121.10, 13.93], [121.12, 13.94], [121.11, 13.96], [121.09, 13.96], [121.08, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Bulaklakan", "name": "Bulaklakan"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.10, 13.92], [121.12, 13.91], [121.14, 13.92], [121.13, 13.94], [121.11, 13.94], [121.10, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Pangao", "name": "Pangao"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.06, 13.92], [121.08, 13.91], [121.10, 13.92], [121.09, 13.94], [121.07, 13.94], [121.06, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Bagong Pook", "name": "Bagong Pook"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.12, 13.92], [121.14, 13.91], [121.16, 13.92], [121.15, 13.94], [121.13, 13.94], [121.12, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Banay-banay", "name": "Banay-banay"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.04, 13.94], [121.06, 13.93], [121.08, 13.94], [121.07, 13.96], [121.05, 13.96], [121.04, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Tambo", "name": "Tambo"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.92], [121.16, 13.91], [121.18, 13.92], [121.17, 13.94], [121.15, 13.94], [121.14, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Sico", "name": "Sico"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.06, 13.96], [121.08, 13.95], [121.10, 13.96], [121.09, 13.98], [121.07, 13.98], [121.06, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Fernando Air Base", "name": "Fernando Air Base"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.04, 13.92], [121.06, 13.91], [121.08, 13.92], [121.07, 13.94], [121.05, 13.94], [121.04, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Salvador", "name": "San Salvador"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.08, 13.90], [121.10, 13.89], [121.12, 13.90], [121.11, 13.92], [121.09, 13.92], [121.08, 13.90]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Tangway", "name": "Tangway"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.10, 13.90], [121.12, 13.89], [121.14, 13.90], [121.13, 13.92], [121.11, 13.92], [121.10, 13.90]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Tibig", "name": "Tibig"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.12, 13.90], [121.14, 13.89], [121.16, 13.90], [121.15, 13.92], [121.13, 13.92], [121.12, 13.90]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Carlos", "name": "San Carlos"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.90], [121.16, 13.89], [121.18, 13.90], [121.17, 13.92], [121.15, 13.92], [121.14, 13.90]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Mataas na Lupa", "name": "Mataas na Lupa"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.16, 13.92], [121.18, 13.91], [121.20, 13.92], [121.19, 13.94], [121.17, 13.94], [121.16, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Adya", "name": "Adya"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.10, 13.88], [121.12, 13.87], [121.14, 13.88], [121.13, 13.90], [121.11, 13.90], [121.10, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Lodlod", "name": "Lodlod"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.12, 13.88], [121.14, 13.87], [121.16, 13.88], [121.15, 13.90], [121.13, 13.90], [121.12, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Cumba", "name": "Cumba"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.88], [121.16, 13.87], [121.18, 13.88], [121.17, 13.90], [121.15, 13.90], [121.14, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Quezon", "name": "Quezon"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.16, 13.88], [121.18, 13.87], [121.20, 13.88], [121.19, 13.90], [121.17, 13.90], [121.16, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Sampaguita", "name": "Sampaguita"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.18, 13.88], [121.20, 13.87], [121.22, 13.88], [121.21, 13.90], [121.19, 13.90], [121.18, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Sebastian", "name": "San Sebastian"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.08, 13.88], [121.10, 13.87], [121.12, 13.88], [121.11, 13.90], [121.09, 13.90], [121.08, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Kayumanggi", "name": "Kayumanggi"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.06, 13.88], [121.08, 13.87], [121.10, 13.88], [121.09, 13.90], [121.07, 13.90], [121.06, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Anilao", "name": "Anilao"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.20, 13.88], [121.22, 13.87], [121.24, 13.88], [121.23, 13.90], [121.21, 13.90], [121.20, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Anilao-Labac", "name": "Anilao-Labac"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.22, 13.88], [121.24, 13.87], [121.26, 13.88], [121.25, 13.90], [121.23, 13.90], [121.22, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Pag-olingin Bata", "name": "Pag-olingin Bata"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.24, 13.88], [121.26, 13.87], [121.28, 13.88], [121.27, 13.90], [121.25, 13.90], [121.24, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Pag-olingin East", "name": "Pag-olingin East"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.26, 13.88], [121.28, 13.87], [121.30, 13.88], [121.29, 13.90], [121.27, 13.90], [121.26, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Pag-olingin West", "name": "Pag-olingin West"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.24, 13.86], [121.26, 13.85], [121.28, 13.86], [121.27, 13.88], [121.25, 13.88], [121.24, 13.86]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Malagonlong", "name": "Malagonlong"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.26, 13.86], [121.28, 13.85], [121.30, 13.86], [121.29, 13.88], [121.27, 13.88], [121.26, 13.86]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Bolbok", "name": "Bolbok"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.28, 13.88], [121.30, 13.87], [121.32, 13.88], [121.31, 13.90], [121.29, 13.90], [121.28, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Rizal", "name": "Rizal"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.04, 13.88], [121.06, 13.87], [121.08, 13.88], [121.07, 13.90], [121.05, 13.90], [121.04, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Mabini", "name": "Mabini"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.02, 13.88], [121.04, 13.87], [121.06, 13.88], [121.05, 13.90], [121.03, 13.90], [121.02, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Calamias", "name": "Calamias"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.00, 13.88], [121.02, 13.87], [121.04, 13.88], [121.03, 13.90], [121.01, 13.90], [121.00, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "San Guillermo", "name": "San Guillermo"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.30, 13.88], [121.32, 13.87], [121.34, 13.88], [121.33, 13.90], [121.31, 13.90], [121.30, 13.88]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 1", "name": "Barangay 1"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.92], [121.155, 13.915], [121.16, 13.93], [121.155, 13.94], [121.14, 13.935], [121.14, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 2", "name": "Barangay 2"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.16, 13.92], [121.175, 13.915], [121.18, 13.93], [121.175, 13.94], [121.16, 13.935], [121.16, 13.92]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 3", "name": "Barangay 3"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.94], [121.155, 13.935], [121.16, 13.95], [121.155, 13.96], [121.14, 13.955], [121.14, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 4", "name": "Barangay 4"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.16, 13.94], [121.175, 13.935], [121.18, 13.95], [121.175, 13.96], [121.16, 13.955], [121.16, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 5", "name": "Barangay 5"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.18, 13.94], [121.195, 13.935], [121.20, 13.95], [121.195, 13.96], [121.18, 13.955], [121.18, 13.94]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 6", "name": "Barangay 6"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.96], [121.155, 13.955], [121.16, 13.97], [121.155, 13.98], [121.14, 13.975], [121.14, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 7", "name": "Barangay 7"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.16, 13.96], [121.175, 13.955], [121.18, 13.97], [121.175, 13.98], [121.16, 13.975], [121.16, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 8", "name": "Barangay 8"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.18, 13.96], [121.195, 13.955], [121.20, 13.97], [121.195, 13.98], [121.18, 13.975], [121.18, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 9", "name": "Barangay 9"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.20, 13.96], [121.215, 13.955], [121.22, 13.97], [121.215, 13.98], [121.20, 13.975], [121.20, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 9-A", "name": "Barangay 9-A"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.22, 13.96], [121.235, 13.955], [121.24, 13.97], [121.235, 13.98], [121.22, 13.975], [121.22, 13.96]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 10", "name": "Barangay 10"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.14, 13.98], [121.155, 13.975], [121.16, 13.99], [121.155, 14.00], [121.14, 13.995], [121.14, 13.98]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {"NAME_3": "Barangay 11", "name": "Barangay 11"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[121.16, 13.98], [121.175, 13.975], [121.18, 13.99], [121.175, 14.00], [121.16, 13.995], [121.16, 13.98]]]
+      }
+    }
+  ]
+}

@@ -18,5 +18,7 @@ urlpatterns = [
     # Profile data endpoint
     path('api/profile-data/', views.get_profile_data, name='get_profile_data'),
     path('api/get-profile-details/<int:profile_id>/', views.get_profile_details, name='get_profile_details'),
+    path('api/get-profile-for-edit/<int:profile_id>/', views.get_profile_for_edit, name='get_profile_for_edit'),
+    path('api/update-profile/<int:profile_id>/', views.update_profile_from_databank, name='update_profile_from_databank'),
     path('api/approve-profile/<int:profile_id>/', views.approve_profile, name='approve_profile'),
 ]
