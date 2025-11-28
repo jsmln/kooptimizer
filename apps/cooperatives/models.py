@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from apps.users.models import User  # Use custom User model, not Django's default
 from apps.account_management.models import Cooperatives
 
 class GenderEnum(models.TextChoices):
@@ -13,8 +13,11 @@ class ApprovalStatusEnum(models.TextChoices):
 
 class ProfileData(models.Model):
     profile_id = models.AutoField(primary_key=True)
-    # One-to-One because a Cooperative should only have one active profile record
-    coop = models.OneToOneField(Cooperatives, on_delete=models.CASCADE)
+    # Changed to ForeignKey to allow multiple profile records per cooperative (one per year)
+    coop = models.ForeignKey(Cooperatives, on_delete=models.CASCADE)
+    
+    # Report Year - similar to FinancialData
+    report_year = models.IntegerField(null=True, blank=True)
     
     # Contact & Location
     address = models.CharField(max_length=255, null=True, blank=True)
@@ -56,6 +59,9 @@ class ProfileData(models.Model):
 
     class Meta:
         db_table = 'profile_data'
+        # Remove unique constraint - allow multiple profiles per coop (one per year)
+        # Add unique constraint on coop_id + report_year combination
+        unique_together = [['coop', 'report_year']]
 
 class FinancialData(models.Model):
     financial_id = models.AutoField(primary_key=True)
@@ -89,7 +95,7 @@ class Member(models.Model):
     fullname = models.CharField(max_length=100)
     gender = models.CharField(max_length=10, choices=GenderEnum.choices, null=True, blank=True)
     mobile_number = models.CharField(max_length=20, null=True, blank=True)
-    email = models.CharField(max_length=100, null=True, blank=True)
+    # Note: email field removed - not used in members table
     
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -101,7 +107,7 @@ class Member(models.Model):
 # ======================================================
 class Staff(models.Model):
     staff_id = models.AutoField(primary_key=True, db_column='staff_id')
-    user = models.OneToOneField(User, on_delete=models.CASCADE, db_column='user_id', related_name='staff_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, db_column='user_id', related_name='cooperatives_staff_profile')
     fullname = models.CharField(max_length=100, blank=True, null=True)
     position = models.CharField(max_length=50, blank=True, null=True)
     gender = models.CharField(max_length=10, blank=True, null=True) # Mapped from 'gender_enum'
@@ -123,7 +129,7 @@ class Staff(models.Model):
 # ======================================================
 class Officer(models.Model):
     officer_id = models.AutoField(primary_key=True, db_column='officer_id')
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, db_column='user_id', blank=True, null=True, related_name='officer_profile')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, db_column='user_id', blank=True, null=True, related_name='cooperatives_officer_profile')
     coop = models.ForeignKey(Cooperatives, on_delete=models.CASCADE, db_column='coop_id')
     fullname = models.CharField(max_length=100, blank=True, null=True)
     position = models.CharField(max_length=50, blank=True, null=True)

@@ -3,11 +3,17 @@ from django.urls import path, include
 from apps.users import views as user_views
 from apps.home import views as home_views
 from apps.core import views as core_views
+import apps.core.webpush_views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Custom webpush save_information view (before including webpush.urls to override)
+    path('webpush/save_information', apps.core.webpush_views.save_webpush_info, name='save_webpush_info'),
+    path('webpush/', include('webpush.urls')),
+    path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript'), name='sw.js'),
     path('', home_views.home_view, name='home'),  # Root URL should point to home
     path('login/', user_views.login_view, name='login'),  # Login should be at /login/
     path('download/', core_views.download_view, name='download'),

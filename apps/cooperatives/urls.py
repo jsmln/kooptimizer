@@ -12,4 +12,10 @@ urlpatterns = [
     
     # Action to download files
     path('profiles/<int:coop_id>/attachment/<str:which>/', views.download_attachment, name='download_attachment'),
+    
+    # Get financial data by year
+    path('api/financial-data/<int:report_year>/', views.get_financial_data_by_year, name='get_financial_data_by_year'),
+    
+    # Print profile
+    path('profiles/<int:coop_id>/print/', views.print_profile, name='print_profile'),
 ]

@@ -30,6 +30,17 @@ class User(models.Model):
     def __str__(self):
         return self.username
 
+    # Django auth compatibility properties
+    @property
+    def is_authenticated(self):
+        """Required for Django authentication compatibility (used by webpush)"""
+        return True
+    
+    @property
+    def is_anonymous(self):
+        """Required for Django authentication compatibility"""
+        return False
+
     # Method to call stored procedure sp_login_user
     @staticmethod
     def login_user(username, password):

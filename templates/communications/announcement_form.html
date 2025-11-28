@@ -1495,13 +1495,25 @@ document.addEventListener('DOMContentLoaded', () => {
             'docx': 'bi-file-earmark-word text-primary',
             'xls': 'bi-file-earmark-excel text-success',
             'xlsx': 'bi-file-earmark-excel text-success',
+            'xlsm': 'bi-file-earmark-excel text-success',
+            'xlsb': 'bi-file-earmark-excel text-success',
+            'csv': 'bi-file-earmark-spreadsheet text-success',
             'ppt': 'bi-file-earmark-ppt text-warning',
             'pptx': 'bi-file-earmark-ppt text-warning',
             'jpg': 'bi-file-earmark-image text-info',
             'jpeg': 'bi-file-earmark-image text-info',
             'png': 'bi-file-earmark-image text-info',
-            'gif': 'bi-file-earmark-image text-info'
+            'gif': 'bi-file-earmark-image text-info',
+            'txt': 'bi-file-earmark-text text-muted'
         };
+        // Special handling for .csv.gz and .pdf.gz files
+        if (ext === 'gz') {
+            if (fileName.toLowerCase().endsWith('.csv.gz')) {
+                return 'bi-file-earmark-spreadsheet text-success';
+            } else if (fileName.toLowerCase().endsWith('.pdf.gz')) {
+                return 'bi-file-earmark-pdf text-danger';
+            }
+        }
         return icons[ext] || 'bi-file-earmark text-secondary';
     }
     
@@ -1742,9 +1754,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     filenames.forEach((filename, index) => {
                         const iconClass = getFileIcon(filename);
                         const fileExt = filename.split('.').pop().toLowerCase();
+                        // Check for .csv.gz files (double extension)
+                        const isCsvGz = filename.toLowerCase().endsWith('.csv.gz');
+                        const isPdfGz = filename.toLowerCase().endsWith('.pdf.gz');
                         // All file types can be previewed now (images, PDFs, and convertible documents)
                         const canPreview = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 
-                                           'docx', 'doc', 'xlsx', 'xls', 'pptx', 'ppt', 'txt', 'csv'].includes(fileExt);
+                                           'docx', 'doc', 'xlsx', 'xls', 'xlsm', 'xlsb', 'pptx', 'ppt', 
+                                           'txt', 'csv'].includes(fileExt) || isCsvGz || isPdfGz;
                         
                         contentHTML += `
                             <div class="d-flex align-items-center gap-3 p-2 bg-white rounded border mb-2">
@@ -1882,10 +1898,15 @@ document.addEventListener('DOMContentLoaded', () => {
         'application/msword',  // .doc
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',  // .xlsx
         'application/vnd.ms-excel',  // .xls
+        'application/vnd.ms-excel.sheet.macroEnabled.12',  // .xlsm
+        'application/vnd.ms-excel.sheet.binary.macroEnabled.12',  // .xlsb
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',  // .pptx
         'application/vnd.ms-powerpoint',  // .ppt
         'text/plain',  // .txt
         'text/csv',  // .csv
+        'application/csv',  // .csv (alternative MIME)
+        'text/x-csv',  // .csv (alternative MIME)
+        'application/gzip',  // .gz (for .csv.gz files)
     ];
 
     // Helper function to escape HTML
@@ -2509,17 +2530,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         previewAnnouncementId = announcementId;
 
-        if (contentType === 'application/pdf' || contentType.startsWith('image')) {
+        // Check if file is .pdf.gz or .csv.gz by filename
+        const isPdfGz = title && title.toLowerCase().endsWith('.pdf.gz');
+        const isCsvGz = title && title.toLowerCase().endsWith('.csv.gz');
+        if (isCsvGz) {
+            isConvertibleDocument = true;
+        }
+
+        // If .pdf.gz, decompress and load directly
+        if (isPdfGz && announcementId) {
+            showLoadingOverlay('Decompressing PDF...');
+            convertAndPreviewAnnouncement(announcementId, src, title);
+        }
+        else if (contentType === 'application/pdf' || contentType.startsWith('image')) {
             loadPdfPreview(src, title, contentType);
             document.getElementById('preview-download-pdf').style.display = 'none';
             document.getElementById('preview-download-toggle').style.display = 'none';
             document.getElementById('preview-download-main').style.borderRadius = '6px';
             document.getElementById('preview-download-main').textContent = 'Download';
         } 
-        else if (isConvertibleDocument && announcementId) {
+        else if ((isConvertibleDocument || isCsvGz) && announcementId) {
             document.getElementById('preview-download-toggle').style.display = 'flex';
             document.getElementById('preview-download-main').style.borderRadius = '6px 0 0 6px';
-            showLoadingOverlay('Converting document to PDF...');
+            const loadingMsg = isCsvGz ? 'Decompressing and converting CSV to PDF...' : 'Converting document to PDF...';
+            showLoadingOverlay(loadingMsg);
             convertAndPreviewAnnouncement(announcementId, src, title);
         } 
         else {
@@ -2541,33 +2575,94 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                const data = await response.json().catch(() => ({ message: 'Conversion failed' }));
-                throw new Error(data.message || 'Conversion failed');
+                let errorMsg = 'Conversion failed';
+                try {
+                    const data = await response.json();
+                    errorMsg = data.message || errorMsg;
+                } catch (e) {
+                    errorMsg = `Server error: ${response.status}`;
+                }
+                throw new Error(errorMsg);
             }
 
+            const conversionStatus = response.headers.get('X-Conversion-Status');
+            const contentType = response.headers.get('Content-Type') || 'application/pdf';
             const blob = await response.blob();
-            const pdfUrl = URL.createObjectURL(blob);
+            const blobUrl = URL.createObjectURL(blob);
+            
+            // Check if it's a decompressed PDF.GZ
+            const isPdfGz = title && title.toLowerCase().endsWith('.pdf.gz');
+            const isDecompressedPdf = conversionStatus === 'decompressed' || isPdfGz;
 
             hideLoadingOverlay();
             previewModal.classList.add('show');
             previewModal.style.display = 'flex';
 
+            // If it's a decompressed PDF.GZ, load it as PDF directly
+            if (isDecompressedPdf && contentType.includes('pdf')) {
+                const pdfFilename = title.replace(/\.gz$/i, ''); // Remove .gz extension
+                document.getElementById('preview-download-main').href = blobUrl;
+                document.getElementById('preview-download-main').download = pdfFilename;
+                document.getElementById('preview-download-main').textContent = 'Download';
+                document.getElementById('preview-download-toggle').style.display = 'none';
+                document.getElementById('preview-download-main').style.borderRadius = '6px';
+                document.getElementById('preview-download-pdf').style.display = 'none';
+                loadPdfFromBlob(blobUrl, pdfFilename);
+                return;
+            }
+
+            // If conversion failed, show original file with download option
+            if (conversionStatus === 'failed' || !contentType.includes('pdf')) {
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-file-earmark" style="font-size: 4rem; color: #6c757d; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">${escapeHtml(title)}</h4>
+                        <p style="color: #6c757d; margin-bottom: 20px;">This file cannot be previewed in the browser.</p>
+                        <p style="color: #6c757d; font-size: 0.9rem;">Please download the file to view it.</p>
+                    </div>
+                `;
+                document.getElementById('preview-title').textContent = title;
+                document.getElementById('preview-download-main').href = originalSrc + '?download=1';
+                document.getElementById('preview-download-main').download = title;
+                document.getElementById('preview-download-main').textContent = 'Download';
+                document.getElementById('preview-download-toggle').style.display = 'none';
+                document.getElementById('preview-download-main').style.borderRadius = '6px';
+                document.getElementById('preview-download-pdf').style.display = 'none';
+                return;
+            }
+
+            // Conversion successful - show PDF
             const pdfFilename = title.split('.').slice(0, -1).join('.') + '.pdf';
             
-            document.getElementById('preview-download-main').href = pdfUrl;
+            document.getElementById('preview-download-main').href = blobUrl;
             document.getElementById('preview-download-main').download = pdfFilename;
             document.getElementById('preview-download-main').textContent = 'Download PDF';
             
-            document.getElementById('preview-download-pdf').href = pdfUrl;
+            document.getElementById('preview-download-pdf').href = blobUrl;
             document.getElementById('preview-download-pdf').download = pdfFilename;
             document.getElementById('preview-download-pdf').style.display = 'block';
 
-            loadPdfFromBlob(pdfUrl, title);
+            loadPdfFromBlob(blobUrl, title);
         } catch (error) {
             hideLoadingOverlay();
             previewModal.classList.add('show');
             previewModal.style.display = 'flex';
-            previewBody.innerHTML = `<p style="color:#d32f2f;">Error converting document: ${error.message}</p>`;
+            previewBody.innerHTML = `
+                <div style="padding: 40px; text-align: center;">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                    <h4 style="color: #495057; margin-bottom: 10px;">Preview Unavailable</h4>
+                    <p style="color: #6c757d; margin-bottom: 20px;">${escapeHtml(error.message)}</p>
+                    <a href="${originalSrc}?download=1" class="btn btn-primary" download="${title}">
+                        <i class="bi bi-download"></i> Download File
+                    </a>
+                </div>
+            `;
+            document.getElementById('preview-title').textContent = title;
+            document.getElementById('preview-download-main').href = originalSrc + '?download=1';
+            document.getElementById('preview-download-main').download = title;
+            document.getElementById('preview-download-main').textContent = 'Download';
+            document.getElementById('preview-download-toggle').style.display = 'none';
+            document.getElementById('preview-download-main').style.borderRadius = '6px';
             console.error('Conversion error:', error);
         }
     }

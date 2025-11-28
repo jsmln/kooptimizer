@@ -551,6 +551,177 @@ def convert_pptx_to_pdf(pptx_bytes):
         return None
 
 
+def convert_csv_gz_to_pdf(csv_gz_bytes):
+    """
+    Decompress gzipped CSV and convert to PDF.
+    Returns PDF bytes or None if conversion fails.
+    """
+    try:
+        # Decompress gzip
+        csv_bytes = gzip.decompress(csv_gz_bytes)
+        # Convert decompressed CSV to PDF
+        return convert_csv_to_pdf(csv_bytes)
+    except gzip.BadGzipFile:
+        # Not a valid gzip file, try treating as regular CSV
+        return convert_csv_to_pdf(csv_gz_bytes)
+    except Exception as e:
+        print(f"CSV.GZ to PDF conversion failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def decompress_pdf_gz(pdf_gz_bytes):
+    """
+    Decompress gzipped PDF file.
+    Returns PDF bytes or None if decompression fails.
+    """
+    try:
+        # Decompress gzip
+        pdf_bytes = gzip.decompress(pdf_gz_bytes)
+        # Verify it's actually a PDF by checking the header
+        if pdf_bytes.startswith(b'%PDF'):
+            return pdf_bytes
+        else:
+            print("Decompressed file does not appear to be a valid PDF")
+            return None
+    except gzip.BadGzipFile:
+        print("File is not a valid gzip file")
+        return None
+    except Exception as e:
+        print(f"PDF.GZ decompression failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def convert_csv_to_pdf(csv_bytes):
+    """
+    Convert CSV bytes to PDF with proper table formatting.
+    Returns PDF bytes or None if conversion fails.
+    """
+    try:
+        import csv
+        from reportlab.lib.pagesizes import A2, A3, A4, LETTER, LEGAL, landscape, portrait
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+        from reportlab.lib import colors
+        from reportlab.lib.units import inch
+        
+        # Decode CSV
+        try:
+            csv_text = csv_bytes.decode('utf-8')
+        except:
+            csv_text = csv_bytes.decode('latin-1', errors='ignore')
+        
+        # Parse CSV
+        csv_reader = csv.reader(csv_text.splitlines())
+        data = []
+        for row in csv_reader:
+            data.append([str(cell) if cell else "" for cell in row])
+        
+        if not data:
+            return None
+        
+        num_cols = len(data[0]) if data else 0
+        num_rows = len(data)
+        
+        # Determine best page size based on content
+        if num_cols <= 4:
+            pagesize = portrait(LETTER)
+        elif num_cols <= 6:
+            pagesize = landscape(LETTER) if num_rows > 30 else portrait(A4)
+        elif num_cols <= 8:
+            pagesize = landscape(LEGAL) if num_rows > 40 else landscape(LETTER)
+        elif num_cols <= 12:
+            pagesize = landscape(A4) if num_rows < 20 else landscape(LEGAL)
+        elif num_cols <= 16:
+            pagesize = landscape(A3)
+        elif num_cols <= 24:
+            pagesize = landscape(A2)
+        else:
+            pagesize = landscape(A2)
+        
+        # Create PDF
+        pdf_file = BytesIO()
+        doc = SimpleDocTemplate(
+            pdf_file,
+            pagesize=pagesize,
+            leftMargin=0.3*inch,
+            rightMargin=0.3*inch,
+            topMargin=0.3*inch,
+            bottomMargin=0.3*inch
+        )
+        
+        # Calculate column widths
+        page_width = pagesize[0] - 0.6*inch
+        max_col_widths = []
+        for row in data:
+            for idx, cell in enumerate(row):
+                if idx >= len(max_col_widths):
+                    max_col_widths.append(0)
+                max_col_widths[idx] = max(max_col_widths[idx], len(str(cell)))
+        
+        total_weight = sum(max_col_widths) if max_col_widths else 1
+        col_widths = []
+        for width in max_col_widths:
+            proportional = (width / total_weight) * page_width if total_weight > 0 else page_width / num_cols
+            col_widths.append(max(proportional, 0.35*inch))
+        
+        # Adjust if total exceeds page width
+        total_width = sum(col_widths)
+        if total_width > page_width:
+            scale_factor = page_width / total_width
+            col_widths = [w * scale_factor for w in col_widths]
+        
+        # Determine font size
+        if num_cols > 20:
+            header_font_size = 6
+            data_font_size = 5
+        elif num_cols > 12:
+            header_font_size = 7
+            data_font_size = 6
+        elif num_cols > 8:
+            header_font_size = 8
+            data_font_size = 7
+        else:
+            header_font_size = 9
+            data_font_size = 8
+        
+        # Create table
+        table = Table(data, colWidths=col_widths, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), header_font_size),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+            ('TOPPADDING', (0, 0), (-1, 0), 5),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), data_font_size),
+            ('TOPPADDING', (0, 1), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 2),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8F8F8')]),
+            ('WORDWRAP', (0, 0), (-1, -1), True),
+        ]))
+        
+        doc.build([table])
+        pdf_file.seek(0)
+        return pdf_file.getvalue()
+        
+    except Exception as e:
+        print(f"CSV to PDF conversion failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def convert_txt_to_pdf(txt_bytes):
     """
     Convert plain text to PDF with proper formatting.
@@ -609,7 +780,12 @@ def can_convert_to_pdf(content_type):
         'application/vnd.openxmlformats-officedocument.presentationml.presentation',  # .pptx
         'application/vnd.ms-powerpoint',  # .ppt
         'text/plain',  # .txt
-        'text/csv',  # .csv (will be treated as text)
+        'text/csv',  # .csv
+        'application/csv',  # .csv (alternative MIME type)
+        'text/x-csv',  # .csv (alternative MIME type)
+        'application/vnd.ms-excel.sheet.macroEnabled.12',  # .xlsm
+        'application/vnd.ms-excel.sheet.binary.macroEnabled.12',  # .xlsb
+        'application/gzip',  # .gz (for .csv.gz files)
     ]
     return content_type in convertible_types
 
@@ -617,28 +793,64 @@ def convert_to_pdf(file_bytes, filename, content_type):
     """
     Convert office documents and text files to PDF.
     Returns (pdf_bytes, success) tuple.
+    Supports: DOCX, DOC, XLSX, XLS, XLSM, XLSB, PPTX, PPT, CSV, TXT
     """
     try:
         # Handle memoryview objects
         if isinstance(file_bytes, memoryview):
             file_bytes = bytes(file_bytes)
         
-        if 'wordprocessingml' in content_type or content_type == 'application/msword':
+        # Get file extension for better format detection
+        file_ext = ''
+        if filename:
+            file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
+        
+        # Word documents
+        if ('wordprocessingml' in content_type or content_type == 'application/msword' or 
+            file_ext in ['docx', 'doc']):
             pdf_bytes = convert_docx_to_pdf(file_bytes)
             if pdf_bytes:
                 return pdf_bytes, True
-        elif 'spreadsheet' in content_type or content_type == 'application/vnd.ms-excel':
+        
+        # Excel/Spreadsheet files
+        elif ('spreadsheet' in content_type or content_type == 'application/vnd.ms-excel' or
+              'excel' in content_type.lower() or file_ext in ['xlsx', 'xls', 'xlsm', 'xlsb']):
             pdf_bytes = convert_xlsx_to_pdf(file_bytes)
             if pdf_bytes:
                 return pdf_bytes, True
-        elif 'presentationml' in content_type or content_type == 'application/vnd.ms-powerpoint':
+        
+        # PowerPoint presentations
+        elif ('presentationml' in content_type or content_type == 'application/vnd.ms-powerpoint' or
+              file_ext in ['pptx', 'ppt']):
             pdf_bytes = convert_pptx_to_pdf(file_bytes)
             if pdf_bytes:
                 return pdf_bytes, True
-        elif content_type in ['text/plain', 'text/csv']:
+        
+        # Gzipped PDF files - just decompress, no conversion needed
+        elif file_ext == 'gz' and filename and filename.lower().endswith('.pdf.gz'):
+            pdf_bytes = decompress_pdf_gz(file_bytes)
+            if pdf_bytes:
+                return pdf_bytes, True
+        
+        # Gzipped CSV files - decompress first, then convert
+        elif file_ext == 'gz' and filename and filename.lower().endswith('.csv.gz'):
+            pdf_bytes = convert_csv_gz_to_pdf(file_bytes)
+            if pdf_bytes:
+                return pdf_bytes, True
+        
+        # CSV files - use dedicated converter for proper table formatting
+        elif (content_type in ['text/csv', 'application/csv', 'text/x-csv'] or 
+              file_ext == 'csv'):
+            pdf_bytes = convert_csv_to_pdf(file_bytes)
+            if pdf_bytes:
+                return pdf_bytes, True
+        
+        # Plain text files
+        elif content_type == 'text/plain' or file_ext == 'txt':
             pdf_bytes = convert_txt_to_pdf(file_bytes)
             if pdf_bytes:
                 return pdf_bytes, True
+        
     except Exception as e:
         print(f"Error in convert_to_pdf: {e}")
         import traceback

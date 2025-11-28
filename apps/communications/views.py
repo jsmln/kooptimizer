@@ -773,12 +773,16 @@ def send_message(request):
             return JsonResponse({'status': 'error', 'message': 'Missing receiver'}, status=400)
 
         # --- 1. Send Text Message (if exists) ---
+        created_message_ids = []
         if message_text:
             with connection.cursor() as cursor:
                 cursor.execute(
                     "SELECT * FROM sp_send_message(%s, %s, %s, %s, %s, %s, %s);",
                     [sender_id, receiver_id, message_text, None, None, None, None]
                 )
+                result = cursor.fetchone()
+                if result:
+                    created_message_ids.append(result[0])  # message_id is first column
         
         # --- 2. Send Files Individually (Loop) ---
         saved_attachments = 0
@@ -793,9 +797,31 @@ def send_message(request):
                         "SELECT * FROM sp_send_message(%s, %s, %s, %s, %s, %s, %s);",
                         [sender_id, receiver_id, "", data_bytes, fname, content_type, fsize]
                     )
+                    result = cursor.fetchone()
+                    if result:
+                        created_message_ids.append(result[0])  # message_id is first column
                 saved_attachments += 1
             except Exception as e:
                 print(f"Error sending file {f.name}: {e}")
+        
+        # --- 3. Send Push Notifications (stored procedures bypass Django signals) ---
+        # Import here to avoid circular imports
+        from .signals import send_push_notification_for_message
+        from .models import Message
+        
+        for message_id in created_message_ids:
+            try:
+                # Fetch the message and receiver from database
+                message = Message.objects.get(message_id=message_id)
+                receiver_user = User.objects.get(user_id=receiver_id)
+                
+                # Send push notification (function handles User mapping internally)
+                send_push_notification_for_message(message, receiver_user)
+            except Exception as e:
+                # Don't fail the request if notification fails
+                print(f"Error sending push notification for message {message_id}: {e}")
+                import traceback
+                traceback.print_exc()
 
         return JsonResponse({
             'status': 'success',
@@ -923,6 +949,24 @@ def convert_attachment_to_pdf(request, message_id):
             return JsonResponse({'status': 'error', 'message': 'You do not have permission'}, status=403)
 
         content_type = msg.attachment_content_type or 'application/octet-stream'
+        filename = msg.attachment_filename or f"attachment_{message_id}"
+        
+        # Check if it's a gzipped PDF
+        is_pdf_gz = filename.lower().endswith('.pdf.gz')
+        if is_pdf_gz:
+            from apps.communications.utils import decompress_pdf_gz
+            pdf_bytes = decompress_pdf_gz(msg.attachment)
+            if pdf_bytes:
+                stream = BytesIO(pdf_bytes)
+                response = FileResponse(stream, as_attachment=False, 
+                                       filename=filename.rsplit('.gz', 1)[0], 
+                                       content_type='application/pdf')
+                response['Content-Length'] = str(len(pdf_bytes))
+                response['X-Conversion-Status'] = 'decompressed'
+                return response
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Failed to decompress PDF'}, status=400)
+        
         if content_type == 'application/pdf':
             return JsonResponse({'status': 'success', 'message': 'Already PDF', 'is_pdf': True})
 
@@ -935,14 +979,25 @@ def convert_attachment_to_pdf(request, message_id):
         pdf_bytes, success = convert_to_pdf(msg.attachment, filename, content_type)
 
         if not success or not pdf_bytes:
-            print(f"[CONVERSION] Failed to convert {filename}")
-            return JsonResponse({'status': 'error', 'message': 'Conversion failed. The document format may not be supported.'}, status=400)
+            print(f"[CONVERSION] Failed to convert {filename} - returning original file")
+            # Return original file instead of error - let browser handle it
+            if isinstance(msg.attachment, memoryview):
+                data = bytes(msg.attachment)
+            else:
+                data = msg.attachment
+            stream = BytesIO(data)
+            response = FileResponse(stream, as_attachment=False, filename=filename, content_type=content_type)
+            response['Content-Length'] = str(len(data))
+            # Add header to indicate conversion failed
+            response['X-Conversion-Status'] = 'failed'
+            return response
 
         print(f"[CONVERSION] Successfully converted {filename} to PDF ({len(pdf_bytes)} bytes)")
         
         stream = BytesIO(pdf_bytes)
         response = FileResponse(stream, as_attachment=False, filename=filename.rsplit('.', 1)[0] + '.pdf', content_type='application/pdf')
         response['Content-Length'] = str(len(pdf_bytes))
+        response['X-Conversion-Status'] = 'success'
         return response
 
     except Exception as e:
@@ -1104,6 +1159,22 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
                 filename = attachment.original_filename
                 content_type = attachment.content_type
                 
+                # Check if it's a gzipped PDF
+                is_pdf_gz = filename.lower().endswith('.pdf.gz')
+                if is_pdf_gz:
+                    from apps.communications.utils import decompress_pdf_gz
+                    pdf_bytes = decompress_pdf_gz(data)
+                    if pdf_bytes:
+                        stream = BytesIO(pdf_bytes)
+                        response = FileResponse(stream, as_attachment=False, 
+                                               filename=filename.rsplit('.gz', 1)[0], 
+                                               content_type='application/pdf')
+                        response['Content-Length'] = str(len(pdf_bytes))
+                        response['X-Conversion-Status'] = 'decompressed'
+                        return response
+                    else:
+                        return JsonResponse({'status': 'error', 'message': 'Failed to decompress PDF'}, status=400)
+                
                 # Already PDF, just return it
                 if content_type == 'application/pdf':
                     stream = BytesIO(data)
@@ -1117,11 +1188,13 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
                 from apps.communications.utils import convert_to_pdf
                 pdf_data, success = convert_to_pdf(data, filename, content_type)
                 
-                if not success:
-                    return JsonResponse({
-                        'status': 'error', 
-                        'message': f'Cannot convert {content_type} to PDF'
-                    }, status=400)
+                if not success or not pdf_data:
+                    # Return original file instead of error
+                    print(f"[CONVERSION] Failed to convert {filename} - returning original file")
+                    stream = BytesIO(data)
+                    response = FileResponse(stream, as_attachment=False, filename=filename, content_type=content_type)
+                    response['X-Conversion-Status'] = 'failed'
+                    return response
                 
                 pdf_filename = filename.rsplit('.', 1)[0] + '.pdf'
                 stream = BytesIO(pdf_data)
@@ -1160,6 +1233,22 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
             filename = filenames[0].strip() if filenames else 'attachment.bin'
             content_type = announcement.attachment_content_type or 'application/octet-stream'
             
+            # Check if it's a gzipped PDF
+            is_pdf_gz = filename.lower().endswith('.pdf.gz')
+            if is_pdf_gz:
+                from apps.communications.utils import decompress_pdf_gz
+                pdf_bytes = decompress_pdf_gz(data)
+                if pdf_bytes:
+                    stream = BytesIO(pdf_bytes)
+                    response = FileResponse(stream, as_attachment=False, 
+                                           filename=filename.rsplit('.gz', 1)[0], 
+                                           content_type='application/pdf')
+                    response['Content-Length'] = str(len(pdf_bytes))
+                    response['X-Conversion-Status'] = 'decompressed'
+                    return response
+                else:
+                    return JsonResponse({'status': 'error', 'message': 'Failed to decompress PDF'}, status=400)
+            
             # Already PDF, just return it
             if content_type == 'application/pdf':
                 stream = BytesIO(data)
@@ -1174,11 +1263,13 @@ def convert_announcement_attachment_to_pdf(request, announcement_id):
             from apps.communications.utils import convert_to_pdf
             pdf_data, success = convert_to_pdf(data, filename, content_type)
             
-            if not success:
-                return JsonResponse({
-                    'status': 'error', 
-                    'message': f'Cannot convert {content_type} to PDF'
-                }, status=400)
+            if not success or not pdf_data:
+                # Return original file instead of error
+                print(f"[CONVERSION] Failed to convert {filename} - returning original file")
+                stream = BytesIO(data)
+                response = FileResponse(stream, as_attachment=False, filename=filename, content_type=content_type)
+                response['X-Conversion-Status'] = 'failed'
+                return response
             
             pdf_filename = filename.rsplit('.', 1)[0] + '.pdf'
             stream = BytesIO(pdf_data)

@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooperative Profile - {{ profile.coop_name|default:coop_name }}</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 0.5in;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #000000;
+            background: #FFFFFF;
+        }
+
+        .print-container {
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.25in;
+        }
+
+        /* Header */
+        .print-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #8B0000;
+            padding-bottom: 10px;
+        }
+
+        .print-header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #8B0000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .single-column {
+            margin-bottom: 15px;
+        }
+
+        /* Form Fields */
+        .form-field {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: baseline;
+        }
+
+        .form-field label {
+            font-weight: bold;
+            min-width: 180px;
+            color: #000000;
+            font-size: 10pt;
+        }
+
+        .form-field .value {
+            flex: 1;
+            border-bottom: 1px solid #000000;
+            padding-left: 5px;
+            padding-right: 5px;
+            min-height: 18px;
+            color: #000000;
+        }
+
+        .form-field .value.empty {
+            border-bottom: 1px dashed #666666;
+            color: #666666;
+        }
+
+        /* Checkboxes */
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000000;
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-weight: bold;
+            font-size: 11pt;
+            color: #8B0000;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #8B0000;
+            padding-bottom: 3px;
+        }
+
+        /* Table Styles */
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        .form-table th {
+            background: #001F3F;
+            color: #FFFFFF;
+            padding: 6px 8px;
+            text-align: left;
+            font-size: 9pt;
+            font-weight: bold;
+            border: 1px solid #000000;
+        }
+
+        .form-table td {
+            padding: 5px 8px;
+            border: 1px solid #000000;
+            font-size: 10pt;
+        }
+
+        .form-table tr:nth-child(even) {
+            background: #F5F5F5;
+        }
+
+        /* Financial Years Grid */
+        .financial-years {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .financial-year-item {
+            display: flex;
+            align-items: baseline;
+        }
+
+        .financial-year-item label {
+            font-weight: bold;
+            min-width: 80px;
+            font-size: 10pt;
+        }
+
+        .financial-year-item .value {
+            flex: 1;
+            border-bottom: 1px solid #000000;
+            padding-left: 5px;
+            min-height: 18px;
+        }
+
+        /* Policy List */
+        .policy-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .policy-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .policy-item input[type="checkbox"] {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000000;
+        }
+
+        /* Print Actions */
+        .print-actions {
+            display: none;
+        }
+
+        @media print {
+            .print-actions {
+                display: none !important;
+            }
+
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+        }
+
+        @media screen {
+            .print-actions {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 20px;
+                padding: 15px;
+                background: #F5F5F5;
+                border-top: 2px solid #8B0000;
+            }
+
+            .print-btn, .download-btn {
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                font-size: 12pt;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .print-btn {
+                background: #8B0000;
+                color: white;
+            }
+
+            .print-btn:hover {
+                background: #6B0000;
+            }
+
+            .download-btn {
+                background: #001F3F;
+                color: white;
+            }
+
+            .download-btn:hover {
+                background: #001529;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <!-- Header -->
+        <div class="print-header">
+            <h1>COOPERATIVE PROFILE</h1>
+        </div>
+
+        <!-- I. General Information -->
+        <div class="section-header">I. GENERAL INFORMATION</div>
+        <div class="two-column">
+            <div>
+                <div class="form-field">
+                    <label>Name of Cooperative:</label>
+                    <span class="value">{% if profile.coop_name %}{{ profile.coop_name }}{% else %}{{ coop_name }}{% endif %}</span>
+                </div>
+                <div class="form-field">
+                    <label>Address:</label>
+                    <span class="value {% if not profile.address %}empty{% endif %}">{{ profile.address|default:"________________" }}</span>
+                </div>
+                <div class="form-field">
+                    <label>Tel. Number:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Mobile Number:</label>
+                    <span class="value {% if not profile.mobile_number %}empty{% endif %}">{{ profile.mobile_number|default:"________________" }}</span>
+                </div>
+                <div class="form-field">
+                    <label>Email Address:</label>
+                    <span class="value {% if not profile.email_address %}empty{% endif %}">{{ profile.email_address|default:"________________" }}</span>
+                </div>
+                <div class="form-field">
+                    <label>Authorized Representative:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>CIN:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>CDA Registration Number:</label>
+                    <span class="value {% if not profile.cda_registration_number %}empty{% endif %}">{{ profile.cda_registration_number|default:"________________" }}</span>
+                </div>
+                <div class="form-field">
+                    <label>CDA Registration Date:</label>
+                    <span class="value {% if not profile.cda_registration_date %}empty{% endif %}">{% if profile.cda_registration_date %}{{ profile.cda_registration_date|date:"M d, Y" }}{% else %}________________{% endif %}</span>
+                </div>
+                <div class="form-field">
+                    <label>LCCDC Membership:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" {% if profile.lccdc_membership %}checked{% endif %} disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" {% if not profile.lccdc_membership %}checked{% endif %} disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Area of Operation:</label>
+                    <span class="value {% if not profile.operation_area %}empty{% endif %}">{{ profile.operation_area|title|default:"________________" }}</span>
+                </div>
+                <div class="form-field">
+                    <label>Bond of Membership:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Date of Gen. Assembly:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Quorum Requirement:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Business Activity:</label>
+                    <span class="value {% if not profile.business_activity %}empty{% endif %}">{{ profile.business_activity|default:"________________" }}</span>
+                </div>
+                <div class="form-field">
+                    <label>Other Financial Services:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Number of Board of Directors:</label>
+                    <span class="value {% if not profile.board_of_directors_count %}empty{% endif %}">{{ profile.board_of_directors_count|default:"____" }}</span>
+                </div>
+                <div class="form-field" style="margin-left: 20px;">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Male:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Female:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="form-field">
+                    <label>Number of PART-TIME Employee:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Number of FULL-TIME Employee:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field" style="margin-left: 20px;">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Male:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Female:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Number of Salaried Employees:</label>
+                    <span class="value {% if not profile.salaried_employees_count %}empty{% endif %}">{{ profile.salaried_employees_count|default:"____" }}</span>
+                </div>
+                <div class="form-field">
+                    <label>Number of Employees Receiving Allowances:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Employees with SSS:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Funding of Reserve Fund:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Employees with PhilHealth:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Employees with Pagibig:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Funding Retirement Fund:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Number of Regular Members:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field" style="margin-left: 20px;">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Male:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Female:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Cert. of Compliance:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" {% if profile.coc_renewal %}checked{% endif %} disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" {% if not profile.coc_renewal %}checked{% endif %} disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Cert. of Tax Exemption:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" {% if profile.cote_renewal %}checked{% endif %} disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" {% if not profile.cote_renewal %}checked{% endif %} disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Number of Associate Members:</label>
+                    <span class="value">NA</span>
+                </div>
+                <div class="form-field" style="margin-left: 20px;">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Male:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                        <div class="checkbox-item">
+                            <label style="min-width: auto;">Female:</label>
+                            <span class="value" style="min-width: 50px;">____</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Validity of Cert. of Compliance:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Validity of Tax Exemption:</label>
+                    <span class="value empty">________________</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- II. Financial Information -->
+        <div class="section-header">II. FINANCIAL INFORMATION</div>
+        <div class="two-column">
+            <div>
+                <div class="financial-years">
+                    <div class="financial-year-item">
+                        <label>2022 Assets:</label>
+                        <span class="value empty">________________</span>
+                    </div>
+                    <div class="financial-year-item">
+                        <label>2023 Assets:</label>
+                        <span class="value empty">________________</span>
+                    </div>
+                    <div class="financial-year-item">
+                        <label>2024 Assets:</label>
+                        <span class="value {% if not profile.assets %}empty{% endif %}">{% if profile.assets %}₱ {{ profile.assets|floatformat:2 }}{% else %}________________{% endif %}</span>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label>Current Loans to Other Agencies:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Donations from:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Amount:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Release Date:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Total Paid Up Capital:</label>
+                    <span class="value {% if not profile.paid_up_capital %}empty{% endif %}">{% if profile.paid_up_capital %}₱ {{ profile.paid_up_capital|floatformat:2 }}{% else %}________________{% endif %}</span>
+                </div>
+                <div class="form-field">
+                    <label>Net Surplus/Loss:</label>
+                    <span class="value {% if not profile.net_surplus %}empty{% endif %}">{% if profile.net_surplus %}₱ {{ profile.net_surplus|floatformat:2 }}{% else %}________________{% endif %}</span>
+                </div>
+                <div class="form-field">
+                    <label>Local Accumulated CETF:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Accumulated CDF:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Accumulated RF:</label>
+                    <span class="value empty">________________</span>
+                </div>
+            </div>
+            <div>
+                <div class="form-field">
+                    <label>Amount:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Release Date:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Total Subscribed Capital:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Total Statutory Fund:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Local Accumulated CETF due to APEX 2020:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Accumulated OPF:</label>
+                    <span class="value empty">________________</span>
+                </div>
+                <div class="form-field">
+                    <label>Gross Income per Business:</label>
+                    <span class="value empty">________________</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- III. Policies -->
+        <div class="section-header">III. PRESENCE OF THE FOLLOWING:</div>
+        <div class="policy-list">
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Membership Policy</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Med Con Policy</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Election Policy</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>DOSRI</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Policy Retirement</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>GAD</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Code of Governance & Ethical Standards</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>CASA</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Audit & Inventory</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Human Resource Policy</span>
+            </div>
+            <div class="policy-item">
+                <input type="checkbox" disabled>
+                <span>Others</span>
+            </div>
+        </div>
+
+        <!-- IV. Lending & Credit -->
+        <div class="section-header">IV. LENDING & CREDIT</div>
+        <div class="two-column">
+            <div class="form-field">
+                <label>Do you adhere to Truth on Lending Act/Diminishing Balance:</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" disabled>
+                        <span>Yes</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" disabled>
+                        <span>No</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-field">
+                <label>Do you have Credit Policy?</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" disabled>
+                        <span>Yes</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" disabled>
+                        <span>No</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Actions (Screen Only) -->
+        <div class="print-actions">
+            <button class="print-btn" onclick="window.print()">Print</button>
+            <button class="download-btn" onclick="downloadAsPDF()">Download as PDF</button>
+        </div>
+    </div>
+
+    <script>
+        function downloadAsPDF() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
+

@@ -4,17 +4,25 @@
 {% block dashboard_title %}Profile Management{% endblock %}
 
 {% block extra_head %}
-    {{ block.super }}
-    {# You can move this CSS to a separate file if you prefer #}
-    <link rel="stylesheet" href="{% static 'frontend/profile_form.css' %}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/css/bootstrap-datepicker.min.css">
+{{ block.super }}
+
+<link rel="stylesheet" href="{% static 'frontend/profile_form.css' %}">
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/css/bootstrap-datepicker.min.css">
 {% endblock %}
 
 {% block dashboard_content %}
 <div class="profile-list-container">
     <div class="page-header">
         <div>
-            <h2><i class="bi bi-building"></i> Cooperative Profile</h2>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <h2><i class="bi bi-building"></i> Cooperative Profile</h2>
+                {% if profile %}
+                <button type="button" class="btn-print-profile" onclick="printProfile()" title="Print Profile">
+                    <i class="bi bi-printer"></i>
+                </button>
+                {% endif %}
+            </div>
             <p class="text-muted mb-0">View and manage your cooperative's information</p>
         </div>
         {# Show Create button only if profile does not exist #}
@@ -34,141 +42,346 @@
                 <div class="status-badge status-{{ profile.approval_status|lower }}">
                     <i class="bi bi-circle-fill"></i> {{ profile.approval_status|default:"Pending"|title }}
                 </div>
+                {% if profile.report_year %}
+                <div class="current-year-badge" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <i class="bi bi-calendar-check"></i> 
+                    <span>Profile Year: <strong>{{ profile.report_year }}</strong></span>
+                    {% if not is_editable %}
+                    <span class="badge bg-warning text-dark" style="font-size: 0.75rem; padding: 4px 8px;">
+                        <i class="bi bi-lock"></i> View Only - Year Ended
+                    </span>
+                    {% endif %}
+                    {# Year Selector Dropdown #}
+                    {% if profile_history|length > 1 %}
+                    <select id="profile-year-selector" onchange="window.location.href='?year=' + this.value">
+                        {% for record in profile_history %}
+                        <option value="{{ record.report_year }}" {% if record.report_year == profile.report_year %}selected{% endif %}>
+                            {{ record.report_year }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
             <div class="header-right">
+                {% if is_editable %}
                 <button type="button" class="btn-edit" data-bs-toggle="modal" data-bs-target="#createProfileModal">
                     <i class="bi bi-pencil"></i> Edit Profile
                 </button>
+                {% else %}
+                <button type="button" class="btn-edit" disabled style="opacity: 0.6; cursor: not-allowed;" title="Cannot edit past year profiles">
+                    <i class="bi bi-lock"></i> View Only
+                </button>
+                {% endif %}
             </div>
         </div>
+
+        {# Profile History Section #}
+        {% if profile_history %}
+        <div class="info-section" style="border-bottom: 2px solid var(--border-color);">
+            <h4 class="section-title"><i class="bi bi-clock-history"></i> Profile History (Latest 3 Years)</h4>
+            <div class="history-cards">
+                {% for record in profile_history %}
+                <div class="history-card {% if record.report_year == profile.report_year %}current-year{% endif %}" 
+                     data-year="{{ record.report_year }}"
+                     onclick="window.location.href='?year={{ record.report_year }}'"
+                     style="cursor: pointer;">
+                    <div class="history-card-header">
+                        <span class="year-badge">{{ record.report_year|default:"N/A" }}</span>
+                        {% if record.report_year == profile.report_year %}
+                        <span class="current-badge">Current</span>
+                        {% endif %}
+                        {% if record.report_year < current_year %}
+                        <span class="badge bg-secondary" style="font-size: 0.7rem; padding: 3px 8px;">
+                            <i class="bi bi-lock"></i> Ended
+                        </span>
+                        {% endif %}
+                        <span class="status-badge-mini status-{{ record.approval_status|lower }}">
+                            {{ record.approval_status|default:"Pending"|title }}
+                        </span>
+                    </div>
+                    <div class="history-card-body">
+                        <div class="history-metric">
+                            <span class="metric-label">Created</span>
+                            <span class="metric-value">{{ record.created_at|date:"M d, Y"|default:"N/A" }}</span>
+                        </div>
+                        <div class="history-metric">
+                            <span class="metric-label">Last Updated</span>
+                            <span class="metric-value">{{ record.updated_at|date:"M d, Y"|default:"N/A" }}</span>
+                        </div>
+                        <div class="history-footer">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> Year {{ record.report_year|default:"N/A" }}
+                            </small>
+                            <button type="button" class="btn-view-details" onclick="event.stopPropagation(); window.location.href='?year={{ record.report_year }}'">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <div class="info-section">
             <h4 class="section-title"><i class="bi bi-info-circle"></i> General Information</h4>
-            <div class="info-grid">
-                <div class="info-item">
-                    <label>Cooperative Name</label>
-                    <p>{{ profile.coop_name|default:coop_name }}</p>
+            <div class="info-grid-enhanced">
+                <div class="info-group">
+                    <h5 class="info-group-title"><i class="bi bi-building"></i> Basic Details</h5>
+                    <div class="info-items">
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-building"></i> Cooperative Name</label>
+                            <p>{{ profile.coop_name|default:coop_name }}</p>
+                        </div>
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-geo-alt"></i> Address</label>
+                            <p>{{ profile.address|default:"N/A" }}</p>
+                        </div>
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-pin-map"></i> Area of Operation</label>
+                            <p>{{ profile.operation_area|title|default:"N/A" }}</p>
+                        </div>
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-briefcase"></i> Business Activity</label>
+                            <p>{{ profile.business_activity|default:"N/A" }}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>Address</label>
-                    <p>{{ profile.address|default:"N/A" }}</p>
+                
+                <div class="info-group">
+                    <h5 class="info-group-title"><i class="bi bi-telephone"></i> Contact Information</h5>
+                    <div class="info-items">
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-phone"></i> Contact Number</label>
+                            <p>{{ profile.mobile_number|default:"N/A" }}</p>
+                        </div>
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-envelope"></i> Email Address</label>
+                            <p>{{ profile.email_address|default:"N/A" }}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>Area of Operation</label>
-                    <p>{{ profile.operation_area|title|default:"N/A" }}</p>
+                
+                <div class="info-group">
+                    <h5 class="info-group-title"><i class="bi bi-file-earmark-text"></i> Registration Details</h5>
+                    <div class="info-items">
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-hash"></i> CDA Registration No.</label>
+                            <p>{{ profile.cda_registration_number|default:"N/A" }}</p>
+                        </div>
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-calendar-event"></i> CDA Registration Date</label>
+                            <p>{{ profile.cda_registration_date|date:"M d, Y"|default:"N/A" }}</p>
+                        </div>
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-check-circle"></i> LCCDC Membership</label>
+                            <p>
+                                {% if profile.lccdc_membership %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Yes</span>
+                                {% if profile.lccdc_membership_date %}
+                                <small class="text-muted">({{ profile.lccdc_membership_date|date:"M d, Y" }})</small>
+                                {% endif %}
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> No</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>Contact Number</label>
-                    <p>{{ profile.mobile_number|default:"N/A" }}</p>
-                </div>
-                <div class="info-item">
-                    <label>Email Address</label>
-                    <p>{{ profile.email_address|default:"N/A" }}</p>
-                </div>
-                <div class="info-item">
-                    <label>CDA Registration No.</label>
-                    <p>{{ profile.cda_registration_number|default:"N/A" }}</p>
-                </div>
-                <div class="info-item">
-                    <label>CDA Registration Date</label>
-                    <p>{{ profile.cda_registration_date|date:"M d, Y"|default:"N/A" }}</p>
-                </div>
-                <div class="info-item">
-                    <label>LCCDC Membership</label>
-                    <p>
-                        {% if profile.lccdc_membership %}
-                            <span class="badge bg-success">Yes</span>
-                            {% if profile.lccdc_membership_date %}
-                                ({{ profile.lccdc_membership_date|date:"M d, Y" }})
-                            {% endif %}
-                        {% else %}
-                            <span class="badge bg-secondary">No</span>
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="info-item">
-                    <label>Business Activity</label>
-                    <p>{{ profile.business_activity|default:"N/A" }}</p>
-                </div>
-                <div class="info-item">
-                    <label>No. of Board Directors</label>
-                    <p>{{ profile.board_of_directors_count|default:"0" }}</p>
-                </div>
-                <div class="info-item">
-                    <label>No. of Salaried Employees</label>
-                    <p>{{ profile.salaried_employees_count|default:"0" }}</p>
-                </div>
-                <div class="info-item">
-                    <label>Last Reporting Year</label>
-                    <p>{{ profile.report_year|default:"N/A" }}</p>
+                
+                <div class="info-group">
+                    <h5 class="info-group-title"><i class="bi bi-people"></i> Organization Structure</h5>
+                    <div class="info-items">
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-person-badge"></i> Board of Directors</label>
+                            <p><span class="count-badge">{{ profile.board_of_directors_count|default:"0" }}</span> members</p>
+                        </div>
+                        <div class="info-item-enhanced">
+                            <label><i class="bi bi-person-workspace"></i> Salaried Employees</label>
+                            <p><span class="count-badge">{{ profile.salaried_employees_count|default:"0" }}</span> employees</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="info-section">
-            <h4 class="section-title"><i class="bi bi-file-earmark-check"></i> Certificates</h4>
-            <div class="info-grid">
-                <div class="info-item">
-                    <label>Certificate of Compliance</label>
-                    <p>
-                        {% if profile.coc_renewal %}
-                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Available</span>
+            <h4 class="section-title"><i class="bi bi-file-earmark-check"></i> Certificates & Compliance</h4>
+            <div class="certificates-grid">
+                <div class="certificate-card {% if profile.coc_renewal %}available{% else %}unavailable{% endif %}">
+                    <div class="certificate-icon">
+                        <i class="bi bi-file-earmark-check-fill"></i>
+                    </div>
+                    <div class="certificate-content">
+                        <h5>Certificate of Compliance</h5>
+                        <div class="certificate-status">
+                            {% if profile.coc_renewal %}
+                            <span class="badge-certificate available">
+                                <i class="bi bi-check-circle-fill"></i> Available
+                            </span>
                             {% if profile.coc_attachment %}
-                                <a href="{% url 'cooperatives:download_attachment' profile.coop_id 'coc' %}" class="download-link">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" class="btn-certificate-preview" 
+                                        data-coop-id="{{ profile.coop_id }}"
+                                        data-attachment-type="coc"
+                                        data-filename="Certificate of Compliance">
+                                    <i class="bi bi-eye"></i> Preview
+                                </button>
+                                <a href="{% url 'cooperatives:download_attachment' profile.coop_id 'coc' %}"
+                                    class="btn-certificate-download">
                                     <i class="bi bi-download"></i> Download
                                 </a>
+                            </div>
                             {% endif %}
-                        {% else %}
-                            <span class="badge bg-warning">Not Available</span>
-                        {% endif %}
-                    </p>
+                            {% else %}
+                            <span class="badge-certificate unavailable">
+                                <i class="bi bi-x-circle"></i> Not Available
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>Certificate of Tax Exemption</label>
-                    <p>
-                        {% if profile.cote_renewal %}
-                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Available</span>
+                <div class="certificate-card {% if profile.cote_renewal %}available{% else %}unavailable{% endif %}">
+                    <div class="certificate-icon">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </div>
+                    <div class="certificate-content">
+                        <h5>Certificate of Tax Exemption</h5>
+                        <div class="certificate-status">
+                            {% if profile.cote_renewal %}
+                            <span class="badge-certificate available">
+                                <i class="bi bi-check-circle-fill"></i> Available
+                            </span>
                             {% if profile.cote_attachment %}
-                                <a href="{% url 'cooperatives:download_attachment' profile.coop_id 'cte' %}" class="download-link">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" class="btn-certificate-preview" 
+                                        data-coop-id="{{ profile.coop_id }}"
+                                        data-attachment-type="cte"
+                                        data-filename="Certificate of Tax Exemption">
+                                    <i class="bi bi-eye"></i> Preview
+                                </button>
+                                <a href="{% url 'cooperatives:download_attachment' profile.coop_id 'cte' %}"
+                                    class="btn-certificate-download">
                                     <i class="bi bi-download"></i> Download
                                 </a>
+                            </div>
                             {% endif %}
-                        {% else %}
-                            <span class="badge bg-warning">Not Available</span>
-                        {% endif %}
-                    </p>
+                            {% else %}
+                            <span class="badge-certificate unavailable">
+                                <i class="bi bi-x-circle"></i> Not Available
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="info-section">
             <h4 class="section-title"><i class="bi bi-currency-dollar"></i> Financial Information</h4>
-            <div class="info-grid">
-                <div class="info-item">
-                    <label>Assets (PHP)</label>
-                    <p class="financial-value">₱ {{ profile.assets|floatformat:2|default:"0.00" }}</p>
+            
+            {% if profile.report_year %}
+            <div class="current-year-badge">
+                <i class="bi bi-calendar-check"></i> Current Reporting Year: <strong>{{ profile.report_year }}</strong>
+            </div>
+            {% endif %}
+            
+            <div class="financial-summary-card">
+                <div class="financial-metrics">
+                    <div class="financial-metric">
+                        <div class="metric-icon assets">
+                            <i class="bi bi-bank"></i>
+                        </div>
+                        <div class="metric-content">
+                            <label>Total Assets</label>
+                            <p class="financial-value">₱ {{ profile.assets|floatformat:2|default:"0.00" }}</p>
+                        </div>
+                    </div>
+                    <div class="financial-metric">
+                        <div class="metric-icon capital">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div class="metric-content">
+                            <label>Paid Up Capital</label>
+                            <p class="financial-value">₱ {{ profile.paid_up_capital|floatformat:2|default:"0.00" }}</p>
+                        </div>
+                    </div>
+                    <div class="financial-metric">
+                        <div class="metric-icon surplus">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <div class="metric-content">
+                            <label>Net Surplus</label>
+                            <p class="financial-value">₱ {{ profile.net_surplus|floatformat:2|default:"0.00" }}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>Paid Up Capital (PHP)</label>
-                    <p class="financial-value">₱ {{ profile.paid_up_capital|floatformat:2|default:"0.00" }}</p>
+                
+                {% if profile.financial_attachments_exist %}
+                <div class="financial-documents-section">
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" class="btn-preview-docs" 
+                                data-coop-id="{{ profile.coop_id }}"
+                                data-attachment-type="financial"
+                                data-filename="Financial Documents">
+                            <i class="bi bi-eye"></i> Preview Documents
+                        </button>
+                        <a href="{% url 'cooperatives:download_attachment' profile.coop_id 'financial' %}"
+                            class="btn-download-docs">
+                            <i class="bi bi-download"></i> Download Documents
+                        </a>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <label>Net Surplus (PHP)</label>
-                    <p class="financial-value">₱ {{ profile.net_surplus|floatformat:2|default:"0.00" }}</p>
-                </div>
-                <div class="info-item full-width">
-                    <label>Financial Documents</label>
-                    <p>
-                        {% if profile.financial_attachments_exist %}
-                            <a href="{% url 'cooperatives:download_attachment' profile.coop_id 'financial' %}" class="download-link">
-                                <i class="bi bi-download"></i> Download Documents
-                            </a>
-                        {% else %}
-                            <span class="text-muted">No documents attached</span>
-                        {% endif %}
-                    </p>
+                {% endif %}
+            </div>
+
+            {% if financial_history %}
+            <div class="financial-history-compact">
+                <h5 class="history-title">
+                    <i class="bi bi-clock-history"></i> Recent Financial History (Latest 3 Years)
+                </h5>
+                <div class="history-cards">
+                    {% for record in financial_history %}
+                    <div class="history-card {% if record.report_year == profile.report_year %}current-year{% endif %}" 
+                         data-year="{{ record.report_year }}">
+                        <div class="history-card-header">
+                            <span class="year-badge">{{ record.report_year|default:"N/A" }}</span>
+                            {% if record.report_year == profile.report_year %}
+                            <span class="current-badge">Current</span>
+                            {% endif %}
+                            <span class="status-badge-mini status-{{ record.approval_status|lower }}">
+                                {{ record.approval_status|default:"Pending"|title }}
+                            </span>
+                        </div>
+                        <div class="history-card-body">
+                            <div class="history-metric">
+                                <span class="metric-label">Assets</span>
+                                <span class="metric-value">₱ {{ record.assets|floatformat:2|default:"0.00" }}</span>
+                            </div>
+                            <div class="history-metric">
+                                <span class="metric-label">Capital</span>
+                                <span class="metric-value">₱ {{ record.paid_up_capital|floatformat:2|default:"0.00" }}</span>
+                            </div>
+                            <div class="history-metric">
+                                <span class="metric-label">Surplus</span>
+                                <span class="metric-value">₱ {{ record.net_surplus|floatformat:2|default:"0.00" }}</span>
+                            </div>
+                            <div class="history-footer">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> {{ record.created_at|date:"M Y"|default:"N/A" }}
+                                </small>
+                                <button type="button" class="btn-view-details" data-year="{{ record.report_year }}">
+                                    <i class="bi bi-eye"></i> Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
+            {% endif %}
         </div>
 
         {% if officers %}
@@ -211,7 +424,6 @@
                             <th>Name</th>
                             <th>Gender</th>
                             <th>Mobile Number</th>
-                            <th>Email</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -220,7 +432,6 @@
                             <td>{{ member.fullname }}</td>
                             <td>{{ member.gender|default:"N/A" }}</td>
                             <td>{{ member.mobile_number|default:"N/A" }}</td>
-                            <td>{{ member.email|default:"N/A" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -229,14 +440,87 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Modal for viewing financial data by year -->
+    <div class="modal fade" id="financialYearModal" tabindex="-1" aria-labelledby="financialYearModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="financialYearModalLabel">Financial Data - Year <span id="modal-year"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="financial-year-details">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading financial data...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Preview Modal (Reusable from messages) -->
+    <div id="preview-modal" class="preview-overlay" style="display:none;">
+        <div class="preview-content" role="dialog" aria-modal="true">
+            <div class="preview-header">
+                <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                    <button id="toggleSidebar" title="Toggle thumbnails" style="border:none; display:inline-flex;"><i class="bi bi-layout-sidebar" style="font-size:1.25rem;"></i></button>
+                    <div class="preview-title" id="preview-title">Preview</div>
+                </div>
+                <div class="preview-controls">
+                    <button id="rotateLeft" title="Rotate left" style="display:inline-flex;"><i class="bi bi-arrow-counterclockwise"></i></button>
+                    <button id="rotateRight" title="Rotate right" style="display:inline-flex;"><i class="bi bi-arrow-clockwise"></i></button>
+                    <button id="fitWidth" title="Fit to width" style="display:inline-flex;"><i class="bi bi-arrows-expand"></i></button>
+                    <button id="fitHeight" title="Fit to height" style="display:inline-flex;"><i class="bi bi-arrows-expand-vertical"></i></button>
+                    <button id="zoomOut" style="display:inline-flex;">−</button>
+                    <span class="preview-zoom-level" id="zoomLevel" style="display:inline-block;">100%</span>
+                    <button id="zoomIn" style="display:inline-flex;">+</button>
+                    <div id="page-controls" style="display:none; gap:8px; align-items:center;">
+                        <button id="prevPage" style="background:#666;">‹</button>
+                        <input type="number" id="pageInput" min="1" style="width:50px; padding:4px 6px; border:1px solid #ccc; border-radius:4px; text-align:center; font-size:0.85rem;" />
+                        <span class="preview-zoom-level" style="min-width:auto;">of <span id="totalPages">1</span></span>
+                        <button id="nextPage" style="background:#666;">›</button>
+                    </div>
+                    <a id="preview-download-main" class="btn-download-main" href="#" download>Download</a>
+                    <button id="preview-close" style="background:#666;">✕</button>
+                </div>
+            </div>
+            <div class="preview-main-container">
+                <!-- File navigation buttons (for multiple files) -->
+                <button id="prev-file-btn" class="file-nav-btn file-nav-prev" style="display:none;" title="Previous file">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button id="next-file-btn" class="file-nav-btn file-nav-next" style="display:none;" title="Next file">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <div class="preview-sidebar" id="preview-sidebar" style="display:none;">
+                    <div class="preview-sidebar-header">Pages</div>
+                    <div class="preview-thumbnails" id="preview-thumbnails"></div>
+                </div>
+                <div class="preview-content-wrapper">
+                    <div class="preview-body" id="preview-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     {% else %}
     <div class="empty-state">
         <i class="bi bi-inbox"></i>
+        {% if error_message %}
+        <h3>Access Error</h3>
+        <p>{{ error_message }}</p>
+        {% else %}
         <h3>No Profile Found</h3>
         <p>Create your cooperative profile to get started.</p>
         <button type="button" class="create-profile-btn" data-bs-toggle="modal" data-bs-target="#createProfileModal">
             <i class="bi bi-plus-circle"></i> Create Profile Now
         </button>
+        {% endif %}
     </div>
     {% endif %}
 </div>
@@ -248,25 +532,48 @@
             <div class="modal-header">
                 <h5 class="modal-title" id="createProfileLabel">
                     {% if profile %}Edit{% else %}Create{% endif %} Cooperative Profile
+                    {% if profile and profile.report_year %}
+                    <span style="font-size: 0.9rem; font-weight: normal; margin-left: 10px;">
+                        (Year: {{ profile.report_year }})
+                    </span>
+                    {% endif %}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body bg-light p-0">
+            <div class="modal-body">
+                {% if not is_editable and profile %}
+                <div class="alert alert-warning" style="margin-bottom: 20px; background: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-text);">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    <strong>View Only Mode:</strong> This profile is for year {{ profile.report_year }}, which has ended. 
+                    Past year profiles cannot be edited. To make changes, please create or edit the profile for the current year ({{ current_year }}).
+                </div>
+                {% endif %}
                 <div class="profile-form-container">
-                    <form method="POST" enctype="multipart/form-data" id="profileForm" action="{% url 'cooperatives:create_profile' %}">
+                    <form method="POST" enctype="multipart/form-data" id="profileForm"
+                        action="{% url 'cooperatives:create_profile' %}" {% if not is_editable %}onsubmit="event.preventDefault(); alert('Cannot edit past year profiles. Please select the current year.'); return false;"{% endif %}>
                         {% csrf_token %}
-                        
-                        <fieldset>
-                            <legend>General Information</legend>
+                        {# Hidden field for report_year - defaults to current year or profile's year #}
+                        <input type="hidden" name="report_year" id="report-year-field" 
+                            value="{% if profile and profile.report_year %}{{ profile.report_year }}{% else %}{{ current_year }}{% endif %}">
+
+                        <div class="form-section">
+                            <div class="section-header">
+                                <i class="bi bi-info-circle"></i>
+                                <h5>General Information</h5>
+                            </div>
 
                             <div class="form-group">
                                 <label for="coop-name" class="required">Name of Cooperative</label>
-                                <input type="text" id="coop-name" name="coop_name" value="{{ profile.coop_name|default:coop_name|default:'' }}" readonly style="background-color: #f8f9fa;">
+                                <input type="text" id="coop-name" name="coop_name"
+                                    value="{{ profile.coop_name|default:coop_name|default:'' }}" readonly
+                                    style="background-color: #f8f9fa;">
                             </div>
 
                             <div class="form-group">
                                 <label for="coop-address" class="required">Cooperative Address</label>
-                                <input type="text" id="coop-address" name="coop_address" value="{{ profile.address|default:'' }}" placeholder="Enter Cooperative Address" required>
+                                <input type="text" id="coop-address" name="coop_address"
+                                    value="{{ profile.address|default:'' }}" placeholder="Enter Cooperative Address"
+                                    required>
                             </div>
 
                             <div class="form-row">
@@ -274,37 +581,50 @@
                                     <label for="area-operation" class="required">Area of Operation</label>
                                     <select id="area-operation" name="area_operation" required>
                                         <option value="">Select area</option>
-                                        <option value="city" {% if profile.operation_area == 'city' %}selected{% endif %}>City</option>
-                                        <option value="municipal" {% if profile.operation_area == 'municipal' %}selected{% endif %}>Municipal</option>
-                                        <option value="provincial" {% if profile.operation_area == 'provincial' %}selected{% endif %}>Provincial</option>
-                                        <option value="regional" {% if profile.operation_area == 'regional' %}selected{% endif %}>Regional</option>
+                                        <option value="city" {% if profile and profile.operation_area == "city" %}selected{% endif %}>
+                                            City</option>
+                                        <option value="municipal" {% if profile and profile.operation_area == "municipal" %}selected{% endif %}>
+                                            Municipal</option>
+                                        <option value="provincial" {% if profile and profile.operation_area == "provincial" %}selected{% endif %}>
+                                            Provincial</option>
+                                        <option value="regional" {% if profile and profile.operation_area == "regional" %}selected{% endif %}>
+                                            Regional</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="business-activity" class="required">Business Activity</label>
-                                    <input type="text" id="business-activity" name="business_activity" value="{{ profile.business_activity|default:'' }}" placeholder="e.g. Transport, Service" required>
+                                    <input type="text" id="business-activity" name="business_activity"
+                                        value="{{ profile.business_activity|default:'' }}"
+                                        placeholder="e.g. Transport, Service" required>
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="coop-contact" class="required">Contact Number</label>
-                                    <input type="tel" id="coop-contact" name="coop_contact" value="{{ profile.mobile_number|default:'' }}" placeholder="09*********" required>
+                                    <input type="tel" id="coop-contact" name="coop_contact"
+                                        value="{{ profile.mobile_number|default:'' }}" placeholder="09*********"
+                                        required>
                                 </div>
                                 <div class="form-group">
                                     <label for="coop-email" class="required">Email Address</label>
-                                    <input type="email" id="coop-email" name="coop_email" value="{{ profile.email_address|default:'' }}" placeholder="sample@gmail.com" required>
+                                    <input type="email" id="coop-email" name="coop_email"
+                                        value="{{ profile.email_address|default:'' }}" placeholder="sample@gmail.com"
+                                        required>
                                 </div>
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="cda-reg-num" class="required">CDA Registration No.</label>
-                                    <input type="text" id="cda-reg-num" name="cda_reg_num" value="{{ profile.cda_registration_number|default:'' }}" placeholder="****-*********" required>
+                                    <input type="text" id="cda-reg-num" name="cda_reg_num"
+                                        value="{{ profile.cda_registration_number|default:'' }}"
+                                        placeholder="****-*********" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="cda-reg-date" class="required">Registration Date</label>
-                                    <input type="date" id="cda-reg-date" name="cda_reg_date" value="{{ profile.cda_registration_date|date:'Y-m-d' }}" required>
+                                    <input type="date" id="cda-reg-date" name="cda_reg_date"
+                                        value="{{ profile.cda_registration_date|date:'Y-m-d' }}" required>
                                 </div>
                             </div>
 
@@ -313,22 +633,25 @@
                                     <label class="required">LCCDC Membership</label>
                                     <div class="form-check-group">
                                         <label class="radio-container">Yes
-                                            <input type="radio" name="lccdc_membership" value="yes" {% if profile.lccdc_membership %}checked{% endif %} required>
+                                            <input type="radio" name="lccdc_membership" value="yes" {% if profile and profile.lccdc_membership %}checked{% endif %} required>
                                             <span class="checkmark"></span>
                                         </label>
                                         <label class="radio-container">No
-                                            <input type="radio" name="lccdc_membership" value="no" {% if not profile.lccdc_membership %}checked{% endif %} required>
+                                            <input type="radio" name="lccdc_membership" value="no" {% if not profile or not profile.lccdc_membership %}checked{% endif %} required>
                                             <span class="checkmark"></span>
                                         </label>
                                     </div>
                                 </div>
 
-                                <div class="form-group lccdc-membership-date" style="display: {% if profile.lccdc_membership %}block{% else %}none{% endif %};">
+                                <div class="form-group lccdc-membership-date"
+                                    style="display: {% if profile and profile.lccdc_membership %}block{% else %}none{% endif %};">
                                     <label for="lccdc-membership-date" class="required">LCCDC Membership Date</label>
-                                    <input type="date" id="lccdc-membership-date" name="lccdc_membership_date" value="{{ profile.lccdc_membership_date|date:'Y-m-d' }}">
+                                    <input type="date" id="lccdc-membership-date" name="lccdc_membership_date"
+                                        value="{{ profile.lccdc_membership_date|date:'Y-m-d' }}">
                                 </div>
 
-                                <div class="form-group lccdc-not-member" style="display: {% if not profile.lccdc_membership %}block{% else %}none{% endif %};">
+                                <div class="form-group lccdc-not-member"
+                                    style="display: {% if not profile or not profile.lccdc_membership %}block{% else %}none{% endif %};">
                                     <p style="font-size:0.9rem; font-style:italic; margin:0;">Not an LCCDC member.</p>
                                 </div>
                             </div>
@@ -336,11 +659,13 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="num-bod" class="required">No. of Board Directors</label>
-                                    <input type="number" id="num-bod" name="num_bod" value="{{ profile.board_of_directors_count }}" placeholder="0" required>
+                                    <input type="number" id="num-bod" name="num_bod"
+                                        value="{{ profile.board_of_directors_count }}" placeholder="0" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="num-se" class="required">No. of Salaried Employees</label>
-                                    <input type="number" id="num-se" name="num_se" value="{{ profile.salaried_employees_count }}" placeholder="0" required>
+                                    <input type="number" id="num-se" name="num_se"
+                                        value="{{ profile.salaried_employees_count }}" placeholder="0" required>
                                 </div>
                             </div>
 
@@ -349,25 +674,35 @@
                                     <label class="required">Certificate of Compliance</label>
                                     <div class="form-check-group">
                                         <label class="radio-container">Yes
-                                            <input type="radio" name="coc" value="yes" {% if profile.coc_renewal %}checked{% endif %} required>
+                                            <input type="radio" name="coc" value="yes" {% if profile and profile.coc_renewal %}checked{% endif %} required>
                                             <span class="checkmark"></span>
                                         </label>
                                         <label class="radio-container">No
-                                            <input type="radio" name="coc" value="no" {% if not profile.coc_renewal %}checked{% endif %} required>
+                                            <input type="radio" name="coc" value="no" {% if not profile or not profile.coc_renewal %}checked{% endif %} required>
                                             <span class="checkmark"></span>
                                         </label>
                                     </div>
 
-                                    <div class="file-upload-single coc-file-group" style="display: {% if profile.coc_renewal %}block{% else %}none{% endif %}; margin-top: .5rem;">
-                                        <label for="coc-file" class="file-label"><i class="bi bi-cloud-upload"></i> Upload CoC</label>
-                                        {# data-has-file attribute prevents 'required' on edit if file exists #}
-                                        <input type="file" id="coc-file" name="coc_file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" {% if profile.coc_attachment %}data-has-file="true"{% endif %}>
-                                        <div class="file-name" id="coc-file-name" style="margin-top:.25rem;color:#333;">
-                                            {% if profile.coc_attachment %}File already uploaded (upload new to replace){% endif %}
+                                    <div class="file-upload-single-modern coc-file-group"
+                                        style="display: {% if profile and profile.coc_renewal %}block{% else %}none{% endif %}; margin-top: 1rem;">
+                                        <div class="file-upload-area-single" id="coc-upload-area">
+                                            <input type="file" id="coc-file" name="coc_file" class="file-input-hidden"
+                                                accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" {% if profile and profile.coc_attachment %}data-has-file="true"{% endif %}>
+                                            <div class="file-upload-content-single">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                                <p class="upload-text-single">Upload Certificate of Compliance</p>
+                                                <p class="upload-hint-single">PDF, DOC, DOCX, XLS, XLSX, Images</p>
+                                                {% if profile and profile.coc_attachment %}
+                                                <p class="upload-note"><i class="bi bi-check-circle"></i> File already uploaded (upload new to replace)</p>
+                                                {% endif %}
+                                            </div>
                                         </div>
+                                        <div class="file-name-display" id="coc-file-name"></div>
                                     </div>
-                                    <div class="not-available coc-not-available" style="display: {% if not profile.coc_renewal %}block{% else %}none{% endif %}; margin-top:.5rem;">
-                                        <p style="font-size:0.9rem; font-style:italic; margin:0;">Please upload renewed certificate ASAP.</p>
+                                    <div class="not-available coc-not-available"
+                                        style="display: {% if not profile or not profile.coc_renewal %}block{% else %}none{% endif %}; margin-top:.5rem;">
+                                        <p style="font-size:0.9rem; font-style:italic; margin:0;">Please upload renewed
+                                            certificate ASAP.</p>
                                     </div>
                                 </div>
 
@@ -375,72 +710,101 @@
                                     <label class="required">Certificate of Tax Exemption</label>
                                     <div class="form-check-group">
                                         <label class="radio-container">Yes
-                                            <input type="radio" name="cte" value="yes" {% if profile.cote_renewal %}checked{% endif %} required>
+                                            <input type="radio" name="cte" value="yes" {% if profile and profile.cote_renewal %}checked{% endif %} required>
                                             <span class="checkmark"></span>
                                         </label>
                                         <label class="radio-container">No
-                                            <input type="radio" name="cte" value="no" {% if not profile.cote_renewal %}checked{% endif %} required>
+                                            <input type="radio" name="cte" value="no" {% if not profile or not profile.cote_renewal %}checked{% endif %} required>
                                             <span class="checkmark"></span>
                                         </label>
                                     </div>
 
-                                    <div class="file-upload-single cte-file-group" style="display: {% if profile.cote_renewal %}block{% else %}none{% endif %}; margin-top: .5rem;">
-                                        <label for="cte-file" class="file-label"><i class="bi bi-cloud-upload"></i> Upload CTE</label>
-                                        <input type="file" id="cte-file" name="cte_file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" {% if profile.cote_attachment %}data-has-file="true"{% endif %}>
-                                        <div class="file-name" id="cte-file-name" style="margin-top:.25rem;color:#333;">
-                                            {% if profile.cote_attachment %}File already uploaded (upload new to replace){% endif %}
+                                    <div class="file-upload-single-modern cte-file-group"
+                                        style="display: {% if profile and profile.cote_renewal %}block{% else %}none{% endif %}; margin-top: 1rem;">
+                                        <div class="file-upload-area-single" id="cte-upload-area">
+                                            <input type="file" id="cte-file" name="cte_file" class="file-input-hidden"
+                                                accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" {% if profile and profile.cote_attachment %}data-has-file="true"{% endif %}>
+                                            <div class="file-upload-content-single">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                                <p class="upload-text-single">Upload Certificate of Tax Exemption</p>
+                                                <p class="upload-hint-single">PDF, DOC, DOCX, XLS, XLSX, Images</p>
+                                                {% if profile and profile.cote_attachment %}
+                                                <p class="upload-note"><i class="bi bi-check-circle"></i> File already uploaded (upload new to replace)</p>
+                                                {% endif %}
+                                            </div>
                                         </div>
+                                        <div class="file-name-display" id="cte-file-name"></div>
                                     </div>
-                                    <div class="not-available cte-not-available" style="display: {% if not profile.cote_renewal %}block{% else %}none{% endif %}; margin-top:.5rem;">
-                                        <p style="font-size:0.9rem; font-style:italic; margin:0;">Please upload renewed certificate ASAP.</p>
+                                    <div class="not-available cte-not-available"
+                                        style="display: {% if not profile or not profile.cote_renewal %}block{% else %}none{% endif %}; margin-top:.5rem;">
+                                        <p style="font-size:0.9rem; font-style:italic; margin:0;">Please upload renewed
+                                            certificate ASAP.</p>
                                     </div>
                                 </div>
                             </div>
-                        </fieldset>
-                        
-                        <fieldset>
-                            <legend>Financial Records</legend>
-                            
+                        </div>
+
+                        <div class="form-section">
+                            <div class="section-header">
+                                <i class="bi bi-currency-dollar"></i>
+                                <h5>Financial Records</h5>
+                            </div>
+
                             <div class="form-group">
-                                <label class="required">Please upload documents for Assets, Net Surplus, and Paid Up Capital AND enter the amounts below.</label>
+                                <label class="required">Please upload documents for Assets, Net Surplus, and Paid Up
+                                    Capital AND enter the amounts below.</label>
 
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="assets-value" class="required">Assets (PHP)</label>
-                                        <input type="text" id="assets-value" name="assets_value" value="{{ profile.assets|default:'0.00' }}" inputmode="decimal" placeholder="0.00" required>
+                                        <input type="text" id="assets-value" name="assets_value"
+                                            value="{{ profile.assets|default:'0.00' }}" inputmode="decimal"
+                                            placeholder="0.00" required>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="paid-up-capital-value" class="required">Paid Up Capital (PHP)</label>
-                                        <input type="text" id="paid-up-capital-value" name="paid_up_capital_value" value="{{ profile.paid_up_capital|default:'0.00' }}" inputmode="decimal" placeholder="0.00" required>
+                                        <label for="paid-up-capital-value" class="required">Paid Up Capital
+                                            (PHP)</label>
+                                        <input type="text" id="paid-up-capital-value" name="paid_up_capital_value"
+                                            value="{{ profile.paid_up_capital|default:'0.00' }}" inputmode="decimal"
+                                            placeholder="0.00" required>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="net-surplus-value" class="required">Net Surplus (PHP)</label>
-                                        <input type="text" id="net-surplus-value" name="net_surplus_value" value="{{ profile.net_surplus|default:'0.00' }}" inputmode="decimal" placeholder="0.00" required>
+                                        <input type="text" id="net-surplus-value" name="net_surplus_value"
+                                            value="{{ profile.net_surplus|default:'0.00' }}" inputmode="decimal"
+                                            placeholder="0.00" required>
                                     </div>
                                 </div>
 
-                                <div class="file-upload-wrapper">
-                                    <label for="financial-docs" class="file-label"><i class="bi bi-cloud-upload"></i> Choose Files</label>
-                                    {# Required only if no profile exists (fresh create), otherwise optional on edit #}
-                                    <input type="file" id="financial-docs" name="financial_documents" class="file-input" multiple accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" {% if not profile %}required{% endif %}>
-                                </div>
-
-                                <div id="file-preview-container" class="file-preview-container">
-                                    <div class="no-files">
-                                        {% if profile.financial_attachments_exist %}
-                                            Previous documents exist. Uploading new files will append to the record.
-                                        {% else %}
+                                <div class="file-upload-modern">
+                                    <div class="file-upload-area" id="financial-upload-area">
+                                        <input type="file" id="financial-docs" name="financial_documents" class="file-input-hidden"
+                                            multiple accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" {% if not profile %}required{% endif %}>
+                                        <div class="file-upload-content">
+                                            <i class="bi bi-cloud-upload"></i>
+                                            <p class="upload-text">Click to upload or drag and drop</p>
+                                            <p class="upload-hint">PDF, DOC, DOCX, XLS, XLSX, Images (Multiple files allowed)</p>
+                                            {% if profile.financial_attachments_exist %}
+                                            <p class="upload-note"><i class="bi bi-info-circle"></i> Previous documents exist. Uploading new files will append to the record.</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div id="file-preview-container" class="file-preview-container">
+                                        <div class="no-files">
                                             No files selected
-                                        {% endif %}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </fieldset>
+                        </div>
 
-                        <fieldset>
-                            <legend>Cooperative Officers</legend>
+                        <div class="form-section">
+                            <div class="section-header">
+                                <i class="bi bi-people"></i>
+                                <h5>Cooperative Officers</h5>
+                            </div>
                             <p class="input-instruction">These officers are already registered. (Read-only)</p>
                             <div class="input-table-container">
                                 <table class="input-table">
@@ -456,26 +820,35 @@
                                     <tbody>
                                         {% for officer in officers %}
                                         <tr>
-                                            <td><input type="text" value="{{ officer.fullname }}" readonly style="background-color: #f8f9fa;"></td>
-                                            <td><input type="text" value="{{ officer.position }}" readonly style="background-color: #f8f9fa;"></td>
-                                            <td><input type="text" value="{{ officer.gender }}" readonly style="background-color: #f8f9fa;"></td>
-                                            <td><input type="text" value="{{ officer.mobile_number }}" readonly style="background-color: #f8f9fa;"></td>
-                                            <td><input type="email" value="{{ officer.email }}" readonly style="background-color: #f8f9fa;"></td>
+                                            <td><input type="text" value="{{ officer.fullname }}" readonly
+                                                    style="background-color: #f8f9fa;"></td>
+                                            <td><input type="text" value="{{ officer.position }}" readonly
+                                                    style="background-color: #f8f9fa;"></td>
+                                            <td><input type="text" value="{{ officer.gender }}" readonly
+                                                    style="background-color: #f8f9fa;"></td>
+                                            <td><input type="text" value="{{ officer.mobile_number }}" readonly
+                                                    style="background-color: #f8f9fa;"></td>
+                                            <td><input type="email" value="{{ officer.email }}" readonly
+                                                    style="background-color: #f8f9fa;"></td>
                                         </tr>
                                         {% empty %}
                                         <tr>
-                                            <td colspan="5" style="text-align: center; color: #A3AED0;">No officers found in database</td>
+                                            <td colspan="5" style="text-align: center; color: #A3AED0;">No officers
+                                                found in database</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
-                        </fieldset>
+                        </div>
 
-                        <fieldset>
-                            <legend>Cooperative Members</legend>
+                        <div class="form-section">
+                            <div class="section-header">
+                                <i class="bi bi-person-badge"></i>
+                                <h5>Cooperative Members</h5>
+                            </div>
                             <p class="input-instruction">List of members. (At least one entry required)</p>
-                            
+
                             <div class="input-table-container">
                                 <table class="input-table">
                                     <thead>
@@ -483,58 +856,72 @@
                                             <th class="required">Name</th>
                                             <th class="required">Gender</th>
                                             <th class="required">Mobile Number</th>
-                                            <th class="required">Email</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {# Edit Mode: Populate existing members #}
                                         {% if members %}
-                                            {% for member in members %}
-                                            <tr>
-                                                <td><input type="text" name="member_name[]" value="{{ member.fullname }}" placeholder="Full Name" required></td>
-                                                <td>
-                                                    <select name="member_gender[]" required>
-                                                        <option value="">Select</option>
-                                                        <option value="Male" {% if member.gender == 'Male' %}selected{% endif %}>Male</option>
-                                                        <option value="Female" {% if member.gender == 'Female' %}selected{% endif %}>Female</option>
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" name="member_mobile[]" value="{{ member.mobile_number }}" placeholder="09xxxxxxxxx" required></td>
-                                                <td><input type="email" name="member_email[]" value="{{ member.email }}" placeholder="Email" required></td>
-                                            </tr>
-                                            {% endfor %}
+                                        {% for member in members %}
+                                        <tr>
+                                            <td><input type="text" name="member_name[]" value="{{ member.fullname }}"
+                                                    placeholder="Full Name" required></td>
+                                            <td>
+                                                <select name="member_gender[]" required>
+                                                    <option value="">Select</option>
+                                                    <option value="Male" {% if member.gender == "Male" %}selected{% endif %}>Male</option>
+                                                    <option value="Female" {% if member.gender == "Female" %}selected{% endif %}>Female</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" name="member_mobile[]"
+                                                    value="{{ member.mobile_number }}" placeholder="09xxxxxxxxx"
+                                                    required></td>
+                                        </tr>
+                                        {% endfor %}
                                         {# Create Mode: Show empty rows #}
                                         {% else %}
-                                            <tr>
-                                                <td><input type="text" name="member_name[]" placeholder="Full Name" required></td>
-                                                <td>
-                                                    <select name="member_gender[]" required>
-                                                        <option value="">Select</option>
-                                                        <option value="Male">Male</option>
-                                                        <option value="Female">Female</option>
-                                                    </select>
-                                                </td>
-                                                <td><input type="text" name="member_mobile[]" placeholder="09xxxxxxxxx" required></td>
-                                                <td><input type="email" name="member_email[]" placeholder="Email" required></td>
-                                            </tr>
+                                        <tr>
+                                            <td><input type="text" name="member_name[]" placeholder="Full Name"
+                                                    required></td>
+                                            <td>
+                                                <select name="member_gender[]" required>
+                                                    <option value="">Select</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" name="member_mobile[]" placeholder="09xxxxxxxxx"
+                                                    required></td>
+                                        </tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
-                                <button type="button" class="add-row-btn"><i class="bi bi-plus-circle"></i> Add Row</button>
+                                <button type="button" class="add-row-btn"><i class="bi bi-plus-circle"></i> Add
+                                    Row</button>
                             </div>
                         </fieldset>
 
+                        {# Reporting Year for Financial Data (separate from profile report_year) #}
                         <div class="form-group">
-                            <label for="reporting-year" class="required">Reporting Year</label>
-                            <input type="text" id="reporting-year" name="reporting_year" value="{{ profile.report_year }}" class="form-control" required autocomplete="off" placeholder="YYYY">
+                            <label for="reporting-year" class="required">Financial Reporting Year</label>
+                            <input type="text" id="reporting-year" name="reporting_year"
+                                value="{{ profile.report_year|default:current_year }}" class="form-control" required autocomplete="off"
+                                placeholder="YYYY" {% if not is_editable %}disabled{% endif %}>
+                            <small class="form-text text-muted">This is for financial data. Profile year is automatically set to the same year.</small>
                         </div>
 
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Close</button>
+                            {% if is_editable %}
                             <button type="submit" class="submit-btn" id="saveProfileBtn">
-                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                <span class="spinner-border spinner-border-sm d-none" role="status"
+                                    aria-hidden="true"></span>
                                 <i class="bi bi-save"></i> Save Profile
                             </button>
+                            {% else %}
+                            <button type="button" class="submit-btn" disabled style="opacity: 0.6; cursor: not-allowed;">
+                                <i class="bi bi-lock"></i> Cannot Edit Past Year
+                            </button>
+                            {% endif %}
                         </div>
                     </form>
                 </div>
@@ -546,294 +933,1234 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/js/bootstrap-datepicker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    
-    // --- AJAX FORM SUBMISSION ---
-    const profileForm = document.getElementById('profileForm');
-    const saveBtn = document.getElementById('saveProfileBtn');
-    const spinner = saveBtn ? saveBtn.querySelector('.spinner-border') : null;
-    
-    if (profileForm) {
-        profileForm.addEventListener('submit', function(e) {
-            e.preventDefault(); 
-            
-            if(saveBtn) {
-                saveBtn.disabled = true;
-                if(spinner) spinner.classList.remove('d-none');
-                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- DISABLE FORM FIELDS FOR PAST YEARS ---
+        {% if not is_editable and profile %}
+        const isReadOnly = true;
+        const formFields = document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea, #profileForm button[type="submit"]');
+        formFields.forEach(field => {
+            if (field.type !== 'hidden' && field.id !== 'report-year-field') {
+                field.disabled = true;
+                field.style.opacity = '0.6';
+                field.style.cursor = 'not-allowed';
             }
-
-            const formData = new FormData(profileForm);
-
-            // If using the custom file uploader logic below, we need to manually ensure files are attached
-            // Note: standard FormData(form) usually grabs inputs, but if 'allSelectedFiles' logic modifies inputs dynamically,
-            // verify the backend receives it. The logic below updates the file input .files property so FormData should catch it.
-
-            fetch(profileForm.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Profile saved successfully!');
-                    location.reload(); 
-                } else {
-                    alert('Error: ' + (data.error || 'Unknown error occurred'));
-                    if(saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';
-                        if(spinner) spinner.classList.add('d-none');
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while communicating with the server.');
-                if(saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';
-                    if(spinner) spinner.classList.add('d-none');
-                }
-            });
-            .then(data => {
-                if (data.success) {
-                    alert('Profile saved successfully!');
-                    location.reload(); 
-                } else {
-                    // IMPROVED ERROR LOGGING
-                    console.error("Server Error Detail:", data.error);
-                    alert('Error saving data: ' + (data.error || 'Check console for details'));
-                    
-                    if(saveBtn) {
-                        saveBtn.disabled = false;
-                        saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';
-                        if(spinner) spinner.classList.add('d-none');
-                    }
-                }
-            })
         });
-    }
+        // Disable file uploads
+        document.querySelectorAll('#profileForm input[type="file"]').forEach(fileInput => {
+            fileInput.disabled = true;
+            fileInput.style.pointerEvents = 'none';
+        });
+        // Disable add row buttons
+        document.querySelectorAll('.add-row-btn').forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
+        });
+        {% else %}
+        const isReadOnly = false;
+        {% endif %}
 
-    // --- LCCDC membership visibility ---
-    (function() {
-        const radios = document.querySelectorAll('input[name="lccdc_membership"]');
-        const dateGroup = document.querySelector('.lccdc-membership-date');
-        const dateInput = dateGroup ? dateGroup.querySelector('input[type="date"]') : null;
-        const notMember = document.querySelector('.lccdc-not-member');
-
-        function updateLccdcVisibility() {
-            const checked = Array.from(radios).find(r => r.checked);
-            if (!checked) return;
-            
-            if (checked.value === 'yes') {
-                if (dateGroup) dateGroup.style.display = '';
-                if (notMember) notMember.style.display = 'none';
-                if (dateInput) dateInput.setAttribute('required', 'required');
-            } else {
-                if (dateGroup) dateGroup.style.display = 'none';
-                if (notMember) notMember.style.display = '';
-                if (dateInput) dateInput.removeAttribute('required');
+        // --- SYNC REPORTING YEAR WITH PROFILE YEAR ---
+        const reportingYearInput = document.getElementById('reporting-year');
+        const reportYearField = document.getElementById('report-year-field');
+        if (reportingYearInput && reportYearField) {
+            reportingYearInput.addEventListener('change', function() {
+                reportYearField.value = this.value;
+            });
+            // Set initial value
+            if (!reportYearField.value && reportingYearInput.value) {
+                reportYearField.value = reportingYearInput.value;
             }
         }
 
-        radios.forEach(r => r.addEventListener('change', updateLccdcVisibility));
-        updateLccdcVisibility(); // Initial check
-    })();
+        // --- AJAX FORM SUBMISSION ---
+        const profileForm = document.getElementById('profileForm');
+        const saveBtn = document.getElementById('saveProfileBtn');
+        const spinner = saveBtn ? saveBtn.querySelector('.spinner-border') : null;
 
-    // --- Certificate toggles (CoC and CTE) ---
-    (function () {
-        function setupToggle(name, fileGroupSelector, fileInputId, notAvailSelector) {
-            const radios = document.querySelectorAll('input[name="' + name + '"]');
-            const fileGroup = document.querySelector(fileGroupSelector);
-            const fileInput = document.getElementById(fileInputId);
-            const notAvail = document.querySelector(notAvailSelector);
+        if (profileForm) {
+            profileForm.addEventListener('submit', function (e) {
+                {% if not is_editable %}
+                e.preventDefault();
+                alert('Cannot edit past year profiles. Please select the current year to make changes.');
+                return false;
+                {% endif %}
+                e.preventDefault();
 
-            function update() {
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    if (spinner) spinner.classList.remove('d-none');
+                    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+                }
+
+                // Ensure report_year is synced with reporting_year before submission
+                const reportingYearInput = document.getElementById('reporting-year');
+                const reportYearField = document.getElementById('report-year-field');
+                if (reportingYearInput && reportYearField) {
+                    reportYearField.value = reportingYearInput.value || new Date().getFullYear();
+                }
+
+                const formData = new FormData(profileForm);
+
+                // If using the custom file uploader logic below, we need to manually ensure files are attached
+                // Note: standard FormData(form) usually grabs inputs, but if 'allSelectedFiles' logic modifies inputs dynamically,
+                // verify the backend receives it. The logic below updates the file input .files property so FormData should catch it.
+                
+                // Ensure report_year is included (in case hidden field wasn't picked up)
+                if (reportYearField && reportYearField.value) {
+                    formData.set('report_year', reportYearField.value);
+                }
+
+                // Get CSRF token from cookies
+                function getCsrfToken() {
+                    const name = 'csrftoken';
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                fetch(profileForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    credentials: 'include'
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            alert('Profile saved successfully!');
+                            location.reload();
+                        } else {
+                            // IMPROVED ERROR LOGGING
+                            console.error("Server Error Detail:", data.error);
+                            alert('Error saving data: ' + (data.error || 'Check console for details'));
+
+                            if (saveBtn) {
+                                saveBtn.disabled = false;
+                                saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';
+                                if (spinner) spinner.classList.add('d-none');
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while communicating with the server. Please try again.');
+                        if (saveBtn) {
+                            saveBtn.disabled = false;
+                            saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';
+                            if (spinner) spinner.classList.add('d-none');
+                        }
+                    });
+            });
+        }
+
+        // --- LCCDC membership visibility ---
+        (function () {
+            const radios = document.querySelectorAll('input[name="lccdc_membership"]');
+            const dateGroup = document.querySelector('.lccdc-membership-date');
+            const dateInput = dateGroup ? dateGroup.querySelector('input[type="date"]') : null;
+            const notMember = document.querySelector('.lccdc-not-member');
+
+            function updateLccdcVisibility() {
                 const checked = Array.from(radios).find(r => r.checked);
                 if (!checked) return;
 
                 if (checked.value === 'yes') {
-                    if (fileGroup) fileGroup.style.display = '';
-                    if (notAvail) notAvail.style.display = 'none';
-                    
-                    // Only require file if it's NOT already uploaded (edit mode check)
-                    if (fileInput && !fileInput.hasAttribute('data-has-file')) {
-                         fileInput.setAttribute('required', 'required');
-                    } else if (fileInput) {
-                        fileInput.removeAttribute('required'); // If has file, not required
-                    }
+                    if (dateGroup) dateGroup.style.display = '';
+                    if (notMember) notMember.style.display = 'none';
+                    if (dateInput) dateInput.setAttribute('required', 'required');
                 } else {
-                    if (fileGroup) fileGroup.style.display = 'none';
-                    if (notAvail) notAvail.style.display = '';
-                    if (fileInput) fileInput.removeAttribute('required');
+                    if (dateGroup) dateGroup.style.display = 'none';
+                    if (notMember) notMember.style.display = '';
+                    if (dateInput) dateInput.removeAttribute('required');
                 }
             }
 
-            radios.forEach(r => r.addEventListener('change', update));
+            radios.forEach(r => r.addEventListener('change', updateLccdcVisibility));
+            updateLccdcVisibility(); // Initial check
+        })();
 
-            if (fileInput) {
-                fileInput.addEventListener('change', function () {
-                    const display = document.getElementById(fileInputId + '-name');
-                    if (this.files && this.files.length > 0) {
-                        display.textContent = this.files[0].name;
-                    } else {
-                        // If we are in edit mode and have a file, show that text, else empty
-                        if (this.hasAttribute('data-has-file')) {
-                            display.textContent = 'File already uploaded (upload new to replace)';
-                        } else {
-                            display.textContent = '';
+        // --- Certificate toggles (CoC and CTE) ---
+        (function () {
+            function setupToggle(name, fileGroupSelector, fileInputId, notAvailSelector) {
+                const radios = document.querySelectorAll('input[name="' + name + '"]');
+                const fileGroup = document.querySelector(fileGroupSelector);
+                const fileInput = document.getElementById(fileInputId);
+                const notAvail = document.querySelector(notAvailSelector);
+
+                function update() {
+                    const checked = Array.from(radios).find(r => r.checked);
+                    if (!checked) return;
+
+                    if (checked.value === 'yes') {
+                        if (fileGroup) fileGroup.style.display = '';
+                        if (notAvail) notAvail.style.display = 'none';
+
+                        // Only require file if it's NOT already uploaded (edit mode check)
+                        if (fileInput && !fileInput.hasAttribute('data-has-file')) {
+                            fileInput.setAttribute('required', 'required');
+                        } else if (fileInput) {
+                            fileInput.removeAttribute('required'); // If has file, not required
                         }
+                    } else {
+                        if (fileGroup) fileGroup.style.display = 'none';
+                        if (notAvail) notAvail.style.display = '';
+                        if (fileInput) fileInput.removeAttribute('required');
+                    }
+                }
+
+                radios.forEach(r => r.addEventListener('change', update));
+
+                if (fileInput) {
+                    const display = document.getElementById(fileInputId + '-name');
+                    const uploadArea = document.getElementById(fileInputId.replace('-file', '-upload-area'));
+                    
+                    fileInput.addEventListener('change', function () {
+                        if (this.files && this.files.length > 0) {
+                            if (display) {
+                                const fileName = this.files[0].name;
+                                display.innerHTML = `
+                                    <div class="file-name-item">
+                                        <div class="file-name-content">
+                                            <i class="bi bi-check-circle"></i>
+                                            <span class="file-name-text">${fileName}</span>
+                                        </div>
+                                        <button type="button" class="remove-single-file-btn" title="Remove file" aria-label="Remove ${fileName}">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                `;
+                                display.classList.add('has-file');
+                                
+                                // Add remove button functionality
+                                const removeBtn = display.querySelector('.remove-single-file-btn');
+                                if (removeBtn) {
+                                    removeBtn.addEventListener('click', function(e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        fileInput.value = '';
+                                        display.textContent = '';
+                                        display.classList.remove('has-file');
+                                    });
+                                }
+                            }
+                        } else {
+                            if (display) {
+                                display.textContent = '';
+                                display.classList.remove('has-file');
+                            }
+                        }
+                    });
+                    
+                    // Handle drag and drop for single file uploads
+                    if (uploadArea) {
+                        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                            uploadArea.addEventListener(eventName, preventDefaults, false);
+                        });
+                        
+                        ['dragenter', 'dragover'].forEach(eventName => {
+                            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+                        });
+                        
+                        ['dragleave', 'drop'].forEach(eventName => {
+                            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+                        });
+                        
+                        uploadArea.addEventListener('drop', function(e) {
+                            const dt = e.dataTransfer;
+                            const files = dt.files;
+                            if (files.length > 0) {
+                                fileInput.files = files;
+                                fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        }, false);
+                    }
+                }
+                
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                update();
+            }
+
+            setupToggle('coc', '.coc-file-group', 'coc-file', '.coc-not-available');
+            setupToggle('cte', '.cte-file-group', 'cte-file', '.cte-not-available');
+        })();
+
+        // --- Numeric formatting for financial inputs ---
+        (function () {
+            function unformatNumber(str) {
+                if (!str) return '';
+                return String(str).replace(/,/g, '').trim();
+            }
+
+            function formatWithCommas(value) {
+                if (value === null || value === undefined) return '';
+                const original = String(value);
+                let s = original.replace(/[^\d.-]/g, '');
+                if (s === '') return '';
+                const isNegative = s[0] === '-';
+                if (isNegative) s = s.slice(1);
+                const parts = s.split('.');
+                let intPart = parts[0] || '0';
+                const decPart = parts.slice(1).join('');
+                intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return (isNegative ? '-' : '') + intPart + (parts.length > 1 || original.endsWith('.') ? '.' + decPart : '');
+            }
+
+            function attachCommaFormatting(el) {
+                if (!el) return;
+                // Initial Format
+                el.value = formatWithCommas(el.value);
+
+                el.addEventListener('input', function () {
+                    const oldVal = el.value;
+                    const unformatted = unformatNumber(oldVal);
+                    const formatted = formatWithCommas(unformatted + (oldVal.endsWith('.') ? '.' : ''));
+                    el.value = formatted;
+                });
+
+                el.addEventListener('blur', function () {
+                    const un = unformatNumber(el.value);
+                    if (un && un !== '.' && un !== '-') {
+                        el.value = formatWithCommas(parseFloat(un).toFixed(2));
                     }
                 });
             }
-            update();
-        }
 
-        setupToggle('coc', '.coc-file-group', 'coc-file', '.coc-not-available');
-        setupToggle('cte', '.cte-file-group', 'cte-file', '.cte-not-available');
-    })();
+            attachCommaFormatting(document.getElementById('assets-value'));
+            attachCommaFormatting(document.getElementById('paid-up-capital-value'));
+            attachCommaFormatting(document.getElementById('net-surplus-value'));
+        })();
 
-    // --- Numeric formatting for financial inputs ---
-    (function() {
-        function unformatNumber(str) {
-            if (!str) return '';
-            return String(str).replace(/,/g, '').trim();
-        }
+        // --- Dynamic row addition for tables ---
+        (function () {
+            document.querySelectorAll('.add-row-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const tableBody = this.previousElementSibling.querySelector('tbody');
+                    const firstRow = tableBody.querySelector('tr');
+                    if (!firstRow) return;
 
-        function formatWithCommas(value) {
-            if (value === null || value === undefined) return '';
-            const original = String(value);
-            let s = original.replace(/[^\d.-]/g, '');
-            if (s === '') return '';
-            const isNegative = s[0] === '-';
-            if (isNegative) s = s.slice(1);
-            const parts = s.split('.');
-            let intPart = parts[0] || '0';
-            const decPart = parts.slice(1).join('');
-            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            return (isNegative ? '-' : '') + intPart + (parts.length > 1 || original.endsWith('.') ? '.' + decPart : '');
-        }
-
-        function attachCommaFormatting(el) {
-            if (!el) return;
-            // Initial Format
-            el.value = formatWithCommas(el.value);
-
-            el.addEventListener('input', function() {
-                const oldVal = el.value;
-                const unformatted = unformatNumber(oldVal);
-                const formatted = formatWithCommas(unformatted + (oldVal.endsWith('.') ? '.' : ''));
-                el.value = formatted;
-            });
-
-            el.addEventListener('blur', function() {
-                const un = unformatNumber(el.value);
-                if (un && un !== '.' && un !== '-') {
-                     el.value = formatWithCommas(parseFloat(un).toFixed(2));
-                }
-            });
-        }
-
-        attachCommaFormatting(document.getElementById('assets-value'));
-        attachCommaFormatting(document.getElementById('paid-up-capital-value'));
-        attachCommaFormatting(document.getElementById('net-surplus-value'));
-    })();
-
-    // --- Dynamic row addition for tables ---
-    (function() {
-        document.querySelectorAll('.add-row-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tableBody = this.previousElementSibling.querySelector('tbody');
-                const firstRow = tableBody.querySelector('tr');
-                if (!firstRow) return; 
-                
-                const newRow = firstRow.cloneNode(true);
-                newRow.querySelectorAll('input').forEach(input => {
-                    input.value = '';
+                    const newRow = firstRow.cloneNode(true);
+                    newRow.querySelectorAll('input').forEach(input => {
+                        input.value = '';
+                    });
+                    newRow.querySelectorAll('select').forEach(select => {
+                        select.selectedIndex = 0;
+                    });
+                    tableBody.appendChild(newRow);
                 });
-                newRow.querySelectorAll('select').forEach(select => {
-                    select.selectedIndex = 0;
-                });
-                tableBody.appendChild(newRow);
             });
-        });
-    })();
+        })();
 
-    // --- File upload additive + preview for financial docs ---
-    (function() {
-        const fileInput = document.getElementById('financial-docs');
-        const previewContainer = document.getElementById('file-preview-container');
-        if (!fileInput || !previewContainer) return;
+        // --- File upload additive + preview for financial docs ---
+        (function () {
+            const fileInput = document.getElementById('financial-docs');
+            const previewContainer = document.getElementById('file-preview-container');
+            if (!fileInput || !previewContainer) return;
 
-        let allSelectedFiles = [];
+            let allSelectedFiles = [];
+            const financialUploadArea = document.getElementById('financial-upload-area');
 
-        function renderPreviews() {
-            // Do not clear if editing and no new files selected yet? 
-            // Actually better to just show current selection.
-            previewContainer.innerHTML = '';
-            if (allSelectedFiles.length === 0) {
-                previewContainer.innerHTML = '<div class="no-files">No new files selected</div>';
-                return;
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
-            allSelectedFiles.forEach((file, index) => {
-                const item = document.createElement('div');
-                item.className = 'file-preview-item';
-                item.innerHTML = `
+
+            function updateFileInput() {
+                const dt = new DataTransfer();
+                allSelectedFiles.forEach(file => dt.items.add(file));
+                fileInput.files = dt.files;
+            }
+
+            // Drag and drop for financial documents
+            if (financialUploadArea) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    financialUploadArea.addEventListener(eventName, preventDefaults, false);
+                });
+                
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    financialUploadArea.addEventListener(eventName, () => financialUploadArea.classList.add('dragover'), false);
+                });
+                
+                ['dragleave', 'drop'].forEach(eventName => {
+                    financialUploadArea.addEventListener(eventName, () => financialUploadArea.classList.remove('dragover'), false);
+                });
+                
+                financialUploadArea.addEventListener('drop', function(e) {
+                    const dt = e.dataTransfer;
+                    const files = Array.from(dt.files);
+                    allSelectedFiles = [...allSelectedFiles, ...files];
+                    updateFileInput();
+                    renderPreviews();
+                }, false);
+                
+                financialUploadArea.addEventListener('click', function() {
+                    financialFileInput.click();
+                });
+            }
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function updateFileInput() {
+                const dt = new DataTransfer();
+                allSelectedFiles.forEach(file => dt.items.add(file));
+                financialFileInput.files = dt.files;
+            }
+
+            function renderPreviews() {
+                previewContainer.innerHTML = '';
+                if (allSelectedFiles.length === 0) {
+                    previewContainer.innerHTML = '<div class="no-files">No files selected</div>';
+                    return;
+                }
+                allSelectedFiles.forEach((file, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'file-preview-item';
+                    item.innerHTML = `
                     <div class="file-info-wrapper">
                         <i class="bi bi-file-earmark-text"></i>
                         <span class="file-name">${file.name}</span>
                     </div>
-                    <i class="bi bi-x-lg remove-file-btn" data-index="${index}" title="Remove file"></i>
+                    <button type="button" class="remove-file-btn" data-index="${index}" title="Remove file" aria-label="Remove ${file.name}">
+                        <i class="bi bi-x"></i>
+                    </button>
                 `;
-                previewContainer.appendChild(item);
-            });
-            
-            // Re-attach listeners to new X buttons
-            document.querySelectorAll('.remove-file-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const idx = parseInt(this.getAttribute('data-index'));
-                    allSelectedFiles.splice(idx, 1);
-                    updateFileInput();
-                    renderPreviews();
+                    previewContainer.appendChild(item);
                 });
+
+                // Re-attach listeners to new X buttons
+                document.querySelectorAll('.remove-file-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const idx = parseInt(this.getAttribute('data-index'));
+                        allSelectedFiles.splice(idx, 1);
+                        updateFileInput();
+                        renderPreviews();
+                    });
+                });
+            }
+
+            function updateFileInput() {
+                const dataTransfer = new DataTransfer();
+                allSelectedFiles.forEach(file => dataTransfer.items.add(file));
+                fileInput.files = dataTransfer.files;
+            }
+
+            fileInput.addEventListener('change', function () {
+                const newFiles = Array.from(this.files);
+                newFiles.forEach(file => {
+                    // simple duplicate check
+                    if (!allSelectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                        allSelectedFiles.push(file);
+                    }
+                });
+                updateFileInput();
+                renderPreviews();
             });
+        })();
+
+        // --- Reporting year datepicker ---
+        try {
+            $('#reporting-year').datepicker({
+                format: "yyyy",
+                viewMode: "years",
+                minViewMode: "years",
+                autoclose: true,
+                endDate: new Date().getFullYear().toString()
+            });
+        } catch (e) { console.log('Datepicker not loaded'); }
+
+        // Initialize PDF.js
+        if (window.pdfjsLib) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
 
-        function updateFileInput() {
-            const dataTransfer = new DataTransfer();
-            allSelectedFiles.forEach(file => dataTransfer.items.add(file));
-            fileInput.files = dataTransfer.files;
-        }
+        // File Preview Functionality
+        const previewModal = document.getElementById('preview-modal');
+        const previewBody = document.getElementById('preview-body');
+        const previewTitle = document.getElementById('preview-title');
+        const previewClose = document.getElementById('preview-close');
+        const previewDownload = document.getElementById('preview-download-main');
+        
+        let pdfDoc = null;
+        let currentPage = 1;
+        let totalPages = 0;
+        let currentZoom = 100;
+        let currentRotation = 0;
+        let isPdfOpen = false;
+        const previewSidebar = document.getElementById('preview-sidebar');
+        const previewThumbnails = document.getElementById('preview-thumbnails');
+        
+        // Multiple file navigation
+        let totalFiles = 0;
+        let currentFileIndex = 0;
+        let currentPreviewUrl = '';
+        let currentFilename = '';
+        let fileList = [];
 
-        fileInput.addEventListener('change', function() {
-            const newFiles = Array.from(this.files);
-            newFiles.forEach(file => {
-                // simple duplicate check
-                if (!allSelectedFiles.some(f => f.name === file.name && f.size === file.size)) {
-                    allSelectedFiles.push(file);
+        // Close preview modal
+        if (previewClose) {
+            previewClose.addEventListener('click', () => {
+                previewModal.style.display = 'none';
+                previewModal.classList.remove('show');
+                if (pdfDoc) {
+                    pdfDoc.destroy();
+                    pdfDoc = null;
                 }
             });
-            updateFileInput();
-            renderPreviews();
-        });
-    })();
+        }
 
-    // --- Reporting year datepicker ---
-    try {
-        $('#reporting-year').datepicker({
-            format: "yyyy",
-            viewMode: "years",
-            minViewMode: "years",
-            autoclose: true,
-            endDate: new Date().getFullYear().toString()
+        // Close on overlay click
+        if (previewModal) {
+            previewModal.addEventListener('click', (e) => {
+                if (e.target === previewModal) {
+                    previewModal.style.display = 'none';
+                    previewModal.classList.remove('show');
+                    if (pdfDoc) {
+                        pdfDoc.destroy();
+                        pdfDoc = null;
+                    }
+                }
+            });
+        }
+
+        // Escape key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && previewModal && previewModal.style.display !== 'none') {
+                previewModal.style.display = 'none';
+                previewModal.classList.remove('show');
+                if (pdfDoc) {
+                    pdfDoc.destroy();
+                    pdfDoc = null;
+                }
+            }
         });
-    } catch (e) { console.log('Datepicker not loaded'); }
-});
+
+        // Load PDF with PDF.js
+        async function loadPdfPreview(url, title, fileIndex = 0) {
+            previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
+            
+            try {
+                if (!window.pdfjsLib) {
+                    throw new Error('PDF.js library not loaded');
+                }
+
+                // First, fetch the URL to check if it's accessible
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    let errorMsg = `Unexpected server response (${response.status})`;
+                    try {
+                        const text = await response.text();
+                        if (text) {
+                            try {
+                                const data = JSON.parse(text);
+                                errorMsg = data.message || errorMsg;
+                            } catch (e) {
+                                errorMsg = `Server error: ${response.status}`;
+                            }
+                        }
+                    } catch (e) {
+                        errorMsg = `Server error: ${response.status}`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                // Check content type
+                const contentType = response.headers.get('Content-Type') || '';
+                if (!contentType.includes('pdf')) {
+                    // Try to get blob and create object URL
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    loadPdfFromBlob(blobUrl, title);
+                    return;
+                }
+
+                // Check for multiple files header
+                const fileCount = response.headers.get('X-File-Count');
+                const currentIndex = response.headers.get('X-Current-File-Index');
+                
+                if (fileCount) {
+                    totalFiles = parseInt(fileCount);
+                    if (currentIndex !== null) {
+                        currentFileIndex = parseInt(currentIndex);
+                    }
+                    updateFileNavigation();
+                }
+
+                const loadingTask = window.pdfjsLib.getDocument(url);
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+                currentPage = 1;
+                currentZoom = 100;
+                currentRotation = 0;
+                isPdfOpen = true;
+
+                document.getElementById('page-controls').style.display = 'flex';
+                document.getElementById('toggleSidebar').style.display = 'inline-flex';
+                document.getElementById('rotateLeft').style.display = 'inline-flex';
+                document.getElementById('rotateRight').style.display = 'inline-flex';
+                document.getElementById('fitWidth').style.display = 'inline-flex';
+                document.getElementById('fitHeight').style.display = 'inline-flex';
+                document.getElementById('zoomOut').style.display = 'inline-flex';
+                document.getElementById('zoomLevel').style.display = 'inline-block';
+                document.getElementById('zoomIn').style.display = 'inline-flex';
+                document.getElementById('totalPages').textContent = totalPages;
+                document.getElementById('pageInput').value = 1;
+                document.getElementById('zoomLevel').textContent = '100%';
+                
+                // Update title if multiple files
+                if (totalFiles > 1) {
+                    previewTitle.textContent = `${title} (${currentFileIndex + 1} of ${totalFiles})`;
+                }
+
+                await renderPdfPage(1);
+                await generateThumbnails();
+            } catch (error) {
+                console.error('PDF loading error:', error);
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">Failed to Load Document</h4>
+                        <p style="color: #6c757d; margin-bottom: 20px;">${escapeHtml(error.message)}</p>
+                        <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 20px;">Unexpected server response (500) while retrieving PDF '${url}'</p>
+                        <a href="${url.replace('?preview=true', '?download=1')}" class="btn btn-primary mt-3" download="${title}">
+                            <i class="bi bi-download"></i> Download Instead
+                        </a>
+                    </div>
+                `;
+            }
+        }
+
+        async function renderPdfPage(pageNum) {
+            if (!pdfDoc) return;
+            
+            try {
+                const page = await pdfDoc.getPage(pageNum);
+                const baseScale = 1.5;
+                const finalScale = (currentZoom / 100) * baseScale;
+                const viewport = page.getViewport({ scale: finalScale, rotation: currentRotation });
+                
+                let canvas = previewBody.querySelector('canvas');
+                if (!canvas) {
+                    canvas = document.createElement('canvas');
+                    previewBody.innerHTML = '';
+                    previewBody.appendChild(canvas);
+                }
+                
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                canvas.style.display = 'block';
+                canvas.style.maxWidth = 'none';
+                canvas.style.maxHeight = 'none';
+                canvas.style.width = viewport.width + 'px';
+                canvas.style.height = viewport.height + 'px';
+                canvas.style.margin = '20px auto';
+                canvas.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+                canvas.style.background = 'white';
+
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport
+                };
+
+                await page.render(renderContext).promise;
+                
+                previewBody.scrollTop = 0;
+                previewBody.scrollLeft = 0;
+                document.getElementById('pageInput').value = pageNum;
+                updateThumbnailActive();
+            } catch (error) {
+                console.error('Page render error:', error);
+                previewBody.innerHTML = `<p style="color:#d32f2f;">Error rendering page: ${error.message}</p>`;
+            }
+        }
+        
+        function applyZoom() {
+            document.getElementById('zoomLevel').textContent = currentZoom + '%';
+            if (isPdfOpen && pdfDoc) {
+                renderPdfPage(currentPage);
+            }
+        }
+        
+        function updateThumbnailActive() {
+            const thumbnails = previewThumbnails.querySelectorAll('.thumbnail-item');
+            thumbnails.forEach((thumb, index) => {
+                if (index + 1 === currentPage) {
+                    thumb.classList.add('active');
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+        }
+        
+        async function generateThumbnails() {
+            if (!pdfDoc) return;
+            
+            previewThumbnails.innerHTML = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                try {
+                    const page = await pdfDoc.getPage(i);
+                    const viewport = page.getViewport({ scale: 0.2 });
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    const context = canvas.getContext('2d');
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    const thumbnail = document.createElement('div');
+                    thumbnail.className = 'thumbnail-item';
+                    if (i === currentPage) thumbnail.classList.add('active');
+                    thumbnail.dataset.page = i;
+                    
+                    thumbnail.innerHTML = `
+                        <div class="thumbnail-number">${i}</div>
+                        <img src="${canvas.toDataURL()}" alt="Page ${i}" />
+                    `;
+                    
+                    thumbnail.addEventListener('click', () => {
+                        currentPage = i;
+                        renderPdfPage(currentPage);
+                        updateThumbnailActive();
+                    });
+                    
+                    previewThumbnails.appendChild(thumbnail);
+                } catch (error) {
+                    console.error(`Error generating thumbnail for page ${i}:`, error);
+                }
+            }
+        }
+
+        // Page navigation
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInput = document.getElementById('pageInput');
+
+        if (prevPageBtn) {
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                }
+            });
+        }
+
+        if (nextPageBtn) {
+            nextPageBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                }
+            });
+        }
+
+        if (pageInput) {
+            pageInput.addEventListener('change', () => {
+                const page = parseInt(pageInput.value);
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderPdfPage(currentPage);
+                    updateThumbnailActive();
+                } else {
+                    pageInput.value = currentPage;
+                }
+            });
+            
+            pageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const page = parseInt(pageInput.value);
+                    if (page >= 1 && page <= totalPages) {
+                        currentPage = page;
+                        renderPdfPage(currentPage);
+                        updateThumbnailActive();
+                    } else {
+                        pageInput.value = currentPage;
+                    }
+                }
+            });
+        }
+        
+        // Sidebar toggle
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        if (toggleSidebarBtn) {
+            toggleSidebarBtn.addEventListener('click', () => {
+                const icon = toggleSidebarBtn.querySelector('i');
+                if (previewSidebar.style.display === 'none') {
+                    previewSidebar.style.display = 'flex';
+                    icon.className = 'bi bi-layout-sidebar-inset';
+                } else {
+                    previewSidebar.style.display = 'none';
+                    icon.className = 'bi bi-layout-sidebar';
+                }
+            });
+        }
+        
+        // Rotation controls
+        const rotateLeftBtn = document.getElementById('rotateLeft');
+        const rotateRightBtn = document.getElementById('rotateRight');
+        
+        if (rotateLeftBtn) {
+            rotateLeftBtn.addEventListener('click', () => {
+                currentRotation = (currentRotation - 90 + 360) % 360;
+                applyZoom();
+            });
+        }
+        
+        if (rotateRightBtn) {
+            rotateRightBtn.addEventListener('click', () => {
+                currentRotation = (currentRotation + 90) % 360;
+                applyZoom();
+            });
+        }
+        
+        // Zoom controls
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                currentZoom = Math.min(300, currentZoom + 10);
+                applyZoom();
+            });
+        }
+        
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                currentZoom = Math.max(10, currentZoom - 10);
+                applyZoom();
+            });
+        }
+        
+        // Fit controls
+        const fitWidthBtn = document.getElementById('fitWidth');
+        const fitHeightBtn = document.getElementById('fitHeight');
+        
+        async function fitToWidth() {
+            if (isPdfOpen && pdfDoc) {
+                const page = await pdfDoc.getPage(currentPage);
+                const viewport = page.getViewport({ scale: 1.5, rotation: currentRotation });
+                const containerWidth = previewBody.clientWidth - 40;
+                const scaleToFit = containerWidth / viewport.width;
+                currentZoom = Math.round(scaleToFit * 100);
+                currentZoom = Math.max(10, Math.min(300, currentZoom));
+                applyZoom();
+            }
+        }
+        
+        async function fitToHeight() {
+            if (isPdfOpen && pdfDoc) {
+                const page = await pdfDoc.getPage(currentPage);
+                const viewport = page.getViewport({ scale: 1.5, rotation: currentRotation });
+                const containerHeight = previewBody.clientHeight - 40;
+                const scaleToFit = containerHeight / viewport.height;
+                currentZoom = Math.round(scaleToFit * 100);
+                currentZoom = Math.max(10, Math.min(300, currentZoom));
+                applyZoom();
+            }
+        }
+        
+        if (fitWidthBtn) {
+            fitWidthBtn.addEventListener('click', fitToWidth);
+        }
+        
+        if (fitHeightBtn) {
+            fitHeightBtn.addEventListener('click', fitToHeight);
+        }
+
+        // Handle preview button clicks
+        document.querySelectorAll('.btn-certificate-preview, .btn-preview-docs').forEach(button => {
+            button.addEventListener('click', function() {
+                const coopId = this.getAttribute('data-coop-id');
+                const attachmentType = this.getAttribute('data-attachment-type');
+                const filename = this.getAttribute('data-filename') || 'Document';
+                
+                if (!coopId && !attachmentType) return;
+
+                // Build preview URL
+                let previewUrl = `/cooperatives/profiles/${coopId}/attachment/${attachmentType}/?preview=true`;
+                
+                // For financial documents, check if year is needed
+                if (attachmentType === 'financial') {
+                    const year = document.querySelector('.current-year-badge strong')?.textContent;
+                    if (year) {
+                        previewUrl += `&year=${year}`;
+                    }
+                }
+
+                // Reset file navigation
+                totalFiles = 0;
+                currentFileIndex = 0;
+                currentPreviewUrl = previewUrl;
+                currentFilename = filename;
+                fileList = [];
+
+                // Show modal
+                previewModal.style.display = 'flex';
+                setTimeout(() => previewModal.classList.add('show'), 10);
+                previewTitle.textContent = filename;
+                previewDownload.href = previewUrl.replace('?preview=true', '?download=1');
+                previewDownload.download = filename;
+
+                // Check if file needs conversion
+                const isCsvGz = filename.toLowerCase().endsWith('.csv.gz');
+                const isPdfGz = filename.toLowerCase().endsWith('.pdf.gz');
+                const needsConversion = filename.toLowerCase().match(/\.(docx?|xlsx?|xlsm|xlsb|pptx?|txt|csv)$/i);
+                
+                if (isCsvGz || isPdfGz || needsConversion) {
+                    // Show loading message
+                    previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Converting document to PDF...</p>';
+                    convertAndPreviewProfile(previewUrl, filename, 0);
+                } else {
+                    // Try to load as PDF directly
+                    loadPdfPreview(previewUrl, filename, 0);
+                }
+            });
+        });
+        
+        // File navigation buttons
+        const prevFileBtn = document.getElementById('prev-file-btn');
+        const nextFileBtn = document.getElementById('next-file-btn');
+        
+        function updateFileNavigation() {
+            if (totalFiles > 1) {
+                prevFileBtn.style.display = 'flex';
+                nextFileBtn.style.display = 'flex';
+                prevFileBtn.disabled = currentFileIndex === 0;
+                nextFileBtn.disabled = currentFileIndex === totalFiles - 1;
+            } else {
+                prevFileBtn.style.display = 'none';
+                nextFileBtn.style.display = 'none';
+            }
+        }
+        
+        function loadFileByIndex(index) {
+            if (index < 0 || index >= totalFiles) return;
+            
+            currentFileIndex = index;
+            const url = currentPreviewUrl + (currentPreviewUrl.includes('?') ? '&' : '?') + `file_index=${index}`;
+            const filename = fileList[index] || currentFilename;
+            
+            previewTitle.textContent = totalFiles > 1 ? `${filename} (${index + 1} of ${totalFiles})` : filename;
+            previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
+            
+            // Check if file needs conversion
+            const isCsvGz = filename.toLowerCase().endsWith('.csv.gz');
+            const isPdfGz = filename.toLowerCase().endsWith('.pdf.gz');
+            const needsConversion = filename.toLowerCase().match(/\.(docx?|xlsx?|xlsm|xlsb|pptx?|txt|csv)$/i);
+            
+            if (isCsvGz || isPdfGz || needsConversion) {
+                convertAndPreviewProfile(url, filename, index);
+            } else {
+                loadPdfPreview(url, filename, index);
+            }
+        }
+        
+        if (prevFileBtn) {
+            prevFileBtn.addEventListener('click', () => {
+                if (currentFileIndex > 0) {
+                    loadFileByIndex(currentFileIndex - 1);
+                }
+            });
+        }
+        
+        if (nextFileBtn) {
+            nextFileBtn.addEventListener('click', () => {
+                if (currentFileIndex < totalFiles - 1) {
+                    loadFileByIndex(currentFileIndex + 1);
+                }
+            });
+        }
+        
+        async function convertAndPreviewProfile(url, title, fileIndex = 0) {
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    let errorMsg = 'Failed to load document';
+                    try {
+                        const data = await response.json();
+                        errorMsg = data.message || errorMsg;
+                    } catch (e) {
+                        errorMsg = `Server error: ${response.status}`;
+                    }
+                    throw new Error(errorMsg);
+                }
+
+                // Check for multiple files header
+                const fileCount = response.headers.get('X-File-Count');
+                const currentIndex = response.headers.get('X-Current-File-Index');
+                
+                if (fileCount) {
+                    totalFiles = parseInt(fileCount);
+                    if (currentIndex !== null) {
+                        currentFileIndex = parseInt(currentIndex);
+                    }
+                    updateFileNavigation();
+                }
+
+                // Check conversion status
+                const conversionStatus = response.headers.get('X-Conversion-Status');
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                
+                // Check if it's a decompressed or converted PDF
+                const isPdfGz = title && title.toLowerCase().endsWith('.pdf.gz');
+                const isDecompressedPdf = conversionStatus === 'decompressed' || conversionStatus === 'converted' || isPdfGz;
+
+                // If it's a converted/decompressed PDF, load it
+                if (isDecompressedPdf && contentType.includes('pdf')) {
+                    const pdfFilename = title.replace(/\.gz$/i, '').replace(/\.[^.]+$/, '.pdf');
+                    previewDownload.href = blobUrl;
+                    previewDownload.download = pdfFilename;
+                    if (totalFiles > 1) {
+                        previewTitle.textContent = `${pdfFilename} (${currentFileIndex + 1} of ${totalFiles})`;
+                    }
+                    loadPdfFromBlob(blobUrl, pdfFilename);
+                    return;
+                }
+
+                // If conversion failed, show error with download option
+                if (conversionStatus === 'failed' || !contentType.includes('pdf')) {
+                    previewBody.innerHTML = `
+                        <div style="padding: 40px; text-align: center;">
+                            <i class="bi bi-file-earmark" style="font-size: 4rem; color: #6c757d; margin-bottom: 20px;"></i>
+                            <h4 style="color: #495057; margin-bottom: 10px;">${escapeHtml(title)}</h4>
+                            <p style="color: #6c757d; margin-bottom: 20px;">This file cannot be previewed in the browser.</p>
+                            <p style="color: #6c757d; font-size: 0.9rem;">Please download the file to view it.</p>
+                        </div>
+                    `;
+                    previewDownload.href = url.replace('?preview=true', '?download=1');
+                    previewDownload.download = title;
+                    return;
+                }
+
+                // Try to load as PDF
+                loadPdfFromBlob(blobUrl, title);
+            } catch (error) {
+                console.error('Conversion error:', error);
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">Failed to Load Document</h4>
+                        <p style="color: #6c757d; margin-bottom: 20px;">${escapeHtml(error.message)}</p>
+                        <a href="${url.replace('?preview=true', '?download=1')}" class="btn btn-primary mt-3" download="${title}">
+                            <i class="bi bi-download"></i> Download Instead
+                        </a>
+                    </div>
+                `;
+            }
+        }
+        
+        function loadPdfFromBlob(blobUrl, title) {
+            previewBody.innerHTML = '<p style="color:#6c757d; font-size:1rem;">Loading document...</p>';
+            
+            if (!window.pdfjsLib) {
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">PDF.js library not loaded</h4>
+                    </div>
+                `;
+                return;
+            }
+
+                const loadingTask = window.pdfjsLib.getDocument(blobUrl);
+                loadingTask.promise.then(doc => {
+                    pdfDoc = doc;
+                    totalPages = pdfDoc.numPages;
+                    currentPage = 1;
+                    currentZoom = 100;
+                    currentRotation = 0;
+                    isPdfOpen = true;
+
+                    document.getElementById('page-controls').style.display = 'flex';
+                    document.getElementById('toggleSidebar').style.display = 'inline-flex';
+                    document.getElementById('rotateLeft').style.display = 'inline-flex';
+                    document.getElementById('rotateRight').style.display = 'inline-flex';
+                    document.getElementById('fitWidth').style.display = 'inline-flex';
+                    document.getElementById('fitHeight').style.display = 'inline-flex';
+                    document.getElementById('zoomOut').style.display = 'inline-flex';
+                    document.getElementById('zoomLevel').style.display = 'inline-block';
+                    document.getElementById('zoomIn').style.display = 'inline-flex';
+                    document.getElementById('totalPages').textContent = totalPages;
+                    document.getElementById('pageInput').value = 1;
+                    document.getElementById('zoomLevel').textContent = '100%';
+                    
+                    // Update title if multiple files
+                    if (totalFiles > 1) {
+                        previewTitle.textContent = `${title} (${currentFileIndex + 1} of ${totalFiles})`;
+                    }
+
+                    renderPdfPage(1).then(() => {
+                        generateThumbnails();
+                    });
+                }).catch(error => {
+                console.error('PDF loading error:', error);
+                previewBody.innerHTML = `
+                    <div style="padding: 40px; text-align: center;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;"></i>
+                        <h4 style="color: #495057; margin-bottom: 10px;">Failed to Load Document</h4>
+                        <p style="color: #6c757d;">${error.message}</p>
+                        <a href="${blobUrl}" class="btn btn-primary mt-3" download="${title}">
+                            <i class="bi bi-download"></i> Download Instead
+                        </a>
+                    </div>
+                `;
+            });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Handle viewing financial data by year
+        document.querySelectorAll('.btn-view-year, .btn-view-details').forEach(button => {
+            button.addEventListener('click', function() {
+                const year = this.getAttribute('data-year');
+                if (!year) return;
+
+                const modal = new bootstrap.Modal(document.getElementById('financialYearModal'));
+                document.getElementById('modal-year').textContent = year;
+                
+                // Show loading state
+                document.getElementById('financial-year-details').innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Loading financial data for year ${year}...</p>
+                    </div>
+                `;
+                
+                modal.show();
+
+                // Fetch financial data for the year
+                fetch(`/cooperatives/api/financial-data/${year}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            const financial = data.data;
+                            document.getElementById('financial-year-details').innerHTML = `
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <label>Reporting Year</label>
+                                        <p><strong>${financial.report_year || 'N/A'}</strong></p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Assets (PHP)</label>
+                                        <p class="financial-value">₱ ${parseFloat(financial.assets || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Paid Up Capital (PHP)</label>
+                                        <p class="financial-value">₱ ${parseFloat(financial.paid_up_capital || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Net Surplus (PHP)</label>
+                                        <p class="financial-value">₱ ${parseFloat(financial.net_surplus || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Status</label>
+                                        <p>
+                                            <span class="badge status-${financial.approval_status ? financial.approval_status.toLowerCase() : 'pending'}">
+                                                ${financial.approval_status ? financial.approval_status.charAt(0).toUpperCase() + financial.approval_status.slice(1) : 'Pending'}
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Submitted</label>
+                                        <p>${financial.created_at ? new Date(financial.created_at).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'}) : 'N/A'}</p>
+                                    </div>
+                                    ${financial.updated_at && financial.updated_at !== financial.created_at ? `
+                                    <div class="info-item">
+                                        <label>Last Updated</label>
+                                        <p>${new Date(financial.updated_at).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</p>
+                                    </div>
+                                    ` : ''}
+                                    ${financial.has_attachments ? `
+                                    <div class="info-item full-width">
+                                        <label>Financial Documents</label>
+                                        <p>
+                                            <a href="/cooperatives/profiles/{{ profile.coop_id }}/attachment/financial/?year=${year}" 
+                                               class="download-link" target="_blank">
+                                                <i class="bi bi-download"></i> Download Documents
+                                            </a>
+                                        </p>
+                                    </div>
+                                    ` : `
+                                    <div class="info-item full-width">
+                                        <label>Financial Documents</label>
+                                        <p><span class="text-muted">No documents attached</span></p>
+                                    </div>
+                                    `}
+                                </div>
+                            `;
+                        } else {
+                            document.getElementById('financial-year-details').innerHTML = `
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> ${data.message || 'Failed to load financial data'}
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching financial data:', error);
+                        document.getElementById('financial-year-details').innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-x-circle"></i> An error occurred while loading financial data. Please try again.
+                            </div>
+                        `;
+                    });
+            });
+        });
+    });
+
+    // Print Profile Function
+    function printProfile() {
+        window.open('{% url "cooperatives:print_profile" profile.coop_id %}', '_blank');
+    }
 </script>
 {% endblock %}
