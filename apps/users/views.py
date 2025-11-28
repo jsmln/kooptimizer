@@ -8,6 +8,16 @@ from .models import User
 import requests
 from apps.core.services.otp_service import OTPService
 import random
+import json
+import datetime
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from .models import Event
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+import os
 
 # ============================================
 # LOGIN & LOGOUT VIEWS
@@ -537,3 +547,115 @@ def perform_password_reset(request):
         'masked_mobile': request.session.get('reset_masked_mobile')
     }
     return render(request, 'users/password_reset.html', context)
+
+def all_events(request):
+    # Import User only when needed
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    # Fallback logic inside the function
+    if request.user.is_authenticated:
+        events = Event.objects.filter(user=request.user)
+    else:
+        # If not logged in, just show Admin's events to prevent empty calendar
+        admin_user = User.objects.filter(is_superuser=True).first()
+        if admin_user:
+            events = Event.objects.filter(user=admin_user)
+        else:
+            events = Event.objects.all()
+
+    out = []
+    for event in events:
+        out.append({
+            'title': event.title,
+            'id': event.id,
+            'start': event.start_date.strftime("%Y-%m-%dT%H:%M:%S"),
+            'end': event.end_date.strftime("%Y-%m-%dT%H:%M:%S"),
+        })
+    return JsonResponse(out, safe=False)
+
+@csrf_exempt
+def add_event(request):
+    if request.method == "POST":
+        try:
+            # 1. SETUP USER
+            User = get_user_model()
+            user = None
+            user_id = request.session.get('user_id')
+            if user_id:
+                try: user = User.objects.get(pk=user_id)
+                except User.DoesNotExist: pass
+            if not user and request.user.is_authenticated:
+                user = request.user
+            if not user:
+                user = User.objects.filter(is_superuser=True).first()
+
+            # 2. PREPARE DATA
+            data = json.loads(request.body)
+            raw_start = data.get("start")
+            raw_end = data.get("end")
+
+            # --- FIX: SMART DATE FORMATTER ---
+            # If date is just "2025-11-30", turn it into "2025-11-30T00:00:00"
+            if 'T' not in raw_start:
+                final_start = f"{raw_start}T08:00:00" # Default to 8 AM
+            else:
+                final_start = raw_start if len(raw_start) > 16 else f"{raw_start}:00"
+
+            if 'T' not in raw_end:
+                final_end = f"{raw_end}T09:00:00" # Default to 1 hour later
+            else:
+                final_end = raw_end if len(raw_end) > 16 else f"{raw_end}:00"
+            # --------------------------------
+
+            # 3. SAVE TO DB
+            new_event = Event.objects.create(
+                user=user,
+                title=data.get("title"),
+                description=data.get("description"),
+                start_date=final_start,
+                end_date=final_end
+            )
+            
+            # 4. GOOGLE SYNC (Safety Bubble)
+            try:
+                SCOPES = ['https://www.googleapis.com/auth/calendar']
+                SERVICE_ACCOUNT_FILE = 'service_account.json' 
+                
+                if os.path.exists(SERVICE_ACCOUNT_FILE):
+                    creds = service_account.Credentials.from_service_account_file(
+                        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+                    service = build('calendar', 'v3', credentials=creds)
+
+                    google_event = {
+                        'summary': data.get("title"),
+                        'description': data.get("description"),
+                        'start': {
+                            'dateTime': final_start, # Uses the fixed format
+                            'timeZone': 'Asia/Manila',
+                        },
+                        'end': {
+                            'dateTime': final_end,   # Uses the fixed format
+                            'timeZone': 'Asia/Manila',
+                        },
+                    }
+
+                    # Use 'primary' if you shared with the robot email. 
+                    # If that fails, replace 'primary' with your actual Gmail address.
+                    # Replace 'your.email@gmail.com' with your REAL email address inside the quotes
+                    my_calendar_id = 'kooptimizer@gmail.com' 
+
+                    service.events().insert(calendarId=my_calendar_id, body=google_event).execute()
+                    print("SUCCESS: Synced to Google Calendar!")
+                else:
+                    print("WARNING: service_account.json not found.")
+
+            except Exception as google_error:
+                print(f"GOOGLE SYNC FAILED (Ignored): {google_error}")
+
+            return JsonResponse({"status": "success"})
+            
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+
+    return JsonResponse({"status": "error"}, status=400)

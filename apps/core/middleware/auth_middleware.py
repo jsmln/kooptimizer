@@ -23,6 +23,8 @@ class AuthenticationMiddleware:
         'access_denied',  # Access denied page
         'users:initiate_password_reset', # Allow searching for account
         'users:perform_password_reset',
+        'users:all_events',
+        'users:add_event',
     ]
     
     # URLs that require pending verification (not full authentication)
@@ -65,6 +67,9 @@ class AuthenticationMiddleware:
         # Check session validity and freshness
         user_id = request.session.get('user_id')
         
+        if '/users/all_events/' in request.path or '/users/add_event/' in request.path:
+            return self.get_response(request)
+
         # ---------------------------------------------------------
         # 1. SESSION FRESHNESS CHECK
         # ---------------------------------------------------------

@@ -1,4 +1,6 @@
-from django.db import models, connection
+from django.db import models
+from django.conf import settings
+from django.db import connection
 
 # ===================================================
 #  User Model
@@ -8,6 +10,15 @@ class User(models.Model):
     username = models.CharField(max_length=150, unique=True)
     password_hash = models.CharField(max_length=255, db_column='password_hash')
     role = models.CharField(max_length=50)
+    
+    # --- NEW FIELDS FOR PROFILE ---
+    # Ensure these columns exist in your 'users' table
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
+    email = models.EmailField(max_length=100, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    # -----------------------------
+
     verification_status = models.CharField(
         max_length=20,
         choices=[
@@ -24,7 +35,7 @@ class User(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        managed = False 
+        managed = False  # Keep this False if you manage DB manually
         db_table = 'users'
 
     def __str__(self):
@@ -77,3 +88,22 @@ class User(models.Model):
                 
         return None
     
+class Event(models.Model):
+    # We MUST keep this relationship, otherwise the calendar breaks
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    title = models.CharField(max_length=255)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    
+    # Adding the description field you requested
+    description = models.TextField(blank=True, null=True)
+    
+    # We remove google_event_id since you didn't include it in your SQL
+
+    class Meta:
+        # THIS IS THE KEY: It forces Django to save to your specific table
+        db_table = 'app_events'
+
+    def __str__(self):
+        return self.title
