@@ -4,8 +4,8 @@
 {% block title %}{% block dashboard_title %}Dashboard{% endblock %} - KoopTimizer{% endblock %}
 
 {% block extra_head %}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'frontend/dashboard.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'frontend/dashboard.css' %}">
 {% endblock %}
 
 {% block header %}{% endblock %}
@@ -16,7 +16,7 @@
 
     <nav class="sidebar" id="main-sidebar">
         <script>
-            (function() {
+            (function () {
                 const s = document.getElementById('main-sidebar');
                 if (localStorage.getItem('sidebar-state') === 'expanded') {
                     s.classList.add('expanded');
@@ -39,70 +39,70 @@
             {% with route_name=request.resolver_match.view_name %}
 
             {% if request.session.role == 'admin' %}
-                <li>
-                    <a href="{% url 'dashboard:admin_dashboard' %}" 
-                       class="nav-item {% if route_name == 'dashboard:admin_dashboard' %}active{% endif %}">
-                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
+            <li>
+                <a href="{% url 'dashboard:admin_dashboard' %}"
+                    class="nav-item {% if route_name == 'dashboard:admin_dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
             {% elif request.session.role == 'staff' %}
-                <li>
-                    <a href="{% url 'dashboard:staff_dashboard' %}" 
-                       class="nav-item {% if route_name == 'dashboard:staff_dashboard' %}active{% endif %}">
-                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
+            <li>
+                <a href="{% url 'dashboard:staff_dashboard' %}"
+                    class="nav-item {% if route_name == 'dashboard:staff_dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
             {% elif request.session.role == 'officer' %}
-                <li>
-                    <a href="{% url 'dashboard:cooperative_dashboard' %}" 
-                       class="nav-item {% if route_name == 'dashboard:cooperative_dashboard' %}active{% endif %}">
-                        <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
+            <li>
+                <a href="{% url 'dashboard:cooperative_dashboard' %}"
+                    class="nav-item {% if route_name == 'dashboard:cooperative_dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-fill"></i> <span class="nav-text">Dashboard</span>
+                </a>
+            </li>
             {% endif %}
 
             <li class="nav-section-title"><span class="nav-text">Modules</span></li>
 
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
-                <li>
-                    <a href="{% url 'account_management:account_management' %}" 
-                       class="nav-item {% if 'account_management' in route_name %}active{% endif %}">
-                        <i class="bi bi-people-fill"></i> <span class="nav-text">Accounts</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'databank:databank_management' %}" 
-                       class="nav-item {% if 'databank' in route_name %}active{% endif %}">
-                        <i class="bi bi-database-fill"></i> <span class="nav-text">Data Bank</span>
-                    </a>
-                </li>
+            <li>
+                <a href="{% url 'account_management:account_management' %}"
+                    class="nav-item {% if 'account_management' in route_name %}active{% endif %}">
+                    <i class="bi bi-people-fill"></i> <span class="nav-text">Accounts</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'databank:databank_management' %}"
+                    class="nav-item {% if 'databank' in route_name %}active{% endif %}">
+                    <i class="bi bi-database-fill"></i> <span class="nav-text">Data Bank</span>
+                </a>
+            </li>
             {% endif %}
 
             {% if request.session.role == 'officer' %}
-                <li>
-                    <a href="{% url 'cooperatives:profile_form' %}" 
-                       class="nav-item {% if 'cooperatives' in route_name %}active{% endif %}">
-                        <i class="bi bi-building"></i> <span class="nav-text">Profile</span>
-                    </a>
-                </li>
+            <li>
+                <a href="{% url 'cooperatives:profile_form' %}"
+                    class="nav-item {% if 'cooperatives' in route_name %}active{% endif %}">
+                    <i class="bi bi-building"></i> <span class="nav-text">Profile</span>
+                </a>
+            </li>
             {% endif %}
 
             <li>
-                <a href="{% url 'communications:message' %}" 
-                   class="nav-item {% if 'communications:message' in route_name %}active{% endif %}">
+                <a href="{% url 'communications:message' %}"
+                    class="nav-item {% if 'communications:message' in route_name %}active{% endif %}">
                     <i class="bi bi-chat-dots-fill"></i> <span class="nav-text">Messages</span>
                 </a>
             </li>
-            
+
             {% if request.session.role == 'admin' or request.session.role == 'staff' %}
             <li>
-                <a href="{% url 'communications:announcement_form' %}" 
-                   class="nav-item {% if 'communications:announcement' in route_name %}active{% endif %}">
+                <a href="{% url 'communications:announcement_form' %}"
+                    class="nav-item {% if 'communications:announcement' in route_name %}active{% endif %}">
                     <i class="bi bi-megaphone-fill"></i> <span class="nav-text">Announcements</span>
                 </a>
             </li>
             {% endif %}
-            
+
             {% endwith %}
         </ul>
 
@@ -110,13 +110,14 @@
 
             <div class="mini-widget">
                 <h4>
-                    <span class="nav-text">Calendar</span> 
+                    <span class="nav-text">Calendar</span>
                     <i class="bi bi-calendar4-week"></i>
                 </h4>
                 <div class="mini-calendar-box">
                     <div class="mini-date" id="current-date">{% now "M d" %}</div>
                     <div class="mini-day" id="current-day">{% now "l" %}</div>
-                    <div class="mini-time" id="current-time" style="font-size: 14px; font-weight: 600; color: #a91e2c; margin-top: 8px;"></div>
+                    <div class="mini-time" id="current-time"
+                        style="font-size: 14px; font-weight: 600; color: #a91e2c; margin-top: 8px;"></div>
                 </div>
             </div>
 
@@ -127,23 +128,32 @@
                 </h4>
                 <div style="padding:8px 12px;">
                     <div style="font-size:0.9rem; color:var(--text-gray); margin-bottom:6px;">Quick help</div>
-                    <button id="open-faq-from-sidebar" class="btn btn-outline-secondary btn-sm" style="width:100%; text-align:left;">Open FAQs</button>
+                    <button id="open-faq-from-sidebar" class="btn btn-outline-secondary btn-sm"
+                        style="width:100%; text-align:left;">Open FAQs</button>
+                </div>
+                <div style="padding:8px 12px;">
+                    <div style="font-size:0.8rem; color:var(--text-gray); margin-bottom:6px;">
+                        Get real-time updates?
+                    </div>
+                    <button id="enable-notifs-btn" class="btn btn-danger btn-sm" style="width:100%;">
+                        <i class="bi bi-bell-fill"></i> Enable Push
+                    </button>
                 </div>
             </div>
 
         </div>
-        
+
         <button id="sidebar-close-btn" class="d-md-none sidebar-close"><i class="bi bi-x-lg"></i></button>
     </nav>
 
     <main class="main-content-wrapper">
-        
+
         <header class="top-bar">
             <div class="top-left">
                 <button id="sidebar-toggle-btn" class="d-md-none"><i class="bi bi-list"></i></button>
                 <div class="page-title">{% block page_header %}Dashboard Overview{% endblock %}</div>
             </div>
-            
+
             <div class="user-menu">
                 <div class="user-info">
                     <span class="u-name">{{ request.session.username }}</span>
@@ -153,17 +163,21 @@
                     {{ request.session.username|first|upper }}
                 </div>
 
-                    <div class="notification-bell" id="notification-bell" style="position:relative;">
-                        <button id="bell-btn" class="btn" title="Activity" style="background:transparent; border:none; color:var(--text-gray); font-size:1.3rem;">
-                            <i class="bi bi-bell-fill"></i>
-                            <span id="activity-badge" class="activity-badge" style="display:none;">0</span>
-                        </button>
-                        <div id="activity-dropdown" class="activity-dropdown" style="display:none; position:absolute; right:0; top:36px; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.08); width:320px; z-index:120;">
-                            <div style="padding:8px 12px; border-bottom:1px solid #f5f5f5; font-weight:700;">Recent Activity</div>
-                            <div id="activity-dropdown-list" style="max-height:260px; overflow:auto;"></div>
-                            <div style="padding:8px 12px; border-top:1px solid #f5f5f5; text-align:center;"><a href="#" class="small">View all</a></div>
+                <div class="notification-bell" id="notification-bell" style="position:relative;">
+                    <button id="bell-btn" class="btn" title="Activity"
+                        style="background:transparent; border:none; color:var(--text-gray); font-size:1.3rem;">
+                        <i class="bi bi-bell-fill"></i>
+                        <span id="activity-badge" class="activity-badge" style="display:none;">0</span>
+                    </button>
+                    <div id="activity-dropdown" class="activity-dropdown"
+                        style="display:none; position:absolute; right:0; top:36px; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.08); width:320px; z-index:120;">
+                        <div style="padding:8px 12px; border-bottom:1px solid #f5f5f5; font-weight:700;">Recent Activity
                         </div>
+                        <div id="activity-dropdown-list" style="max-height:260px; overflow:auto;"></div>
+                        <div style="padding:8px 12px; border-top:1px solid #f5f5f5; text-align:center;"><a href="#"
+                                class="small">View all</a></div>
                     </div>
+                </div>
 
                 <a href="{% url 'users:profile_settings' %}" class="settings-btn-mini" title="Settings">
                     <i class="bi bi-three-dots-vertical"></i>
@@ -177,10 +191,10 @@
 
         <div class="content-scrollable">
             {% block dashboard_content %}
-                <div class="welcome-banner">
-                    <h2>Welcome back, {{ request.session.username }}!</h2>
-                    <p>Here is what's happening with your cooperative today.</p>
-                </div>
+            <div class="welcome-banner">
+                <h2>Welcome back, {{ request.session.username }}!</h2>
+                <p>Here is what's happening with your cooperative today.</p>
+            </div>
             {% endblock %}
         </div>
     </main>
@@ -190,7 +204,7 @@
 <div class="sidebar-overlay"></div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const desktopToggle = document.getElementById('desktop-sidebar-toggle');
         const sidebar = document.getElementById('main-sidebar');
 
@@ -198,14 +212,14 @@
         // We wait a tiny bit to ensure the initial paint is done, then enable transitions
         // This ensures the "load" was static, but future "clicks" will slide.
         setTimeout(() => {
-            if(sidebar) sidebar.classList.add('sidebar-animated');
+            if (sidebar) sidebar.classList.add('sidebar-animated');
         }, 100);
 
         // 2. TOGGLE HANDLER
         if (desktopToggle && sidebar) {
-            desktopToggle.addEventListener('click', function(e) {
-                e.preventDefault(); 
-                
+            desktopToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+
                 sidebar.classList.toggle('expanded');
 
                 // Save New State
@@ -220,7 +234,7 @@
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const toggleBtn = document.getElementById('sidebar-toggle-btn');
         const closeBtn = document.getElementById('sidebar-close-btn');
         const overlay = document.querySelector('.sidebar-overlay');
@@ -230,10 +244,10 @@
             body.classList.toggle('sidebar-open');
         }
 
-        if(toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
-        if(closeBtn) closeBtn.addEventListener('click', toggleSidebar);
-        if(overlay) overlay.addEventListener('click', toggleSidebar);
-        
+        if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+
         // Real-time clock
         function updateClock() {
             const now = new Date();
@@ -242,91 +256,91 @@
             const seconds = now.getSeconds();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
-            hours = hours ? hours : 12; 
-            
+            hours = hours ? hours : 12;
+
             const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} ${ampm}`;
-            
+
             const timeElement = document.getElementById('current-time');
             if (timeElement) {
                 timeElement.textContent = timeString;
             }
         }
-        
+
         updateClock();
         setInterval(updateClock, 1000);
     });
 </script>
 
 <script>
-// Activity Dropdown Script (Kept same as before)
-document.addEventListener('DOMContentLoaded', function() {
-    const activityBadge = document.getElementById('activity-badge');
-    const dropdownList = document.getElementById('activity-dropdown-list');
-    const bellBtn = document.getElementById('bell-btn');
-    const activityDropdown = document.getElementById('activity-dropdown');
+    // Activity Dropdown Script (Kept same as before)
+    document.addEventListener('DOMContentLoaded', function () {
+        const activityBadge = document.getElementById('activity-badge');
+        const dropdownList = document.getElementById('activity-dropdown-list');
+        const bellBtn = document.getElementById('bell-btn');
+        const activityDropdown = document.getElementById('activity-dropdown');
 
-    function buildActivityHtml(activities){
-        if(!activities || activities.length === 0){
-            return `<div style="padding:12px; color:#A3AED0;">No recent messages</div>`;
-        }
-        let html = '';
-        activities.forEach(act => {
-            html += `<div style="padding:10px 12px; border-bottom:1px solid #f5f5f5;">
+        function buildActivityHtml(activities) {
+            if (!activities || activities.length === 0) {
+                return `<div style="padding:12px; color:#A3AED0;">No recent messages</div>`;
+            }
+            let html = '';
+            activities.forEach(act => {
+                html += `<div style="padding:10px 12px; border-bottom:1px solid #f5f5f5;">
                         <div style="font-weight:600; color:var(--text-dark);">${act.title}</div>
                         <div style="font-size:0.8rem; color:#707EAE; margin-top:4px;">${act.sender} · ${act.time}</div>
                      </div>`;
-        });
-        return html;
-    }
-
-    function setBadge(count){
-        if(!activityBadge) return;
-        if(count && count > 0){
-            activityBadge.textContent = count > 99 ? '99+' : count;
-            activityBadge.style.display = 'inline-block';
-        } else {
-            activityBadge.style.display = 'none';
-        }
-    }
-
-    function loadRecentActivity(){
-        fetch("{% url 'communications:api_recent_activity' %}")
-            .then(r => { if(!r.ok) throw new Error('Network'); return r.json(); })
-            .then(data => {
-                if(data.status === 'success'){
-                    const activities = data.activities || [];
-                    const count = activities.length;
-                    setBadge(count);
-                    const html = buildActivityHtml(activities.slice(0,6));
-                    if(dropdownList && dropdownList.innerHTML !== html) dropdownList.innerHTML = html;
-                }
-            })
-            .catch(err => {
-                console.error('Activity load error', err);
-                if(dropdownList) dropdownList.innerHTML = `<div style="padding:12px; color:red;">Error loading activity</div>`;
-                setBadge(0);
             });
-    }
+            return html;
+        }
 
-    if(bellBtn && activityDropdown){
-        bellBtn.addEventListener('click', function(e){
-            e.stopPropagation();
-            const isOpen = activityDropdown.style.display === 'block';
-            if(!isOpen){
-                loadRecentActivity();
-                activityDropdown.style.display = 'block';
+        function setBadge(count) {
+            if (!activityBadge) return;
+            if (count && count > 0) {
+                activityBadge.textContent = count > 99 ? '99+' : count;
+                activityBadge.style.display = 'inline-block';
             } else {
-                activityDropdown.style.display = 'none';
+                activityBadge.style.display = 'none';
             }
-        });
+        }
 
-        document.addEventListener('click', function(e){
-            if(!activityDropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)){
-                activityDropdown.style.display = 'none';
-            }
-        });
-    }
-});
+        function loadRecentActivity() {
+            fetch("{% url 'communications:api_recent_activity' %}")
+                .then(r => { if (!r.ok) throw new Error('Network'); return r.json(); })
+                .then(data => {
+                    if (data.status === 'success') {
+                        const activities = data.activities || [];
+                        const count = activities.length;
+                        setBadge(count);
+                        const html = buildActivityHtml(activities.slice(0, 6));
+                        if (dropdownList && dropdownList.innerHTML !== html) dropdownList.innerHTML = html;
+                    }
+                })
+                .catch(err => {
+                    console.error('Activity load error', err);
+                    if (dropdownList) dropdownList.innerHTML = `<div style="padding:12px; color:red;">Error loading activity</div>`;
+                    setBadge(0);
+                });
+        }
+
+        if (bellBtn && activityDropdown) {
+            bellBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const isOpen = activityDropdown.style.display === 'block';
+                if (!isOpen) {
+                    loadRecentActivity();
+                    activityDropdown.style.display = 'block';
+                } else {
+                    activityDropdown.style.display = 'none';
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!activityDropdown.contains(e.target) && e.target !== bellBtn && !bellBtn.contains(e.target)) {
+                    activityDropdown.style.display = 'none';
+                }
+            });
+        }
+    });
 </script>
 
 <div class="modal fade" id="faqModal" tabindex="-1" aria-labelledby="faqModalLabel" aria-hidden="true">
@@ -340,23 +354,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="row">
                     <div class="col-md-4">
                         <div class="list-group" id="faq-list" role="tablist">
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="To reset your password, go to Settings → Password Reset and follow the instructions.">How do I reset my password?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="To create an announcement, go to Announcements in the sidebar and click 'New Announcement'.">How do I post an announcement?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="Messages appear in real-time; mark them as seen in the conversation to clear activities.">Why are some activities still showing?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="For support, email support@kooptimizer@gmail.com or use the contact form under About → Contact.">How do I contact support?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="Access your profile by clicking on your avatar in the top-right corner and selecting 'Settings'.">How do I edit my profile?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="Admins and staff manage accounts in the Accounts module. Officers can view their own profile in the Profile section.">Who can manage user accounts?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="The Data Bank module stores cooperative information and records. Access it from the sidebar under Modules.">What is the Data Bank?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="Messages are sent and received through the Messages module in the sidebar. You'll receive notifications for new messages.">How do I send messages?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="Your activity feed updates automatically every 2 seconds. Check the Activity widget in the sidebar.">How often does my activity update?</button>
-                            <button type="button" class="list-group-item list-group-item-action" data-answer="To log out, click the logout button (arrow icon) in the top-right corner and confirm in the modal.">How do I log out?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="To reset your password, go to Settings → Password Reset and follow the instructions.">How
+                                do I reset my password?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="To create an announcement, go to Announcements in the sidebar and click 'New Announcement'.">How
+                                do I post an announcement?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="Messages appear in real-time; mark them as seen in the conversation to clear activities.">Why
+                                are some activities still showing?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="For support, email support@kooptimizer@gmail.com or use the contact form under About → Contact.">How
+                                do I contact support?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="Access your profile by clicking on your avatar in the top-right corner and selecting 'Settings'.">How
+                                do I edit my profile?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="Admins and staff manage accounts in the Accounts module. Officers can view their own profile in the Profile section.">Who
+                                can manage user accounts?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="The Data Bank module stores cooperative information and records. Access it from the sidebar under Modules.">What
+                                is the Data Bank?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="Messages are sent and received through the Messages module in the sidebar. You'll receive notifications for new messages.">How
+                                do I send messages?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="Your activity feed updates automatically every 2 seconds. Check the Activity widget in the sidebar.">How
+                                often does my activity update?</button>
+                            <button type="button" class="list-group-item list-group-item-action"
+                                data-answer="To log out, click the logout button (arrow icon) in the top-right corner and confirm in the modal.">How
+                                do I log out?</button>
                         </div>
                     </div>
                     <div class="col-md-8">
-                        <div id="faq-chat" style="min-height:300px; border:1px solid #e9ecef; border-radius:6px; padding:12px; background:#f8fafc; display:flex; flex-direction:column;">
+                        <div id="faq-chat"
+                            style="min-height:300px; border:1px solid #e9ecef; border-radius:6px; padding:12px; background:#f8fafc; display:flex; flex-direction:column;">
                             <div id="faq-messages" style="flex:1; overflow:auto; margin-bottom:8px;"></div>
                             <div id="faq-controls" style="display:flex; gap:8px; align-items:center;">
-                                <input id="faq-input-preview" class="form-control" placeholder="Selected question answer will type here..." readonly />
+                                <input id="faq-input-preview" class="form-control"
+                                    placeholder="Selected question answer will type here..." readonly />
                                 <button id="faq-clear" class="btn btn-outline-secondary">Clear</button>
                             </div>
                         </div>
@@ -372,8 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
-// FAQ Script (Kept same as before)
-document.addEventListener('DOMContentLoaded', function() {
+    // FAQ Script (Kept same as before)
+    document.addEventListener('DOMContentLoaded', function () {
         const openFaqBtn = document.getElementById('open-faq-btn');
         const openFaqSidebarBtn = document.getElementById('open-faq-from-sidebar');
         const faqModalEl = document.getElementById('faqModal');
@@ -383,70 +419,282 @@ document.addEventListener('DOMContentLoaded', function() {
         const faqInput = document.getElementById('faq-input-preview');
         const faqClear = document.getElementById('faq-clear');
 
-        function appendMessage(text, from='system'){
-                const wrap = document.createElement('div');
-                wrap.style.margin = '6px 0';
-                const bubble = document.createElement('div');
-                bubble.style.display = 'inline-block';
-                bubble.style.padding = '8px 12px';
-                bubble.style.borderRadius = '18px';
-                bubble.style.maxWidth = '85%';
-                bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-                if(from === 'user'){
-                        bubble.style.background = '#e7f3ff';
-                        bubble.style.alignSelf = 'flex-end';
-                        bubble.style.marginLeft = 'auto';
-                } else {
-                        bubble.style.background = '#ffffff';
-                        bubble.style.alignSelf = 'flex-start';
+        function appendMessage(text, from = 'system') {
+            const wrap = document.createElement('div');
+            wrap.style.margin = '6px 0';
+            const bubble = document.createElement('div');
+            bubble.style.display = 'inline-block';
+            bubble.style.padding = '8px 12px';
+            bubble.style.borderRadius = '18px';
+            bubble.style.maxWidth = '85%';
+            bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+            if (from === 'user') {
+                bubble.style.background = '#e7f3ff';
+                bubble.style.alignSelf = 'flex-end';
+                bubble.style.marginLeft = 'auto';
+            } else {
+                bubble.style.background = '#ffffff';
+                bubble.style.alignSelf = 'flex-start';
+            }
+            bubble.textContent = text;
+            wrap.appendChild(bubble);
+            faqMessages.appendChild(wrap);
+            faqMessages.scrollTop = faqMessages.scrollHeight;
+        }
+
+        function typeIntoPreview(text, speed = 25) {
+            faqInput.value = '';
+            let i = 0;
+            const interval = setInterval(() => {
+                faqInput.value = text.slice(0, i + 1);
+                i++;
+                if (i >= text.length) {
+                    clearInterval(interval);
+                    appendMessage(text, 'system');
                 }
-                bubble.textContent = text;
-                wrap.appendChild(bubble);
-                faqMessages.appendChild(wrap);
-                faqMessages.scrollTop = faqMessages.scrollHeight;
+            }, speed);
         }
 
-        function typeIntoPreview(text, speed=25){
-                faqInput.value = '';
-                let i = 0;
-                const interval = setInterval(() => {
-                        faqInput.value = text.slice(0, i+1);
-                        i++;
-                        if(i >= text.length){
-                                clearInterval(interval);
-                                appendMessage(text, 'system');
-                        }
-                }, speed);
-        }
-
-        function openFaqModalReset(){
+        function openFaqModalReset() {
             faqInput.value = '';
             faqMessages.innerHTML = '';
             document.getElementById('faq-list').querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-            if(faqModal) faqModal.show();
+            if (faqModal) faqModal.show();
         }
 
-        if(openFaqBtn) openFaqBtn.addEventListener('click', function(e){ e.preventDefault(); openFaqModalReset(); });
-        if(openFaqSidebarBtn) openFaqSidebarBtn.addEventListener('click', function(e){ e.preventDefault(); openFaqModalReset(); });
+        if (openFaqBtn) openFaqBtn.addEventListener('click', function (e) { e.preventDefault(); openFaqModalReset(); });
+        if (openFaqSidebarBtn) openFaqSidebarBtn.addEventListener('click', function (e) { e.preventDefault(); openFaqModalReset(); });
 
-        if(faqList){
-                faqList.addEventListener('click', function(e){
-                        const btn = e.target.closest('button');
-                        if(!btn) return;
-                        faqList.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
-                        btn.classList.add('active');
-                        appendMessage(btn.textContent.trim(), 'user');
-                        const answer = btn.getAttribute('data-answer') || 'Sorry, no answer available.';
-                        typeIntoPreview(answer);
-                });
+        if (faqList) {
+            faqList.addEventListener('click', function (e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                faqList.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                appendMessage(btn.textContent.trim(), 'user');
+                const answer = btn.getAttribute('data-answer') || 'Sorry, no answer available.';
+                typeIntoPreview(answer);
+            });
         }
 
-        if(faqClear){
-                faqClear.addEventListener('click', function(){
-                        faqMessages.innerHTML = '';
-                        faqInput.value = '';
-                });
+        if (faqClear) {
+            faqClear.addEventListener('click', function () {
+                faqMessages.innerHTML = '';
+                faqInput.value = '';
+            });
         }
-});
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const enableBtn = document.getElementById('enable-notifs-btn');
+        const widget = document.getElementById('push-permission-widget');
+
+        // 1. GET THE KEY safely
+        const vapidPublicKey = "{{ webpush_settings.VAPID_PUBLIC_KEY|default:'' }}";
+
+        // 2. HELPER: Get CSRF Token from cookies
+        function getCsrfToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // 3. HELPER: Show Django-style message
+        function showDjangoMessage(message, tag = 'info') {
+            const container = document.getElementById('django-messages');
+            if (!container) {
+                console.warn('Django messages container not found');
+                return;
+            }
+
+            // Create message element
+            const messageEl = document.createElement('div');
+            messageEl.className = `dj-message dj-${tag}`;
+            messageEl.setAttribute('role', 'status');
+            messageEl.innerHTML = `
+                <div class="dj-message-left">
+                    <div class="dj-message-icon" aria-hidden="true">!</div>
+                </div>
+                <div class="dj-message-body">
+                    <div class="dj-message-text">${message}</div>
+                </div>
+                <button class="dj-message-close" aria-label="Close message">×</button>
+            `;
+
+            // Add dismiss functionality
+            const closeBtn = messageEl.querySelector('.dj-message-close');
+            function dismiss() {
+                messageEl.style.transition = 'opacity 240ms ease, transform 240ms ease';
+                messageEl.style.opacity = '0';
+                messageEl.style.transform = 'translateX(18px)';
+                setTimeout(() => {
+                    if (messageEl.parentNode) {
+                        messageEl.parentNode.removeChild(messageEl);
+                    }
+                }, 260);
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', dismiss);
+            }
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(messageEl)) {
+                    dismiss();
+                }
+            }, 5000);
+
+            // Append to container
+            container.appendChild(messageEl);
+        }
+
+        // 4. HELPER: VAPID Key Conversion
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        // 5. LOGIC: Check permissions immediately to decide visibility
+        if ('serviceWorker' in navigator && 'PushManager' in window && widget) {
+            // Only show if permission is 'default' (user hasn't been asked yet)
+            // If 'granted' or 'denied', keep it hidden (display:none is default in HTML)
+            if (Notification.permission === 'default') {
+                widget.style.display = 'block';
+            }
+        }
+
+        // 6. SUBSCRIBE ACTION
+        if (enableBtn) {
+            enableBtn.addEventListener('click', async () => {
+                if (!vapidPublicKey) {
+                    showDjangoMessage('Push notifications are not configured. Please contact support.', 'error');
+                    return;
+                }
+
+                // Store original button state
+                const originalText = enableBtn.innerHTML;
+                const originalDisabled = enableBtn.disabled;
+
+                try {
+                    // Change button state to loading
+                    enableBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enabling...';
+                    enableBtn.disabled = true;
+
+                    // A. Register Service Worker
+                    const register = await navigator.serviceWorker.register('/sw.js');
+
+                    // B. Subscribe to Browser Push Manager
+                    const subscription = await register.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+                    });
+
+                    // C. Get CSRF Token
+                    const csrfToken = getCsrfToken();
+                    if (!csrfToken) {
+                        throw new Error('Please refresh the page and try again.');
+                    }
+
+                    // D. Extract browser name from user agent (webpush library expects this)
+                    const browserMatch = navigator.userAgent.match(/(firefox|msie|chrome|safari|trident|edg)/i);
+                    const browser = browserMatch ? browserMatch[0].toLowerCase() : 'chrome';
+
+                    // E. Send Subscription to Django Backend
+                    const response = await fetch('/webpush/save_information', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            status_type: 'subscribe',
+                            subscription: subscription.toJSON(),
+                            browser: browser,
+                            user_agent: navigator.userAgent
+                        })
+                    });
+
+                    if (response.ok) {
+                        // F. SUCCESS: Hide the widget and reset button
+                        if (widget) {
+                            widget.style.display = 'none';
+                        }
+                        // Reset button state (widget is hidden, so button won't be visible anyway)
+                        enableBtn.innerHTML = originalText;
+                        enableBtn.disabled = originalDisabled;
+
+                        showDjangoMessage('Push notifications enabled successfully! You will now receive real-time updates.', 'success');
+                    } else {
+                        // Parse error response
+                        let errorMessage = 'Unable to enable notifications.';
+                        try {
+                            const errorData = await response.json();
+                            if (errorData.error) {
+                                // Make error messages user-friendly
+                                const error = errorData.error.toLowerCase();
+                                if (error.includes('authentication') || error.includes('login')) {
+                                    errorMessage = 'Please log in again to enable notifications.';
+                                } else if (error.includes('csrf')) {
+                                    errorMessage = 'Security verification failed. Please refresh the page and try again.';
+                                } else if (error.includes('invalid') || error.includes('field')) {
+                                    errorMessage = 'Invalid request. Please try again or contact support if the problem persists.';
+                                } else {
+                                    errorMessage = 'Unable to enable notifications. Please try again later.';
+                                }
+                            }
+                        } catch (e) {
+                            // If JSON parsing fails, use generic message
+                            errorMessage = 'Unable to enable notifications. Please try again later.';
+                        }
+
+                        // Reset button state
+                        enableBtn.innerHTML = originalText;
+                        enableBtn.disabled = originalDisabled;
+
+                        showDjangoMessage(errorMessage, 'error');
+                    }
+
+                } catch (error) {
+                    console.error('Failed to subscribe:', error);
+
+                    // Reset button state
+                    enableBtn.innerHTML = originalText;
+                    enableBtn.disabled = originalDisabled;
+
+                    // Handle specific errors with user-friendly messages
+                    if (Notification.permission === 'denied') {
+                        if (widget) {
+                            widget.style.display = 'none';
+                        }
+                        showDjangoMessage('Notifications are blocked in your browser. Please enable them in your browser settings to receive updates.', 'warning');
+                    } else if (error.message.includes('CSRF') || error.message.includes('token')) {
+                        showDjangoMessage('Security verification failed. Please refresh the page and try again.', 'error');
+                    } else if (error.message.includes('service worker') || error.message.includes('register')) {
+                        showDjangoMessage('Unable to set up notifications. Please check your browser settings and try again.', 'error');
+                    } else {
+                        showDjangoMessage('Unable to enable notifications. Please try again or contact support if the problem continues.', 'error');
+                    }
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}

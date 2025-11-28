@@ -65,6 +65,54 @@ class AuthenticationMiddleware:
         # Check session validity and freshness
         user_id = request.session.get('user_id')
         
+        # Set request.user for compatibility with Django auth (needed for webpush)
+        if user_id:
+            try:
+                UserModel = apps.get_model('users', 'User')
+                # DEBUG: Check what we're getting
+                print(f"DEBUG middleware: user_id from session = {user_id}, type = {type(user_id)}")
+                
+                # Handle string user_id
+                if isinstance(user_id, str):
+                    try:
+                        user_id = int(user_id)
+                        print(f"DEBUG middleware: Converted string to int: {user_id}")
+                    except ValueError:
+                        print(f"DEBUG middleware: user_id is non-numeric string: '{user_id}', trying username lookup")
+                        # Try username lookup if it's not a number
+                        try:
+                            request.user = UserModel.objects.get(username=user_id)
+                            print(f"DEBUG middleware: Found user by username: {request.user}, type: {type(request.user)}")
+                        except UserModel.DoesNotExist:
+                            print(f"DEBUG middleware: User not found by username, using AnonymousUser")
+                            from django.contrib.auth.models import AnonymousUser
+                            request.user = AnonymousUser()
+                        except Exception as e:
+                            print(f"DEBUG middleware: Exception during username lookup: {e}")
+                            from django.contrib.auth.models import AnonymousUser
+                            request.user = AnonymousUser()
+                    else:
+                        # Conversion succeeded, fetch by user_id
+                        request.user = UserModel.objects.get(user_id=user_id)
+                        print(f"DEBUG middleware: Found user by user_id: {request.user}, type: {type(request.user)}")
+                else:
+                    # user_id is already an int
+                    request.user = UserModel.objects.get(user_id=user_id)
+                    print(f"DEBUG middleware: Found user by user_id (int): {request.user}, type: {type(request.user)}")
+                
+                # Note: is_authenticated is a property defined in User model, no need to set it
+            except (LookupError, ImportError, ObjectDoesNotExist, ValueError, TypeError) as e:
+                # If user model not found or user doesn't exist, use AnonymousUser
+                print(f"DEBUG middleware: Exception setting request.user: {e}, user_id = {user_id}")
+                import traceback
+                traceback.print_exc()
+                from django.contrib.auth.models import AnonymousUser
+                request.user = AnonymousUser()
+        else:
+            from django.contrib.auth.models import AnonymousUser
+            request.user = AnonymousUser()
+            print(f"DEBUG middleware: No user_id in session, using AnonymousUser")
+        
         # ---------------------------------------------------------
         # 1. SESSION FRESHNESS CHECK
         # ---------------------------------------------------------

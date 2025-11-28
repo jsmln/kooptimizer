@@ -1,5 +1,5 @@
 """
-Automatic scheduler for sending scheduled announcements.
+Automatic scheduler for sending scheduled announcements and checking yearly profile updates.
 This runs in the background as long as the Django server is running.
 """
 import threading
@@ -39,9 +39,38 @@ class AnnouncementScheduler:
     
     def _run(self):
         """Main scheduler loop - runs every minute."""
+        # Track last profile check time (check once per day)
+        last_profile_check = None
+        
         while self.running:
             try:
                 self._check_and_send_scheduled()
+                
+                # Check for yearly profile updates once per day
+                # Check at midnight (00:00) or if 24 hours have passed
+                now = timezone.now()
+                should_check_profiles = False
+                
+                if last_profile_check is None:
+                    # First run - check immediately
+                    should_check_profiles = True
+                    last_profile_check = now
+                else:
+                    # Check if 24 hours have passed
+                    hours_since_check = (now - last_profile_check).total_seconds() / 3600
+                    if hours_since_check >= 24:
+                        should_check_profiles = True
+                        last_profile_check = now
+                
+                if should_check_profiles:
+                    try:
+                        from apps.cooperatives.signals import check_and_notify_yearly_profile_updates
+                        notified_count = check_and_notify_yearly_profile_updates()
+                        if notified_count > 0:
+                            logger.info(f"Yearly profile update check: Notified {notified_count} cooperatives")
+                    except Exception as e:
+                        logger.error(f"Error checking yearly profile updates: {str(e)}")
+                        
             except Exception as e:
                 logger.error(f"Error in scheduler: {str(e)}")
             

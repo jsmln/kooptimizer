@@ -1,0 +1,270 @@
+/* --- GLOBAL RESET --- */
+/* Essential to prevent padding from adding to width and causing overlap */
+* {
+    box-sizing: border-box; 
+}
+
+/* --- 1. LAYOUT WRAPPER --- */
+.announcement-layout {
+    display: flex;
+    width: 96%;  
+    height: 92%; 
+    /* Centering logic if parent is full screen */
+    margin: auto; 
+    gap: 20px; 
+    background: transparent;
+    overflow: hidden; /* Prevents the whole page from scrolling */
+}
+
+/* --- 2. LEFT CARD: NAVIGATION SIDEBAR --- */
+.announcement-sidebar {
+    width: 260px;
+    /* FIX: Prevents sidebar from shrinking when right content is wide */
+    min-width: 260px; 
+    flex-shrink: 0;
+    height: 100%; /* Ensure it fills height */
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+}
+
+/* Sidebar Internal Scrolling (if menu is long) */
+.sidebar-menu-container {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+/* Create New Button Wrapper */
+.sidebar-action-area {
+    padding: 20px;
+    flex-shrink: 0; /* Keeps button at top/bottom fixed if needed */
+}
+
+#create-new-btn {
+    width: 100%; /* Ensure it fits container */
+    background-color: #b71c1c;
+    color: #fff;
+    border: none;
+    font-weight: 600;
+    border-radius: 12px;
+    padding: 12px;
+    transition: 0.2s;
+    cursor: pointer;
+}
+#create-new-btn:hover { background-color: #8a1515; }
+
+/* Navigation Links */
+.sidebar-nav .nav-item {
+    margin-bottom: 4px;
+    padding-right: 15px;
+}
+
+.sidebar-nav .nav-link {
+    color: #555;
+    font-weight: 500;
+    padding: 10px 20px;
+    border-radius: 0 25px 25px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-decoration: none; /* Remove underline */
+    transition: all 0.2s;
+    white-space: nowrap; /* Prevents text wrapping breaking layout */
+}
+
+.sidebar-nav .nav-link i { font-size: 1.1rem; color: #888; width: 24px; text-align: center; }
+
+.sidebar-nav .nav-link:hover {
+    background-color: #f5f5f5;
+    color: #000;
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: #fff0f2;
+    color: #b71c1c;
+}
+.sidebar-nav .nav-link.active i { color: #b71c1c; }
+
+.sidebar-nav .badge {
+    background-color: #f0f0f0;
+    color: #333;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+}
+.sidebar-nav .nav-link.active .badge {
+    background-color: #b71c1c;
+    color: #fff;
+}
+
+/* --- 3. RIGHT CARD: CONTENT AREA --- */
+.announcement-content {
+    flex: 1; /* Takes remaining space */
+    /* FIX: These two lines prevent the right side from pushing the left side */
+    width: 0; 
+    min-width: 0; 
+    
+    height: 100%;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Content Header (Fixed Height) */
+.content-header {
+    height: 70px;
+    min-height: 70px; /* Enforce height */
+    padding: 0 25px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0; /* Never shrink header */
+    background: #fff;
+    z-index: 10;
+}
+
+/* Search Input */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+.search-wrapper input {
+    width: 100%;
+    padding: 10px 15px 10px 40px;
+    background: #f9f9f9;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    color: #000;
+}
+.search-wrapper input:focus {
+    background: #fff;
+    border-color: #b71c1c;
+    outline: none;
+}
+.search-wrapper i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+
+/* --- 4. CONSISTENT CONTENT CONTAINER (The Fix) --- */
+/* Use this class for the container of ANY view (List, Form, Details) */
+.content-scroll-area {
+    flex: 1; /* Fills the rest of vertical height */
+    overflow-y: auto; /* Enables scrolling inside this box */
+    overflow-x: hidden;
+    padding: 0; /* Keep 0 here, add padding to children or specific views if needed */
+    position: relative;
+}
+
+/* Standard Wrapper for Forms/Details to ensure padding */
+.view-container {
+    padding: 25px;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* List Items (Specific to List View) */
+.list-group-item {
+    border: none;
+    border-bottom: 1px solid #f9f9f9;
+    padding: 18px 25px;
+    transition: background 0.1s;
+    display: block;
+    width: 100%;
+}
+.list-group-item:hover {
+    background-color: #fafafa;
+    cursor: pointer;
+}
+
+/* Badges in List */
+.badge-type {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.badge-type.sms { background-color: #e3f2fd; color: #0d47a1; }
+.badge-type.email { background-color: #e8f5e9; color: #1b5e20; }
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 400px; /* Ensure visibility */
+    color: #999;
+    padding: 40px;
+}
+.empty-state i { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
+
+/* --- FORM STYLES --- */
+.form-label { font-size: 0.9rem; color: #333; margin-bottom: 6px; display: block;}
+.form-control, .form-select {
+    width: 100%; /* Fix overlap */
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    background: #fcfcfc;
+    margin-bottom: 15px; /* Space between inputs */
+}
+.form-control:focus, .form-select:focus {
+    border-color: #b71c1c;
+    box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1);
+    background: #fff;
+    outline: none;
+}
+
+/* Notification Styles (Floating) */
+.dj-message-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.dj-message {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: #fff;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+    max-width: 400px;
+}
+.dj-message-left { flex-shrink: 0; }
+.dj-message-icon {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 14px; color: #fff;
+}
+.dj-success .dj-message-icon { background-color: #28a745; }
+.dj-error .dj-message-icon { background-color: #dc3545; }
+.dj-message-body { flex: 1; padding-top: 2px; }
+.dj-message-text { color: #333; font-size: 14px; line-height: 1.5; }

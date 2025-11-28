@@ -25,9 +25,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Read sensitive settings from environment variables - NO DEFAULTS for production
 SECRET_KEY = config('SECRET_KEY')
 
-# Optiic OCR API Configuration
-OPTIIC_API_KEY = config('OPTIIC_API_KEY', default='')
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
 
@@ -58,11 +55,13 @@ INSTALLED_APPS = [
     # Added apps
     'apps.core',
     'apps.users',
-    'apps.cooperatives',
-    'apps.communications.apps.CommunicationsConfig',  # Use AppConfig to enable scheduler
+    'apps.cooperatives.apps.CooperativesConfig',
+    'apps.communications.apps.CommunicationsConfig',
     'apps.home',
     'apps.account_management',
     'apps.databank',
+
+    'webpush',
 ]
 
 MIDDLEWARE = [
@@ -88,6 +87,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.core.context_processors.webpush_processor'
             ],
         },
     },
@@ -148,6 +148,7 @@ import os
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Default primary key field type
@@ -216,6 +217,16 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'apps.cooperatives.signals': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'apps.core.notification_utils': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
@@ -259,7 +270,9 @@ OCR_SPACE_API_KEY = config('OCR_SPACE_API_KEY')
 OCR_SPACE_API_URL = config('OCR_SPACE_API_URL', default='https://api.ocr.space/parse/image')
 
 
-
-
-
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": config('VAPID_PUBLIC_KEY'),
+    "VAPID_PRIVATE_KEY": config('VAPID_PRIVATE_KEY'),
+    "VAPID_ADMIN_EMAIL": config('VAPID_ADMIN_EMAIL')
+}
 
