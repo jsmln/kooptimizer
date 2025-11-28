@@ -5,8 +5,9 @@
 
 {% block extra_head %}
     {{ block.super }}
-    <link rel="stylesheet" href="{% static 'frontend/cooperative_dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="{% static 'frontend/cooperative_dashboard.css' %}">
 {% endblock %}
 
 {% block dashboard_content %}
@@ -68,7 +69,7 @@
             <div class="card-icon red-bg"><i class="bi bi-person-badge-fill"></i></div>
             <div class="card-content">
                 <p class="label">Total Officers</p>
-                <h3 class="value">{{ cooperative.officers_count|default:"12" }}</h3>
+                <h3 class="value" id="stat-officers">0</h3>
             </div>
         </div>
 
@@ -76,23 +77,23 @@
             <div class="card-icon blue-bg"><i class="bi bi-people-fill"></i></div>
             <div class="card-content">
                 <p class="label">Total Members</p>
-                <h3 class="value">{{ cooperative.members_count|default:"120" }}</h3>
+                <h3 class="value" id="stat-members">0</h3>
             </div>
             
-            <div class="gender-breakdown">
+            <div class="gender-breakdown" id="genderBreakdown">
                 <div class="gender-item">
                     <div class="gender-label"><i class="bi bi-gender-male"></i> Male</div>
                     <div class="gender-bar-container">
-                        <div class="gender-bar male-bar" style="width: 60%;"></div>
+                        <div class="gender-bar male-bar" id="maleBar" style="width: 0%;"></div>
                     </div>
-                    <span class="gender-count">72</span>
+                    <span class="gender-count" id="maleCount">0</span>
                 </div>
                 <div class="gender-item">
                     <div class="gender-label"><i class="bi bi-gender-female"></i> Female</div>
                     <div class="gender-bar-container">
-                        <div class="gender-bar female-bar" style="width: 40%;"></div>
+                        <div class="gender-bar female-bar" id="femaleBar" style="width: 0%;"></div>
                     </div>
-                    <span class="gender-count">48</span>
+                    <span class="gender-count" id="femaleCount">0</span>
                 </div>
             </div>
         </div>
@@ -122,31 +123,31 @@
                 <h3>Recent Activity</h3>
                 <a href="#" class="view-all">View All</a>
             </div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-marker bg-success"></div>
-                    <div class="timeline-content">
-                        <p class="text-main">Profile Updated Successfully</p>
-                        <span class="time">2 hours ago</span>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-marker bg-primary"></div>
-                    <div class="timeline-content">
-                        <p class="text-main">New Announcement Received</p>
-                        <span class="time">1 day ago</span>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-marker bg-warning"></div>
-                    <div class="timeline-content">
-                        <p class="text-main">Annual Asset Report Pending</p>
-                        <span class="time">3 days ago</span>
-                    </div>
-                </div>
+            <div class="timeline" id="coopActivityTimeline">
+                <div class="text-center text-muted p-3">Loading activities...</div>
             </div>
         </div>
 
+    </div>
+
+    <div class="charts-section" style="margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        <div class="chart-card" style="min-height: 300px;">
+            <div class="card-header-custom">
+                <h3>Financial Trend (Last 5 Years)</h3>
+            </div>
+            <div class="chart-wrapper" style="height: 250px;">
+                <canvas id="coopFinancialChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card" style="min-height: 300px;">
+            <div class="card-header-custom">
+                <h3>Assets Growth</h3>
+            </div>
+            <div class="chart-wrapper" style="height: 250px;">
+                <canvas id="coopAssetsChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -251,39 +252,185 @@
 </div>
 
 <script>
+    let coopFinancialChart, coopAssetsChart;
+
+    async function loadCooperativeDashboardData() {
+        try {
+            // Load stats
+            const statsResponse = await fetch('{% url "dashboard:dashboard_stats_api" %}');
+            const statsData = await statsResponse.json();
+            updateCooperativeStats(statsData);
+
+            // Load member demographics
+            const demographicsResponse = await fetch('{% url "dashboard:dashboard_member_demographics_api" %}');
+            const demographicsData = await demographicsResponse.json();
+            updateMemberDemographics(demographicsData);
+
+            // Load charts data
+            const chartsResponse = await fetch('{% url "dashboard:dashboard_charts_api" %}');
+            const chartsData = await chartsResponse.json();
+            initializeCooperativeCharts(chartsData);
+
+            // Load recent activity
+            const activityResponse = await fetch('{% url "dashboard:dashboard_recent_activity_api" %}');
+            const activityData = await activityResponse.json();
+            updateCooperativeActivity(activityData.activities);
+        } catch (error) {
+            console.error('Error loading cooperative dashboard data:', error);
+        }
+    }
+
+    function updateCooperativeStats(data) {
+        document.getElementById('stat-officers').textContent = data.total_officers || 0;
+        document.getElementById('stat-members').textContent = data.total_members || 0;
+    }
+
+    function updateMemberDemographics(data) {
+        const total = data.total || 1;
+        const malePercent = total > 0 ? (data.male / total) * 100 : 0;
+        const femalePercent = total > 0 ? (data.female / total) * 100 : 0;
+
+        document.getElementById('maleCount').textContent = data.male || 0;
+        document.getElementById('femaleCount').textContent = data.female || 0;
+        document.getElementById('maleBar').style.width = `${malePercent}%`;
+        document.getElementById('femaleBar').style.width = `${femalePercent}%`;
+    }
+
+    function initializeCooperativeCharts(data) {
+        // Financial Trend Chart
+        const ctxFin = document.getElementById('coopFinancialChart');
+        if (ctxFin) {
+            const trend = data.financial_trend || {};
+            const trendLabels = Object.keys(trend).sort();
+            const trendValues = trendLabels.map(year => (trend[year] || 0) / 1000000);
+            
+            if (coopFinancialChart) coopFinancialChart.destroy();
+            coopFinancialChart = new Chart(ctxFin.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: trendLabels.length > 0 ? trendLabels : ['No Data'],
+                    datasets: [{
+                        label: 'Net Surplus (M)',
+                        data: trendValues.length > 0 ? trendValues : [0],
+                        borderColor: '#1a237e',
+                        backgroundColor: 'rgba(26, 35, 126, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // Assets Growth Chart
+        const ctxAssets = document.getElementById('coopAssetsChart');
+        if (ctxAssets) {
+            const trend = data.financial_trend || {};
+            const trendLabels = Object.keys(trend).sort();
+            // Get assets data (we'll need to add this to the API, for now use net surplus as proxy)
+            const assetsValues = trendLabels.map(year => {
+                // This is a placeholder - ideally we'd have separate assets data
+                return ((trend[year] || 0) * 10) / 1000000; // Approximate
+            });
+            
+            if (coopAssetsChart) coopAssetsChart.destroy();
+            coopAssetsChart = new Chart(ctxAssets.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: trendLabels.length > 0 ? trendLabels : ['No Data'],
+                    datasets: [{
+                        label: 'Assets (M)',
+                        data: assetsValues.length > 0 ? assetsValues : [0],
+                        backgroundColor: '#a91e2c',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+                }
+            });
+        }
+    }
+
+    function updateCooperativeActivity(activities) {
+        const timeline = document.getElementById('coopActivityTimeline');
+        if (!timeline) return;
+        
+        timeline.innerHTML = '';
+        
+        if (activities.length === 0) {
+            timeline.innerHTML = '<div class="text-center text-muted p-3">No recent activity</div>';
+            return;
+        }
+
+        activities.slice(0, 5).forEach(activity => {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            const timeAgo = activity.time ? getTimeAgo(new Date(activity.time)) : 'Recently';
+            const markerClass = activity.color === 'red' ? 'bg-danger' : 
+                               activity.color === 'green' ? 'bg-success' : 
+                               activity.color === 'blue' ? 'bg-primary' : 'bg-warning';
+            item.innerHTML = `
+                <div class="timeline-marker ${markerClass}"></div>
+                <div class="timeline-content">
+                    <p class="text-main">${activity.title}</p>
+                    <span class="time">${timeAgo}</span>
+                </div>
+            `;
+            timeline.appendChild(item);
+        });
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+
     // Modal Logic
     document.addEventListener('DOMContentLoaded', () => {
+        loadCooperativeDashboardData();
+        
         const viewProfileBtn = document.getElementById('viewProfileBtn');
         const modal = document.getElementById('profile-modal');
         const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-close-btn-bottom');
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
 
         if (modal && viewProfileBtn) {
-            // Open Modal
             viewProfileBtn.addEventListener('click', () => {
                 modal.classList.add('visible');
             });
 
-            // Close Modal Function
             const closeModal = () => {
                 modal.classList.remove('visible');
             };
 
-            // Attach Close Events
             closeButtons.forEach(btn => {
                 btn.addEventListener('click', closeModal);
             });
 
-            // Close on Overlay Click
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) closeModal();
             });
 
-            // PDF Download Logic
             if (downloadPdfBtn) {
                 downloadPdfBtn.addEventListener('click', function() {
                     const element = document.getElementById('printable-area');
-                    const coopName = document.getElementById('modal-coop-name').textContent.trim();
+                    const coopName = document.getElementById('modal-coop-name')?.textContent.trim() || 'Cooperative';
                     
                     const opt = {
                         margin: 0.2,
