@@ -6,6 +6,7 @@
 {% block extra_head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'frontend/staff_dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -50,6 +51,19 @@
                 <h3>2</h3>
                 <small class="text-muted">Profiles not yet submitted</small>
             </div>
+        </div>
+    </div>
+
+    <div class="card-section chart-container" style="margin-bottom: 25px;">
+        <div class="card-header-custom">
+            <h3>Asset Performance of Assigned Coops (Top 5)</h3>
+            <select class="form-select-sm" style="border: 1px solid #e0e0e0; border-radius: 6px;">
+                <option>This Year</option>
+                <option>Last Year</option>
+            </select>
+        </div>
+        <div style="height: 300px; width: 100%;">
+            <canvas id="assetBarChart"></canvas>
         </div>
     </div>
 
@@ -375,6 +389,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize on load
     applyStaffFilters();
+
+    const ctx = document.getElementById('assetBarChart');
+    
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                // Using names from your existing table data
+                labels: ['Consumer Coop', 'Plaridel MPC', 'Agriculture Coop', 'Transport Service', 'Housing Coop'],
+                datasets: [{
+                    label: 'Total Assets (in PHP)',
+                    data: [356964, 520000, 210500, 180000, 150000], // Dummy data matching "Top 5" logic
+                    backgroundColor: '#a91e2c', // var(--brand-red)
+                    borderRadius: 4,
+                    barThickness: 40, // Fixed width for cleaner look
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false // Hide legend since title explains it
+                    },
+                    tooltip: {
+                        backgroundColor: '#2B3674',
+                        padding: 12,
+                        titleFont: { size: 13 },
+                        bodyFont: { size: 13 },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f0f0f0',
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            color: '#A3AED0',
+                            font: { size: 11 },
+                            callback: function(value) {
+                                return '₱' + value / 1000 + 'k'; // Abbreviate large numbers
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false,
+                        },
+                        ticks: {
+                            color: '#2B3674',
+                            font: { size: 12, weight: 'bold' }
+                        }
+                    }
+                }
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

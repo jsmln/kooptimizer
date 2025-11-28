@@ -1,7 +1,7 @@
 .databank-container {
     background: #fff;
     border-radius: 12px;
-    padding: 25px 30px;
+    /* padding: 25px 30px; */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     color: #222;
     width: 100%;
@@ -10,7 +10,9 @@
     animation: fadeIn 0.4s ease-in-out;
     display: flex;
     flex-direction: column;
-    height: 75vh;
+    height: 85vh; /* Increase height slightly to accommodate 2 tables */
+    padding: 20px;
+    gap: 15px;
 }
 
 @keyframes fadeIn {
@@ -359,4 +361,119 @@ table tbody tr:hover { background: #f5f5f5; }
     .databank-header { flex-direction: column; align-items: stretch; }
     .search-input { width: 100%; }
     .two-col, .three-col { grid-template-columns: 1fr; }
+}
+
+.databank-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: #222;
+    width: 100%;
+    max-width: 1050px; /* Increased width to handle large data */
+    margin: 20px auto;
+    height: 85  vh; /* Fixed height for the container */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Visual separation between Top and Bottom Tables */
+}
+
+/* =========================================
+   TOP PANEL: Summary (Fixed Height)
+   ========================================= */
+.overview-panel {
+    flex: 0 0 35%; /* Takes top 35% of the container */
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.summary-wrapper {
+    flex: 1;
+    overflow: auto; /* Enables scroll for top table */
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fff;
+}
+
+/* =========================================
+   BOTTOM PANEL: Detailed (Remaining Height)
+   ========================================= */
+.detailed-panel {
+    flex: 1; /* Takes remaining space */
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-top: 1px solid #eee; /* Subtle divider */
+    padding-top: 15px;
+}
+
+.section-divider-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #a91e2c;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.detailed-wrapper {
+    flex: 1;
+    overflow: auto; /* Enables scroll for bottom table */
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fff;
+}
+
+/* =========================================
+   SHARED TABLE STYLES
+   ========================================= */
+/* Ensure headers stick on both tables */
+#summary-table thead th, 
+#coop-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #860000;
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 2px rgba(0,0,0,0.1);
+}
+
+/* Sticky first column for BOTH tables */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background-color: #fff;
+    z-index: 10;
+    border-right: 2px solid #eee;
+}
+
+/* Fix z-index overlap for headers + sticky col */
+#summary-table thead th.sticky-col,
+#coop-table thead th.sticky-col {
+    background-color: #860000;
+    z-index: 30;
+}
+
+/* Hover effects */
+table tbody tr:hover .sticky-col { background-color: #f5f5f5; }
+
+/* Header Controls (Top Only) */
+.databank-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+/* Make sure footer stays at bottom of detailed panel */
+.table-footer {
+    margin-top: 8px;
+    text-align: right;
+    font-size: 0.85rem;
+    color: #666;
 }

@@ -24,23 +24,61 @@
     </div>
     {% endif %}
 
-    <div class="databank-header">
-        <div class="tab-buttons">
-            <button class="add-btn" id="addCoopBtn">
-                <i class="bi bi-plus-circle"></i> Add Cooperative
-            </button>
-            <button class="filter-btn" title="Filter">
-                <i class="bi bi-funnel"></i> Filter
-            </button>
+    <div class="overview-panel">
+        
+        <div class="databank-header">
+            <div class="tab-buttons">
+                <button class="add-btn" id="addCoopBtn">
+                    <i class="bi bi-plus-circle"></i> Add Cooperative
+                </button>
+                <button class="filter-btn" title="Filter">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+
+            <div class="table-controls">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search Name, District, Address...">
+            </div>
         </div>
 
-        <div class="table-controls">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search cooperatives...">
+        <div class="table-wrapper summary-wrapper">
+            <table id="summary-table">
+                <thead>
+                    <tr>
+                        <th class="sticky-col">Cooperative Name</th>
+                        <th>Category</th>
+                        <th>District</th>
+                        <th>Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coop in cooperatives %}
+                    <tr class="summary-row" data-modal-target="profile-modal" data-coop-id="{{ coop.coop_id }}">
+                        <td class="sticky-col"><strong>{{ coop.cooperative_name }}</strong></td>
+                        <td>
+                            {% if coop.category %}
+                                <span class="badge-category">{{ coop.category }}</span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ coop.district|default:"N/A" }}</td>
+                        <td class="address-cell" title="{{ coop.address }}">{{ coop.address|default:"N/A" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4">No data found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="table-section active">
-        <div class="table-wrapper">
+    <div class="detailed-panel">
+        <h5 class="section-divider-title">Detailed Master List</h5>
+        
+        <div class="table-wrapper detailed-wrapper">
             <table id="coop-table">
                 <thead>
                     <tr>
@@ -70,7 +108,7 @@
                 </thead>
                 <tbody>
                     {% for coop in cooperatives %}
-                    <tr data-modal-target="profile-modal" data-coop-id="{{ coop.coop_id }}">
+                    <tr class="detailed-row" data-modal-target="profile-modal" data-coop-id="{{ coop.coop_id }}">
                         <td class="sticky-col"><strong>{{ coop.cooperative_name }}</strong></td>
                         <td>{% if coop.category %}<span class="badge-category">{{ coop.category }}</span>{% else %}<span class="text-muted">N/A</span>{% endif %}</td>
                         <td>{{ coop.district|default:"N/A" }}</td>
@@ -88,7 +126,6 @@
                             {% endif %}
                         </td>
                         <td>{{ coop.lccdc_membership_date|date:"M d, Y"|default:"-" }}</td>
-                        
                         <td>{{ coop.operation_area|default:"-" }}</td>
                         <td>{{ coop.business_activity|default:"-" }}</td>
                         <td class="text-center">{{ coop.board_of_directors_count|default:0 }}</td>
@@ -149,104 +186,6 @@
         </div>
         <div class="table-footer">
             <div>Showing <strong>{{ cooperatives|length }}</strong> of <strong>{{ total_count }}</strong> cooperatives</div>
-        </div>
-    </div>
-</div>
-
-<button class="ocr-toggle-btn" id="ocrToggleBtn" title="Open OCR Assistant">
-    <i class="bi bi-upc-scan"></i>
-</button>
-
-<div class="ocr-drawer-wrapper">
-    <div class="ocr-drawer" id="ocrDrawer">
-        <div class="ocr-drawer-header">
-            <h3><i class="bi bi-upc-scan me-2"></i>OCR Assistant</h3>
-            <button class="ocr-drawer-close" id="ocrDrawerClose">&times;</button>
-        </div>
-        
-        <div class="ocr-drawer-body">
-            <div id="camera-container" style="display: none; margin-bottom: 20px; text-align: center;">
-                <video id="camera-video" autoplay playsinline style="width: 100%; border-radius: 12px; border: 2px solid #a91e2c; background: black;"></video>
-                <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center;">
-                    <button id="capture-btn" class="btn-apply" style="padding: 8px 20px;">Capture</button>
-                    <button id="cancel-camera-btn" class="btn-clear" style="padding: 8px 20px;">Cancel</button>
-                </div>
-            </div>
-
-            <div id="upload-container">
-                <p class="text-muted small mb-3" style="border-left: 3px solid #a91e2c; padding-left: 10px; background: #fff5f6; padding: 8px; border-radius: 4px;">
-                    Scan documents using your phone camera or upload an image to auto-fill forms.
-                </p>
-
-                <div class="ocr-upload-area" id="ocrUploadArea">
-                    <i class="bi bi-cloud-upload"></i>
-                    <h5>Drag & Drop Image</h5>
-                    <p class="text-muted small mb-0">or click to browse</p>
-                    <input type="file" id="ocrFileInput" accept="image/*" style="display: none;">
-                    <input type="file" id="mobileCameraInput" accept="image/*" capture="environment" style="display: none;">
-                </div>
-                
-                <div class="ocr-btn-group">
-                    <button class="ocr-action-btn" id="ocrUploadBtn">
-                        <i class="bi bi-upload"></i> <span>Upload Image</span>
-                    </button>
-                    <button class="ocr-action-btn" id="ocrCameraBtn">
-                        <i class="bi bi-camera-fill"></i> <span>Scan / Camera</span>
-                    </button>
-                    <button class="ocr-action-btn" id="ocrPasteBtn">
-                        <i class="bi bi-clipboard"></i> <span>Paste</span>
-                    </button>
-                    <button class="ocr-action-btn" id="ocrScreenshotBtn">
-                        <i class="bi bi-display"></i> <span>Screenshot</span>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="ocr-loading" id="ocrLoading">
-                <div class="spinner-border" role="status"></div>
-                <p class="mt-2 text-muted">Scanning text...</p>
-            </div>
-            
-            <div class="ocr-result-area" id="ocrResultArea" style="display: none;">
-                <label class="form-label fw-bold">Extracted Data:</label>
-                <textarea class="ocr-result-text" id="ocrResultText"></textarea>
-                <div class="ocr-result-actions">
-                    <button class="btn-apply" id="ocrApplyBtn">Apply</button>
-                    <button class="btn-clear" id="ocrClearBtn">Clear</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="preview-modal" class="preview-overlay">
-    <div class="preview-content">
-        <div class="preview-header">
-            <span class="preview-title" id="preview-title">Document Preview</span>
-            <div class="preview-controls">
-                <button id="zoomOut"><i class="bi bi-dash"></i></button>
-                <span id="zoomLevel">100%</span>
-                <button id="zoomIn"><i class="bi bi-plus"></i></button>
-                <button id="preview-close"><i class="bi bi-x-lg"></i></button>
-            </div>
-        </div>
-        <div id="preview-body" class="preview-body"></div>
-    </div>
-</div>
-
-<div id="profile-modal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-top-bar">
-            <h3>Cooperative Profile</h3>
-            <button class="modal-close-btn">&times;</button>
-        </div>
-        <div class="modal-scroll-area">
-            <div class="modal-body">
-                <section class="info-section">
-                    <h5 class="section-title">Cooperative Details</h5>
-                    <p>Loading details...</p>
-                </section>
-            </div>
         </div>
     </div>
 </div>
@@ -419,11 +358,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#coop-table tbody tr');
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
+            
+            // Filter Function
+            const applyFilter = (selector) => {
+                const rows = document.querySelectorAll(selector);
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            };
+
+            // Apply to Top Table
+            applyFilter('#summary-table tbody tr');
+            // Apply to Bottom Table
+            applyFilter('#coop-table tbody tr');
         });
     }
 
