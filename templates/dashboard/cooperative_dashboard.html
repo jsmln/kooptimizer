@@ -73,7 +73,7 @@
         <div class="stat-card">
             <div class="icon-box red-box"><i class="bi bi-wallet2"></i></div>
             <div class="stat-info">
-                <p>Current Assets</p>
+                <p>Total Assets</p>
                 <h3>₱ {{ latest_financial.assets|default:"356,964" }}</h3>
                 <small class="text-muted">Latest Financial Record</small>
             </div>
@@ -98,6 +98,17 @@
         </div>
 
         <div class="stat-card">
+            <div class="icon-box" style="background: #F3E8FF; color: #805AD5; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Employees</p>
+                <h3>{{ profile.salaried_employees_count|default:"0" }}</h3>
+                <small class="text-muted">Salaried Staff</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
             <div class="icon-box orange-box"><i class="bi bi-person-badge-fill"></i></div>
             <div class="stat-info">
                 <p>Board Size</p>
@@ -107,66 +118,110 @@
         </div>
     </div>
 
-    <div class="charts-grid">
-        <div class="card-section">
-            <div class="card-header-custom">
-                <h3>Financial Health Trend</h3>
-            </div>
-            <div class="chart-container-large">
-                <canvas id="financialTrendChart"></canvas>
+    <div class="card-section chart-container" style="margin-bottom: 25px;">
+        <div class="card-header-custom">
+            <h3>Year-over-Year Growth</h3>
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="financeCurrentView" class="current-view-badge">All Data</span>
+
+                <div class="chart-filter-wrapper">
+                    <button id="financeFilterToggle" class="filter-icon-btn" type="button" title="Filter Metrics">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    
+                    <div id="financeFilterControls" class="chart-filter-dropdown" style="display: none;">
+                        <div class="dropdown-header-text">Select View:</div>
+                        
+                        <div class="filter-option active" onclick="applyFinancialFilter('all', this)">
+                            <span>All Data</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        <div class="filter-option" onclick="applyFinancialFilter('assets', this)">
+                            <span><span class="dot asset-dot"></span> Assets</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        <div class="filter-option" onclick="applyFinancialFilter('capital', this)">
+                            <span><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                        <div class="filter-option" onclick="applyFinancialFilter('surplus', this)">
+                            <span><span class="dot surplus-dot"></span> Net Surplus</span>
+                            <i class="bi bi-check-lg check-icon"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card-section">
-            <div class="card-header-custom">
-                <h3>Member Gender Ratio</h3>
-            </div>
-            <div class="chart-container-small">
-                <canvas id="genderRatioChart"></canvas>
-            </div>
+        <div class="chart-legend-inline">
+            <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
+            <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
+            <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="financialTrendChart"></canvas>
         </div>
     </div>
 
     <div class="content-split">
         
-        <div class="card-section">
-            <div class="card-header-custom">
-                <h3>Compliance Status</h3>
-            </div>
-            <div class="compliance-list">
-                <div class="compliance-item">
-                    <div class="compliance-info">
-                        <span class="compliance-label">Certificate of Compliance (COC)</span>
-                        <small class="text-muted">Required for operation</small>
-                    </div>
-                    {% if profile.coc_renewal_needed %}
-                        <span class="status-pill danger">Needs Renewal</span>
-                    {% else %}
-                        <span class="status-pill success">Active</span>
-                    {% endif %}
+        <div style="display: flex; flex-direction: column; gap: 25px;">
+            
+            <div class="card-section">
+                <div class="card-header-custom">
+                    <h3>Document Status</h3>
                 </div>
+                <div class="compliance-list">
+                    <div class="compliance-item">
+                        <div class="compliance-info">
+                            <span class="compliance-label">Certificate of Compliance (COC)</span>
+                            <small class="text-muted">Required for operation</small>
+                        </div>
+                        {% if profile.coc_renewal_needed %}
+                            <span class="status-pill danger">Needs Renewal</span>
+                        {% else %}
+                            <span class="status-pill success">Active</span>
+                        {% endif %}
+                    </div>
 
-                <div class="compliance-item">
-                    <div class="compliance-info">
-                        <span class="compliance-label">Tax Exemption (COTE)</span>
-                        <small class="text-muted">Bureau of Internal Revenue</small>
+                    <div class="compliance-item">
+                        <div class="compliance-info">
+                            <span class="compliance-label">Tax Exemption (COTE)</span>
+                            <small class="text-muted">Bureau of Internal Revenue</small>
+                        </div>
+                        {% if profile.cote_renewal %}
+                            <span class="status-pill danger">Needs Renewal</span>
+                        {% else %}
+                            <span class="status-pill success">Active</span>
+                        {% endif %}
                     </div>
-                    <span class="status-pill success">Active</span>
-                </div>
 
-                <div class="compliance-item">
-                    <div class="compliance-info">
-                        <span class="compliance-label">LCCDC Membership</span>
-                        <small class="text-muted">Council Membership</small>
+                    <div class="compliance-item">
+                        <div class="compliance-info">
+                            <span class="compliance-label">LCCDC Membership</span>
+                            <small class="text-muted">Council Membership</small>
+                        </div>
+                        <span class="status-pill success">Member</span>
                     </div>
-                    <span class="status-pill success">Member</span>
                 </div>
             </div>
+
+            <div class="card-section">
+                <div class="card-header-custom">
+                    <h3>Member Gender Demographics</h3>
+                </div>
+                <div class="chart-container-small">
+                    <canvas id="genderRatioChart"></canvas>
+                </div>
+            </div>
+
         </div>
 
         <div class="card-section">
             <div class="card-header-custom">
-                <h3>Officer Roster</h3>
+                <h3>Officers</h3>
                 <a href="#" class="link-text" id="viewProfileBtn">View Full Profile</a>
             </div>
             <div class="table-responsive">
@@ -190,10 +245,13 @@
                             <td class="fw-bold">Art Delos Reyes</td>
                             <td><span class="badge-position">BOD Member</span></td>
                         </tr>
+                        <tr><td class="fw-bold">Maria Santos</td><td><span class="badge-position">Secretary</span></td></tr>
+                        <tr><td class="fw-bold">Juan Cruz</td><td><span class="badge-position">Treasurer</span></td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -202,7 +260,7 @@
         <div class="modal-top-bar">
             <h3>Cooperative Profile</h3>
             <div class="modal-actions">
-                <button class="pdf-btn" id="download-pdf-btn" title="Download as PDF">
+                <button class="pdf-btn" id="download-pdf-btn">
                     <i class="bi bi-file-earmark-pdf-fill"></i> <span>Download PDF</span>
                 </button>
                 <button class="modal-close-btn">&times;</button>
@@ -229,106 +287,138 @@
                             <div class="info-item"><label>Contact</label><p>09929380925</p></div>
                         </div>
                     </section>
-                    </div>
+                </div>
             </div>
         </div>
 
         <div class="modal-footer">
             <button class="secondary-btn modal-close-btn-bottom">Close</button>
-            <a href="{% url 'cooperatives:profile_form' %}" class="primary-btn"><i class="bi bi-pencil-square"></i> Update</a>
+            <a href="#" class="primary-btn"><i class="bi bi-pencil-square"></i> Update</a>
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- 1. CHARTS CONFIGURATION ---
-    const ctxFinance = document.getElementById('financialTrendChart');
-    if (ctxFinance) {
-        new Chart(ctxFinance, {
-            type: 'line',
-            data: {
-                labels: ['2021', '2022', '2023', '2024'],
-                datasets: [
-                    {
-                        label: 'Assets',
-                        data: [142657, 258843, 300000, 356964],
-                        borderColor: '#a91e2c',
-                        backgroundColor: 'rgba(169, 30, 44, 0.1)',
-                        tension: 0.3,
-                        fill: true
-                    },
-                    {
-                        label: 'Net Surplus',
-                        data: [5000, 8000, 9500, 10653],
-                        borderColor: '#2e7d32',
-                        backgroundColor: 'rgba(46, 125, 50, 0.05)',
-                        tension: 0.3,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } },
-                scales: { 
-                    y: { beginAtZero: true, grid: { borderDash: [2, 2] } },
-                    x: { grid: { display: false } }
+    // GLOBAL VARIABLE
+    let financialChart;
+
+    // --- GLOBAL FUNCTION: APPLY FILTER ---
+    window.applyFinancialFilter = function(type, clickedElement) {
+        if(!financialChart) return;
+
+        // Visibility Logic
+        if (type === 'all') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = false;
+        } else if (type === 'assets') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'capital') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'surplus') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = false;
+        }
+        financialChart.update();
+
+        // UI Updates
+        const allOptions = document.querySelectorAll('#financeFilterControls .filter-option');
+        allOptions.forEach(opt => opt.classList.remove('active'));
+        clickedElement.classList.add('active');
+
+        // Label Update
+        const labelMap = { 'all': 'All Data', 'assets': 'Assets', 'capital': 'Paid-Up Capital', 'surplus': 'Net Surplus' };
+        document.getElementById('financeCurrentView').textContent = labelMap[type];
+
+        // Close Dropdown
+        document.getElementById('financeFilterControls').style.display = 'none';
+        document.getElementById('financeFilterToggle').classList.remove('active');
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // 1. CHART INIT
+        const ctxFinance = document.getElementById('financialTrendChart');
+        if (ctxFinance) {
+            financialChart = new Chart(ctxFinance.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['2021', '2022', '2023', '2024'],
+                    datasets: [
+                        { label: 'Assets', data: [142657, 258843, 300000, 356964], borderColor: '#2e7d32', backgroundColor: 'rgba(46, 125, 50, 0.1)', tension: 0.3, fill: false, hidden: false },
+                        { label: 'Paid-Up Capital', data: [80000, 95000, 102000, 108243], borderColor: '#1565c0', backgroundColor: 'rgba(21, 101, 192, 0.1)', tension: 0.3, fill: false, hidden: false },
+                        { label: 'Net Surplus', data: [5000, 8000, 9500, 10653], borderColor: '#ef6c00', backgroundColor: 'rgba(239, 108, 0, 0.1)', tension: 0.3, fill: false, hidden: false }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
                 }
-            }
-        });
-    }
-
-    const ctxGender = document.getElementById('genderRatioChart');
-    if (ctxGender) {
-        new Chart(ctxGender, {
-            type: 'doughnut',
-            data: {
-                labels: ['Male', 'Female'],
-                datasets: [{
-                    data: [72, 48],
-                    backgroundColor: ['#4299e1', '#ed64a6'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } },
-                cutout: '70%',
-            }
-        });
-    }
-
-    // --- 2. MODAL LOGIC ---
-    const viewProfileBtn = document.getElementById('viewProfileBtn');
-    const modal = document.getElementById('profile-modal');
-    const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-close-btn-bottom');
-    const downloadPdfBtn = document.getElementById('download-pdf-btn');
-
-    if (modal && viewProfileBtn) {
-        viewProfileBtn.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('visible'); });
-        const closeModal = () => { modal.classList.remove('visible'); };
-        closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
-        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-        if (downloadPdfBtn) {
-            downloadPdfBtn.addEventListener('click', function() {
-                const element = document.getElementById('printable-area');
-                const coopName = document.getElementById('modal-coop-name').textContent.trim();
-                const opt = {
-                    margin: 0.2, filename: `${coopName}_Profile.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-                };
-                html2pdf().set(opt).from(element).save();
             });
         }
-    }
-});
+
+        const ctxGender = document.getElementById('genderRatioChart');
+        if (ctxGender) {
+            new Chart(ctxGender, {
+                type: 'doughnut',
+                data: { labels: ['Male', 'Female'], datasets: [{ data: [72, 48], backgroundColor: ['#4299e1', '#ed64a6'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+            });
+        }
+
+        // 2. FILTER TOGGLE EVENT
+        const filterToggleBtn = document.getElementById('financeFilterToggle');
+        const filterDropdown = document.getElementById('financeFilterControls');
+
+        if(filterToggleBtn){
+            filterToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                if (filterDropdown.style.display === 'none' || filterDropdown.style.display === '') {
+                    filterDropdown.style.display = 'flex'; 
+                    filterToggleBtn.classList.add('active');      
+                } else {
+                    filterDropdown.style.display = 'none'; 
+                    filterToggleBtn.classList.remove('active');   
+                }
+            });
+        }
+
+        // Global Close for Dropdown
+        document.addEventListener('click', () => {
+            if (filterDropdown && filterDropdown.style.display === 'flex') {
+                filterDropdown.style.display = 'none';
+                filterToggleBtn.classList.remove('active');
+            }
+        });
+
+        if(filterDropdown) filterDropdown.addEventListener('click', (e) => e.stopPropagation());
+
+        // 3. MODAL LOGIC
+        const viewProfileBtn = document.getElementById('viewProfileBtn');
+        const modal = document.getElementById('profile-modal');
+        const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-close-btn-bottom');
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+
+        if (modal && viewProfileBtn) {
+            viewProfileBtn.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('visible'); });
+            const closeModal = () => { modal.classList.remove('visible'); };
+            closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+            if (downloadPdfBtn) {
+                downloadPdfBtn.addEventListener('click', function() {
+                    const element = document.getElementById('printable-area');
+                    const opt = { margin: 0.2, filename: 'Coop_Profile.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+                    html2pdf().set(opt).from(element).save();
+                });
+            }
+        }
+    });
 </script>
 {% endblock %}
