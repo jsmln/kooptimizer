@@ -49,13 +49,8 @@
 }
 
 .stat-card {
-    background: #fff;
-    border-radius: 20px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: var(--card-shadow);
+    background: #fff; border-radius: 20px; padding: 20px; display: flex;
+    align-items: center; gap: 15px; box-shadow: var(--card-shadow);
     transition: transform 0.2s ease;
 }
 
@@ -148,6 +143,7 @@
     margin-bottom: 25px;
 }
 
+/* --- Charts Sections --- */
 .chart-card {
     background: #fff;
     border-radius: 20px;
@@ -164,6 +160,8 @@
     align-items: center;
     margin-bottom: 15px;
 }
+.card-header-custom h3 { margin: 0; font-size: 1rem; color: var(--text-dark); font-weight: 700; }
+.chart-wrapper { position: relative; flex: 1; width: 100%; min-height: 0; }
 
 .card-header-custom h3 {
     margin: 0;
@@ -280,44 +278,52 @@
     border-bottom: 1px solid #f0f0f0;
 }
 
+/* --- Top 20 Ranking List (RESTORED) --- */
+.ranking-list { overflow-y: auto; max-height: 250px; padding-right: 5px; }
+.rank-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
 .rank-num {
-    width: 28px;
-    height: 28px;
-    background: var(--bg-main);
-    color: var(--text-dark);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.85rem;
+    width: 28px; height: 28px; background: var(--bg-main); color: var(--text-dark);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
 }
-
 .rank-item:nth-child(1) .rank-num { background: #ffd700; color: #fff; }
 .rank-item:nth-child(2) .rank-num { background: #c0c0c0; color: #fff; }
 .rank-item:nth-child(3) .rank-num { background: #cd7f32; color: #fff; }
 
-.rank-info {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
+.rank-info { flex: 1; display: flex; justify-content: space-between; align-items: center; }
 .coop-name {
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px;
+    font-size: 0.9rem; color: var(--text-dark); font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;
+}
+.coop-asset { font-size: 0.85rem; color: #2e7d32; font-weight: 700; }
+.badge-red { background: var(--brand-red); color: #fff; padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; }
+
+/* --- Legend Box --- */
+.legend-box { display: flex; gap: 10px; font-size: 0.75rem; color: var(--text-gray); }
+.legend-box .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.legend-box .active { background: #4caf50; }
+.legend-box .inactive { background: #ef5350; }
+
+/* --- Tables --- */
+.table-card, .filter-section {
+    background: #fff; border-radius: 20px; padding: 20px;
+    box-shadow: var(--card-shadow); display: flex; flex-direction: column;
+}
+.table-responsive { overflow-x: auto; }
+.admin-table, .coop-list-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.admin-table th, .coop-list-table th {
+    text-align: left; font-size: 0.75rem; color: var(--text-gray);
+    text-transform: uppercase; padding: 10px; border-bottom: 1px solid #e0e0e0;
+}
+.admin-table td, .coop-list-table td {
+    padding: 12px 10px; border-bottom: 1px solid #f9f9f9;
+    color: var(--text-dark); font-size: 0.9rem; vertical-align: middle;
 }
 
-.coop-asset {
-    font-size: 0.85rem;
-    color: #2e7d32;
-    font-weight: 700;
+/* --- Table Interactions (Hover & Click) --- */
+.coop-list-table tbody tr {
+    cursor: pointer; transition: all 0.2s ease;
+    border-left: 4px solid transparent;
 }
 
 /* =========================================================
@@ -601,14 +607,12 @@
 
 /* Responsive */
 @media (max-width: 1200px) {
-    .charts-section, .tables-grid-row, .operations-grid {
-        grid-template-columns: 1fr;
-    }
-    .analytics-grid-secondary {
-        grid-template-columns: 1fr 1fr;
-    }
+    .tables-grid-row { grid-template-columns: 1fr; }
+    .charts-section { grid-template-columns: 1fr; }
 }
-
+@media (max-width: 992px) {
+    .analytics-grid-secondary, .operations-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 768px) {
     .analytics-grid-secondary {
         grid-template-columns: 1fr;
