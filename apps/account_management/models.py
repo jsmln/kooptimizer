@@ -67,6 +67,7 @@ class Cooperatives(models.Model):
     cooperative_name = models.CharField(max_length=200, unique=True, null=False)
     category = models.CharField(max_length=255, blank=True, null=True)
     district = models.CharField(max_length=255, blank=True, null=True)
+    is_active = models.BooleanField(default=True, null=True, blank=True, db_column='is_active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

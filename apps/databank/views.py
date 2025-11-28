@@ -1,32 +1,175 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, JsonResponse, FileResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
+from django.template.loader import render_to_string
 import json
 from apps.core.services.ocr_service import optiic_service
+from apps.users.models import User
+from apps.account_management.models import Staff, Cooperatives, Users
+from apps.cooperatives.models import ProfileData, FinancialData, Officer, Member
+from django.contrib.auth.hashers import check_password
 
 def databank_management_view(request):
     try:
+        user_id = request.session.get('user_id')
+        user_role = request.session.get('role')
+        
+        # Get filter parameter from query string (default: 'active')
+        coop_filter = request.GET.get('filter', 'active')
+        
+        # Validate filter parameter
+        if coop_filter not in ['active', 'deactivated', 'all']:
+            coop_filter = 'active'
+        
+        if not user_id:
+            return render(request, 'databank/databank_management.html', {
+                'cooperatives': [],
+                'deactivated_cooperatives': [],
+                'profiles': [],
+                'error': 'Authentication required',
+                'current_filter': coop_filter
+            })
+        
+        # Get user
+        try:
+            if isinstance(user_id, str):
+                try:
+                    user_id = int(user_id)
+                    user = User.objects.get(user_id=user_id)
+                except ValueError:
+                    user = User.objects.get(username=user_id)
+            else:
+                user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return render(request, 'databank/databank_management.html', {
+                'cooperatives': [],
+                'deactivated_cooperatives': [],
+                'profiles': [],
+                'error': 'User not found',
+                'current_filter': coop_filter
+            })
+        
+        # Get cooperatives based on role and filter
+        cooperatives = []
+        deactivated_cooperatives = []
+        staff_list = []
+        
         with connection.cursor() as cursor:
-            # UPDATED: Matches your specific SQL function name
-            cursor.execute("SELECT * FROM sp_get_all_cooperatives()")
+            if user_role == 'admin':
+                # Admin sees all cooperatives with staff info
+                if coop_filter == 'active':
+                    cursor.execute("""
+                        SELECT c.*, s.fullname as staff_name, s.staff_id
+                        FROM cooperatives c
+                        LEFT JOIN staff s ON c.staff_id = s.staff_id
+                        WHERE c.is_active IS NULL OR c.is_active = TRUE
+                        ORDER BY c.cooperative_name
+                    """)
+                elif coop_filter == 'deactivated':
+                    cursor.execute("""
+                        SELECT c.*, s.fullname as staff_name, s.staff_id
+                        FROM cooperatives c
+                        LEFT JOIN staff s ON c.staff_id = s.staff_id
+                        WHERE c.is_active = FALSE
+                        ORDER BY c.cooperative_name
+                    """)
+                else:  # 'all'
+                    cursor.execute("""
+                        SELECT c.*, s.fullname as staff_name, s.staff_id
+                        FROM cooperatives c
+                        LEFT JOIN staff s ON c.staff_id = s.staff_id
+                        ORDER BY c.cooperative_name
+                    """)
+            elif user_role == 'staff':
+                # Staff sees only cooperatives assigned to them (active only)
+                try:
+                    staff = Staff.objects.get(user_id=user.user_id)
+                    cursor.execute("""
+                        SELECT c.*, s.fullname as staff_name, s.staff_id
+                        FROM cooperatives c
+                        LEFT JOIN staff s ON c.staff_id = s.staff_id
+                        WHERE c.staff_id = %s AND (c.is_active IS NULL OR c.is_active = TRUE)
+                        ORDER BY c.cooperative_name
+                    """, [staff.staff_id])
+                except Staff.DoesNotExist:
+                    cursor.execute("SELECT * FROM sp_get_all_cooperatives() WHERE 1=0")  # Empty result
+            else:
+                # Officers don't have access to this page, but handle gracefully
+                cursor.execute("SELECT * FROM sp_get_all_cooperatives() WHERE 1=0")
             
             if cursor.description:
                 columns = [col[0] for col in cursor.description]
-                # Convert rows to a list of dictionaries
-                cooperatives = [dict(zip(columns, row)) for row in cursor.fetchall()]
-            else:
-                cooperatives = []
+                all_coops = [dict(zip(columns, row)) for row in cursor.fetchall()]
+                
+                # Separate active and deactivated for admin
+                if user_role == 'admin':
+                    for coop in all_coops:
+                        if coop.get('is_active') is False:
+                            deactivated_cooperatives.append(coop)
+                        else:
+                            cooperatives.append(coop)
+                else:
+                    cooperatives = all_coops
+        
+        # Get all staff for admin dropdown
+        if user_role == 'admin':
+            staff_list = list(Staff.objects.all().values('staff_id', 'fullname', 'user_id'))
+        
+        # Get profile data for bottom table
+        # Admin sees all profiles, staff sees only profiles for their cooperatives
+        profiles = []
+        coop_ids = [c.get('coop_id') for c in cooperatives if c.get('coop_id')]
+        
+        if coop_ids:
+            try:
+                profile_queryset = ProfileData.objects.filter(coop_id__in=coop_ids).select_related('coop').order_by('-report_year', '-created_at')
+                for profile in profile_queryset:
+                    profiles.append({
+                        'profile_id': profile.profile_id,
+                        'coop_id': profile.coop_id,
+                        'cooperative_name': profile.coop.cooperative_name if profile.coop else 'N/A',
+                        'report_year': profile.report_year,
+                        'address': profile.address,
+                        'mobile_number': profile.mobile_number,
+                        'email_address': profile.email_address,
+                        'cda_registration_number': profile.cda_registration_number,
+                        'cda_registration_date': profile.cda_registration_date,
+                        'lccdc_membership': profile.lccdc_membership,
+                        'lccdc_membership_date': profile.lccdc_membership_date,
+                        'operation_area': profile.operation_area,
+                        'business_activity': profile.business_activity,
+                        'board_of_directors_count': profile.board_of_directors_count,
+                        'salaried_employees_count': profile.salaried_employees_count,
+                        'approval_status': profile.approval_status,
+                        'created_at': profile.created_at,
+                        'updated_at': profile.updated_at,
+                    })
+            except Exception as e:
+                print(f"Error loading profiles: {e}")
+                import traceback
+                traceback.print_exc()
 
         context = {
             'cooperatives': cooperatives,
-            'total_count': len(cooperatives)
+            'deactivated_cooperatives': deactivated_cooperatives,
+            'profiles': profiles,
+            'staff_list': staff_list,
+            'user_role': user_role,
+            'total_count': len(cooperatives),
+            'deactivated_count': len(deactivated_cooperatives),
+            'profile_count': len(profiles),
+            'current_filter': coop_filter
         }
         return render(request, 'databank/databank_management.html', context)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Error: {e}")
         return render(request, 'databank/databank_management.html', {
             'cooperatives': [],
+            'profiles': [],
             'error': f"Database Error: {str(e)}"
         })
     
@@ -64,27 +207,33 @@ def process_ocr(request):
 @require_http_methods(["POST"])
 def add_cooperative(request):
     try:
+        user_role = request.session.get('role')
+        
+        # Only admin can add cooperatives
+        if user_role != 'admin':
+            return JsonResponse({'success': False, 'error': 'Permission denied. Only admin can add cooperatives.'}, status=403)
+        
         data = json.loads(request.body)
         
+        # Validate required fields
+        if not data.get('cooperative_name'):
+            return JsonResponse({'success': False, 'error': 'Cooperative name is required'}, status=400)
+        
         with connection.cursor() as cursor:
-            # UPDATED: Your SQL function accepts exactly 9 arguments
+            # Insert directly into cooperatives table
+            staff_id = data.get('staff_id') if data.get('staff_id') else None
             cursor.execute("""
-                SELECT sp_create_cooperative(
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
+                INSERT INTO cooperatives (staff_id, cooperative_name, category, district, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, NOW(), NOW())
+                RETURNING coop_id
             """, [
-                data.get('staff_id'),
+                staff_id,
                 data.get('cooperative_name'),
-                data.get('category'),
-                data.get('district'),
-                data.get('address'),
-                data.get('mobile_number'),
-                data.get('email_address'),
-                data.get('cda_registration_number'),
-                data.get('cda_registration_date')
+                data.get('category') or None,
+                data.get('district') or None
             ])
             
-            # Retrieve the new ID returned by the function
+            # Retrieve the new ID
             new_id = cursor.fetchone()[0]
             
         return JsonResponse({
@@ -93,6 +242,8 @@ def add_cooperative(request):
             'message': 'Cooperative added successfully'
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @require_http_methods(["GET"])
@@ -121,41 +272,372 @@ def get_cooperative(request, coop_id):
 def update_cooperative(request, coop_id):
     try:
         data = json.loads(request.body)
+        user_role = request.session.get('role')
+        
+        # Check permissions
+        if user_role != 'admin' and user_role != 'staff':
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+        
+        # If staff, verify they have access to this cooperative
+        if user_role == 'staff':
+            user_id = request.session.get('user_id')
+            try:
+                if isinstance(user_id, str):
+                    try:
+                        user_id = int(user_id)
+                    except ValueError:
+                        pass
+                staff = Staff.objects.get(user_id=user_id)
+                coop = Cooperatives.objects.filter(coop_id=coop_id, staff_id=staff.staff_id).first()
+                if not coop:
+                    return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+            except Staff.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Staff profile not found'}, status=403)
+        
         with connection.cursor() as cursor:
-            # UPDATED: Using 'CALL' because your SQL defines this as a PROCEDURE, not FUNCTION
-            cursor.execute("""
-                CALL sp_update_cooperative_profile(
-                    %s, %s, %s, %s, %s, %s, %s
-                )
-            """, [
-                coop_id,
-                data.get('address'),
-                data.get('mobile_number'),
-                data.get('email_address'),
-                data.get('assets', 0),
-                data.get('paid_up_capital', 0),
-                data.get('net_surplus', 0)
-            ])
+            # Update cooperative basic info
+            staff_id = data.get('staff_id')  # For admin to assign staff
+            cooperative_name = data.get('cooperative_name')
+            category = data.get('category')
+            district = data.get('district')
+            
+            # Build update query
+            updates = []
+            params = []
+            
+            if cooperative_name:
+                updates.append("cooperative_name = %s")
+                params.append(cooperative_name)
+            if category is not None:
+                updates.append("category = %s")
+                params.append(category)
+            if district is not None:
+                updates.append("district = %s")
+                params.append(district)
+            if staff_id is not None and user_role == 'admin':  # Only admin can assign staff
+                updates.append("staff_id = %s")
+                params.append(staff_id if staff_id else None)
+            
+            if updates:
+                params.append(coop_id)
+                cursor.execute(f"""
+                    UPDATE cooperatives 
+                    SET {', '.join(updates)}, updated_at = NOW()
+                    WHERE coop_id = %s
+                """, params)
             
         return JsonResponse({'success': True, 'message': 'Cooperative updated successfully'})
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @require_http_methods(["DELETE", "POST"])
+@csrf_exempt
 def delete_cooperative(request, coop_id):
     try:
+        user_role = request.session.get('role')
+        
+        # Only admin can delete
+        if user_role != 'admin':
+            return JsonResponse({'success': False, 'error': 'Permission denied. Only admin can delete cooperatives.'}, status=403)
+        
+        # Require password in POST body
+        try:
+            data = json.loads(request.body)
+            password = data.get('password')
+        except Exception:
+            password = None
+
+        if not password:
+            return JsonResponse({'success': False, 'error': 'Password is required.'}, status=400)
+
+        # Get current user's ID from session
+        current_user_id = request.session.get('user_id')
+        if not current_user_id:
+            return JsonResponse({'success': False, 'error': 'User not authenticated.'}, status=401)
+
+        # Get user's password hash from database
+        try:
+            user = Users.objects.get(user_id=current_user_id)
+            is_valid = check_password(password, user.password_hash)
+        except Users.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
+
+        if not is_valid:
+            return JsonResponse({'success': False, 'error': 'Incorrect password.'}, status=403)
+        
         with connection.cursor() as cursor:
-            # UPDATED: Using 'CALL' for stored procedure
-            cursor.execute("CALL sp_delete_cooperative(%s)", [coop_id])
+            # Deactivate instead of delete (soft delete)
+            cursor.execute("UPDATE cooperatives SET is_active = FALSE, updated_at = NOW() WHERE coop_id = %s", [coop_id])
             
-        return JsonResponse({'success': True, 'message': 'Cooperative deleted successfully'})
+        return JsonResponse({'success': True, 'message': 'Cooperative deactivated successfully'})
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 @require_http_methods(["POST"])
+@csrf_exempt
 def restore_cooperative(request, coop_id):
     try:
+        user_role = request.session.get('role')
+        
+        # Only admin can restore
+        if user_role != 'admin':
+            return JsonResponse({'success': False, 'error': 'Permission denied. Only admin can restore cooperatives.'}, status=403)
+        
+        # Require password in POST body
+        try:
+            data = json.loads(request.body)
+            password = data.get('password')
+        except Exception:
+            password = None
+
+        if not password:
+            return JsonResponse({'success': False, 'error': 'Password is required.'}, status=400)
+
+        # Get current user's ID from session
+        current_user_id = request.session.get('user_id')
+        if not current_user_id:
+            return JsonResponse({'success': False, 'error': 'User not authenticated.'}, status=401)
+
+        # Get user's password hash from database
+        try:
+            user = Users.objects.get(user_id=current_user_id)
+            is_valid = check_password(password, user.password_hash)
+        except Users.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found.'}, status=404)
+
+        if not is_valid:
+            return JsonResponse({'success': False, 'error': 'Incorrect password.'}, status=403)
+        
         with connection.cursor() as cursor:
             cursor.execute("UPDATE cooperatives SET is_active = TRUE, updated_at = NOW() WHERE coop_id = %s", [coop_id])
         return JsonResponse({'success': True, 'message': 'Cooperative restored successfully'})
     except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@require_http_methods(["POST"])
+@csrf_exempt
+def verify_password_view(request):
+    """
+    Verify the current user's password for sensitive operations like deactivating/reactivating cooperatives.
+    """
+    try:
+        data = json.loads(request.body)
+        password = data.get('password')
+        
+        if not password:
+            return JsonResponse({'valid': False, 'message': 'Password is required.'}, status=400)
+        
+        # Get current user's ID from session
+        user_id = request.session.get('user_id')
+        
+        if not user_id:
+            return JsonResponse({'valid': False, 'message': 'User not authenticated.'}, status=401)
+        
+        # Get user's password hash from database
+        try:
+            user = Users.objects.get(user_id=user_id)
+            is_valid = check_password(password, user.password_hash)
+            
+            return JsonResponse({'valid': is_valid})
+            
+        except Users.DoesNotExist:
+            return JsonResponse({'valid': False, 'message': 'User not found.'}, status=404)
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'valid': False, 'message': str(e)}, status=500)
+
+@require_http_methods(["GET"])
+def get_profile_data(request):
+    """Get profile data for the bottom table"""
+    try:
+        user_id = request.session.get('user_id')
+        user_role = request.session.get('role')
+        
+        if not user_id:
+            return JsonResponse({'success': False, 'error': 'Authentication required'}, status=401)
+        
+        # Get cooperatives based on role
+        coop_ids = []
+        if user_role == 'admin':
+            # Get all active cooperatives
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT coop_id FROM cooperatives WHERE is_active IS NULL OR is_active = TRUE")
+                coop_ids = [row[0] for row in cursor.fetchall()]
+        elif user_role == 'staff':
+            try:
+                if isinstance(user_id, str):
+                    try:
+                        user_id = int(user_id)
+                    except ValueError:
+                        pass
+                staff = Staff.objects.get(user_id=user_id)
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        SELECT coop_id FROM cooperatives 
+                        WHERE staff_id = %s AND (is_active IS NULL OR is_active = TRUE)
+                    """, [staff.staff_id])
+                    coop_ids = [row[0] for row in cursor.fetchall()]
+            except Staff.DoesNotExist:
+                pass
+        
+        if not coop_ids:
+            return JsonResponse({'success': True, 'profiles': []})
+        
+        profiles = ProfileData.objects.filter(coop_id__in=coop_ids).select_related('coop').order_by('-report_year', '-created_at')
+        
+        profile_list = []
+        for profile in profiles:
+            profile_list.append({
+                'profile_id': profile.profile_id,
+                'coop_id': profile.coop_id,
+                'cooperative_name': profile.coop.cooperative_name if profile.coop else 'N/A',
+                'report_year': profile.report_year,
+                'address': profile.address,
+                'mobile_number': profile.mobile_number,
+                'email_address': profile.email_address,
+                'cda_registration_number': profile.cda_registration_number,
+                'cda_registration_date': profile.cda_registration_date.strftime('%Y-%m-%d') if profile.cda_registration_date else None,
+                'lccdc_membership': profile.lccdc_membership,
+                'lccdc_membership_date': profile.lccdc_membership_date.strftime('%Y-%m-%d') if profile.lccdc_membership_date else None,
+                'operation_area': profile.operation_area,
+                'business_activity': profile.business_activity,
+                'board_of_directors_count': profile.board_of_directors_count,
+                'salaried_employees_count': profile.salaried_employees_count,
+                'approval_status': profile.approval_status,
+                'created_at': profile.created_at.strftime('%Y-%m-%d %H:%M:%S') if profile.created_at else None,
+                'updated_at': profile.updated_at.strftime('%Y-%m-%d %H:%M:%S') if profile.updated_at else None,
+            })
+        
+        return JsonResponse({'success': True, 'profiles': profile_list})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@require_http_methods(["GET"])
+def get_profile_details(request, profile_id):
+    """Get full profile details for modal display"""
+    try:
+        user_role = request.session.get('role')
+        if user_role not in ['admin', 'staff']:
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+        
+        profile = get_object_or_404(ProfileData, profile_id=profile_id)
+        coop = profile.coop
+        
+        # Get financial data for the same report year
+        financial_data = FinancialData.objects.filter(
+            coop=coop, 
+            report_year=profile.report_year
+        ).first()
+        
+        # Get officers and members
+        officers = Officer.objects.filter(coop=coop)
+        members = Member.objects.filter(coop=coop)
+        
+        # Get financial history (latest 3 years)
+        financial_history = FinancialData.objects.filter(coop=coop).order_by(
+            '-report_year', '-created_at'
+        ).values(
+            'financial_id', 'report_year', 'assets', 'paid_up_capital', 'net_surplus',
+            'approval_status', 'created_at', 'updated_at'
+        )[:3]
+        
+        # Prepare context similar to profile_form_view
+        context = {
+            'profile': {
+                'coop_name': coop.cooperative_name if coop else 'N/A',
+                'coop_id': coop.coop_id if coop else None,
+                'address': profile.address,
+                'operation_area': profile.operation_area,
+                'mobile_number': profile.mobile_number,
+                'email_address': profile.email_address,
+                'cda_registration_number': profile.cda_registration_number,
+                'cda_registration_date': profile.cda_registration_date,
+                'lccdc_membership': profile.lccdc_membership,
+                'lccdc_membership_date': profile.lccdc_membership_date,
+                'business_activity': profile.business_activity,
+                'board_of_directors_count': profile.board_of_directors_count,
+                'salaried_employees_count': profile.salaried_employees_count,
+                'coc_renewal': profile.coc_renewal,
+                'cote_renewal': profile.cote_renewal,
+                'coc_attachment': profile.coc_attachment,
+                'cote_attachment': profile.cote_attachment,
+                'approval_status': profile.approval_status,
+                'report_year': profile.report_year,
+            },
+            'financial': {
+                'assets': financial_data.assets if financial_data else 0,
+                'paid_up_capital': financial_data.paid_up_capital if financial_data else 0,
+                'net_surplus': financial_data.net_surplus if financial_data else 0,
+                'financial_attachments_exist': True if (financial_data and financial_data.attachments) else False,
+            } if financial_data else {
+                'assets': 0,
+                'paid_up_capital': 0,
+                'net_surplus': 0,
+                'financial_attachments_exist': False,
+            },
+            'officers': officers,
+            'members': members,
+            'financial_history': financial_history,
+            'current_year': profile.report_year if profile.report_year else None,
+        }
+        
+        # Render the profile card HTML
+        html = render_to_string('databank/profile_card.html', context)
+        
+        return JsonResponse({'success': True, 'html': html})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@require_http_methods(["POST"])
+def approve_profile(request, profile_id):
+    """Approve or cancel approval of a cooperative profile"""
+    try:
+        user_role = request.session.get('role')
+        if user_role not in ['admin', 'staff']:
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+        
+        data = json.loads(request.body)
+        action = data.get('action')  # 'approve' or 'cancel'
+        
+        if action not in ['approve', 'cancel']:
+            return JsonResponse({'success': False, 'error': 'Invalid action'}, status=400)
+        
+        profile = get_object_or_404(ProfileData, profile_id=profile_id)
+        
+        if action == 'approve':
+            profile.approval_status = 'approved'
+            profile.save()
+            return JsonResponse({
+                'success': True, 
+                'message': 'Profile approved successfully',
+                'new_status': 'approved'
+            })
+        elif action == 'cancel':
+            # Cancel approval - set back to pending (don't change if already pending)
+            if profile.approval_status == 'approved':
+                profile.approval_status = 'pending'
+                profile.save()
+                return JsonResponse({
+                    'success': True, 
+                    'message': 'Approval cancelled successfully',
+                    'new_status': 'pending'
+                })
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Profile is not approved, cannot cancel'
+                }, status=400)
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

@@ -1,0 +1,330 @@
+{% load static %}
+<div class="profile-details-card">
+    <div class="profile-header">
+        <div class="header-left">
+            <h3>{{ profile.coop_name }}</h3>
+            <div class="status-badge status-{{ profile.approval_status|lower }}">
+                <i class="bi bi-circle-fill"></i> {{ profile.approval_status|default:"Pending"|title }}
+            </div>
+            {% if profile.report_year %}
+            <div class="current-year-badge" style="margin-top: 8px; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <i class="bi bi-calendar-check"></i> 
+                <span>Profile Year: <strong>{{ profile.report_year }}</strong></span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h4 class="section-title"><i class="bi bi-info-circle"></i> General Information</h4>
+        <div class="info-grid-enhanced">
+            <div class="info-group">
+                <h5 class="info-group-title"><i class="bi bi-building"></i> Basic Details</h5>
+                <div class="info-items">
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-building"></i> Cooperative Name</label>
+                        <p>{{ profile.coop_name }}</p>
+                    </div>
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-geo-alt"></i> Address</label>
+                        <p>{{ profile.address|default:"N/A" }}</p>
+                    </div>
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-pin-map"></i> Area of Operation</label>
+                        <p>{{ profile.operation_area|title|default:"N/A" }}</p>
+                    </div>
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-briefcase"></i> Business Activity</label>
+                        <p>{{ profile.business_activity|default:"N/A" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <h5 class="info-group-title"><i class="bi bi-telephone"></i> Contact Information</h5>
+                <div class="info-items">
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-phone"></i> Contact Number</label>
+                        <p>{{ profile.mobile_number|default:"N/A" }}</p>
+                    </div>
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-envelope"></i> Email Address</label>
+                        <p>{{ profile.email_address|default:"N/A" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <h5 class="info-group-title"><i class="bi bi-file-earmark-text"></i> Registration Details</h5>
+                <div class="info-items">
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-hash"></i> CDA Registration No.</label>
+                        <p>{{ profile.cda_registration_number|default:"N/A" }}</p>
+                    </div>
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-calendar-event"></i> CDA Registration Date</label>
+                        <p>{{ profile.cda_registration_date|date:"M d, Y"|default:"N/A" }}</p>
+                    </div>
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-check-circle"></i> LCCDC Membership</label>
+                        <p>
+                            {% if profile.lccdc_membership %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Yes</span>
+                            {% if profile.lccdc_membership_date %}
+                            <small class="text-muted">({{ profile.lccdc_membership_date|date:"M d, Y" }})</small>
+                            {% endif %}
+                            {% else %}
+                            <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> No</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-group">
+                <h5 class="info-group-title"><i class="bi bi-people"></i> Organization Structure</h5>
+                <div class="info-items">
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-person-badge"></i> Board of Directors</label>
+                        <p><span class="count-badge">{{ profile.board_of_directors_count|default:"0" }}</span> members</p>
+                    </div>
+                    <div class="info-item-enhanced">
+                        <label><i class="bi bi-person-workspace"></i> Salaried Employees</label>
+                        <p><span class="count-badge">{{ profile.salaried_employees_count|default:"0" }}</span> employees</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h4 class="section-title"><i class="bi bi-file-earmark-check"></i> Certificates & Compliance</h4>
+        <div class="certificates-grid">
+            <div class="certificate-card {% if profile.coc_renewal %}available{% else %}unavailable{% endif %}">
+                <div class="certificate-icon">
+                    <i class="bi bi-file-earmark-check-fill"></i>
+                </div>
+                <div class="certificate-content">
+                    <h5>Certificate of Compliance</h5>
+                    <div class="certificate-status">
+                        {% if profile.coc_renewal %}
+                        <span class="badge-certificate available">
+                            <i class="bi bi-check-circle-fill"></i> Available
+                        </span>
+                        {% if profile.coc_attachment %}
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn-certificate-preview" 
+                                    data-coop-id="{{ profile.coop_id }}"
+                                    data-attachment-type="coc"
+                                    data-filename="Certificate of Compliance">
+                                <i class="bi bi-eye"></i> Preview
+                            </button>
+                            <a href="/cooperatives/profiles/{{ profile.coop_id }}/attachment/coc/"
+                                class="btn-certificate-download">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <span class="badge-certificate unavailable">
+                            <i class="bi bi-x-circle"></i> Not Available
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="certificate-card {% if profile.cote_renewal %}available{% else %}unavailable{% endif %}">
+                <div class="certificate-icon">
+                    <i class="bi bi-receipt-cutoff"></i>
+                </div>
+                <div class="certificate-content">
+                    <h5>Certificate of Tax Exemption</h5>
+                    <div class="certificate-status">
+                        {% if profile.cote_renewal %}
+                        <span class="badge-certificate available">
+                            <i class="bi bi-check-circle-fill"></i> Available
+                        </span>
+                        {% if profile.cote_attachment %}
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <button type="button" class="btn-certificate-preview" 
+                                    data-coop-id="{{ profile.coop_id }}"
+                                    data-attachment-type="cte"
+                                    data-filename="Certificate of Tax Exemption">
+                                <i class="bi bi-eye"></i> Preview
+                            </button>
+                            <a href="/cooperatives/profiles/{{ profile.coop_id }}/attachment/cte/"
+                                class="btn-certificate-download">
+                                <i class="bi bi-download"></i> Download
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <span class="badge-certificate unavailable">
+                            <i class="bi bi-x-circle"></i> Not Available
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h4 class="section-title"><i class="bi bi-currency-dollar"></i> Financial Information</h4>
+        
+        {% if profile.report_year %}
+        <div class="current-year-badge">
+            <i class="bi bi-calendar-check"></i> Current Reporting Year: <strong>{{ profile.report_year }}</strong>
+        </div>
+        {% endif %}
+        
+        <div class="financial-summary-card">
+            <div class="financial-metrics">
+                <div class="financial-metric">
+                    <div class="metric-icon assets">
+                        <i class="bi bi-bank"></i>
+                    </div>
+                    <div class="metric-content">
+                        <label>Total Assets</label>
+                        <p class="financial-value">₱ {{ financial.assets|floatformat:2|default:"0.00" }}</p>
+                    </div>
+                </div>
+                <div class="financial-metric">
+                    <div class="metric-icon capital">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="metric-content">
+                        <label>Paid Up Capital</label>
+                        <p class="financial-value">₱ {{ financial.paid_up_capital|floatformat:2|default:"0.00" }}</p>
+                    </div>
+                </div>
+                <div class="financial-metric">
+                    <div class="metric-icon surplus">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div class="metric-content">
+                        <label>Net Surplus</label>
+                        <p class="financial-value">₱ {{ financial.net_surplus|floatformat:2|default:"0.00" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if financial.financial_attachments_exist %}
+            <div class="financial-documents-section">
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <button type="button" class="btn-preview-docs" 
+                            data-coop-id="{{ profile.coop_id }}"
+                            data-attachment-type="financial"
+                            data-filename="Financial Documents">
+                        <i class="bi bi-eye"></i> Preview Documents
+                    </button>
+                    <a href="/cooperatives/profiles/{{ profile.coop_id }}/attachment/financial/"
+                        class="btn-download-docs">
+                        <i class="bi bi-download"></i> Download Documents
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if financial_history %}
+        <div class="financial-history-compact">
+            <h5 class="history-title">
+                <i class="bi bi-clock-history"></i> Recent Financial History (Latest 3 Years)
+            </h5>
+            <div class="history-cards">
+                {% for record in financial_history %}
+                <div class="history-card {% if record.report_year == profile.report_year %}current-year{% endif %}" 
+                     data-year="{{ record.report_year }}">
+                    <div class="history-card-header">
+                        <span class="year-badge">{{ record.report_year|default:"N/A" }}</span>
+                        {% if record.report_year == profile.report_year %}
+                        <span class="current-badge">Current</span>
+                        {% endif %}
+                        <span class="status-badge-mini status-{{ record.approval_status|lower }}">
+                            {{ record.approval_status|default:"Pending"|title }}
+                        </span>
+                    </div>
+                    <div class="history-card-body">
+                        <div class="history-metric">
+                            <span class="metric-label">Assets</span>
+                            <span class="metric-value">₱ {{ record.assets|floatformat:2|default:"0.00" }}</span>
+                        </div>
+                        <div class="history-metric">
+                            <span class="metric-label">Capital</span>
+                            <span class="metric-value">₱ {{ record.paid_up_capital|floatformat:2|default:"0.00" }}</span>
+                        </div>
+                        <div class="history-metric">
+                            <span class="metric-label">Surplus</span>
+                            <span class="metric-value">₱ {{ record.net_surplus|floatformat:2|default:"0.00" }}</span>
+                        </div>
+                        <div class="history-footer">
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> {{ record.created_at|date:"M Y"|default:"N/A" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if officers %}
+    <div class="info-section">
+        <h4 class="section-title"><i class="bi bi-people"></i> Cooperative Officers</h4>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Position</th>
+                        <th>Gender</th>
+                        <th>Mobile Number</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for officer in officers %}
+                    <tr>
+                        <td>{{ officer.fullname }}</td>
+                        <td>{{ officer.position }}</td>
+                        <td>{{ officer.gender }}</td>
+                        <td>{{ officer.mobile_number|default:"N/A" }}</td>
+                        <td>{{ officer.email|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if members %}
+    <div class="info-section">
+        <h4 class="section-title"><i class="bi bi-person-badge"></i> Cooperative Members</h4>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Mobile Number</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                    <tr>
+                        <td>{{ member.fullname }}</td>
+                        <td>{{ member.gender|default:"N/A" }}</td>
+                        <td>{{ member.mobile_number|default:"N/A" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+

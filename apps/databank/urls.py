@@ -13,4 +13,10 @@ urlpatterns = [
     path('api/cooperative/<int:coop_id>/update/', views.update_cooperative, name='update_cooperative'),
     path('api/cooperative/<int:coop_id>/delete/', views.delete_cooperative, name='delete_cooperative'),
     path('api/cooperative/<int:coop_id>/restore/', views.restore_cooperative, name='restore_cooperative'),
+    path('api/verify-password/', views.verify_password_view, name='verify_password'),
+    
+    # Profile data endpoint
+    path('api/profile-data/', views.get_profile_data, name='get_profile_data'),
+    path('api/get-profile-details/<int:profile_id>/', views.get_profile_details, name='get_profile_details'),
+    path('api/approve-profile/<int:profile_id>/', views.approve_profile, name='approve_profile'),
 ]
