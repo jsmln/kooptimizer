@@ -21,8 +21,11 @@
     </div>
 
     <div class="stats-grid">
+        
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#adminListModal">
-            <div class="icon-box red-box"><i class="bi bi-shield-lock-fill"></i></div>
+            <div class="icon-box red-box">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
             <div class="stat-info">
                 <p>System Admins</p>
                 <h3>3</h3>
@@ -31,7 +34,9 @@
         </div>
 
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#staffListModal">
-            <div class="icon-box blue-box"><i class="bi bi-people-fill"></i></div>
+            <div class="icon-box blue-box">
+                <i class="bi bi-people-fill"></i>
+            </div>
             <div class="stat-info">
                 <p>Office Staff</p>
                 <h3>12</h3>
@@ -39,8 +44,21 @@
             </div>
         </div>
 
+        <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#officersListModal">
+            <div class="icon-box yellow-box">
+                <i class="bi bi-person-badge-fill"></i>
+            </div>
+            <div class="stat-info">
+                <p>Coop Officers</p>
+                <h3>174</h3>
+                <span class="link-text">View Details <i class="bi bi-arrow-right"></i></span>
+            </div>
+        </div>
+
         <div class="stat-card">
-            <div class="icon-box green-box"><i class="bi bi-building"></i></div>
+            <div class="icon-box green-box">
+                <i class="bi bi-building"></i>
+            </div>
             <div class="stat-info">
                 <p>Total Cooperatives</p>
                 <h3>58</h3>
@@ -49,7 +67,9 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box orange-box"><i class="bi bi-person-hearts"></i></div>
+            <div class="icon-box orange-box">
+                <i class="bi bi-person-hearts"></i>
+            </div>
             <div class="stat-info">
                 <p>Total Members</p>
                 <h3>12,450</h3>
@@ -58,7 +78,9 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box purple-box"><i class="bi bi-cash-stack"></i></div>
+            <div class="icon-box purple-box">
+                <i class="bi bi-cash-stack"></i>
+            </div>
             <div class="stat-info">
                 <p>Total Assets</p>
                 <h3>₱ 845M</h3>
@@ -67,7 +89,9 @@
         </div>
 
         <div class="stat-card">
-            <div class="icon-box teal-box"><i class="bi bi-person-check-fill"></i></div>
+            <div class="icon-box teal-box">
+                <i class="bi bi-person-check-fill"></i>
+            </div>
             <div class="stat-info">
                 <p>Pending Users</p>
                 <h3>15</h3>
@@ -81,11 +105,14 @@
                 <h3>42</h3>
                 <small>Active Member Coops</small>
             </div>
-            <div class="icon-bg"><i class="bi bi-award"></i></div>
+            <div class="icon-bg">
+                <i class="bi bi-award"></i>
+            </div>
         </div>
     </div>
 
     <div class="charts-section">
+        
         <div class="chart-card main-chart">
             <div class="card-header-custom">
                 <h3>Business Activity Analytics</h3>
@@ -102,7 +129,6 @@
         <div class="chart-card ranking-card">
             <div class="card-header-custom">
                 <h3>Top 20 Ranking</h3>
-                <span class="badge-red">By Assets</span>
             </div>
             <div class="ranking-list">
                 <div class="rank-item">
@@ -145,6 +171,7 @@
     </div>
 
     <div class="analytics-grid-secondary">
+        
         <div class="chart-card">
             <div class="card-header-custom">
                 <h3>Coops by Category</h3>
@@ -178,10 +205,53 @@
     </div>
 
     <div class="tables-grid-row">
+     
         <div class="chart-card wide-chart">
             <div class="card-header-custom">
-                <h3>Financial Growth Trend (Net Surplus)</h3>
+                <h3>Financial Growth Trend</h3>
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    
+                    <span id="financeCurrentView" class="current-view-badge">All Data</span>
+
+                    <div class="chart-filter-wrapper">
+                        <button id="financeFilterToggle" class="filter-icon-btn" type="button" title="Filter Metrics">
+                            <i class="bi bi-funnel"></i>
+                        </button>
+                        
+                        <div id="financeFilterControls" class="chart-filter-dropdown" style="display: none;">
+                            <div class="dropdown-header-text">Select View:</div>
+                            
+                            <div class="filter-option active" onclick="applyFinancialFilter('all', this)">
+                                <span>All Data</span>
+                                <i class="bi bi-check-lg check-icon"></i>
+                            </div>
+                            
+                            <div class="filter-option" onclick="applyFinancialFilter('assets', this)">
+                                <span><span class="dot asset-dot"></span> Assets</span>
+                                <i class="bi bi-check-lg check-icon"></i>
+                            </div>
+                            
+                            <div class="filter-option" onclick="applyFinancialFilter('capital', this)">
+                                <span><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                                <i class="bi bi-check-lg check-icon"></i>
+                            </div>
+                            
+                            <div class="filter-option" onclick="applyFinancialFilter('surplus', this)">
+                                <span><span class="dot surplus-dot"></span> Net Surplus</span>
+                                <i class="bi bi-check-lg check-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <div class="chart-legend-inline">
+                <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
+                <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
+            </div>
+
             <div class="chart-wrapper">
                 <canvas id="financialTrendChart"></canvas>
             </div>
@@ -195,7 +265,12 @@
             <div class="table-responsive">
                 <table class="admin-table">
                     <thead>
-                        <tr><th>Cooperative</th><th>Year</th><th>Assets</th><th>Action</th></tr>
+                        <tr>
+                            <th>Cooperative</th>
+                            <th>Year</th>
+                            <th>Assets</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <tr>
@@ -216,6 +291,12 @@
                             <td>₱ 890k</td>
                             <td><button class="btn-action">Review</button></td>
                         </tr>
+                        <tr>
+                            <td class="fw-bold">Lipa Transport</td>
+                            <td>2024</td>
+                            <td>₱ 5.2M</td>
+                            <td><button class="btn-action">Review</button></td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -231,26 +312,36 @@
             <div class="table-responsive">
                 <table class="admin-table">
                     <thead>
-                        <tr><th>Staff</th><th>Assigned</th><th>Status</th></tr>
+                        <tr>
+                            <th>Staff</th>
+                            <th>Assigned</th>
+                            <th>Status</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
-                                <div class="user-cell"><div class="avatar-xs" style="background:#1976d2;">AR</div> Ana Reyes</div>
+                                <div class="user-cell">
+                                    <div class="avatar-xs" style="background:#1976d2;">AR</div> Ana Reyes
+                                </div>
                             </td>
                             <td class="text-center fw-bold">12</td>
                             <td><span class="badge bg-danger">Heavy</span></td>
                         </tr>
                         <tr>
                             <td>
-                                <div class="user-cell"><div class="avatar-xs" style="background:#388e3c;">JR</div> Jose Rizal</div>
+                                <div class="user-cell">
+                                    <div class="avatar-xs" style="background:#388e3c;">JR</div> Jose Rizal
+                                </div>
                             </td>
                             <td class="text-center fw-bold">6</td>
                             <td><span class="badge bg-success">Balanced</span></td>
                         </tr>
                         <tr>
                             <td>
-                                <div class="user-cell"><div class="avatar-xs" style="background:#fbc02d; color:#333;">CR</div> Clara Recto</div>
+                                <div class="user-cell">
+                                    <div class="avatar-xs" style="background:#fbc02d; color:#333;">CR</div> Clara Recto
+                                </div>
                             </td>
                             <td class="text-center fw-bold">8</td>
                             <td><span class="badge bg-warning text-dark">Moderate</span></td>
@@ -315,12 +406,18 @@
                             <td><span class="badge-category">Small</span></td>
                             <td>Urban</td>
                         </tr>
+                        <tr data-category="Medium" data-district="North" onclick="openProfileModal('Housing Cooperative')">
+                            <td><span class="fw-bold text-dark">Housing Cooperative</span></td>
+                            <td><span class="badge-category">Medium</span></td>
+                            <td>North</td>
+                        </tr>
                     </tbody>
                 </table>
-                <div id="noResultsMessage" style="display: none; padding: 20px; text-align: center; color: #6c757d;">No cooperatives found matching the selected filters.</div>
+                <div id="noResultsMessage" style="display: none; padding: 20px; text-align: center; color: #6c757d;">
+                    No cooperatives found matching the selected filters.
+                </div>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -333,10 +430,33 @@
             </div>
             <div class="modal-body p-0">
                 <table class="modal-table">
-                    <thead><tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Gender</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr><td>Juan Dela Cruz</td><td>Head Admin</td><td>Male</td><td>juan.admin@lipa.gov.ph</td></tr>
-                        <tr><td>Maria Santos</td><td>System Maintainer</td><td>Female</td><td>maria.s@lipa.gov.ph</td></tr>
+                        <tr>
+                            <td>Juan Dela Cruz</td>
+                            <td>Head Admin</td>
+                            <td>Male</td>
+                            <td>juan.admin@lipa.gov.ph</td>
+                        </tr>
+                        <tr>
+                            <td>Maria Santos</td>
+                            <td>System Maintainer</td>
+                            <td>Female</td>
+                            <td>maria.s@lipa.gov.ph</td>
+                        </tr>
+                        <tr>
+                            <td>Pedro Penduko</td>
+                            <td>IT Support</td>
+                            <td>Male</td>
+                            <td>pedro.p@lipa.gov.ph</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -353,10 +473,72 @@
             </div>
             <div class="modal-body p-0">
                 <table class="modal-table">
-                    <thead><tr><th>Name</th><th>Position</th><th>Gender</th><th>Email</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Gender</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr><td>Ana Reyes</td><td>Encoder</td><td>Female</td><td>ana.reyes@lipa.gov.ph</td></tr>
-                        <tr><td>Jose Rizal</td><td>Clerk</td><td>Male</td><td>jose.r@lipa.gov.ph</td></tr>
+                        <tr>
+                            <td>Ana Reyes</td>
+                            <td>Encoder</td>
+                            <td>Female</td>
+                            <td>ana.reyes@lipa.gov.ph</td>
+                        </tr>
+                        <tr>
+                            <td>Jose Rizal</td>
+                            <td>Clerk</td>
+                            <td>Male</td>
+                            <td>jose.r@lipa.gov.ph</td>
+                        </tr>
+                        <tr>
+                            <td>Clara Recto</td>
+                            <td>Secretary</td>
+                            <td>Female</td>
+                            <td>clara.recto@lipa.gov.ph</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="officersListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cooperative Officers</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <table class="modal-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Cooperative</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Isabel Delacion</td>
+                            <td>Chairperson</td>
+                            <td>Consumer Coop</td>
+                        </tr>
+                        <tr>
+                            <td>Mark Santos</td>
+                            <td>Treasurer</td>
+                            <td>Transport Coop</td>
+                        </tr>
+                        <tr>
+                            <td>Elena Cruz</td>
+                            <td>Secretary</td>
+                            <td>Housing Coop</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -406,11 +588,25 @@
                         <h6 class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">Officers</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered">
-                                <thead class="table-light"><tr><th>Name</th><th>Position</th></tr></thead>
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
-                                    <tr><td>Isabel Delacion</td><td>Chairperson</td></tr>
-                                    <tr><td>Jasmin Esperida</td><td>Vice Chairperson</td></tr>
-                                    <tr><td>Maria Lopez</td><td>Secretary</td></tr>
+                                    <tr>
+                                        <td>Isabel Delacion</td>
+                                        <td>Chairperson</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jasmin Esperida</td>
+                                        <td>Vice Chairperson</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Maria Lopez</td>
+                                        <td>Secretary</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -429,9 +625,7 @@
 </div>
 
 <script>
-    // --- CHARTS INITIALIZATION ---
-    
-    // 1. Business Activity (Bar)
+    // 2. Business Activity Chart (Bar)
     const ctx = document.getElementById('businessActivityChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -445,13 +639,14 @@
             }]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
         }
     });
 
-    // 2. Category (Doughnut)
+    // 3. Category Chart (Doughnut)
     const ctxCat = document.getElementById('categoryChart').getContext('2d');
     new Chart(ctxCat, {
         type: 'doughnut',
@@ -464,12 +659,13 @@
             }]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
         }
     });
 
-    // 3. District (Bar)
+    // 4. District Chart (Bar)
     const ctxDist = document.getElementById('districtChart').getContext('2d');
     new Chart(ctxDist, {
         type: 'bar',
@@ -482,13 +678,14 @@
             }]
         },
         options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { y: { display: false }, x: { grid: { display: false } } }
         }
     });
 
-    // 4. Compliance (Stacked Bar)
+    // 5. Compliance Chart (Stacked Bar)
     const ctxComp = document.getElementById('complianceChart').getContext('2d');
     new Chart(ctxComp, {
         type: 'bar',
@@ -500,43 +697,137 @@
             ]
         },
         options: {
-            responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
             scales: { x: { stacked: true, display: false }, y: { stacked: true, grid: { display: false } } },
             plugins: { legend: { display: false } }
         }
     });
 
-    // 5. Financial Trend (Line)
+    // 6. Financial Trend Chart (Multi-line with Logic)
     const ctxFin = document.getElementById('financialTrendChart').getContext('2d');
-    new Chart(ctxFin, {
+    const financialChart = new Chart(ctxFin, {
         type: 'line',
         data: {
             labels: ['2020', '2021', '2022', '2023', '2024'],
-            datasets: [{
-                label: 'Net Surplus (M)',
-                data: [12, 15, 14, 22, 28],
-                borderColor: '#1a237e', backgroundColor: 'rgba(26, 35, 126, 0.1)',
-                tension: 0.4, fill: true, pointRadius: 3
-            }]
+            datasets: [
+                {
+                    label: 'Assets', // Index 0
+                    data: [120, 135, 142, 258, 356],
+                    borderColor: '#2e7d32', backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                    tension: 0.3, fill: false, hidden: false 
+                },
+                {
+                    label: 'Paid-Up Capital', // Index 1
+                    data: [80, 90, 95, 102, 108],
+                    borderColor: '#1565c0', backgroundColor: 'rgba(21, 101, 192, 0.1)',
+                    tension: 0.3, fill: false, hidden: false 
+                },
+                {
+                    label: 'Net Surplus', // Index 2
+                    data: [5, 6.2, 7.8, 9.5, 10.6],
+                    borderColor: '#ef6c00', backgroundColor: 'rgba(239, 108, 0, 0.1)',
+                    tension: 0.3, fill: false, hidden: false 
+                }
+            ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
         }
     });
 
-    // --- INTERACTIVITY ---
+    // --- Financial Chart Filter Logic (Single Select) ---
 
-    // Filter Toggle
+    // 1. Toggle Dropdown Visibility
+    document.getElementById('financeFilterToggle').addEventListener('click', (e) => {
+        e.stopPropagation(); 
+        const dropdown = document.getElementById('financeFilterControls');
+        const btn = document.getElementById('financeFilterToggle');
+
+        if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+            dropdown.style.display = 'flex'; 
+            btn.classList.add('active');     
+        } else {
+            dropdown.style.display = 'none'; 
+            btn.classList.remove('active');  
+        }
+    });
+
+    // 2. Handle Selection (Single Choice)
+    window.applyFinancialFilter = function(type, clickedElement) {
+        if(!financialChart) return;
+
+        // A. Reset Logic: Determine what to show
+        if (type === 'all') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = false;
+        } else if (type === 'assets') {
+            financialChart.getDatasetMeta(0).hidden = false;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'capital') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = false;
+            financialChart.getDatasetMeta(2).hidden = true;
+        } else if (type === 'surplus') {
+            financialChart.getDatasetMeta(0).hidden = true;
+            financialChart.getDatasetMeta(1).hidden = true;
+            financialChart.getDatasetMeta(2).hidden = false;
+        }
+        
+        financialChart.update();
+
+        // B. Update UI (Visual Selection State)
+        const allOptions = document.querySelectorAll('#financeFilterControls .filter-option');
+        allOptions.forEach(opt => opt.classList.remove('active'));
+
+        clickedElement.classList.add('active');
+
+        // C. Update Status Label
+        const labelMap = {
+            'all': 'All Data',
+            'assets': 'Assets',
+            'capital': 'Paid-Up Capital',
+            'surplus': 'Net Surplus'
+        };
+        document.getElementById('financeCurrentView').textContent = labelMap[type];
+
+        // D. Close Dropdown immediately after selection
+        document.getElementById('financeFilterControls').style.display = 'none';
+        document.getElementById('financeFilterToggle').classList.remove('active');
+    };
+
+    // 3. Global Click to Close Dropdown
+    window.addEventListener('click', () => {
+        const dropdown = document.getElementById('financeFilterControls');
+        const btn = document.getElementById('financeFilterToggle');
+        
+        if (dropdown && dropdown.style.display === 'flex') {
+            dropdown.style.display = 'none';
+            btn.classList.remove('active');
+        }
+        document.querySelector('.filter-controls').classList.add('hidden');
+    });
+
+    // 4. Prevent clicks inside dropdowns from closing them
+    document.getElementById('financeFilterControls').addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+    document.querySelector('.filter-controls').addEventListener('click', e => e.stopPropagation());
+
+    // --- Cooperative List Filter Logic ---
     const filterToggle = document.getElementById('filterToggle');
     const filterControls = document.querySelector('.filter-controls');
     
-    filterToggle.addEventListener('click', () => {
+    filterToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
         filterControls.classList.toggle('hidden');
     });
 
-    // Table Filtering Logic
     function filterTable() {
         const categoryFilter = document.getElementById('categoryFilter').value;
         const districtFilter = document.getElementById('districtFilter').value;
@@ -561,27 +852,36 @@
     document.getElementById('categoryFilter').addEventListener('change', filterTable);
     document.getElementById('districtFilter').addEventListener('change', filterTable);
 
-    // Open Modal Logic (Global for HTML onclick)
+    // --- Modal Logic ---
     window.openProfileModal = function(coopName) {
         document.getElementById('modalCoopName').textContent = coopName;
         const modal = new bootstrap.Modal(document.getElementById('coopProfileModal'));
         modal.show();
     }
 
-    // PDF Download Logic
+    // --- PDF Download Logic ---
     document.getElementById('downloadPdfBtn').addEventListener('click', function() {
         const element = document.getElementById('printable-area');
         const coopName = document.getElementById('modalCoopName').textContent.trim();
         const btn = this;
         const originalText = btn.innerHTML;
+        
         btn.innerHTML = 'Generating...';
         btn.disabled = true;
 
-        const opt = { margin: 0.5, filename: `${coopName}_Profile.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+        const opt = {
+            margin: 0.5,
+            filename: `${coopName}_Profile.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
         html2pdf().set(opt).from(element).save().then(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
     });
+
 </script>
 {% endblock %}

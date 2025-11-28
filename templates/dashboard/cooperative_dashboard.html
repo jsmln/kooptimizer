@@ -6,6 +6,7 @@
 {% block extra_head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'frontend/cooperative_dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 {% endblock %}
 
@@ -34,9 +35,15 @@
                 <div class="status-badge success">
                     <i class="bi bi-patch-check-fill"></i> LCCDC Member
                 </div>
-                <div class="status-badge warning">
-                    <i class="bi bi-file-earmark-text"></i> Report Due Soon
+                {% if profile.coc_renewal_needed %}
+                <div class="status-badge danger">
+                    <i class="bi bi-exclamation-circle-fill"></i> COC Renewal
                 </div>
+                {% else %}
+                <div class="status-badge success">
+                    <i class="bi bi-file-earmark-check-fill"></i> COC Active
+                </div>
+                {% endif %}
             </div>
         </div>
         
@@ -52,48 +59,70 @@
                 <p>{{ cooperative.cda_registration_date|default:"Sept 06, 2005" }}</p>
             </div>
             <div class="detail-item">
-                <label>LCCDC Membership Date</label>
-                <p>{{ cooperative.lccdc_membership_date|default:"Sept 14, 2014" }}</p>
-            </div>
-            <div class="detail-item">
                 <label>Business Activity</label>
                 <p>{{ cooperative.business_activity|default:"Supply and Demand" }}</p>
+            </div>
+            <div class="detail-item">
+                <label>LCCDC Membership Date</label>
+                <p>{{ cooperative.lccdc_membership_date|default:"Sept 14, 2014" }}</p>
             </div>
         </div>
     </div>
 
     <div class="stats-grid">
-        
         <div class="stat-card">
-            <div class="card-icon red-bg"><i class="bi bi-person-badge-fill"></i></div>
-            <div class="card-content">
-                <p class="label">Total Officers</p>
-                <h3 class="value">{{ cooperative.officers_count|default:"12" }}</h3>
+            <div class="icon-box red-box"><i class="bi bi-wallet2"></i></div>
+            <div class="stat-info">
+                <p>Current Assets</p>
+                <h3>₱ {{ latest_financial.assets|default:"356,964" }}</h3>
+                <small class="text-muted">Latest Financial Record</small>
             </div>
         </div>
 
-        <div class="stat-card wide-card">
-            <div class="card-icon blue-bg"><i class="bi bi-people-fill"></i></div>
-            <div class="card-content">
-                <p class="label">Total Members</p>
-                <h3 class="value">{{ cooperative.members_count|default:"120" }}</h3>
+        <div class="stat-card">
+            <div class="icon-box green-box"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="stat-info">
+                <p>Net Surplus</p>
+                <h3>₱ {{ latest_financial.net_surplus|default:"10,653" }}</h3>
+                <small class="text-muted">Fiscal Year 2024</small>
             </div>
-            
-            <div class="gender-breakdown">
-                <div class="gender-item">
-                    <div class="gender-label"><i class="bi bi-gender-male"></i> Male</div>
-                    <div class="gender-bar-container">
-                        <div class="gender-bar male-bar" style="width: 60%;"></div>
-                    </div>
-                    <span class="gender-count">72</span>
-                </div>
-                <div class="gender-item">
-                    <div class="gender-label"><i class="bi bi-gender-female"></i> Female</div>
-                    <div class="gender-bar-container">
-                        <div class="gender-bar female-bar" style="width: 40%;"></div>
-                    </div>
-                    <span class="gender-count">48</span>
-                </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box blue-box"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <p>Total Members</p>
+                <h3>{{ member_count|default:"120" }}</h3>
+                <small class="text-muted">Active Members</small>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="icon-box orange-box"><i class="bi bi-person-badge-fill"></i></div>
+            <div class="stat-info">
+                <p>Board Size</p>
+                <h3>{{ profile.board_of_directors_count|default:"3" }}</h3>
+                <small class="text-muted">Directors</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="card-section">
+            <div class="card-header-custom">
+                <h3>Financial Health Trend</h3>
+            </div>
+            <div class="chart-container-large">
+                <canvas id="financialTrendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card-section">
+            <div class="card-header-custom">
+                <h3>Member Gender Ratio</h3>
+            </div>
+            <div class="chart-container-small">
+                <canvas id="genderRatioChart"></canvas>
             </div>
         </div>
     </div>
@@ -101,52 +130,70 @@
     <div class="content-split">
         
         <div class="card-section">
-            <div class="section-header">
-                <h3>Quick Actions</h3>
+            <div class="card-header-custom">
+                <h3>Compliance Status</h3>
             </div>
-            <div class="action-grid">
-                <button class="action-btn" id="viewProfileBtn">
-                    <i class="bi bi-eye-fill"></i>
-                    <span>View Cooperative Profile</span>
-                </button>
-                
-                <a href="{% url 'cooperatives:profile_form' %}" class="action-btn">
-                    <i class="bi bi-pencil-square"></i>
-                    <span>Update Profile</span>
-                </a>
+            <div class="compliance-list">
+                <div class="compliance-item">
+                    <div class="compliance-info">
+                        <span class="compliance-label">Certificate of Compliance (COC)</span>
+                        <small class="text-muted">Required for operation</small>
+                    </div>
+                    {% if profile.coc_renewal_needed %}
+                        <span class="status-pill danger">Needs Renewal</span>
+                    {% else %}
+                        <span class="status-pill success">Active</span>
+                    {% endif %}
+                </div>
+
+                <div class="compliance-item">
+                    <div class="compliance-info">
+                        <span class="compliance-label">Tax Exemption (COTE)</span>
+                        <small class="text-muted">Bureau of Internal Revenue</small>
+                    </div>
+                    <span class="status-pill success">Active</span>
+                </div>
+
+                <div class="compliance-item">
+                    <div class="compliance-info">
+                        <span class="compliance-label">LCCDC Membership</span>
+                        <small class="text-muted">Council Membership</small>
+                    </div>
+                    <span class="status-pill success">Member</span>
+                </div>
             </div>
         </div>
 
         <div class="card-section">
-            <div class="section-header">
-                <h3>Recent Activity</h3>
-                <a href="#" class="view-all">View All</a>
+            <div class="card-header-custom">
+                <h3>Officer Roster</h3>
+                <a href="#" class="link-text" id="viewProfileBtn">View Full Profile</a>
             </div>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-marker bg-success"></div>
-                    <div class="timeline-content">
-                        <p class="text-main">Profile Updated Successfully</p>
-                        <span class="time">2 hours ago</span>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-marker bg-primary"></div>
-                    <div class="timeline-content">
-                        <p class="text-main">New Announcement Received</p>
-                        <span class="time">1 day ago</span>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-marker bg-warning"></div>
-                    <div class="timeline-content">
-                        <p class="text-main">Annual Asset Report Pending</p>
-                        <span class="time">3 days ago</span>
-                    </div>
-                </div>
+            <div class="table-responsive">
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold">Isabel Delacion</td>
+                            <td><span class="badge-position">Chairperson</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Jasmin Esperida</td>
+                            <td><span class="badge-position">Vice Chairperson</span></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Art Delos Reyes</td>
+                            <td><span class="badge-position">BOD Member</span></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-
     </div>
 </div>
 
@@ -156,7 +203,7 @@
             <h3>Cooperative Profile</h3>
             <div class="modal-actions">
                 <button class="pdf-btn" id="download-pdf-btn" title="Download as PDF">
-                    <i class="bi bi-file-earmark-pdf-fill"></i> <span>Download Profile</span>
+                    <i class="bi bi-file-earmark-pdf-fill"></i> <span>Download PDF</span>
                 </button>
                 <button class="modal-close-btn">&times;</button>
             </div>
@@ -169,145 +216,119 @@
                     <div class="coop-title-info">
                         <h4 id="modal-coop-name">{{ cooperative.cooperative_name|default:"Consumer Cooperative" }}</h4>
                         <span class="badge-cda">CDA: {{ cooperative.cda_registration_number|default:"1414-060923055" }}</span>
-                        <div class="update-info">Last Updated: {{ cooperative.updated_at|default:"Sept 30, 2025" }}</div>
                     </div>
                 </div>
 
                 <div class="modal-body">
                     <section class="info-section">
-                        <h5 class="section-title">Cooperative General Information</h5>
+                        <h5 class="section-title">General Information</h5>
                         <div class="info-grid two-col">
-                            <div class="info-item"><label>Cooperative Name</label><p>{{ cooperative.cooperative_name|default:"Consumer Cooperative" }}</p></div>
-                            <div class="info-item"><label>Address</label><p>{{ cooperative.address|default:"Sabang, Lipa City, Batangas" }}</p></div>
-                            <div class="info-item"><label>Contact Number</label><p>{{ cooperative.contact_number|default:"09929380925" }}</p></div>
-                            <div class="info-item"><label>Email Address</label><p>{{ cooperative.email|default:"consumercoop@gmail.com" }}</p></div>
-                            <div class="info-item"><label>CDA Reg. No.</label><p>{{ cooperative.cda_registration_number|default:"1414-060923055" }}</p></div>
-                            <div class="info-item"><label>CDA Reg. Date</label><p>{{ cooperative.cda_registration_date|default:"09-06-2005" }}</p></div>
-                            <div class="info-item"><label>LCCDC Membership</label><p>{{ cooperative.lccdc_membership_date|default:"09-14-2014" }}</p></div>
-                            <div class="info-item"><label>Area of Operation</label><p>{{ cooperative.area_operation|default:"Consumer" }}</p></div>
-                            <div class="info-item"><label>Business Activity</label><p>{{ cooperative.business_activity|default:"Supply and demand" }}</p></div>
-                            <div class="info-item"><label>Board Directors</label><p>{{ cooperative.bod_count|default:"3" }}</p></div>
-                            <div class="info-item"><label>Salaried Employees</label><p>{{ cooperative.employee_count|default:"14" }}</p></div>
-                            <div class="info-item"><label>Compliance Cert.</label><p><span class="status-yes">Yes</span></p></div>
-                            <div class="info-item"><label>Tax Exemption</label><p><span class="status-yes">Yes</span></p></div>
+                            <div class="info-item"><label>Coop Name</label><p>{{ cooperative.cooperative_name|default:"Consumer Cooperative" }}</p></div>
+                            <div class="info-item"><label>Address</label><p>{{ cooperative.address|default:"Sabang, Lipa City" }}</p></div>
+                            <div class="info-item"><label>Email</label><p>{{ cooperative.email|default:"consumercoop@gmail.com" }}</p></div>
+                            <div class="info-item"><label>Contact</label><p>09929380925</p></div>
                         </div>
                     </section>
-
-                    <section class="info-section">
-                        <h5 class="section-title">Financial Records</h5>
-                        <div class="info-grid three-col">
-                            <div class="info-item"><label>2022 Assets</label><p>₱ 142,657.00</p></div>
-                            <div class="info-item"><label>2023 Assets</label><p>₱ 258,843.00</p></div>
-                            <div class="info-item"><label>2024 Assets</label><p>₱ 356,964.68</p></div>
-                            <div class="info-item"><label>Paid Up Capital</label><p>₱ 108,243.78</p></div>
-                            <div class="info-item"><label>Net Surplus</label><p>₱ 10,653.54</p></div>
-                        </div>
-                    </section>
-
-                    <section class="info-section">
-                        <h5 class="section-title">Cooperative Officers</h5>
-                        <div class="modal-table-wrapper">
-                            <table class="modal-table">
-                                <thead>
-                                    <tr><th>Name</th><th>Position</th><th>Gender</th><th>Mobile</th><th>Email</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>Isabel Delacion</td><td>Chairperson</td><td>Female</td><td>0917-123-4567</td><td>isabel.d@email.com</td></tr>
-                                    <tr><td>Jasmin Esperida</td><td>Vice Chairperson</td><td>Female</td><td>0918-234-5678</td><td>jasmin.e@email.com</td></tr>
-                                    <tr><td>Art Delos Reyes</td><td>BOD Member</td><td>Male</td><td>0919-345-6789</td><td>art.dr@email.com</td></tr>
-                                    <tr><td>Maria Lopez</td><td>Secretary</td><td>Female</td><td>0921-567-8901</td><td>maria.l@email.com</td></tr>
-                                    <tr><td>Ramon Santos</td><td>Treasurer</td><td>Male</td><td>0922-678-9012</td><td>ramon.s@email.com</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <section class="info-section">
-                        <h5 class="section-title">Cooperative Members</h5>
-                        <div class="modal-table-wrapper">
-                            <table class="modal-table">
-                                <thead>
-                                    <tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Email</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr><td>Juan dela Cruz</td><td>Male</td><td>0950-111-2222</td><td>juan.dc@email.com</td></tr>
-                                    <tr><td>Maria Clara Santos</td><td>Female</td><td>0950-333-4444</td><td>maria.cs@email.com</td></tr>
-                                    <tr><td>Jose Rizalino</td><td>Male</td><td>0950-555-6666</td><td>jose.r@email.com</td></tr>
-                                    <tr><td>Andres Bonifacio Jr.</td><td>Male</td><td>0950-777-8888</td><td>andres.b@email.com</td></tr>
-                                    <tr><td>Gabriela Silang</td><td>Female</td><td>0950-999-0000</td><td>gabriela.s@email.com</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-                </div>
+                    </div>
             </div>
         </div>
 
         <div class="modal-footer">
             <button class="secondary-btn modal-close-btn-bottom">Close</button>
-            <a href="{% url 'cooperatives:profile_form' %}" class="primary-btn"><i class="bi bi-pencil-square"></i> Update Info</a>
+            <a href="{% url 'cooperatives:profile_form' %}" class="primary-btn"><i class="bi bi-pencil-square"></i> Update</a>
         </div>
     </div>
 </div>
 
 <script>
-    // Modal Logic
-    document.addEventListener('DOMContentLoaded', () => {
-        const viewProfileBtn = document.getElementById('viewProfileBtn');
-        const modal = document.getElementById('profile-modal');
-        const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-close-btn-bottom');
-        const downloadPdfBtn = document.getElementById('download-pdf-btn');
-
-        if (modal && viewProfileBtn) {
-            // Open Modal
-            viewProfileBtn.addEventListener('click', () => {
-                modal.classList.add('visible');
-            });
-
-            // Close Modal Function
-            const closeModal = () => {
-                modal.classList.remove('visible');
-            };
-
-            // Attach Close Events
-            closeButtons.forEach(btn => {
-                btn.addEventListener('click', closeModal);
-            });
-
-            // Close on Overlay Click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) closeModal();
-            });
-
-            // PDF Download Logic
-            if (downloadPdfBtn) {
-                downloadPdfBtn.addEventListener('click', function() {
-                    const element = document.getElementById('printable-area');
-                    const coopName = document.getElementById('modal-coop-name').textContent.trim();
-                    
-                    const opt = {
-                        margin: 0.2,
-                        filename: `${coopName}_Profile.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-                    };
-                    
-                    const originalContent = this.innerHTML;
-                    this.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
-                    this.disabled = true;
-
-                    html2pdf().set(opt).from(element).save().then(() => {
-                        this.innerHTML = originalContent;
-                        this.disabled = false;
-                    }).catch(err => {
-                        console.error(err);
-                        this.innerHTML = originalContent;
-                        this.disabled = false;
-                    });
-                });
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- 1. CHARTS CONFIGURATION ---
+    const ctxFinance = document.getElementById('financialTrendChart');
+    if (ctxFinance) {
+        new Chart(ctxFinance, {
+            type: 'line',
+            data: {
+                labels: ['2021', '2022', '2023', '2024'],
+                datasets: [
+                    {
+                        label: 'Assets',
+                        data: [142657, 258843, 300000, 356964],
+                        borderColor: '#a91e2c',
+                        backgroundColor: 'rgba(169, 30, 44, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Net Surplus',
+                        data: [5000, 8000, 9500, 10653],
+                        borderColor: '#2e7d32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.05)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { 
+                    y: { beginAtZero: true, grid: { borderDash: [2, 2] } },
+                    x: { grid: { display: false } }
+                }
             }
+        });
+    }
+
+    const ctxGender = document.getElementById('genderRatioChart');
+    if (ctxGender) {
+        new Chart(ctxGender, {
+            type: 'doughnut',
+            data: {
+                labels: ['Male', 'Female'],
+                datasets: [{
+                    data: [72, 48],
+                    backgroundColor: ['#4299e1', '#ed64a6'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                cutout: '70%',
+            }
+        });
+    }
+
+    // --- 2. MODAL LOGIC ---
+    const viewProfileBtn = document.getElementById('viewProfileBtn');
+    const modal = document.getElementById('profile-modal');
+    const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-close-btn-bottom');
+    const downloadPdfBtn = document.getElementById('download-pdf-btn');
+
+    if (modal && viewProfileBtn) {
+        viewProfileBtn.addEventListener('click', (e) => { e.preventDefault(); modal.classList.add('visible'); });
+        const closeModal = () => { modal.classList.remove('visible'); };
+        closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', function() {
+                const element = document.getElementById('printable-area');
+                const coopName = document.getElementById('modal-coop-name').textContent.trim();
+                const opt = {
+                    margin: 0.2, filename: `${coopName}_Profile.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                };
+                html2pdf().set(opt).from(element).save();
+            });
         }
-    });
+    }
+});
 </script>
 {% endblock %}
