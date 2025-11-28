@@ -437,3 +437,14 @@
         grid-template-columns: 1fr;
     }
 }
+
+.chart-container {
+    position: relative;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .chart-container div[style*="height"] {
+        height: 250px !important; /* Slightly shorter on mobile */
+    }
+}
