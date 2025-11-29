@@ -368,7 +368,7 @@ table tbody tr.selected {
     right: 0;
     top: 0;
     height: 100vh;
-    z-index: 1050;
+    z-index: 10060;
     pointer-events: none;
 }
 
@@ -384,9 +384,10 @@ table tbody tr.selected {
     pointer-events: all;
     overflow-y: auto;
     border-left: 1px solid #edf2f7;
+    z-index: 10060;
 }
 
-.ocr-drawer.open { right: 0; }
+.ocr-drawer.open { right: 0; z-index: 10060; }
 
 .ocr-drawer-header {
     background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
@@ -452,9 +453,13 @@ table tbody tr.selected {
 .ocr-result-area { margin-top:24px; background:#ffffff; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); border:1px solid #edf2f7; display:none; }
 .ocr-result-text { width:100%; min-height:220px; padding:14px; border:1px solid #edf2f7; border-radius:10px; font-family:'Courier New', monospace; font-size:13px; background:#f8f9fc; color:#2B3674; resize:vertical; }
 .ocr-result-text:focus { outline:none; border-color:#a91e2c; background:#ffffff; box-shadow:0 0 0 3px rgba(169,30,44,0.08); }
-.ocr-result-actions { margin-top:14px; display:flex; gap:12px; }
-.btn-apply { background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%); color:#ffffff; box-shadow:0 4px 10px rgba(169,30,44,0.25); padding:12px; border-radius:10px; }
-.btn-clear { background:#f8f9fc; color:#2B3674; border:1px solid #edf2f7; padding:12px; border-radius:10px; }
+.ocr-result-actions { margin-top:14px; display:flex; gap:12px; flex-wrap: wrap; }
+.btn-apply { background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%); color:#ffffff; box-shadow:0 4px 10px rgba(169,30,44,0.25); padding:12px; border-radius:10px; border: none; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+.btn-apply:hover { transform: translateY(-2px); box-shadow:0 6px 14px rgba(169,30,44,0.35); }
+.btn-copy { background:#2B3674; color:#ffffff; border:1px solid #2B3674; padding:12px; border-radius:10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
+.btn-copy:hover { background:#1a2347; border-color:#1a2347; transform: translateY(-2px); box-shadow:0 4px 10px rgba(43,54,116,0.25); }
+.btn-clear { background:#f8f9fc; color:#2B3674; border:1px solid #edf2f7; padding:12px; border-radius:10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+.btn-clear:hover { background:#e8ecf4; border-color:#d1d5db; transform: translateY(-2px); }
 
 /* Floating Toggle Button */
 .ocr-toggle-btn {
@@ -469,10 +474,49 @@ table tbody tr.selected {
     border: none;
     box-shadow: 0 8px 24px rgba(169,30,44,0.4);
     cursor: pointer;
-    z-index: 1040;
+    z-index: 10059;
     display:flex; align-items:center; justify-content:center;
 }
 .ocr-toggle-btn:hover { transform:scale(1.1) translateY(-3px); }
+
+/* OCR Icon Button in Modals */
+.ocr-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(169,30,44,0.3);
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 20px;
+}
+
+.ocr-icon-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(169,30,44,0.4);
+    background: linear-gradient(135deg, #8a1824 0%, #6d1219 100%);
+}
+
+.ocr-icon-btn i {
+    font-size: 20px;
+}
+
+/* OCR Icon Button for Edit Profile Modal (white theme) */
+.ocr-icon-btn-white {
+    transition: all 0.3s ease;
+}
+
+.ocr-icon-btn-white:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
 
 /* =========================================
    5. Modals (Standard)
