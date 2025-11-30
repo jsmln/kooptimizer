@@ -31,6 +31,12 @@ database/backups/*.sql
 database/dumps/*.sql
 *.dump
 
+# Service Account Credentials (CRITICAL - DO NOT COMMIT)
+service_account.json
+*service_account*.json
+*credentials*.json
+*key*.json
+
 # Test Results (can be regenerated)
 test_results/
 *.test.log
