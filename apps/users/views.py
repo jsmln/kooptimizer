@@ -20,6 +20,27 @@ from .models import Event
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import os
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from django.core.mail import EmailMessage
+from .models import User
+from apps.account_management.models import Admin, Staff, Officers
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.db import connection
+from django.contrib.auth.hashers import make_password
+from .models import User
+import requests
+from apps.core.services.otp_service import OTPService
+import random
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from .tokens import custom_token_generator as default_token_generator
+from django.core.mail import send_mail
+from django.urls import reverse
 
 # ============================================
 # LOGIN & LOGOUT VIEWS
@@ -498,84 +519,120 @@ def update_profile(request):
 # ============================================
 
 def initiate_password_reset(request):
-    """Handles the search modal form submission and SENDS REAL OTP"""
+    """Handles the search modal form submission"""
     if request.method == 'POST':
-        identifier = request.POST.get('identifier')
+        reset_method = request.POST.get('reset_method')
+        identifier = request.POST.get('identifier', '').strip()
         
+        print(f"--- DEBUG: Password Reset Request ---")
+        print(f"Method: {reset_method}")
+        print(f"Identifier: {identifier}")
+
         try:
-            # 1. Find user by username OR mobile number
-            user = User.objects.filter(username=identifier).first()
-            if not user:
-                user = User.objects.filter(mobile_number=identifier).first()
+            user = None
+            
+            # --- OPTION A: EMAIL (Magic Link) ---
+            if reset_method == 'email':
+                # 1. Check Admin Table
+                # Use __iexact for case-insensitive matching (User@gmail.com vs user@gmail.com)
+                admin = Admin.objects.filter(email__iexact=identifier).first()
+                if admin: 
+                    print("DEBUG: Found in Admin table")
+                    user = admin.user
+                
+                # 2. Check Staff Table
+                if not user:
+                    staff = Staff.objects.filter(email__iexact=identifier).first()
+                    if staff: 
+                        print("DEBUG: Found in Staff table")
+                        user = staff.user
 
-            if user:
-                # 2. Check if user has a mobile number
-                if not user.mobile_number:
-                    messages.error(request, 'This account does not have a mobile number linked.')
+                # 3. Check Officers Table
+                if not user:
+                    officer = Officers.objects.filter(email__iexact=identifier).first()
+                    if officer: 
+                        print("DEBUG: Found in Officers table")
+                        user = officer.user
+
+                if not user:
+                    print("DEBUG: ❌ No user found with that email.")
+                    messages.error(request, 'No account found with this email address.')
                     return redirect('login')
 
-                # 3. Server-side deduplication: Prevent duplicate OTP requests within 30 seconds
-                # Use atomic cache.add() to prevent race conditions - only sets if key doesn't exist
-                from django.core.cache import cache
-                cache_key = f"otp_reset_{user.user_id}"
+                # 4. Send Email
+                print(f"DEBUG: Generating token for user: {user.username}")
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
                 
-                # Try to acquire lock atomically - if key exists, another request is already processing
-                if not cache.add(cache_key, True, 30):
-                    messages.warning(request, 'Please wait before requesting another OTP code. Check your phone for the previous code.')
-                    return redirect('login')
+                reset_link = request.build_absolute_uri(
+                    reverse('users:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+                )
                 
-                # 4. Initialize OTP Service
-                otp_service = OTPService(request)
+                subject = "Reset Your KoopTimizer Password"
+                message = f"Click the link to reset your password: {reset_link}"
                 
-                # 5. SEND THE OTP via API (This consumes credits)
-                # We use a specific template for password reset to be professional
-                msg_template = "KoopTimizer Password Reset: Your verification code is {pin}. Valid for 5 minutes."
-                success, error_message = otp_service.send_otp(user.mobile_number, message_template=msg_template)
+                print(f"DEBUG: Attempting to send email to {identifier}...")
+                send_mail(subject, message, settings.EMAIL_HOST_USER, [identifier], fail_silently=False)
+                print(f"DEBUG: ✅ Email sent successfully!")
                 
-                # If sending failed, remove the cache lock so user can retry
-                if not success:
-                    cache.delete(cache_key)
-
-                if success:
-                    # Store the User ID so we know who we are resetting the password for
-                    request.session['reset_user_id'] = user.user_id
-                    
-                    # Mask Number for display (e.g. *******1234)
-                    mobile = user.mobile_number
-                    masked = f"*******{mobile[-4:]}" if len(mobile) > 4 else "your number"
-                    request.session['reset_masked_mobile'] = masked
-                    
-                    return redirect('users:perform_password_reset')
-                else:
-                    # API Failed (No credits, network error, etc)
-                    messages.error(request, f'Failed to send SMS: {error_message}')
-                    return redirect('login')
-
-            else:
-                messages.error(request, 'Account not found.')
+                messages.success(request, f"We've sent a password reset link to {identifier}")
                 return redirect('login')
-                
+
+            # --- OPTION B: SMS (OTP) ---
+            elif reset_method == 'sms':
+                # ... (Keep your existing SMS logic here) ...
+                pass
+            
         except Exception as e:
-            print(f"Error in password reset: {e}")
-            messages.error(request, 'An error occurred. Please try again.')
+            print(f"❌ CRITICAL ERROR: {e}")
+            # If it's an SMTP authentication error, tell the user specifically
+            if "535" in str(e) or "Username and Password not accepted" in str(e):
+                messages.error(request, "System Email Error: Invalid App Password configuration.")
+            else:
+                messages.error(request, f'An error occurred: {e}')
             return redirect('login')
     
     return redirect('login')
 
+def password_reset_confirm(request, uidb64, token):
+    """Handles the link clicked from Email"""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        # Token is valid!
+        # Set session variable so perform_password_reset knows who we are
+        request.session['reset_user_id'] = user.user_id
+        
+        # Mark session to skip OTP step
+        request.session['reset_via_email'] = True 
+        
+        return redirect('users:perform_password_reset')
+    else:
+        messages.error(request, 'The password reset link is invalid or has expired.')
+        return redirect('login')
+
 
 def perform_password_reset(request):
-    """Handles OTP check and Password update"""
-    # Security check: ensure we initiated the flow
+    """Handles OTP Verify (if SMS) AND Password Change (Both)"""
     if 'reset_user_id' not in request.session:
         return redirect('login')
 
-    step = 'otp' # Default step
+    # Determine current step
+    # If coming from Email link, jump straight to password
+    if request.session.get('reset_via_email'):
+        step = 'password'
+    else:
+        step = 'otp' # Default for SMS
     
     if request.method == 'POST':
         current_step = request.POST.get('step')
         
+        # 1. Verify OTP Logic (Only if step is OTP)
         if current_step == 'verify_otp':
-            # Combine the 4 input fields
             input_otp = "".join([
                 request.POST.get('otp_1', ''),
                 request.POST.get('otp_2', ''),
@@ -583,40 +640,40 @@ def perform_password_reset(request):
                 request.POST.get('otp_4', '')
             ])
             
-            # Use the Service to verify (Checks session 'otp_pin' and expiry)
             otp_service = OTPService(request)
             success, message = otp_service.verify_otp(input_otp)
             
             if success:
-                step = 'password' # Move to next step
+                step = 'password' # Proceed
             else:
                 messages.error(request, f"Verification failed: {message}")
                 step = 'otp'
 
+        # 2. Set New Password Logic
         elif current_step == 'set_password':
             new_pass = request.POST.get('new_password')
             confirm_pass = request.POST.get('confirm_password')
             
             if new_pass and new_pass == confirm_pass:
-                user_id = request.session.get('reset_user_id')
-                try:
-                    user = User.objects.get(user_id=user_id)
-                    
-                    # Update password in database
-                    user.password_hash = make_password(new_pass) 
-                    user.save()
-                    
-                    # Cleanup Session Data
-                    keys_to_delete = ['reset_user_id', 'reset_masked_mobile', 'otp_pin', 'otp_expiry']
-                    for key in keys_to_delete:
-                        if key in request.session:
-                            del request.session[key]
-                    
-                    messages.success(request, "Password reset successfully! Please login.")
-                    return redirect('login')
-                except User.DoesNotExist:
-                     messages.error(request, "User error.")
-                     return redirect('login')
+                if len(new_pass) < 8:
+                     messages.error(request, "Password must be at least 8 characters.")
+                else:
+                    user_id = request.session.get('reset_user_id')
+                    try:
+                        user = User.objects.get(user_id=user_id)
+                        user.password_hash = make_password(new_pass) 
+                        user.save()
+                        
+                        # Cleanup Session
+                        keys = ['reset_user_id', 'reset_masked_mobile', 'otp_pin', 'otp_expiry', 'reset_via_email']
+                        for k in keys:
+                            if k in request.session: del request.session[k]
+                        
+                        messages.success(request, "Password reset successfully! Please login.")
+                        return redirect('login')
+                    except User.DoesNotExist:
+                         messages.error(request, "User error.")
+                         return redirect('login')
             else:
                 messages.error(request, "Passwords do not match.")
                 step = 'password'
@@ -832,3 +889,53 @@ def add_event(request):
             return JsonResponse({"status": "error", "message": str(e)})
 
     return JsonResponse({"status": "error"}, status=400)
+
+def contact_view(request):
+    if request.method == 'POST':
+        # 1. Get Data from Form
+        name = request.POST.get('name')
+        user_email = request.POST.get('email') # The user's email
+        phone = request.POST.get('phone')
+        subject = request.POST.get('subject')
+        message_body = request.POST.get('message')
+
+        # 2. Prepare Email Content
+        email_subject = f"New Inquiry: {subject}"
+        
+        # We put the user's details inside the message body so you know who sent it
+        full_message = f"""
+        You have received a new message via the KoopTimizer Contact Form.
+
+        --------------------------------------------------
+        Sender Name:  {name}
+        Sender Email: {user_email}
+        Phone Number: {phone}
+        --------------------------------------------------
+
+        Message:
+        {message_body}
+        """
+
+        try:
+            # 3. Construct the Email Object
+            email = EmailMessage(
+                subject=email_subject,
+                body=full_message,
+                from_email=settings.EMAIL_HOST_USER, # MUST be your verified Gmail
+                to=['kooptimizer@gmail.com'],        # Sending to yourself
+                reply_to=[user_email]                # <--- THE FIX: Replies go to the user
+            )
+            
+            # 4. Send
+            email.send(fail_silently=False)
+            
+            messages.success(request, "Your message has been sent successfully!")
+            return redirect('contact')
+            
+        except Exception as e:
+            # Print error to console for debugging
+            print(f"Email Error: {e}")
+            messages.error(request, "Failed to send message. Please try again later.")
+            return redirect('contact')
+
+    return render(request, 'contact.html')

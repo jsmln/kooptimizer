@@ -8,6 +8,7 @@ class User(models.Model):
     user_id = models.AutoField(primary_key=True, db_column='user_id')
     username = models.CharField(max_length=150, unique=True)
     password_hash = models.CharField(max_length=255, db_column='password_hash')
+    last_login = models.DateTimeField(blank=True, null=True)
     role = models.CharField(max_length=50)
     verification_status = models.CharField(
         max_length=20,

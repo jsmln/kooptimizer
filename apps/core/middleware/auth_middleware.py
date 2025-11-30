@@ -19,10 +19,13 @@ class AuthenticationMiddleware:
         'login',          # Login page
         'about',          # About page
         'download',       # Download page
+        'contact',        # Contact page
+        'password_reset', # Password reset initiation
         'users:logout',   # Logout (to clear session)
         'access_denied',  # Access denied page
         'users:initiate_password_reset', # Allow searching for account
         'users:perform_password_reset',
+        'users:password_reset_confirm',
         'users:all_events',
         'users:add_event',
     ]
