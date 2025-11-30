@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block dashboard_title %}Announcements{% endblock %}
-{% block page_header %}{% endblock %}
+{% block page_header %}Announcements{% endblock %}
 
 {% block extra_head %}
     {{ block.super }}
@@ -3835,16 +3835,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize on page load
     updateFilterBadge();
     applyFilters();
-
-    const profileTrigger = document.querySelector('.profile-trigger');
-        const profileDropdown = document.querySelector('.profile-dropdown');
-        if(profileTrigger) {
-            profileTrigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                profileDropdown.classList.toggle('active');
-            });
-            document.addEventListener('click', () => profileDropdown.classList.remove('active'));
-        }
 });
 </script>
 
