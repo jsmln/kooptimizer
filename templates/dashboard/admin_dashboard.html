@@ -65,35 +65,35 @@
     .legend-item { display: flex; align-items: center; margin: 3px 0; }
     .legend-color { width: 20px; height: 15px; margin-right: 8px; border: 1px solid #ccc; }
 
-    /* --- NEW CSS FOR ACTIVITY LOGS --- */
+   /* --- UPDATED CSS FOR ACTIVITY LOGS --- */
     .activity-card {
         background: #fff;
         border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08); /* Match existing shadow */
+        padding: 24px;
+        box-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08);
         display: flex;
         flex-direction: column;
         height: 100%; 
-        max-height: 400px; /* Limit height */
+        max-height: 480px;
     }
 
     .timeline-wrapper {
         flex: 1;
-        overflow-y: auto; /* Scrollable if list is long */
+        overflow-y: auto;
         padding-right: 5px;
+        margin-top: 15px;
     }
 
     .timeline {
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        margin-top: 10px;
+        gap: 25px;
         padding-left: 10px;
     }
 
     .timeline-item {
         display: flex;
-        gap: 15px;
+        gap: 18px;
         position: relative;
     }
 
@@ -101,48 +101,74 @@
     .timeline-item:not(:last-child)::after {
         content: '';
         position: absolute;
-        top: 35px;
-        left: 18px; /* Align with center of icon (36px width / 2) */
-        bottom: -25px;
+        top: 45px;
+        left: 20px; 
+        bottom: -30px;
         width: 2px;
-        background: #f0f0f0;
+        background: #E0E5F2; 
+        z-index: 0;
     }
 
     .timeline-icon {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: 1.2rem;
         flex-shrink: 0;
         z-index: 1;
-        color: white;
+        background-color: #fff; 
     }
 
-    /* Activity Colors */
-    .bg-blue { background-color: #1565c0; }
-    .bg-green { background-color: #2e7d32; }
-    .bg-orange { background-color: #ef6c00; }
-    .bg-red { background-color: #c62828; }
-    .bg-purple { background-color: #7b1fa2; }
+    /* Soft Icon Colors */
+    .icon-soft-blue { background-color: #E6F7FF; color: #1890FF; }
+    .icon-soft-red { background-color: #FFF1F0; color: #F5222D; }
+    .icon-soft-green { background-color: #F6FFED; color: #52C41A; }
 
     .timeline-content {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
-    .timeline-content p {
-        margin: 0;
-        line-height: 1.4;
+    .timeline-title {
+        color: #2B3674;
+        font-weight: 700;
+        font-size: 1rem;
+        margin: 0 0 4px 0;
+    }
+
+    .timeline-desc {
+        color: #707EAE;
         font-size: 0.9rem;
+        margin: 0 0 6px 0; /* Space before user name */
+        line-height: 1.4;
+    }
+
+    /* NEW: Style for the User Name */
+    .timeline-user {
+        font-size: 0.85rem;
+        color: #2B3674;
+        font-weight: 600;
+        margin: 0 0 2px 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .timeline-user span {
+        font-weight: 400;
+        color: #A3AED0; /* Muted "by" text */
     }
 
     .time-ago {
         font-size: 0.75rem;
-        color: #A3AED0; /* Matches existing gray var */
+        color: #A3AED0;
         display: block;
-        margin-top: 4px;
+        margin-top: 2px;
     }
 </style>
 {% endblock %}
@@ -262,65 +288,46 @@
             </div>
 
             <div class="activity-card">
-                <div class="card-header-custom">
-                    <h3>Recent Activity Logs</h3>
-                    <small class="text-muted" style="font-size: 0.8rem;">Real-time updates</small>
+                <div class="card-header-custom" style="padding-bottom: 0; border: none;">
+                    <h3 style="color: #2B3674; font-weight: 700; font-size: 1.2rem;">Recent Activity Logs</h3>
                 </div>
+                
                 <div class="timeline-wrapper">
                     <div class="timeline">
                         
                         <div class="timeline-item">
-                            <div class="timeline-icon bg-blue">
-                                <i class="bi bi-person-plus-fill"></i>
+                            <div class="timeline-icon icon-soft-blue">
+                                <i class="bi bi-file-earmark-text"></i>
                             </div>
                             <div class="timeline-content">
-                                <p class="text-dark fw-bold">New User Registered</p>
-                                <p class="text-muted small">Juan Dela Cruz registered as Officer for Plaridel MPC.</p>
-                                <span class="time-ago">10 mins ago</span>
-                            </div>
-                        </div>
-
-                        <div class="timeline-item">
-                            <div class="timeline-icon bg-green">
-                                <i class="bi bi-check-circle-fill"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <p class="text-dark fw-bold">Coop Profile Approved</p>
-                                <p class="text-muted small">Admin Maria approved the profile update for Consumer Coop.</p>
-                                <span class="time-ago">1 hour ago</span>
-                            </div>
-                        </div>
-
-                        <div class="timeline-item">
-                            <div class="timeline-icon bg-orange">
-                                <i class="bi bi-pencil-square"></i>
-                            </div>
-                            <div class="timeline-content">
-                                <p class="text-dark fw-bold">Financials Updated</p>
-                                <p class="text-muted small">Staff Jose encoded 2024 Assets for Agriculture Coop.</p>
+                                <h5 class="timeline-title">Financial Report Uploaded</h5>
+                                <p class="timeline-desc">Consumer Cooperative uploaded 2024 Assets.</p>
+                                <p class="timeline-user"><span>by</span> Joan Cruz</p>
                                 <span class="time-ago">2 hours ago</span>
                             </div>
                         </div>
 
                         <div class="timeline-item">
-                            <div class="timeline-icon bg-purple">
-                                <i class="bi bi-gear-fill"></i>
+                            <div class="timeline-icon icon-soft-red">
+                                <i class="bi bi-pencil-square"></i>
                             </div>
                             <div class="timeline-content">
-                                <p class="text-dark fw-bold">System Maintenance</p>
-                                <p class="text-muted small">System backup completed successfully.</p>
+                                <h5 class="timeline-title">Profile Updated</h5>
+                                <p class="timeline-desc">Agriculture Cooperative updated officer list.</p>
+                                <p class="timeline-user"><span>by</span> Marco Reyes</p>
                                 <span class="time-ago">1 day ago</span>
                             </div>
                         </div>
 
                         <div class="timeline-item">
-                            <div class="timeline-icon bg-red">
-                                <i class="bi bi-x-circle-fill"></i>
+                            <div class="timeline-icon icon-soft-green">
+                                <i class="bi bi-check-circle"></i>
                             </div>
                             <div class="timeline-content">
-                                <p class="text-dark fw-bold">Login Attempt Failed</p>
-                                <p class="text-muted small">Multiple failed attempts detected for user 'guest'.</p>
-                                <span class="time-ago">1 day ago</span>
+                                <h5 class="timeline-title">Compliance Verified</h5>
+                                <p class="timeline-desc">Plaridel MPC marked as compliant.</p>
+                                <p class="timeline-user"><span>by</span> Admin (You)</p>
+                                <span class="time-ago">2 days ago</span>
                             </div>
                         </div>
 
