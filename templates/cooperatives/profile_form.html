@@ -948,6 +948,32 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // --- CHECK FOR #edit HASH AND OPEN MODAL ---
+        if (window.location.hash === '#edit') {
+            // Wait a bit for Bootstrap to be fully loaded
+            setTimeout(function() {
+                const editModal = document.getElementById('createProfileModal');
+                if (editModal) {
+                    // Check if Bootstrap is available
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        const modal = new bootstrap.Modal(editModal);
+                        modal.show();
+                    } else {
+                        // Fallback: use jQuery/bootstrap if available
+                        if (typeof $ !== 'undefined' && $.fn.modal) {
+                            $(editModal).modal('show');
+                        } else {
+                            // Last resort: trigger click on edit button
+                            const editBtn = document.querySelector('[data-bs-target="#createProfileModal"]');
+                            if (editBtn) {
+                                editBtn.click();
+                            }
+                        }
+                    }
+                }
+            }, 100);
+        }
+        
         // --- DISABLE FORM FIELDS FOR PAST YEARS ---
         {% if not is_editable and profile %}
         const isReadOnly = true;
@@ -2231,7 +2257,17 @@
 
     // Print Profile Function
     function printProfile() {
-        window.open('{% url "cooperatives:print_profile" profile.coop_id %}', '_blank');
+        {% if coop and coop.coop_id %}
+        var coopId = {{ coop.coop_id }};
+        var printUrl = '{% url "cooperatives:print_profile" 999 %}'.replace('999', coopId.toString());
+        window.open(printUrl, '_blank');
+        {% elif profile.coop_id %}
+        var coopId = {{ profile.coop_id }};
+        var printUrl = '{% url "cooperatives:print_profile" 999 %}'.replace('999', coopId.toString());
+        window.open(printUrl, '_blank');
+        {% else %}
+        alert('Cooperative ID not found. Cannot print profile.');
+        {% endif %}
     }
 </script>
 {% endblock %}

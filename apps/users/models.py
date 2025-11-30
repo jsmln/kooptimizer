@@ -1,4 +1,5 @@
 from django.db import models, connection
+from django.conf import settings
 
 # ===================================================
 #  User Model
@@ -87,4 +88,25 @@ class User(models.Model):
                 return result[0]  # Return the mobile number
                 
         return None
+    
+class Event(models.Model):
+    # We MUST keep this relationship, otherwise the calendar breaks
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    title = models.CharField(max_length=255)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    
+    # Adding the description field you requested
+    description = models.TextField(blank=True, null=True)
+    
+    # We remove google_event_id since you didn't include it in your SQL
+
+    class Meta:
+        # THIS IS THE KEY: It forces Django to save to your specific table
+        db_table = 'app_events'
+
+    def __str__(self):
+        return self.title
+    
     

@@ -129,7 +129,8 @@ def profile_form_view(request):
         'coop_name': 'Unknown Cooperative',
         'officers': [],
         'members': [],
-        'financial_data': None
+        'financial_data': None,
+        'coop': None  # Will be set when coop is found
     }
 
     # Ensure user is a User instance before calling get_cooperative_for_user
@@ -147,6 +148,7 @@ def profile_form_view(request):
 
     # Cooperative Found - Populate Context
     context['coop_name'] = coop.cooperative_name
+    context['coop'] = coop  # Add coop to context for template access
     
     # Get current year and check if we should allow editing
     from datetime import datetime
@@ -238,6 +240,11 @@ def profile_form_view(request):
             })
         
         context['profile'] = profile_ctx
+    else:
+        # If no profile_data, still set coop_id in profile for URL generation
+        context['profile'] = {
+            'coop_id': coop.coop_id if coop else None
+        }
 
     return render(request, 'cooperatives/profile_form.html', context)
 

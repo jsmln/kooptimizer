@@ -11,7 +11,34 @@
 {% endblock %}
 
 {% block dashboard_content %}
-<div class="coop-dashboard-container">
+{% if not has_profile_data %}
+<!-- Blocking Modal - No Profile Data -->
+<div id="noProfileModal" class="modal-overlay-blocking" style="display: flex;">
+    <div class="modal-content-blocking">
+        <div class="modal-header-blocking">
+            <h2><i class="bi bi-exclamation-triangle-fill"></i> Profile Data Required</h2>
+        </div>
+        <div class="modal-body-blocking">
+            <p class="modal-message">
+                Your cooperative profile has not been submitted yet. Please complete your profile data before accessing the dashboard.
+            </p>
+            <p class="modal-submessage">
+                You need to submit your cooperative profile information to continue.
+            </p>
+        </div>
+        <div class="modal-footer-blocking">
+            <a href="{% url 'cooperatives:profile_form' %}" class="btn-modal-primary">
+                <i class="bi bi-file-earmark-text"></i> Go to Profile Management
+            </a>
+            <a href="{% url 'communications:message' %}" class="btn-modal-secondary">
+                <i class="bi bi-envelope"></i> Go to Messages
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="coop-dashboard-container" {% if not has_profile_data %}style="display: none;"{% endif %}>
     
     <div class="dashboard-header">
         <div>
@@ -27,17 +54,21 @@
                     {{ cooperative.cooperative_name|first|default:"C" }}
                 </div>
                 <div>
-                    <h2>{{ cooperative.cooperative_name|default:"Consumer Cooperative" }}</h2>
-                    <p class="coop-address"><i class="bi bi-geo-alt-fill"></i> {{ cooperative.address|default:"Sabang, Lipa City, Batangas" }}</p>
+                    <h2>{% if cooperative %}{{ cooperative.cooperative_name }}{% else %}Consumer Cooperative{% endif %}</h2>
+                    <p class="coop-address"><i class="bi bi-geo-alt-fill"></i> {% if cooperative and cooperative.address %}{{ cooperative.address }}{% else %}Address not available{% endif %}</p>
                 </div>
             </div>
             <div class="compliance-badges">
+                {% if cooperative and cooperative.lccdc_membership %}
                 <div class="status-badge success">
                     <i class="bi bi-patch-check-fill"></i> LCCDC Member
                 </div>
+                {% endif %}
+                {% if cooperative and not cooperative.coc_renewal or not cooperative.cote_renewal %}
                 <div class="status-badge warning">
                     <i class="bi bi-file-earmark-text"></i> Report Due Soon
                 </div>
+                {% endif %}
             </div>
         </div>
         
@@ -46,19 +77,19 @@
         <div class="hero-details-grid">
             <div class="detail-item">
                 <label>CDA Registration No.</label>
-                <p>{{ cooperative.cda_registration_number|default:"1414-060923055" }}</p>
+                <p>{% if cooperative.cda_registration_number %}{{ cooperative.cda_registration_number }}{% else %}N/A{% endif %}</p>
             </div>
             <div class="detail-item">
                 <label>CDA Registration Date</label>
-                <p>{{ cooperative.cda_registration_date|default:"Sept 06, 2005" }}</p>
+                <p>{% if cooperative.cda_registration_date %}{{ cooperative.cda_registration_date|date:"M d, Y" }}{% else %}N/A{% endif %}</p>
             </div>
             <div class="detail-item">
                 <label>LCCDC Membership Date</label>
-                <p>{{ cooperative.lccdc_membership_date|default:"Sept 14, 2014" }}</p>
+                <p>{% if cooperative.lccdc_membership_date %}{{ cooperative.lccdc_membership_date|date:"M d, Y" }}{% else %}N/A{% endif %}</p>
             </div>
             <div class="detail-item">
                 <label>Business Activity</label>
-                <p>{{ cooperative.business_activity|default:"Supply and Demand" }}</p>
+                <p>{% if cooperative.business_activity %}{{ cooperative.business_activity }}{% else %}N/A{% endif %}</p>
             </div>
         </div>
     </div>
@@ -207,12 +238,12 @@
                 <h3>Quick Actions</h3>
             </div>
             <div class="action-grid">
-                <button class="action-btn" id="viewProfileBtn">
+                <a href="{% url 'cooperatives:profile_form' %}" class="action-btn" id="viewProfileBtn" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
                     <i class="bi bi-eye-fill"></i>
                     <span>View Cooperative Profile</span>
-                </button>
+                </a>
                 
-                <a href="{% url 'cooperatives:profile_form' %}" class="action-btn">
+                <a href="{% url 'cooperatives:profile_form' %}#edit" class="action-btn" id="updateProfileBtn" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
                     <i class="bi bi-pencil-square"></i>
                     <span>Update Profile</span>
                 </a>
@@ -222,7 +253,6 @@
         <div class="card-section">
             <div class="section-header">
                 <h3>Recent Activity</h3>
-                <a href="{% url 'cooperatives:profile_form' %}" class="view-all">View All</a>
             </div>
             <div class="timeline" id="coopActivityTimeline">
                 <div class="text-center text-muted p-3">Loading activities...</div>
@@ -269,7 +299,6 @@
         <div class="card-section">
             <div class="card-header-custom">
                 <h3>Officers</h3>
-                <a href="#" class="link-text" id="viewProfileBtnOfficers">View Full Profile</a>
             </div>
             <div class="table-responsive">
                 <table class="simple-table">
@@ -799,22 +828,15 @@
             });
         });
         
-        // Handle View Profile buttons (multiple instances)
-        const viewProfileBtns = document.querySelectorAll('#viewProfileBtn, #viewProfileBtnOfficers');
+        // Both buttons are now links, so no JavaScript needed for redirect
+        // The links will handle navigation automatically
+
+        // Handle profile modal (if it exists for other purposes)
         const modal = document.getElementById('profile-modal');
         const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-close-btn-bottom');
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
 
         if (modal) {
-            viewProfileBtns.forEach(btn => {
-                if (btn) {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        modal.classList.add('visible');
-                    });
-                }
-            });
-
             const closeModal = () => {
                 modal.classList.remove('visible');
             };
@@ -856,5 +878,49 @@
             }
         }
     });
+    
+    // --- BLOCKING MODAL FOR NO PROFILE DATA ---
+    {% if not has_profile_data %}
+    (function() {
+        const modal = document.getElementById('noProfileModal');
+        if (!modal) return;
+        
+        // Prevent closing the modal
+        modal.addEventListener('click', function(e) {
+            // Only allow clicks on the buttons inside the modal
+            if (!e.target.closest('.btn-modal-primary') && !e.target.closest('.btn-modal-secondary')) {
+                e.stopPropagation();
+            }
+        });
+        
+        // Prevent navigation away from the page
+        window.addEventListener('beforeunload', function(e) {
+            e.preventDefault();
+            e.returnValue = 'You need to complete your profile before leaving. Are you sure you want to leave?';
+            return e.returnValue;
+        });
+        
+        // Prevent back button
+        window.addEventListener('popstate', function(e) {
+            history.pushState(null, null, window.location.href);
+        });
+        
+        // Push state to prevent back button
+        history.pushState(null, null, window.location.href);
+        
+        // Disable sidebar navigation
+        const sidebarLinks = document.querySelectorAll('.sidebar a, .sidebar button');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                // Only allow navigation to profile or messages
+                if (href && !href.includes('profile_form') && !href.includes('message') && !href.includes('#')) {
+                    e.preventDefault();
+                    alert('Please complete your profile data first before navigating to other pages.');
+                }
+            });
+        });
+    })();
+    {% endif %}
 </script>
 {% endblock %}

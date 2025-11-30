@@ -118,16 +118,68 @@ def admin_dashboard(request):
 def cooperative_dashboard(request):
     user_id = request.session.get('user_id')
     cooperative = None
+    profile_data = None
+    
     try:
         officer = Officers.objects.filter(user_id=user_id).first()
         if officer:
             cooperative = officer.coop
-    except:
-        pass
+            
+            # Get latest ProfileData for this cooperative
+            if cooperative:
+                profile_data = ProfileData.objects.filter(
+                    coop=cooperative
+                ).order_by('-report_year', '-created_at').first()
+    except Exception as e:
+        print(f"Error in cooperative_dashboard: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # Create a simple object that combines cooperative and profile data for template
+    class CooperativeContext:
+        def __init__(self, coop, profile=None):
+            # Cooperative fields
+            self.coop_id = coop.coop_id if coop else None
+            self.cooperative_name = coop.cooperative_name if coop else "Unknown Cooperative"
+            
+            # Profile data fields (use profile if available, otherwise None)
+            if profile:
+                self.address = profile.address
+                self.cda_registration_number = profile.cda_registration_number
+                self.cda_registration_date = profile.cda_registration_date
+                self.lccdc_membership_date = profile.lccdc_membership_date
+                self.lccdc_membership = profile.lccdc_membership
+                self.business_activity = profile.business_activity
+                self.operation_area = profile.operation_area
+                self.board_of_directors_count = profile.board_of_directors_count
+                self.salaried_employees_count = profile.salaried_employees_count
+                self.coc_renewal = profile.coc_renewal
+                self.cote_renewal = profile.cote_renewal
+            else:
+                self.address = None
+                self.cda_registration_number = None
+                self.cda_registration_date = None
+                self.lccdc_membership_date = None
+                self.lccdc_membership = None
+                self.business_activity = None
+                self.operation_area = None
+                self.board_of_directors_count = None
+                self.salaried_employees_count = None
+                self.coc_renewal = None
+                self.cote_renewal = None
+    
+    cooperative_context = CooperativeContext(cooperative, profile_data) if cooperative else None
+    
+    # Check if profile data exists (any profile data, not just latest)
+    has_profile_data = False
+    if cooperative:
+        has_profile_data = ProfileData.objects.filter(coop=cooperative).exists()
     
     return render(request, 'dashboard/cooperative_dashboard.html', {
         'page_title': 'Cooperative Dashboard',
-        'cooperative': cooperative
+        'cooperative': cooperative_context,
+        'profile_data': profile_data,
+        'has_profile_data': has_profile_data
     })
 
 @login_required
@@ -369,7 +421,7 @@ def dashboard_staff_workload_api(request):
 
 @login_required
 def dashboard_pending_reviews_api(request):
-    """Get pending reviews (admin/staff only)"""
+    """Get pending reviews (admin/staff only) - excludes approved items"""
     try:
         user_id = request.session.get('user_id')
         role = request.session.get('role')
@@ -382,23 +434,84 @@ def dashboard_pending_reviews_api(request):
         
         pending_reviews = []
         if coop_ids:
-            # Get financial data with pending approval
-            pending_financial = FinancialData.objects.filter(
-                coop__coop_id__in=coop_ids,
-                approval_status='pending'
-            ).order_by('-created_at')[:10]
+            # Get all financial data for these cooperatives
+            all_financial = FinancialData.objects.filter(
+                coop__coop_id__in=coop_ids
+            ).order_by('-created_at')[:20]
             
-            for fin in pending_financial:
-                coop = user_coops.filter(coop_id=fin.coop.coop_id).first()
-                if coop:
-                    pending_reviews.append({
-                        'coop_name': coop.cooperative_name,
-                        'year': fin.report_year,
-                        'assets': float(fin.assets),
-                        'type': 'Financial Report'
-                    })
+            for fin in all_financial:
+                # Check if both profile and financial data are approved - if so, skip
+                profile = ProfileData.objects.filter(
+                    coop__coop_id=fin.coop.coop_id,
+                    report_year=fin.report_year
+                ).first()
+                
+                # If profile exists and both are approved, skip this item
+                if profile and profile.approval_status == 'approved' and fin.approval_status == 'approved':
+                    continue
+                
+                # Only include if at least one is pending (not both approved)
+                if fin.approval_status == 'pending' or (profile and profile.approval_status == 'pending'):
+                    coop = user_coops.filter(coop_id=fin.coop.coop_id).first()
+                    if coop:
+                        # Get assets from financial data
+                        assets = float(fin.assets) if fin.assets else 0
+                        pending_reviews.append({
+                            'coop_name': coop.cooperative_name,
+                            'year': fin.report_year,
+                            'assets': assets,
+                            'type': 'Financial Report',
+                            'coop_id': coop.coop_id,
+                            'fin_status': fin.approval_status,
+                            'profile_status': profile.approval_status if profile else 'none'
+                        })
+            
+            # Also check for profiles without financial data that are pending
+            all_profiles = ProfileData.objects.filter(
+                coop__coop_id__in=coop_ids
+            ).order_by('-created_at')[:20]
+            
+            for profile in all_profiles:
+                # Check if both profile and financial data are approved - if so, skip
+                fin_data = FinancialData.objects.filter(
+                    coop__coop_id=profile.coop.coop_id,
+                    report_year=profile.report_year
+                ).first()
+                
+                # If financial data exists and both are approved, skip this item
+                if fin_data and fin_data.approval_status == 'approved' and profile.approval_status == 'approved':
+                    continue
+                
+                # Only include if at least one is pending (not both approved)
+                if profile.approval_status == 'pending' or (fin_data and fin_data.approval_status == 'pending'):
+                    # Check if already in list
+                    existing = next((r for r in pending_reviews if r['coop_name'] == profile.coop.cooperative_name and r['year'] == profile.report_year), None)
+                    if not existing:
+                        coop = user_coops.filter(coop_id=profile.coop.coop_id).first()
+                        if coop:
+                            assets = float(fin_data.assets) if fin_data and fin_data.assets else 0
+                            pending_reviews.append({
+                                'coop_name': coop.cooperative_name,
+                                'year': profile.report_year,
+                                'assets': assets,
+                                'type': 'Profile',
+                                'coop_id': coop.coop_id,
+                                'fin_status': fin_data.approval_status if fin_data else 'none',
+                                'profile_status': profile.approval_status
+                            })
         
-        return JsonResponse({'pending_reviews': pending_reviews})
+        # Remove duplicates and sort by most recent first
+        seen = set()
+        unique_reviews = []
+        for review in pending_reviews:
+            key = (review['coop_name'], review['year'])
+            if key not in seen:
+                seen.add(key)
+                unique_reviews.append(review)
+        
+        unique_reviews.sort(key=lambda x: x['year'], reverse=True)
+        
+        return JsonResponse({'pending_reviews': unique_reviews[:10]})  # Limit to 10 most recent
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

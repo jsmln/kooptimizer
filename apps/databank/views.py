@@ -4,11 +4,18 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
 from django.template.loader import render_to_string
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.utils import timezone
+from datetime import timedelta
 import json
+import base64
+import io
 from apps.core.services.ocr_service import optiic_service
 from apps.users.models import User
 from apps.account_management.models import Staff, Cooperatives, Users
 from apps.cooperatives.models import ProfileData, FinancialData, Officer, Member
+from apps.databank.models import OCRScanSession
 from django.contrib.auth.hashers import check_password
 
 def databank_management_view(request):
@@ -186,21 +193,196 @@ def view_attachment(request, coop_id, doc_type):
 @require_http_methods(["POST"])
 def process_ocr(request):
     try:
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
+        
+        image_file = None
+        result = None
+        base64_data = None
+        json_data = None
+        
+        # Check for files first (doesn't consume body)
+        # If we have FormData, don't read request.body
         if 'image' in request.FILES:
-            result = optiic_service.process_image_file(request.FILES['image'])
-        elif 'url' in request.POST:
-            result = optiic_service.process_image_url(request.POST.get('url'))
+            image_file = request.FILES['image']
         elif 'base64' in request.POST:
-            result = optiic_service.process_base64_image(request.POST.get('base64'))
+            base64_data = request.POST.get('base64')
+        elif 'url' in request.POST:
+            # Process URL from POST
+            result = optiic_service.process_image_url(request.POST.get('url'))
         else:
-            data = json.loads(request.body)
-            if 'base64' in data:
-                result = optiic_service.process_base64_image(data['base64'])
-            elif 'url' in data:
-                result = optiic_service.process_image_url(data['url'])
+            # Only read request.body if we don't have FormData
+            # Check content type to avoid reading body when it's multipart
+            content_type = request.META.get('CONTENT_TYPE', '')
+            if 'application/json' in content_type:
+                try:
+                    # Try to read body - will raise RawPostDataException if already consumed
+                    body = request.body
+                    if body:
+                        json_data = json.loads(body)
+                        if 'base64' in json_data:
+                            base64_data = json_data['base64']
+                        elif 'url' in json_data:
+                            result = optiic_service.process_image_url(json_data['url'])
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    # Not valid JSON
+                    pass
+                except Exception:
+                    # Body might have been consumed (RawPostDataException) or other error
+                    # Skip reading body in this case
+                    pass
+        
+        # Convert base64 to file if needed (before OCR processing)
+        image_file_for_save = None
+        if not image_file and base64_data:
+            try:
+                # Remove data URL prefix if present
+                clean_base64 = base64_data.split(',', 1)[1] if ',' in base64_data else base64_data
+                
+                # Decode base64
+                image_data = base64.b64decode(clean_base64)
+                
+                # Create file objects for both OCR processing and saving
+                image_file = ContentFile(image_data, name='ocr_scan.jpg')
+                image_file_for_save = ContentFile(image_data, name='ocr_scan.jpg')  # Create a copy for saving
+            except Exception as e:
+                print(f"Error converting base64 to file: {e}")
+        
+        # Store original image file for saving (before OCR processing consumes it)
+        if image_file and not image_file_for_save:
+            # If it's a ContentFile, create a copy
+            if isinstance(image_file, ContentFile):
+                # Read the content and create a new ContentFile for saving
+                image_file.seek(0)
+                image_data = image_file.read()
+                image_file_for_save = ContentFile(image_data, name='ocr_scan.jpg')
+                image_file.seek(0)  # Reset for OCR processing
             else:
-                return JsonResponse({'success': False, 'error': 'No image data'}, status=400)
+                # For uploaded files, read and create a copy
+                image_file.seek(0)
+                image_data = image_file.read()
+                image_file_for_save = ContentFile(image_data, name=image_file.name if hasattr(image_file, 'name') else 'ocr_scan.jpg')
+                image_file.seek(0)  # Reset for OCR processing
+        
+        # Process OCR if not already processed
+        if result is None:
+            if image_file:
+                # Reset file pointer for OCR processing
+                if hasattr(image_file, 'seek'):
+                    image_file.seek(0)
+                result = optiic_service.process_image_file(image_file)
+            elif base64_data:
+                result = optiic_service.process_base64_image(base64_data)
+                # Ensure we have image_file_for_save from base64
+                if not image_file_for_save and base64_data:
+                    try:
+                        clean_base64 = base64_data.split(',', 1)[1] if ',' in base64_data else base64_data
+                        image_data = base64.b64decode(clean_base64)
+                        image_file_for_save = ContentFile(image_data, name='ocr_scan.jpg')
+                    except Exception as e:
+                        print(f"Error creating file from base64 for saving: {e}")
+            else:
+                return JsonResponse({'success': False, 'error': 'No image data provided'}, status=400)
+        
+        # Save to database (save image even if OCR fails)
+        try:
+            user = User.objects.get(user_id=user_id)
+            extracted_text = result.get('text', '') if result.get('success') else ''
+            
+            # Save the session with the preserved image file
+            ocr_session = OCRScanSession.objects.create(
+                user=user,
+                image=image_file_for_save if image_file_for_save else None,
+                extracted_text=extracted_text,
+                is_consumed=False
+            )
+            result['session_id'] = ocr_session.id
+            result['image_url'] = ocr_session.image.url if ocr_session.image else None
+            print(f"Successfully saved OCR session {ocr_session.id} with image: {bool(ocr_session.image)}")
+        except Exception as db_error:
+            import traceback
+            print(f"Error saving OCR session: {db_error}")
+            print(traceback.format_exc())
+            # Continue even if save fails
+        
         return JsonResponse(result)
+    except Exception as e:
+        import traceback
+        print(f"OCR Error: {str(e)}")
+        print(traceback.format_exc())
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@require_http_methods(["GET"])
+def get_ocr_sessions(request):
+    """Fetch OCR sessions for the logged-in user and auto-delete old ones"""
+    try:
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
+        
+        # Get the User object to ensure proper ForeignKey relationship
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+        
+        # Auto-delete unconsumed sessions older than 5 minutes
+        five_minutes_ago = timezone.now() - timedelta(minutes=5)
+        deleted_count = OCRScanSession.objects.filter(
+            user=user,
+            created_at__lt=five_minutes_ago,
+            is_consumed=False  # Only delete unconsumed sessions
+        ).delete()[0]
+        
+        if deleted_count > 0:
+            print(f"Auto-deleted {deleted_count} unconsumed OCR session(s) older than 5 minutes for user {user_id}")
+        
+        # Get recent OCR sessions (not consumed, ordered by newest first)
+        # Remove the limit to show all recent scans
+        sessions = OCRScanSession.objects.filter(
+            user=user,
+            is_consumed=False
+        ).order_by('-created_at')  # Get all unconsumed sessions
+        
+        sessions_data = []
+        for session in sessions:
+            sessions_data.append({
+                'id': session.id,
+                'image_url': session.image.url if session.image else None,
+                'extracted_text': session.extracted_text,
+                'created_at': session.created_at.isoformat(),
+                'is_consumed': session.is_consumed
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'sessions': sessions_data
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@require_http_methods(["POST"])
+def mark_ocr_session_consumed(request, session_id):
+    """Mark an OCR session as consumed"""
+    try:
+        user_id = request.session.get('user_id')
+        if not user_id:
+            return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
+        
+        # Get the User object to ensure proper ForeignKey relationship
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+        
+        session = OCRScanSession.objects.get(id=session_id, user=user)
+        session.is_consumed = True
+        session.save()
+        
+        return JsonResponse({'success': True})
+    except OCRScanSession.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Session not found'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -615,11 +797,23 @@ def approve_profile(request, profile_id):
         profile = get_object_or_404(ProfileData, profile_id=profile_id)
         
         if action == 'approve':
+            # Approve the profile
             profile.approval_status = 'approved'
             profile.save()
+            
+            # Also approve the corresponding FinancialData for the same cooperative and year
+            financial_data = FinancialData.objects.filter(
+                coop__coop_id=profile.coop.coop_id,
+                report_year=profile.report_year
+            ).first()
+            
+            if financial_data:
+                financial_data.approval_status = 'approved'
+                financial_data.save()
+            
             return JsonResponse({
                 'success': True, 
-                'message': 'Profile approved successfully',
+                'message': 'Profile and financial data approved successfully',
                 'new_status': 'approved'
             })
         elif action == 'cancel':
@@ -627,6 +821,17 @@ def approve_profile(request, profile_id):
             if profile.approval_status == 'approved':
                 profile.approval_status = 'pending'
                 profile.save()
+                
+                # Also set corresponding FinancialData back to pending
+                financial_data = FinancialData.objects.filter(
+                    coop__coop_id=profile.coop.coop_id,
+                    report_year=profile.report_year
+                ).first()
+                
+                if financial_data:
+                    financial_data.approval_status = 'pending'
+                    financial_data.save()
+                
                 return JsonResponse({
                     'success': True, 
                     'message': 'Approval cancelled successfully',

@@ -529,6 +529,7 @@
                 </div>
             </div>
 
+
             <div id="upload-container">
                 <p class="text-muted small mb-3" style="border-left: 3px solid #a91e2c; padding-left: 10px; background: #fff5f6; padding: 8px; border-radius: 4px;">
                     Scan documents using your phone camera or upload an image to auto-fill forms.
@@ -557,13 +558,42 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Saved OCR Sessions - Moved below buttons -->
+            <div id="ocr-saved-sessions" style="margin-top: 20px; margin-bottom: 20px;">
+                <h6 style="font-size: 14px; font-weight: 600; color: #2B3674; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-clock-history"></i> Recent Scans
+                </h6>
+                <div id="ocr-sessions-list" style="max-height: 200px; overflow-y: auto;">
+                    <p class="text-muted small" style="text-align: center; padding: 20px;">Loading recent scans...</p>
+                </div>
+            </div>
             
-            <div class="ocr-loading" id="ocrLoading">
+            <div class="ocr-loading" id="ocrLoading" style="display: none;">
                 <div class="spinner-border" role="status"></div>
                 <p class="mt-2 text-muted">Scanning text...</p>
+                <!-- Progress Bar -->
+                <div class="progress" style="margin-top: 16px; height: 8px; border-radius: 4px; background: #e0e0e0;">
+                    <div id="ocr-progress-bar" class="progress-bar" role="progressbar" style="width: 0%; background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%); transition: width 0.3s ease;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <p id="ocr-progress-text" class="mt-2 text-muted small" style="font-weight: 600;">0%</p>
             </div>
             
             <div class="ocr-result-area" id="ocrResultArea" style="display: none;">
+                <!-- Image Preview - Moved above extracted text -->
+                <div id="ocr-image-preview" style="display: none; margin-bottom: 16px; text-align: center; padding: 12px; background: #f8f9fc; border-radius: 8px; border: 1px solid #edf2f7;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <label class="form-label fw-bold" style="margin: 0; font-size: 13px; color: #2B3674;">
+                            <span id="ocr-scan-number" style="background: #a91e2c; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 8px;">#1</span>
+                            Scanned Image
+                        </label>
+                        <button type="button" id="ocr-remove-preview" class="btn-clear" style="padding: 4px 8px; font-size: 11px;">
+                            <i class="bi bi-x-circle"></i> Remove
+                        </button>
+                    </div>
+                    <img id="ocr-preview-img" src="" alt="Preview" style="max-width: 100%; max-height: 250px; border-radius: 8px; border: 2px solid #a91e2c; object-fit: contain; background: white;">
+                </div>
+                
                 <label class="form-label fw-bold">Extracted Data:</label>
                 <textarea class="ocr-result-text" id="ocrResultText"></textarea>
                 <div class="ocr-result-actions">
@@ -1648,7 +1678,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (mobileCameraInput) {
             mobileCameraInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) processImageFile(e.target.files[0]);
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    showImagePreview(file);
+                    processImageFile(file);
+                }
             });
         }
 
@@ -1685,7 +1719,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 canvas.height = videoElement.videoHeight;
                 canvas.getContext('2d').drawImage(videoElement, 0, 0);
                 stopCamera();
-                processBase64Image(canvas.toDataURL('image/jpeg'));
+                const base64 = canvas.toDataURL('image/jpeg');
+                // Show preview immediately
+                const preview = document.getElementById('ocr-image-preview');
+                const previewImg = document.getElementById('ocr-preview-img');
+                if (preview && previewImg) {
+                    previewImg.src = base64;
+                    preview.style.display = 'block';
+                }
+                processBase64Image(base64);
             });
         }
 
@@ -1703,7 +1745,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (ocrFileInput) {
             ocrFileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) processImageFile(e.target.files[0]);
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    showImagePreview(file);
+                    processImageFile(file);
+                }
+            });
+        }
+
+        // Remove preview button
+        const ocrRemovePreview = document.getElementById('ocr-remove-preview');
+        if (ocrRemovePreview) {
+            ocrRemovePreview.addEventListener('click', () => {
+                removeImagePreview();
             });
         }
 
@@ -1716,7 +1770,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (type.startsWith('image/')) {
                                 const blob = await item.getType(type);
                                 const reader = new FileReader();
-                                reader.onload = (e) => processBase64Image(e.target.result);
+                                reader.onload = (e) => {
+                                    const base64 = e.target.result;
+                                    // Show preview
+                                    const preview = document.getElementById('ocr-image-preview');
+                                    const previewImg = document.getElementById('ocr-preview-img');
+                                    if (preview && previewImg) {
+                                        previewImg.src = base64;
+                                        preview.style.display = 'block';
+                                    }
+                                    processBase64Image(base64);
+                                };
                                 reader.readAsDataURL(blob);
                                 return;
                             }
@@ -1757,18 +1821,97 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        let currentImageFile = null;
+        let progressInterval = null;
+
+        function showImagePreview(file) {
+            currentImageFile = file;
+            const preview = document.getElementById('ocr-image-preview');
+            const previewImg = document.getElementById('ocr-preview-img');
+            if (preview && previewImg && file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeImagePreview() {
+            currentImageFile = null;
+            const preview = document.getElementById('ocr-image-preview');
+            if (preview) preview.style.display = 'none';
+            const fileInput = document.getElementById('ocrFileInput');
+            if (fileInput) fileInput.value = '';
+        }
+
         function showLoading(show) {
             if (show) {
                 if (ocrLoading) ocrLoading.style.display = 'block';
                 if (ocrResultArea) ocrResultArea.style.display = 'none';
+                // Start progress simulation
+                startProgressSimulation();
             } else {
                 if (ocrLoading) ocrLoading.style.display = 'none';
+                stopProgressSimulation();
             }
         }
 
-        function displayResult(text) {
+        function startProgressSimulation() {
+            let progress = 0;
+            const progressBar = document.getElementById('ocr-progress-bar');
+            const progressText = document.getElementById('ocr-progress-text');
+            
+            if (progressInterval) clearInterval(progressInterval);
+            
+            progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90; // Don't go to 100% until actually done
+                
+                if (progressBar) {
+                    progressBar.style.width = progress + '%';
+                    progressBar.setAttribute('aria-valuenow', progress);
+                }
+                if (progressText) {
+                    progressText.textContent = Math.round(progress) + '%';
+                }
+            }, 200);
+        }
+
+        function stopProgressSimulation() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            const progressBar = document.getElementById('ocr-progress-bar');
+            const progressText = document.getElementById('ocr-progress-text');
+            if (progressBar) {
+                progressBar.style.width = '100%';
+                progressBar.setAttribute('aria-valuenow', 100);
+            }
+            if (progressText) {
+                progressText.textContent = '100%';
+            }
+        }
+
+        function displayResult(text, imageUrl = null, scanNumber = null) {
             if (ocrResultText) ocrResultText.value = text;
             if (ocrResultArea) ocrResultArea.style.display = 'block';
+            
+            // Show image if provided
+            if (imageUrl) {
+                const preview = document.getElementById('ocr-image-preview');
+                const previewImg = document.getElementById('ocr-preview-img');
+                const scanNumberEl = document.getElementById('ocr-scan-number');
+                if (preview && previewImg) {
+                    previewImg.src = imageUrl;
+                    preview.style.display = 'block';
+                    if (scanNumberEl && scanNumber) {
+                        scanNumberEl.textContent = `#${scanNumber}`;
+                    }
+                }
+            }
         }
 
         function getCookie(name) {
@@ -1787,19 +1930,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         async function processImageFile(file) {
+            showImagePreview(file);
             showLoading(true);
             try {
                 const compressedBlob = await compressImage(file);
                 const formData = new FormData();
                 formData.append('image', compressedBlob, "scan.jpg");
+                
                 const res = await fetch('{% url "databank:process_ocr" %}', {
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: formData
                 });
+                
                 const data = await res.json();
+                stopProgressSimulation();
+                
                 if (data.success) {
-                    displayResult(data.text);
+                    // Reload saved sessions immediately to show the new scan
+                    await loadOCRSessions();
+                    
+                    // Get the latest session count for numbering
+                    const sessionsRes = await fetch('{% url "databank:get_ocr_sessions" %}', {
+                        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                        cache: 'no-cache'
+                    });
+                    const sessionsData = await sessionsRes.json();
+                    const scanNumber = sessionsData.success && sessionsData.sessions.length > 0 ? sessionsData.sessions.length : 1;
+                    
+                    // Show image preview if available, otherwise use the file preview
+                    const imageUrl = data.image_url || (currentImageFile ? URL.createObjectURL(currentImageFile) : null);
+                    displayResult(data.text, imageUrl, scanNumber);
+                    
+                    // Update last session count
+                    lastSessionCount = sessionsData.success ? sessionsData.sessions.length : 0;
                 } else {
                     alert('OCR Failed: ' + (data.error || 'Unknown error'));
                 }
@@ -1814,8 +1978,127 @@ document.addEventListener('DOMContentLoaded', () => {
         async function processBase64Image(base64) {
             const res = await fetch(base64);
             const blob = await res.blob();
-            processImageFile(blob);
+            const file = new File([blob], 'ocr_scan.jpg', { type: 'image/jpeg' });
+            processImageFile(file);
         }
+
+        let scanCounter = 0;
+
+        // Load saved OCR sessions
+        async function loadOCRSessions() {
+            const sessionsList = document.getElementById('ocr-sessions-list');
+            if (!sessionsList) return Promise.resolve();
+
+            try {
+                const res = await fetch('{% url "databank:get_ocr_sessions" %}', {
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    cache: 'no-cache' // Ensure fresh data
+                });
+                const data = await res.json();
+                
+                // Update last session count and IDs
+                if (data.success) {
+                    lastSessionCount = data.sessions.length;
+                    lastSessionIds = new Set(data.sessions.map(s => s.id));
+                }
+                
+                if (data.success && data.sessions.length > 0) {
+                    sessionsList.innerHTML = '';
+                    // Reverse to show newest first, then number them
+                    const reversedSessions = [...data.sessions].reverse();
+                    reversedSessions.forEach((session, index) => {
+                        const scanNumber = data.sessions.length - index; // Number from highest to lowest
+                        const sessionDiv = document.createElement('div');
+                        sessionDiv.className = 'ocr-session-item';
+                        sessionDiv.style.cssText = 'padding: 12px; margin-bottom: 8px; background: white; border-radius: 8px; border: 1px solid #edf2f7; cursor: pointer; transition: all 0.2s;';
+                        sessionDiv.innerHTML = `
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <div style="background: #a91e2c; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0;">${scanNumber}</div>
+                                ${session.image_url ? `<img src="${session.image_url}" alt="Scan" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e0e0e0;">` : '<div style="width: 60px; height: 60px; background: #f0f0f0; border-radius: 6px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-image" style="font-size: 24px; color: #999;"></i></div>'}
+                                <div style="flex: 1; min-width: 0;">
+                                    <p style="margin: 0; font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${session.extracted_text.substring(0, 50)}${session.extracted_text.length > 50 ? '...' : ''}</p>
+                                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #999;">${new Date(session.created_at).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        `;
+                        sessionDiv.addEventListener('click', () => {
+                            displayResult(session.extracted_text, session.image_url, scanNumber);
+                        });
+                        sessionsList.appendChild(sessionDiv);
+                    });
+                } else {
+                    sessionsList.innerHTML = '<p class="text-muted small" style="text-align: center; padding: 20px;">No recent scans</p>';
+                    lastSessionCount = 0;
+                }
+            } catch (e) {
+                console.error('Error loading OCR sessions:', e);
+                sessionsList.innerHTML = '<p class="text-muted small" style="text-align: center; padding: 20px; color: #dc3545;">Error loading sessions</p>';
+            }
+            
+            return Promise.resolve();
+        }
+
+        // Load sessions when drawer opens and poll for updates (real-time)
+        let sessionPollInterval = null;
+        let lastSessionCount = 0;
+        let lastSessionIds = new Set(); // Track session IDs for better change detection
+        
+        const originalToggleOcrDrawer = toggleOcrDrawer;
+        toggleOcrDrawer = function(open) {
+            originalToggleOcrDrawer(open);
+            if (open) {
+                // Load immediately when drawer opens
+                loadOCRSessions().then(() => {
+                    // Update tracking
+                    const sessionsList = document.getElementById('ocr-sessions-list');
+                    if (sessionsList) {
+                        const sessionItems = sessionsList.querySelectorAll('.ocr-session-item');
+                        lastSessionCount = sessionItems.length;
+                        lastSessionIds = new Set(Array.from(sessionItems).map((_, idx) => idx));
+                    }
+                    
+                    // Start polling for updates every 1.5 seconds for real-time feel
+                    if (sessionPollInterval) clearInterval(sessionPollInterval);
+                    sessionPollInterval = setInterval(async () => {
+                        const sessionsList = document.getElementById('ocr-sessions-list');
+                        if (sessionsList) {
+                            try {
+                                const res = await fetch('{% url "databank:get_ocr_sessions" %}', {
+                                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                                    cache: 'no-cache'
+                                });
+                                const data = await res.json();
+                                
+                                // Reload if count changed or if we detect new sessions
+                                if (data.success) {
+                                    const currentCount = data.sessions.length;
+                                    const currentIds = new Set(data.sessions.map(s => s.id));
+                                    
+                                    // Check if count changed or if there are new session IDs
+                                    const hasNewSessions = data.sessions.some(s => !lastSessionIds.has(s.id));
+                                    
+                                    if (currentCount !== lastSessionCount || hasNewSessions) {
+                                        lastSessionCount = currentCount;
+                                        lastSessionIds = currentIds;
+                                        await loadOCRSessions();
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Error polling sessions:', e);
+                            }
+                        }
+                    }, 1500); // Poll every 1.5 seconds for real-time updates
+                });
+            } else {
+                // Stop polling when drawer closes
+                if (sessionPollInterval) {
+                    clearInterval(sessionPollInterval);
+                    sessionPollInterval = null;
+                }
+                lastSessionCount = 0;
+                lastSessionIds = new Set();
+            }
+        };
 
         if (ocrClearBtn) {
             ocrClearBtn.addEventListener('click', () => {

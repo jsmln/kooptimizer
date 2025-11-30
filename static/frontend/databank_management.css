@@ -890,11 +890,179 @@ table tbody tr.selected {
 .info-item label { display: block; font-size: 0.8rem; color: #777; font-weight: 600; }
 .info-item p { margin: 3px 0 0 0; font-weight: 500; color: #333; }
 
+/* =========================================
+   MOBILE RESPONSIVE STYLES
+   ========================================= */
 @media (max-width: 768px) {
-    .databank-container { padding: 15px; }
-    .databank-header { flex-direction: column; align-items: stretch; }
-    .search-input { width: 100%; }
-    .two-col, .three-col { grid-template-columns: 1fr; }
+    .databank-container { 
+        padding: 15px; 
+        margin: 10px auto;
+        max-width: 100%;
+    }
+    
+    .databank-header { 
+        flex-direction: column; 
+        align-items: stretch; 
+        gap: 10px;
+    }
+    
+    .search-input { 
+        width: 100%; 
+    }
+    
+    .two-col, .three-col { 
+        grid-template-columns: 1fr; 
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        position: relative;
+    }
+    
+    /* Add scroll indicator for mobile */
+    .table-wrapper::after {
+        content: '← Scroll →';
+        position: sticky;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(134, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        pointer-events: none;
+        z-index: 100;
+        opacity: 0.7;
+    }
+    
+    table {
+        font-size: 0.8rem;
+        min-width: 800px; /* Ensure table doesn't shrink too much */
+    }
+    
+    table thead th {
+        padding: 10px 8px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+    
+    table tbody td {
+        padding: 10px 8px;
+        font-size: 0.75rem;
+    }
+    
+    /* Hide less important columns on very small screens */
+    @media (max-width: 480px) {
+        table thead th:nth-child(n+6),
+        table tbody td:nth-child(n+6) {
+            display: none;
+        }
+        
+        table thead th.sticky-col,
+        table tbody td.sticky-col {
+            display: table-cell;
+        }
+    }
+    
+    /* Better touch targets for mobile */
+    table tbody tr {
+        min-height: 44px; /* iOS touch target minimum */
+    }
+    
+    .btn-view-attach {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .add-btn, .filter-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* OCR Drawer Mobile */
+    .ocr-drawer-wrapper {
+        width: 100%;
+        right: 0;
+    }
+    
+    .ocr-drawer {
+        width: 100%;
+        right: -100%;
+    }
+    
+    .ocr-drawer.open {
+        right: 0;
+    }
+    
+    .ocr-btn-group {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .ocr-action-btn {
+        padding: 12px 8px;
+        font-size: 11px;
+    }
+    
+    .ocr-action-btn i {
+        font-size: 24px;
+    }
+    
+    .ocr-action-btn span {
+        font-size: 11px;
+    }
+    
+    .ocr-upload-area {
+        padding: 30px 20px;
+    }
+    
+    .ocr-result-actions {
+        flex-direction: column;
+    }
+    
+    .ocr-result-actions button {
+        width: 100%;
+    }
+    
+    /* Modal Mobile */
+    .modal-content, .onboard-form-container {
+        width: 95%;
+        max-width: 95%;
+        margin: 10px;
+    }
+    
+    .form-scroll-wrapper {
+        padding: 20px 15px;
+    }
+    
+    /* OCR Icon Button Mobile */
+    .ocr-icon-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
+    .ocr-icon-btn-white {
+        width: 32px !important;
+        height: 32px !important;
+    }
+    
+    .ocr-icon-btn-white i {
+        font-size: 16px !important;
+    }
+    
+    /* Saved Sessions Mobile */
+    .ocr-session-item {
+        padding: 10px !important;
+    }
+    
+    #ocr-sessions-list {
+        max-height: 150px;
+    }
 }
 
 .databank-container {

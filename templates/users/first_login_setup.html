@@ -3,6 +3,23 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'frontend/first_login.css' %}">
+<style>
+    /* Spinner for OTP button loading state */
+    .spinner-border-sm {
+        display: inline-block;
+        width: 0.875rem;
+        height: 0.875rem;
+        vertical-align: text-bottom;
+        border: 0.125em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: spinner-border 0.75s linear infinite;
+    }
+
+    @keyframes spinner-border {
+        to { transform: rotate(360deg); }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -88,12 +105,40 @@
         });
     });
 
+    // Protect all forms from double-submission
     document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', () => {
+        form.addEventListener('submit', function(e) {
             const btn = form.querySelector('button[type="submit"]');
+            const action = form.querySelector('input[name="action"]');
+            
             if (btn) {
+                // Check if already submitting
+                if (btn.disabled) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Disable button and show loading state
                 btn.disabled = true;
-                btn.textContent = "Processing...";
+                const originalText = btn.textContent;
+                
+                // Special handling for OTP send forms
+                if (action && action.value === 'send_otp') {
+                    btn.innerHTML = '<span class="spinner-border-sm"></span> Sending...';
+                    btn.style.opacity = '0.6';
+                    btn.style.cursor = 'not-allowed';
+                    
+                    // Re-enable after 5 seconds for OTP forms (in case of error)
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                    }, 5000);
+                } else {
+                    // Generic processing state for other forms
+                    btn.textContent = "Processing...";
+                }
             }
         });
     });

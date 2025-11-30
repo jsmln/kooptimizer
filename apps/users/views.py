@@ -10,6 +10,16 @@ from apps.core.services.otp_service import OTPService
 import random
 import time
 import logging
+import json
+import datetime
+from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from .models import Event
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+import os
 
 # ============================================
 # LOGIN & LOGOUT VIEWS
@@ -271,7 +281,22 @@ def first_login_setup(request):
         otp_service = OTPService(request)
 
         if action == 'send_otp':
+            # Server-side deduplication: Prevent duplicate OTP requests within 30 seconds
+            # Use atomic cache.add() to prevent race conditions - only sets if key doesn't exist
+            from django.core.cache import cache
+            cache_key = f"otp_send_{user.user_id}"
+            
+            # Try to acquire lock atomically - if key exists, another request is already processing
+            if not cache.add(cache_key, True, 30):
+                messages.warning(request, 'Please wait before requesting another OTP code. Check your phone for the previous code.')
+                context['verification_step'] = 'otp' if context.get('verification_step') == 'otp' else 'start'
+                return render(request, 'login.html', context)
+            
             success, error = otp_service.send_otp(user.mobile_number)
+            
+            # If sending failed, remove the cache lock so user can retry
+            if not success:
+                cache.delete(cache_key)
             if success:
                 messages.success(request, 'OTP has been sent to your phone.')
                 context['verification_step'] = 'otp'
@@ -489,13 +514,27 @@ def initiate_password_reset(request):
                     messages.error(request, 'This account does not have a mobile number linked.')
                     return redirect('login')
 
-                # 3. Initialize OTP Service
+                # 3. Server-side deduplication: Prevent duplicate OTP requests within 30 seconds
+                # Use atomic cache.add() to prevent race conditions - only sets if key doesn't exist
+                from django.core.cache import cache
+                cache_key = f"otp_reset_{user.user_id}"
+                
+                # Try to acquire lock atomically - if key exists, another request is already processing
+                if not cache.add(cache_key, True, 30):
+                    messages.warning(request, 'Please wait before requesting another OTP code. Check your phone for the previous code.')
+                    return redirect('login')
+                
+                # 4. Initialize OTP Service
                 otp_service = OTPService(request)
                 
-                # 4. SEND THE OTP via API (This consumes credits)
+                # 5. SEND THE OTP via API (This consumes credits)
                 # We use a specific template for password reset to be professional
                 msg_template = "KoopTimizer Password Reset: Your verification code is {pin}. Valid for 5 minutes."
                 success, error_message = otp_service.send_otp(user.mobile_number, message_template=msg_template)
+                
+                # If sending failed, remove the cache lock so user can retry
+                if not success:
+                    cache.delete(cache_key)
 
                 if success:
                     # Store the User ID so we know who we are resetting the password for
@@ -587,3 +626,209 @@ def perform_password_reset(request):
         'masked_mobile': request.session.get('reset_masked_mobile')
     }
     return render(request, 'users/password_reset.html', context)
+
+def all_events(request):
+    # Get user_id from session
+    user_id = request.session.get('user_id')
+    
+    print(f"DEBUG all_events: user_id from session = {user_id}")
+    
+    # If we have a valid user_id, filter by user_id
+    try:
+        # First, check total events in database for debugging
+        total_events = Event.objects.count()
+        print(f"DEBUG all_events: Total events in database: {total_events}")
+        
+        if user_id:
+            # Try multiple query approaches to find events
+            # Approach 1: Filter by user_id directly (ForeignKey column)
+            events = Event.objects.filter(user_id=user_id)
+            event_count = events.count()
+            print(f"DEBUG all_events: Approach 1 (user_id={user_id}): Found {event_count} events")
+            
+            # Approach 2: If no results, try filtering by user's primary key
+            if event_count == 0:
+                from .models import User
+                try:
+                    user = User.objects.get(pk=user_id)
+                    events = Event.objects.filter(user=user)
+                    event_count = events.count()
+                    print(f"DEBUG all_events: Approach 2 (user object): Found {event_count} events")
+                except User.DoesNotExist:
+                    print(f"DEBUG all_events: User with pk={user_id} does not exist")
+            
+            # Approach 3: If still no results but events exist, show all (for debugging)
+            if event_count == 0 and total_events > 0:
+                print(f"DEBUG all_events: No events for user_id={user_id}, but {total_events} total events exist. Showing all events for debugging.")
+                events = Event.objects.all()
+        else:
+            # If not logged in, show all events
+            events = Event.objects.all()
+            print(f"DEBUG all_events: No user_id, showing all {events.count()} events")
+    except Exception as e:
+        print(f"ERROR all_events: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+    out = []
+    for event in events:
+        # Format dates for FullCalendar (ISO 8601 format)
+        # FullCalendar can handle both date-only and datetime formats
+        if event.start_date:
+            # Convert to timezone-aware if needed, then format as ISO
+            if timezone.is_naive(event.start_date):
+                start_dt = timezone.make_aware(event.start_date, timezone.get_current_timezone())
+            else:
+                start_dt = event.start_date
+            start_str = start_dt.isoformat()
+        else:
+            start_str = None
+            
+        if event.end_date:
+            # Convert to timezone-aware if needed, then format as ISO
+            if timezone.is_naive(event.end_date):
+                end_dt = timezone.make_aware(event.end_date, timezone.get_current_timezone())
+            else:
+                end_dt = event.end_date
+            end_str = end_dt.isoformat()
+        else:
+            end_str = None
+        
+        event_data = {
+            'title': event.title,
+            'id': event.id,
+            'start': start_str,
+            'end': end_str,
+        }
+        
+        if event.description:
+            event_data['description'] = event.description
+        
+        out.append(event_data)
+    
+    print(f"DEBUG all_events: Returning {len(out)} events for user_id={user_id}")
+    if len(out) > 0:
+        print(f"DEBUG all_events: First event: {out[0]}")
+    
+    return JsonResponse(out, safe=False)
+
+@csrf_exempt
+def add_event(request):
+    if request.method == "POST":
+        try:
+            # 1. SETUP USER_ID - Get user_id from session
+            # We'll use user_id directly to avoid model mismatch issues with AUTH_USER_MODEL
+            user_id = request.session.get('user_id')
+            if not user_id:
+                return JsonResponse({"status": "error", "message": "User not authenticated"}, status=401)
+            print(f"DEBUG add_event: user_id from session = {user_id}")
+
+            # 2. PREPARE DATA
+            data = json.loads(request.body)
+            raw_start = data.get("start")
+            raw_end = data.get("end")
+
+            # --- FIX: SMART DATE FORMATTER ---
+            # If date is just "2025-11-30", turn it into "2025-11-30T00:00:00"
+            if 'T' not in raw_start:
+                final_start = f"{raw_start}T08:00:00" # Default to 8 AM
+            else:
+                final_start = raw_start if len(raw_start) > 16 else f"{raw_start}:00"
+
+            if 'T' not in raw_end:
+                final_end = f"{raw_end}T09:00:00" # Default to 1 hour later
+            else:
+                final_end = raw_end if len(raw_end) > 16 else f"{raw_end}:00"
+            # --------------------------------
+
+            # Parse datetime strings and make them timezone-aware
+            # Parse the datetime strings
+            try:
+                # Try ISO format parsing
+                start_dt = datetime.datetime.fromisoformat(final_start.replace('Z', '+00:00'))
+                end_dt = datetime.datetime.fromisoformat(final_end.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                # Fallback: parse manually
+                try:
+                    # Format: "2025-11-29T10:27:00" or "2025-11-29T10:27:00+08:00"
+                    if '+' in final_start or final_start.endswith('Z'):
+                        start_dt = datetime.datetime.fromisoformat(final_start.replace('Z', '+00:00'))
+                    else:
+                        start_dt = datetime.datetime.strptime(final_start, "%Y-%m-%dT%H:%M:%S")
+                    
+                    if '+' in final_end or final_end.endswith('Z'):
+                        end_dt = datetime.datetime.fromisoformat(final_end.replace('Z', '+00:00'))
+                    else:
+                        end_dt = datetime.datetime.strptime(final_end, "%Y-%m-%dT%H:%M:%S")
+                except ValueError:
+                    # Last resort: use current time
+                    start_dt = timezone.now()
+                    end_dt = timezone.now()
+            
+            # Make timezone-aware if naive
+            if timezone.is_naive(start_dt):
+                start_dt = timezone.make_aware(start_dt, timezone.get_current_timezone())
+            if timezone.is_naive(end_dt):
+                end_dt = timezone.make_aware(end_dt, timezone.get_current_timezone())
+
+            # 3. SAVE TO DB
+            # Always use user_id directly to avoid model mismatch issues with AUTH_USER_MODEL
+            # The Event.user ForeignKey points to AUTH_USER_MODEL, which may be different from our custom User model
+            try:
+                new_event = Event.objects.create(
+                    user_id=user_id,  # Use user_id directly - Django will handle the ForeignKey
+                    title=data.get("title"),
+                    description=data.get("description"),
+                    start_date=start_dt,
+                    end_date=end_dt
+                )
+                print(f"✓ Event saved to database: ID={new_event.id}, user_id={user_id}, title={new_event.title}")
+            except Exception as db_error:
+                print(f"✗ Database save error: {db_error}")
+                import traceback
+                traceback.print_exc()
+                return JsonResponse({"status": "error", "message": f"Failed to save event to database: {str(db_error)}"}, status=500)
+            
+            # 4. GOOGLE SYNC (Safety Bubble)
+            try:
+                SCOPES = ['https://www.googleapis.com/auth/calendar']
+                SERVICE_ACCOUNT_FILE = 'service_account.json' 
+                
+                if os.path.exists(SERVICE_ACCOUNT_FILE):
+                    creds = service_account.Credentials.from_service_account_file(
+                        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+                    service = build('calendar', 'v3', credentials=creds)
+
+                    google_event = {
+                        'summary': data.get("title"),
+                        'description': data.get("description"),
+                        'start': {
+                            'dateTime': final_start, # Uses the fixed format
+                            'timeZone': 'Asia/Manila',
+                        },
+                        'end': {
+                            'dateTime': final_end,   # Uses the fixed format
+                            'timeZone': 'Asia/Manila',
+                        },
+                    }
+
+                    # Use 'primary' if you shared with the robot email. 
+                    # If that fails, replace 'primary' with your actual Gmail address.
+                    # Replace 'your.email@gmail.com' with your REAL email address inside the quotes
+                    my_calendar_id = 'kooptimizer@gmail.com' 
+
+                    service.events().insert(calendarId=my_calendar_id, body=google_event).execute()
+                    print("SUCCESS: Synced to Google Calendar!")
+                else:
+                    print("WARNING: service_account.json not found.")
+
+            except Exception as google_error:
+                print(f"GOOGLE SYNC FAILED (Ignored): {google_error}")
+
+            return JsonResponse({"status": "success"})
+            
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)})
+
+    return JsonResponse({"status": "error"}, status=400)

@@ -109,9 +109,9 @@
         <div class="sidebar-widgets">
 
             <div class="mini-widget">
-                <h4>
-                    <span class="nav-text">Calendar</span>
-                    <i class="bi bi-calendar4-week"></i>
+                <h4 id="calendarTrigger" style="cursor: pointer;">
+                        <span class="nav-text">Calendar</span> 
+                        <i class="bi bi-calendar4-week"></i>
                 </h4>
                 <div class="mini-calendar-box">
                     <div class="mini-date" id="current-date">{% now "M d" %}</div>
@@ -206,9 +206,230 @@
     </main>
 
 </div>
+<div id="myCalendarModal" class="custom-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>My Schedule</h2>
+      <span class="close-btn">&times;</span>
+    </div>
+    
+    <div id="calendar"></div>
+  </div>
+</div>
+
+<div id="eventFormModal" class="custom-modal" style="z-index: 10000;">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h3 style="margin:0;">Add New Event</h3>
+      <span class="close-form-btn" style="cursor:pointer; font-size:24px;">&times;</span>
+    </div>
+    
+    <div class="modal-body" style="padding-top: 15px;">
+      <form id="addEventForm">
+        
+        <div class="modal-input-group">
+          <label>Event Title *</label>
+          <input type="text" id="eventTitle" placeholder="Ex: General Assembly" required>
+        </div>
+
+        <div class="modal-input-group">
+          <label>Description (Optional)</label>
+          <textarea id="eventDesc" placeholder="Enter details..." style="height: 80px;"></textarea>
+        </div>
+
+        <div class="modal-input-group">
+          <label>Start Date (Optional)</label>
+          <input type="datetime-local" id="eventStart">
+        </div>
+
+        <div class="modal-input-group">
+          <label>End Date (Optional)</label>
+          <input type="datetime-local" id="eventEnd">
+        </div>
+
+        <input type="hidden" id="defaultStart">
+        <input type="hidden" id="defaultEnd">
+
+        <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+          <button type="button" class="cancel-btn">Cancel</button>
+          <button type="submit" style="background-color: #A91B0D; color: white; padding: 8px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Save Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 
 <div class="sidebar-overlay"></div>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    var calendarModal = document.getElementById("myCalendarModal");
+    var formModal = document.getElementById("eventFormModal");
+    var btn = document.getElementById("calendarTrigger");
+    
+    // Close Buttons
+    var closeCalendarBtn = document.getElementsByClassName("close-btn")[0];
+    var closeFormBtn = document.getElementsByClassName("close-form-btn")[0];
+    var cancelFormBtn = document.querySelector(".cancel-btn");
+    
+    var calendarEl = document.getElementById('calendar');
+    var calendar = null;
 
+    function initCalendar() {
+       calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
+        height: 500,
+        selectable: true,
+        displayEventTime: false, 
+        eventColor: '#A91B0D',
+        timeZone: 'Asia/Manila',
+        events: {
+            url: '/users/all_events/',
+            failure: function() {
+                console.error('Failed to load events');
+                alert('Failed to load calendar events. Please refresh the page.');
+            }
+        },
+        eventDidMount: function(info) {
+            // Optional: Add tooltip or styling
+            if (info.event.extendedProps.description) {
+                info.el.setAttribute('title', info.event.extendedProps.description);
+            }
+        },
+
+        select: function(info) {
+           // 1. SAVE THE CLICKED DATE AS DEFAULT
+           // info.startStr is what they clicked (e.g., "2025-11-28")
+           document.getElementById('defaultStart').value = info.startStr;
+           document.getElementById('defaultEnd').value = info.endStr;
+
+           // 2. Pre-fill visual inputs (Optional - you can leave these blank if you prefer)
+           // I'm leaving them blank so the user sees they are optional
+           document.getElementById('eventStart').value = ""; 
+           document.getElementById('eventEnd').value = "";
+           
+           document.getElementById('eventTitle').value = "";
+           document.getElementById('eventDesc').value = "";
+           
+           formModal.style.display = "block";
+        }
+      });
+      calendar.render();
+    }
+
+    // HANDLE FORM SUBMISSION
+    document.getElementById('addEventForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var title = document.getElementById('eventTitle').value;
+        var desc = document.getElementById('eventDesc').value;
+        
+        // --- SMART DATE LOGIC ---
+        // Get input values
+        var inputStart = document.getElementById('eventStart').value;
+        var inputEnd = document.getElementById('eventEnd').value;
+        
+        // Get default (clicked) values
+        var defaultStart = document.getElementById('defaultStart').value;
+        var defaultEnd = document.getElementById('defaultEnd').value;
+
+        // Logic: If input is empty, use default. 
+        // Note: We might need to append time if default is just a date (YYYY-MM-DD)
+        var finalStart = inputStart ? inputStart : defaultStart;
+        var finalEnd = inputEnd ? inputEnd : defaultEnd;
+
+        if (!title) { alert("Title is required"); return; }
+
+        // Get save button and show loading state
+        var saveButton = document.querySelector('#addEventForm button[type="submit"]');
+        var originalButtonText = saveButton.innerHTML;
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ffffff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px;"></span>Saving...';
+        saveButton.style.opacity = '0.7';
+        saveButton.style.cursor = 'not-allowed';
+
+        var eventData = { 
+            title: title, 
+            description: desc, 
+            start: finalStart, 
+            end: finalEnd 
+        };
+
+        fetch('/users/add_event/', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(eventData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Reset button state
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalButtonText;
+            saveButton.style.opacity = '1';
+            saveButton.style.cursor = 'pointer';
+            
+            if (data.status === 'success') {
+                // Clear form
+                document.getElementById('eventTitle').value = "";
+                document.getElementById('eventDesc').value = "";
+                document.getElementById('eventStart').value = "";
+                document.getElementById('eventEnd').value = "";
+                
+                // Close modal and refresh calendar
+                formModal.style.display = "none";
+                if (calendar) {
+                    calendar.refetchEvents();
+                }
+                alert('Event Saved!');
+            } else {
+                alert('Error: ' + (data.message || 'Unknown error occurred'));
+            }
+        })
+        .catch(error => {
+            console.error('Error saving event:', error);
+            // Reset button state on error
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalButtonText;
+            saveButton.style.opacity = '1';
+            saveButton.style.cursor = 'pointer';
+            alert('Error saving event. Please try again.');
+        });
+    });
+
+    // CONTROLS
+    if(btn) { 
+        btn.onclick = function() { 
+            calendarModal.style.display = "block"; 
+            setTimeout(function(){ 
+                if (!calendar) { 
+                    initCalendar(); 
+                } else { 
+                    calendar.render();
+                    calendar.refetchEvents(); // Refresh events when opening calendar
+                } 
+            }, 100); 
+        } 
+    }
+    if(closeCalendarBtn) closeCalendarBtn.onclick = function() { calendarModal.style.display = "none"; }
+    if(closeFormBtn) closeFormBtn.onclick = function() { formModal.style.display = "none"; }
+    if(cancelFormBtn) cancelFormBtn.onclick = function() { formModal.style.display = "none"; }
+    window.onclick = function(event) { if (event.target == calendarModal) calendarModal.style.display = "none"; }
+  });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const desktopToggle = document.getElementById('desktop-sidebar-toggle');
@@ -640,6 +861,18 @@
                         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
                     });
 
+                    // Validate subscription object
+                    if (!subscription || !subscription.endpoint) {
+                        throw new Error('Failed to create push subscription. Please check browser permissions.');
+                    }
+
+                    const subscriptionJson = subscription.toJSON();
+                    console.log('Push subscription data:', {
+                        endpoint: subscriptionJson.endpoint ? subscriptionJson.endpoint.substring(0, 50) + '...' : 'missing',
+                        hasKeys: !!subscriptionJson.keys,
+                        keysType: subscriptionJson.keys ? typeof subscriptionJson.keys : 'missing'
+                    });
+
                     // C. Get CSRF Token
                     const csrfToken = getCsrfToken();
                     if (!csrfToken) {
@@ -651,6 +884,14 @@
                     const browser = browserMatch ? browserMatch[0].toLowerCase() : 'chrome';
 
                     // E. Send Subscription to Django Backend
+                    const requestBody = {
+                        status_type: 'subscribe',
+                        subscription: subscriptionJson,
+                        browser: browser,
+                        user_agent: navigator.userAgent
+                    };
+                    
+                    console.log('Sending push subscription request...');
                     const response = await fetch('/webpush/save_information', {
                         method: 'POST',
                         headers: {
@@ -658,13 +899,10 @@
                             'X-CSRFToken': csrfToken,
                         },
                         credentials: 'include',
-                        body: JSON.stringify({
-                            status_type: 'subscribe',
-                            subscription: subscription.toJSON(),
-                            browser: browser,
-                            user_agent: navigator.userAgent
-                        })
+                        body: JSON.stringify(requestBody)
                     });
+                    
+                    console.log('Response status:', response.status, response.statusText);
 
                     if (response.ok) {
                         // F. SUCCESS: Hide the widget permanently (subscription saved in database)
@@ -683,22 +921,33 @@
                         let errorMessage = 'Unable to enable notifications.';
                         try {
                             const errorData = await response.json();
+                            console.error('Push subscription error response:', errorData);
+                            
                             if (errorData.error) {
+                                // Use the server's error message if available
+                                const serverError = errorData.error;
+                                console.error('Server error:', serverError);
+                                
                                 // Make error messages user-friendly
-                                const error = errorData.error.toLowerCase();
-                                if (error.includes('authentication') || error.includes('login')) {
+                                const error = serverError.toLowerCase();
+                                if (error.includes('authentication') || error.includes('login') || error.includes('user not found')) {
                                     errorMessage = 'Please log in again to enable notifications.';
                                 } else if (error.includes('csrf')) {
                                     errorMessage = 'Security verification failed. Please refresh the page and try again.';
-                                } else if (error.includes('invalid') || error.includes('field')) {
-                                    errorMessage = 'Invalid request. Please try again or contact support if the problem persists.';
+                                } else if (error.includes('subscription') || error.includes('endpoint')) {
+                                    errorMessage = 'Invalid subscription data. Please try again.';
+                                } else if (error.includes('invalid') || error.includes('field') || error.includes('required')) {
+                                    errorMessage = serverError; // Show the actual error message
                                 } else {
-                                    errorMessage = 'Unable to enable notifications. Please try again later.';
+                                    errorMessage = serverError || 'Unable to enable notifications. Please try again later.';
                                 }
+                            } else {
+                                errorMessage = `Server returned error (${response.status}). Please try again.`;
                             }
                         } catch (e) {
                             // If JSON parsing fails, use generic message
-                            errorMessage = 'Unable to enable notifications. Please try again later.';
+                            console.error('Failed to parse error response:', e);
+                            errorMessage = `Unable to enable notifications (HTTP ${response.status}). Please try again later.`;
                         }
 
                         // Reset button state

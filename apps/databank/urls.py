@@ -6,6 +6,8 @@ app_name = 'databank'
 urlpatterns = [
     path('databank/', views.databank_management_view, name='databank_management'),
     path('api/ocr/process/', views.process_ocr, name='process_ocr'),
+    path('api/ocr/sessions/', views.get_ocr_sessions, name='get_ocr_sessions'),
+    path('api/ocr/sessions/<int:session_id>/consume/', views.mark_ocr_session_consumed, name='mark_ocr_session_consumed'),
     
     # Cooperative CRUD endpoints
     path('api/cooperative/add/', views.add_cooperative, name='add_cooperative'),

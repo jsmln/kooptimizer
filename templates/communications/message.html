@@ -2053,13 +2053,29 @@
     // ========================================
     // Send Message (Updated: Refresh Contacts)
     // ========================================
+    let isSending = false; // Flag to prevent double-submission
+
     async function sendMessage() {
+        // Prevent double-submission
+        if (isSending) {
+            console.log('Message sending already in progress...');
+            return;
+        }
+
         const messageText = textInput.value.trim();
 
         // Allow sending when either message text or attachments exist
         if ((!messageText && selectedFiles.length === 0) || !currentConversationReceiverId) {
             return;
         }
+
+        // Set sending flag and disable button
+        isSending = true;
+        sendBtn.disabled = true;
+        sendBtn.style.opacity = '0.6';
+        sendBtn.style.cursor = 'not-allowed';
+        const originalBtnText = sendBtn.innerHTML;
+        sendBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
 
         updateActivity(); // Mark as active when sending
 
@@ -2136,6 +2152,13 @@
         } catch (error) {
             console.error('Error sending message:', error);
             alert('Failed to send message');
+        } finally {
+            // Always re-enable button and reset flag
+            isSending = false;
+            sendBtn.disabled = !textInput.value.trim() && selectedFiles.length === 0;
+            sendBtn.style.opacity = '1';
+            sendBtn.style.cursor = 'pointer';
+            sendBtn.innerHTML = originalBtnText;
         }
     }
 

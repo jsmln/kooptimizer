@@ -391,6 +391,89 @@
                 }
             }, 1000);
         }
+
+        // Protect OTP send forms from double-submission
+        const otpForms = document.querySelectorAll('form[action*="first_login_setup"]');
+        otpForms.forEach(form => {
+            const action = form.querySelector('input[name="action"]');
+            if (action && action.value === 'send_otp') {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                
+                if (submitBtn) {
+                    form.addEventListener('submit', function(e) {
+                        // Check if already submitting
+                        if (submitBtn.disabled) {
+                            e.preventDefault();
+                            return false;
+                        }
+                        
+                        // Disable button and show loading state
+                        submitBtn.disabled = true;
+                        const originalText = submitBtn.textContent;
+                        submitBtn.innerHTML = '<span class="spinner-border-sm"></span> Sending...';
+                        submitBtn.style.opacity = '0.6';
+                        submitBtn.style.cursor = 'not-allowed';
+                        
+                        // Re-enable after 5 seconds (in case of error, user can retry)
+                        setTimeout(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = originalText;
+                            submitBtn.style.opacity = '1';
+                            submitBtn.style.cursor = 'pointer';
+                        }, 5000);
+                    });
+                }
+            }
+        });
+
+        // Protect password reset form from double-submission
+        const passwordResetForm = document.querySelector('form[action*="password-reset/init"]');
+        if (passwordResetForm) {
+            const submitBtn = passwordResetForm.querySelector('button[type="submit"]');
+            
+            if (submitBtn) {
+                passwordResetForm.addEventListener('submit', function(e) {
+                    // Check if already submitting
+                    if (submitBtn.disabled) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Disable button and show loading state
+                    submitBtn.disabled = true;
+                    const originalText = submitBtn.textContent;
+                    submitBtn.innerHTML = '<span class="spinner-border-sm"></span> Searching...';
+                    submitBtn.style.opacity = '0.6';
+                    submitBtn.style.cursor = 'not-allowed';
+                    
+                    // Re-enable after 5 seconds (in case of error, user can retry)
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                    }, 5000);
+                });
+            }
+        }
     </script>
+
+    <style>
+        /* Spinner for OTP button loading state */
+        .spinner-border-sm {
+            display: inline-block;
+            width: 0.875rem;
+            height: 0.875rem;
+            vertical-align: text-bottom;
+            border: 0.125em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 
 {% endblock %}
