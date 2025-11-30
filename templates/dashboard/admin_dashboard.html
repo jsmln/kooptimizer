@@ -12,237 +12,137 @@
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <link rel="stylesheet" href="{% static 'frontend/admin_dashboard.css' %}">
 <style>
-    #districtMap {
-        height: 100%;
-        width: 100%;
-        border-radius: 8px;
-        z-index: 0;
-        min-height: 450px;
+    /* --- Existing Map & Layout Styles --- */
+    #districtMap { height: 100%; width: 100%; border-radius: 8px; z-index: 0; min-height: 450px; }
+    .admin-dashboard-container { width: 100%; max-width: 100%; box-sizing: border-box; transition: none; }
+    .dashboard-section { margin-bottom: 1.5rem; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .dashboard-section:last-child { margin-bottom: 0; }
+    .chart-card { width: 100%; max-width: 100%; box-sizing: border-box; }
+    
+    /* Map Card Expansion */
+    #districtMapCard { height: auto !important; min-height: 500px !important; max-height: none !important; }
+    #districtMapWrapper { height: 450px !important; min-height: 450px !important; max-height: none !important; }
+    #districtMap { min-height: 450px !important; }
+    
+    .content-scrollable { width: 100%; max-width: 100%; box-sizing: border-box; }
+    
+    /* Grids */
+    .stats-grid, .analytics-grid-secondary, .charts-section, .operations-grid {
+        display: flex; flex-wrap: wrap; gap: 1.5rem; width: 100%; max-width: 100%;
+    }
+    
+    .stats-grid .stat-card { flex: 1; min-width: 200px; max-width: 100%; box-sizing: border-box; }
+    .analytics-grid-secondary .chart-card, .analytics-grid-secondary .table-card { flex: 1; min-width: 300px; max-width: 100%; box-sizing: border-box; }
+    .charts-section .chart-card { flex: 1; min-width: 300px; max-width: 100%; box-sizing: border-box; }
+    
+    /* Operations Grid Items */
+    .operations-grid .table-card, 
+    .operations-grid .filter-section,
+    .operations-grid .activity-card { /* Added activity-card here */
+        flex: 1; min-width: 350px; max-width: 100%; box-sizing: border-box;
     }
 
-    .admin-dashboard-container {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-        transition: none;
-    }
-
-    .dashboard-section {
-        margin-bottom: 1.5rem;
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .dashboard-section:last-child {
-        margin-bottom: 0;
-    }
-
-    .chart-card {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    /* Special styling for map card - allow it to expand */
-    #districtMapCard {
-        height: auto !important;
-        min-height: 500px !important;
-        max-height: none !important;
-    }
-
-    #districtMapWrapper {
-        height: 450px !important;
-        min-height: 450px !important;
-        max-height: none !important;
-    }
-
-    #districtMap {
-        min-height: 450px !important;
-    }
-
-    .content-scrollable {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .stats-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .stats-grid .stat-card {
-        flex: 1;
-        min-width: 200px;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .analytics-grid-secondary {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .analytics-grid-secondary .chart-card,
-    .analytics-grid-secondary .table-card {
-        flex: 1;
-        min-width: 300px;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .charts-section {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .charts-section .chart-card {
-        flex: 1;
-        min-width: 300px;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    .operations-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .operations-grid .table-card,
-    .operations-grid .filter-section {
-        flex: 1;
-        min-width: 400px;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
+    /* Media Queries */
     @media (max-width: 1400px) {
-
-        .analytics-grid-secondary .chart-card,
-        .analytics-grid-secondary .table-card {
-            min-width: 280px;
-        }
-
-        .charts-section .chart-card {
-            min-width: 280px;
-        }
+        .analytics-grid-secondary .chart-card, .analytics-grid-secondary .table-card, .charts-section .chart-card { min-width: 280px; }
     }
-
     @media (max-width: 1200px) {
-        .stats-grid .stat-card {
-            min-width: 180px;
-            flex: 1 1 calc(50% - 0.75rem);
-        }
-
-        .analytics-grid-secondary .chart-card,
-        .analytics-grid-secondary .table-card {
-            flex: 1 1 calc(50% - 0.75rem);
-            min-width: 250px;
-        }
-
-        .charts-section .chart-card {
-            flex: 1 1 calc(50% - 0.75rem);
-            min-width: 250px;
-        }
-
-        .operations-grid .table-card,
-        .operations-grid .filter-section {
-            flex: 1 1 100%;
-            min-width: 100%;
-        }
+        .stats-grid .stat-card { min-width: 180px; flex: 1 1 calc(50% - 0.75rem); }
+        .analytics-grid-secondary .chart-card, .analytics-grid-secondary .table-card, .charts-section .chart-card { flex: 1 1 calc(50% - 0.75rem); min-width: 250px; }
+        .operations-grid .table-card, .operations-grid .filter-section, .operations-grid .activity-card { flex: 1 1 100%; min-width: 100%; }
     }
-
     @media (max-width: 768px) {
-        .stats-grid .stat-card {
-            flex: 1 1 100%;
-            min-width: 100%;
-        }
-
-        .analytics-grid-secondary .chart-card,
-        .analytics-grid-secondary .table-card {
-            flex: 1 1 100%;
-            min-width: 100%;
-        }
-
-        .charts-section .chart-card {
-            flex: 1 1 100%;
-            min-width: 100%;
-        }
+        .stats-grid .stat-card, .analytics-grid-secondary .chart-card, .analytics-grid-secondary .table-card, .charts-section .chart-card { flex: 1 1 100%; min-width: 100%; }
+        #districtMapCard { flex-direction: column !important; }
+        #districtMapCard > div:first-child, #districtMapCard > div:last-child { flex: 1 !important; min-width: 100% !important; }
     }
 
-    .district-label {
-        font-size: 12px;
-        font-weight: bold;
-        color: white;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-        text-align: center;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 4px 8px;
-        border-radius: 4px;
-        pointer-events: none;
+    /* Map Specifics */
+    .district-label { font-size: 12px; font-weight: bold; color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); text-align: center; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; pointer-events: none; }
+    .cooperative-marker { background: transparent; border: none; }
+    .cooperative-marker:hover { cursor: pointer; z-index: 1000; }
+    .map-legend { position: absolute; bottom: 20px; right: 20px; background: white; padding: 10px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000; font-size: 11px; }
+    .legend-item { display: flex; align-items: center; margin: 3px 0; }
+    .legend-color { width: 20px; height: 15px; margin-right: 8px; border: 1px solid #ccc; }
+
+    /* --- NEW CSS FOR ACTIVITY LOGS --- */
+    .activity-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0px 10px 25px rgba(112, 144, 176, 0.08); /* Match existing shadow */
+        display: flex;
+        flex-direction: column;
+        height: 100%; 
+        max-height: 400px; /* Limit height */
     }
 
-    .cooperative-marker {
-        background: transparent;
-        border: none;
+    .timeline-wrapper {
+        flex: 1;
+        overflow-y: auto; /* Scrollable if list is long */
+        padding-right: 5px;
     }
 
-    .cooperative-marker:hover {
-        cursor: pointer;
-        z-index: 1000;
+    .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-top: 10px;
+        padding-left: 10px;
     }
 
-    @media (max-width: 992px) {
-        #districtMapCard {
-            flex-direction: column !important;
-        }
-
-        #districtMapCard>div:first-child {
-            flex: 1 !important;
-        }
-
-        #districtMapCard>div:last-child {
-            flex: 1 !important;
-            min-width: 100% !important;
-        }
+    .timeline-item {
+        display: flex;
+        gap: 15px;
+        position: relative;
     }
 
-    .map-legend {
+    /* Vertical connector line */
+    .timeline-item:not(:last-child)::after {
+        content: '';
         position: absolute;
-        bottom: 20px;
-        right: 20px;
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-        font-size: 11px;
+        top: 35px;
+        left: 18px; /* Align with center of icon (36px width / 2) */
+        bottom: -25px;
+        width: 2px;
+        background: #f0f0f0;
     }
 
-    .legend-item {
+    .timeline-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
-        margin: 3px 0;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+        z-index: 1;
+        color: white;
     }
 
-    .legend-color {
-        width: 20px;
-        height: 15px;
-        margin-right: 8px;
-        border: 1px solid #ccc;
+    /* Activity Colors */
+    .bg-blue { background-color: #1565c0; }
+    .bg-green { background-color: #2e7d32; }
+    .bg-orange { background-color: #ef6c00; }
+    .bg-red { background-color: #c62828; }
+    .bg-purple { background-color: #7b1fa2; }
+
+    .timeline-content {
+        flex: 1;
+    }
+
+    .timeline-content p {
+        margin: 0;
+        line-height: 1.4;
+        font-size: 0.9rem;
+    }
+
+    .time-ago {
+        font-size: 0.75rem;
+        color: #A3AED0; /* Matches existing gray var */
+        display: block;
+        margin-top: 4px;
     }
 </style>
 {% endblock %}
@@ -258,444 +158,76 @@
     </div>
 
     <div class="stats-grid">
-
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#adminListModal">
             <div class="icon-box red-box"><i class="bi bi-shield-lock-fill"></i></div>
-            <div class="stat-info">
-                <p>System Admins</p>
-                <h3>3</h3>
-                <span class="link-text">View Details <i class="bi bi-arrow-right"></i></span>
-            </div>
+            <div class="stat-info"><p>System Admins</p><h3>3</h3><span class="link-text">View Details <i class="bi bi-arrow-right"></i></span></div>
         </div>
-
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#staffListModal">
             <div class="icon-box blue-box"><i class="bi bi-people-fill"></i></div>
-            <div class="stat-info">
-                <p>Office Staff</p>
-                <h3>12</h3>
-                <span class="link-text">View Details <i class="bi bi-arrow-right"></i></span>
-            </div>
+            <div class="stat-info"><p>Office Staff</p><h3>12</h3><span class="link-text">View Details <i class="bi bi-arrow-right"></i></span></div>
         </div>
-
         <div class="stat-card clickable" data-bs-toggle="modal" data-bs-target="#officersListModal">
-            <div class="icon-box yellow-box">
-                <i class="bi bi-person-badge-fill"></i>
-            </div>
-            <div class="stat-info">
-                <p>Cooperative Officers</p>
-                <h3>174</h3>
-                <span class="link-text">View Details <i class="bi bi-arrow-right"></i></span>
-            </div>
+            <div class="icon-box yellow-box"><i class="bi bi-person-badge-fill"></i></div>
+            <div class="stat-info"><p>Cooperative Officers</p><h3>174</h3><span class="link-text">View Details <i class="bi bi-arrow-right"></i></span></div>
         </div>
-
         <div class="stat-card">
             <div class="icon-box green-box"><i class="bi bi-building"></i></div>
-            <div class="stat-info">
-                <p>Total Cooperatives</p>
-                <h3>58</h3>
-                <small class="text-muted">Registered in Lipa City</small>
-            </div>
+            <div class="stat-info"><p>Total Cooperatives</p><h3>58</h3><small class="text-muted">Registered in Lipa City</small></div>
         </div>
-
         <div class="stat-card">
-            <div class="icon-box orange-box">
-                <i class="bi bi-person-hearts"></i>
-            </div>
-            <div class="stat-info">
-                <p>Total Members</p>
-                <h3>12,450</h3>
-                <small class="text-muted">City-wide Base</small>
-            </div>
+            <div class="icon-box orange-box"><i class="bi bi-person-hearts"></i></div>
+            <div class="stat-info"><p>Total Members</p><h3>12,450</h3><small class="text-muted">City-wide Base</small></div>
         </div>
-
         <div class="stat-card">
-            <div class="icon-box purple-box">
-                <i class="bi bi-cash-stack"></i>
-            </div>
-            <div class="stat-info">
-                <p>Total Assets</p>
-                <h3>₱ 845M</h3>
-                <small class="text-muted">Combined Financials</small>
-            </div>
+            <div class="icon-box purple-box"><i class="bi bi-cash-stack"></i></div>
+            <div class="stat-info"><p>Total Assets</p><h3>₱ 845M</h3><small class="text-muted">Combined Financials</small></div>
         </div>
-
         <div class="stat-card">
-            <div class="icon-box teal-box">
-                <i class="bi bi-person-check-fill"></i>
-            </div>
-            <div class="stat-info">
-                <p>Pending Users</p>
-                <h3>15</h3>
-            </div>
+            <div class="icon-box teal-box"><i class="bi bi-person-check-fill"></i></div>
+            <div class="stat-info"><p>Pending Users</p><h3>15</h3></div>
         </div>
-
         <div class="stat-card highlight-card">
-            <div class="stat-info text-white">
-                <p>LCCDC Members</p>
-                <h3>42</h3>
-                <small>Active Member Cooperatives</small>
-            </div>
+            <div class="stat-info text-white"><p>LCCDC Members</p><h3>42</h3><small>Active Member Cooperatives</small></div>
             <div class="icon-bg"><i class="bi bi-award"></i></div>
         </div>
     </div>
 
-    <!-- User Demographics Section -->
     <div class="dashboard-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-        <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">User Demographics &
-            Traffic</h2>
-
-        <div class="dashboard-card"
-            style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px;">
-            <h3 style="color: #2B3674; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">User Traffic (Last 30
-                Days)</h3>
-            <div style="height: 300px; position: relative;">
-                <canvas id="trafficChart"></canvas>
-            </div>
+        <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">User Demographics & Traffic</h2>
+        <div class="dashboard-card" style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <h3 style="color: #2B3674; font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;">User Traffic (Last 30 Days)</h3>
+            <div style="height: 300px; position: relative;"><canvas id="trafficChart"></canvas></div>
         </div>
-
         <div class="analytics-grid-secondary" style="margin-top: 1.5rem;">
             <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>User Distribution by Role</h3>
-                </div>
-                <div class="chart-wrapper" style="height: 250px;">
-                    <canvas id="userRoleChart"></canvas>
-                </div>
+                <div class="card-header-custom"><h3>User Distribution by Role</h3></div>
+                <div class="chart-wrapper" style="height: 250px;"><canvas id="userRoleChart"></canvas></div>
             </div>
-
             <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>User Gender Distribution</h3>
-                </div>
-                <div class="chart-wrapper" style="height: 250px;">
-                    <canvas id="userGenderChart"></canvas>
-                </div>
+                <div class="card-header-custom"><h3>User Gender Distribution</h3></div>
+                <div class="chart-wrapper" style="height: 250px;"><canvas id="userGenderChart"></canvas></div>
             </div>
-
             <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>Verification Status</h3>
-                </div>
-                <div class="chart-wrapper" style="height: 250px;">
-                    <canvas id="verificationChart"></canvas>
-                </div>
+                <div class="card-header-custom"><h3>Verification Status</h3></div>
+                <div class="chart-wrapper" style="height: 250px;"><canvas id="verificationChart"></canvas></div>
             </div>
         </div>
     </div>
 
-    <!-- Cooperative Demographics Section -->
-    <div class="dashboard-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700;">Cooperative Demographics</h2>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <select id="coopDemoCategoryFilter" class="form-select-sm" style="min-width: 120px;">
-                    <option value="">All Categories</option>
-                    <option value="Micro">Micro</option>
-                    <option value="Small">Small</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Large">Large</option>
-                </select>
-                <select id="coopDemoDistrictFilter" class="form-select-sm" style="min-width: 120px;">
-                    <option value="">All Districts</option>
-                    <option value="East">East</option>
-                    <option value="West">West</option>
-                    <option value="North">North</option>
-                    <option value="South">South</option>
-                    <option value="Urban">Urban</option>
-                </select>
-                <button id="applyCoopDemoFilters" class="btn btn-sm btn-primary">Apply Filters</button>
-            </div>
-        </div>
-
-        <div class="analytics-grid-secondary">
-            <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>Cooperatives by Category</h3>
-                </div>
-                <div class="chart-wrapper" style="height: 250px;">
-                    <canvas id="coopCategoryChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>Geographic District</h3>
-                </div>
-                <div class="chart-wrapper" style="height: 250px;">
-                    <canvas id="coopDistrictChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>Member Gender Distribution</h3>
-                </div>
-                <div class="chart-wrapper" style="height: 250px;">
-                    <canvas id="memberGenderChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Statistical Analytics Section -->
-    <div class="dashboard-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
-        <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Statistical Analytics
-        </h2>
-
-        <div class="charts-section">
-            <div class="chart-card main-chart" style="flex: 2; min-width: 400px;">
-                <div class="card-header-custom">
-                    <h3>Business Activity Analytics</h3>
-                    <select id="businessActivityYearFilter" class="form-select-sm">
-                        <option value="">All Years</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                    </select>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="businessActivityChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card ranking-card" style="flex: 1; min-width: 300px;">
-                <div class="card-header-custom">
-                    <h3>Top 20 Ranking</h3>
-                </div>
-                <div class="ranking-list">
-                    <div class="rank-item">
-                        <span class="rank-num">1</span>
-                        <div class="rank-info">
-                            <span class="coop-name">Lipa City Multi-Purpose Coop</span>
-                            <span class="coop-asset">₱ 520M</span>
-                        </div>
-                    </div>
-                    <div class="rank-item">
-                        <span class="rank-num">2</span>
-                        <div class="rank-info">
-                            <span class="coop-name">Batangas Health Care MPC</span>
-                            <span class="coop-asset">₱ 480M</span>
-                        </div>
-                    </div>
-                    <div class="rank-item">
-                        <span class="rank-num">3</span>
-                        <div class="rank-info">
-                            <span class="coop-name">Metro Lipa Water District</span>
-                            <span class="coop-asset">₱ 350M</span>
-                        </div>
-                    </div>
-                    <div class="rank-item">
-                        <span class="rank-num">4</span>
-                        <div class="rank-info">
-                            <span class="coop-name">De La Salle Lipa Coop</span>
-                            <span class="coop-asset">₱ 210M</span>
-                        </div>
-                    </div>
-                    <div class="rank-item">
-                        <span class="rank-num">5</span>
-                        <div class="rank-info">
-                            <span class="coop-name">Feed Millers Cooperative</span>
-                            <span class="coop-asset">₱ 180M</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="analytics-grid-secondary">
-            <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>Cooperatives by Category</h3>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="categoryChart"></canvas>
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="card-header-custom">
-                    <h3>Compliance Status</h3>
-                    <div class="legend-box">
-                        <span class="dot active"></span> OK
-                        <span class="dot inactive"></span> Exp
-                    </div>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="complianceChart"></canvas>
-                </div>
-            </div>
-
-            <div class="table-card">
-                <div class="card-header-custom">
-                    <h3>Preview Cooperatives</h3>
-                    {% comment %} <span class="badge bg-warning text-dark">Action Needed</span> {% endcomment %}
-                </div>
-                <div class="table-responsive">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Cooperative</th>
-                                <th>Year</th>
-                                <th>Assets</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingReviewsTableBody">
-                            <!-- Data will be loaded dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Geographic District Distribution - Own Row -->
-        <div class="dashboard-section" style="margin-top: 2rem;">
-            <div class="chart-card" id="districtMapCard"
-                style="width: 100%; max-width: 100%; height: auto !important; min-height: 500px !important; max-height: none !important; display: flex; flex-direction: row; gap: 1rem; padding: 20px;">
-                <!-- Map Section - 3/4 width -->
-                <div style="flex: 3; display: flex; flex-direction: column;">
-                    <div class="card-header-custom" style="margin-bottom: 10px;">
-                        <h3>Geographic District Distribution</h3>
-                    </div>
-                    <div class="chart-wrapper" id="districtMapWrapper"
-                        style="position: relative; height: 450px !important; min-height: 450px !important; max-height: none !important; overflow: hidden; width: 100%; flex: 1;">
-                        <div id="districtMap" style="height: 100%; width: 100%;"></div>
-                        <div class="map-legend" style="bottom: 20px; right: 20px;">
-                            <strong>Cooperatives</strong>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #FFEDA0;"></div> 0-5
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #FD8D3C;"></div> 6-10
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #FC4E2A;"></div> 11-15
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #E31A1C;"></div> 16-20
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #BD0026;"></div> 21-25
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #800026;"></div> 25+
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- District Info Sidebar - 1/4 width -->
-                <div style="flex: 1; display: flex; flex-direction: column; gap: 0.75rem; min-width: 200px;">
-                    <div style="font-weight: 700; color: #2B3674; margin-bottom: 0.5rem; font-size: 0.9rem;">District
-                        Summary</div>
-                    <div id="districtInfoCards"
-                        style="display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; max-height: 450px;">
-                        <!-- District cards will be dynamically loaded here -->
-                        <div class="text-center text-muted p-3" style="font-size: 0.85rem;">Loading districts...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Financial Growth Trend - Own Row -->
-        <div class="dashboard-section" style="margin-top: 1.5rem;">
-            <div class="chart-card" style="width: 100%; max-width: 100%;">
-                <div class="card-header-custom">
-                    <h3>Financial Growth Trend</h3>
-
-                    <div style="display: flex; align-items: center; gap: 10px;">
-
-                        <span id="financeCurrentView" class="current-view-badge">All Data</span>
-
-                        <div class="chart-filter-wrapper">
-                            <button id="financeFilterToggle" class="filter-icon-btn" type="button"
-                                title="Filter Metrics">
-                                <i class="bi bi-funnel"></i>
-                            </button>
-
-                            <div id="financeFilterControls" class="chart-filter-dropdown" style="display: none;">
-                                <div class="dropdown-header-text">Select View:</div>
-
-                                <div class="filter-option active" onclick="applyFinancialFilter('all', this)">
-                                    <span>All Data</span>
-                                    <i class="bi bi-check-lg check-icon"></i>
-                                </div>
-
-                                <div class="filter-option" onclick="applyFinancialFilter('assets', this)">
-                                    <span><span class="dot asset-dot"></span> Assets</span>
-                                    <i class="bi bi-check-lg check-icon"></i>
-                                </div>
-
-                                <div class="filter-option" onclick="applyFinancialFilter('capital', this)">
-                                    <span><span class="dot capital-dot"></span> Paid-Up Capital</span>
-                                    <i class="bi bi-check-lg check-icon"></i>
-                                </div>
-
-                                <div class="filter-option" onclick="applyFinancialFilter('surplus', this)">
-                                    <span><span class="dot surplus-dot"></span> Net Surplus</span>
-                                    <i class="bi bi-check-lg check-icon"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chart-legend-inline">
-                    <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
-                    <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
-                    <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
-                </div>
-
-                <div class="chart-wrapper" style="height: 450px;">
-                    <canvas id="financialTrendChart"></canvas>
-                </div>
-            </div>
-        </div>
-
+    <div class="dashboard-section" style="margin-top: 1.5rem;">
+        <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Operations Overview</h2>
+        
         <div class="operations-grid">
-
+            
             <div class="table-card workload-card">
-                <div class="card-header-custom">
-                    <h3>Staff Workload</h3>
-                </div>
+                <div class="card-header-custom"><h3>Staff Workload</h3></div>
                 <div class="table-responsive">
                     <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Staff</th>
-                                <th>Assigned</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Staff</th><th>Assigned</th><th>Status</th></tr></thead>
                         <tbody>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="avatar-xs" style="background:#1976d2;">AR</div> Ana Reyes
-                                    </div>
-                                </td>
-                                <td class="text-center fw-bold">12</td>
-                                <td><span class="badge bg-danger">Heavy</span></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="avatar-xs" style="background:#388e3c;">JR</div> Jose Rizal
-                                    </div>
-                                </td>
-                                <td class="text-center fw-bold">6</td>
-                                <td><span class="badge bg-success">Balanced</span></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="avatar-xs" style="background:#fbc02d; color:#333;">CR</div> Clara
-                                        Recto
-                                    </div>
-                                </td>
-                                <td class="text-center fw-bold">8</td>
-                                <td><span class="badge bg-warning text-dark">Moderate</span></td>
-                            </tr>
+                            <tr><td><div class="user-cell"><div class="avatar-xs" style="background:#1976d2;">AR</div> Ana Reyes</div></td><td class="text-center fw-bold">12</td><td><span class="badge bg-danger">Heavy</span></td></tr>
+                            <tr><td><div class="user-cell"><div class="avatar-xs" style="background:#388e3c;">JR</div> Jose Rizal</div></td><td class="text-center fw-bold">6</td><td><span class="badge bg-success">Balanced</span></td></tr>
+                            <tr><td><div class="user-cell"><div class="avatar-xs" style="background:#fbc02d; color:#333;">CR</div> Clara Recto</div></td><td class="text-center fw-bold">8</td><td><span class="badge bg-warning text-dark">Moderate</span></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -704,245 +236,184 @@
             <div class="filter-section">
                 <div class="card-header-custom">
                     <h3>All Cooperatives List</h3>
-
                     <div class="header-actions" style="display:flex;align-items:center;gap:0.5rem;">
-                        <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters">
-                            <i class="bi bi-funnel"></i>
-                            <span>Filter</span>
-                        </button>
-
+                        <button id="filterToggle" class="filter-toggle-btn" title="Toggle filters"><i class="bi bi-funnel"></i><span>Filter</span></button>
                         <div class="filter-controls hidden">
                             <select class="form-select-sm" id="categoryFilter">
-                                <option value="">All Categories</option>
-                                <option value="Micro">Micro</option>
-                                <option value="Small">Small</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Large">Large</option>
+                                <option value="">All Categories</option><option value="Micro">Micro</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option>
                             </select>
                             <select class="form-select-sm" id="districtFilter">
-                                <option value="">All Districts</option>
-                                <option value="East">East</option>
-                                <option value="West">West</option>
-                                <option value="North">North</option>
-                                <option value="South">South</option>
-                                <option value="Urban">Urban</option>
+                                <option value="">All Districts</option><option value="East">East</option><option value="West">West</option><option value="North">North</option><option value="South">South</option><option value="Urban">Urban</option>
                             </select>
                         </div>
                     </div>
                 </div>
-
                 <div class="table-responsive">
                     <table class="coop-list-table">
-                        <thead>
-                            <tr>
-                                <th>Cooperative Name</th>
-                                <th>Category</th>
-                                <th>District</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Cooperative Name</th><th>Category</th><th>District</th></tr></thead>
                         <tbody id="coopTableBody">
-                            <tr data-category="Micro" data-district="East"
-                                onclick="openProfileModal('Consumer Cooperative')">
-                                <td><span class="fw-bold text-dark">Consumer Cooperative</span></td>
-                                <td><span class="badge-category"
-                                        style="background-color: #42a5f5; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">Micro</span>
-                                </td>
-                                <td>East</td>
-                            </tr>
-                            <tr data-category="Large" data-district="West" onclick="openProfileModal('Plaridel MPC')">
-                                <td><span class="fw-bold text-dark">Plaridel MPC</span></td>
-                                <td><span class="badge-category"
-                                        style="background-color: #a91e2c; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">Large</span>
-                                </td>
-                                <td>West</td>
-                            </tr>
-                            <tr data-category="Small" data-district="Urban"
-                                onclick="openProfileModal('Agriculture Cooperative')">
-                                <td><span class="fw-bold text-dark">Agriculture Cooperative</span></td>
-                                <td><span class="badge-category"
-                                        style="background-color: #26a69a; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">Small</span>
-                                </td>
-                                <td>Urban</td>
-                            </tr>
-                            <tr data-category="Medium" data-district="North"
-                                onclick="openProfileModal('Housing Cooperative')">
-                                <td><span class="fw-bold text-dark">Housing Cooperative</span></td>
-                                <td><span class="badge-category"
-                                        style="background-color: #e57373; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">Medium</span>
-                                </td>
-                                <td>North</td>
-                            </tr>
+                            <tr data-category="Micro" data-district="East" onclick="openProfileModal('Consumer Cooperative')"><td><span class="fw-bold text-dark">Consumer Cooperative</span></td><td><span class="badge-category" style="background-color: #42a5f5; color: #ffffff; padding: 4px 12px; border-radius: 6px;">Micro</span></td><td>East</td></tr>
+                            <tr data-category="Large" data-district="West" onclick="openProfileModal('Plaridel MPC')"><td><span class="fw-bold text-dark">Plaridel MPC</span></td><td><span class="badge-category" style="background-color: #a91e2c; color: #ffffff; padding: 4px 12px; border-radius: 6px;">Large</span></td><td>West</td></tr>
+                            <tr data-category="Small" data-district="Urban" onclick="openProfileModal('Agriculture Cooperative')"><td><span class="fw-bold text-dark">Agriculture Cooperative</span></td><td><span class="badge-category" style="background-color: #26a69a; color: #ffffff; padding: 4px 12px; border-radius: 6px;">Small</span></td><td>Urban</td></tr>
                         </tbody>
                     </table>
-                    <div id="noResultsMessage"
-                        style="display: none; padding: 20px; text-align: center; color: #6c757d;">
-                        No cooperatives found matching the selected filters.
-                    </div>
+                    <div id="noResultsMessage" style="display: none; padding: 20px; text-align: center; color: #6c757d;">No cooperatives found.</div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="adminListModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">System Administrators</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="activity-card">
+                <div class="card-header-custom">
+                    <h3>Recent Activity Logs</h3>
+                    <small class="text-muted" style="font-size: 0.8rem;">Real-time updates</small>
                 </div>
-                <div class="modal-body p-0">
-                    <table class="modal-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Gender</th>
-                                <th>Email</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminListModalBody">
-                            <!-- Data will be loaded dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="staffListModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Office Staff</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <table class="modal-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Gender</th>
-                                <th>Email</th>
-                            </tr>
-                        </thead>
-                        <tbody id="staffListModalBody">
-                            <!-- Data will be loaded dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="officersListModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Cooperative Officers</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <table class="modal-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Position</th>
-                                <th>Cooperative</th>
-                            </tr>
-                        </thead>
-                        <tbody id="officersListModalBody">
-                            <!-- Data will be loaded dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="coopProfileModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Cooperative Profile</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div id="printable-area">
-                        <div class="text-center mb-4">
-                            <div class="avatar-circle mb-2">C</div>
-                            <h4 id="modalCoopName">Consumer Cooperative</h4>
-                            <span class="badge"
-                                style="background-color: #10b981; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-weight: 600;">Active</span>
-                            <p class="text-muted mt-2">Sabang, Lipa City, Batangas</p>
+                <div class="timeline-wrapper">
+                    <div class="timeline">
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-blue">
+                                <i class="bi bi-person-plus-fill"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <p class="text-dark fw-bold">New User Registered</p>
+                                <p class="text-muted small">Juan Dela Cruz registered as Officer for Plaridel MPC.</p>
+                                <span class="time-ago">10 mins ago</span>
+                            </div>
                         </div>
 
-                        <section class="info-section mb-4">
-                            <h6
-                                class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">
-                                General Information</h6>
-                            <div class="info-grid">
-                                <div><strong>CDA No:</strong> 1414-060923055</div>
-                                <div><strong>Category:</strong> Micro</div>
-                                <div><strong>District:</strong> East</div>
-                                <div><strong>Email:</strong> consumercoop@gmail.com</div>
-                                <div><strong>Contact:</strong> 09929380925</div>
-                                <div><strong>Compliance:</strong> <span class="text-success fw-bold">Yes</span></div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-green">
+                                <i class="bi bi-check-circle-fill"></i>
                             </div>
-                        </section>
-
-                        <section class="info-section mb-4">
-                            <h6
-                                class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">
-                                Financials (2024)</h6>
-                            <div class="info-grid">
-                                <div><strong>Assets:</strong> ₱ 356,964.68</div>
-                                <div><strong>Paid Up Capital:</strong> ₱ 108,243.78</div>
-                                <div><strong>Net Surplus:</strong> ₱ 10,653.54</div>
+                            <div class="timeline-content">
+                                <p class="text-dark fw-bold">Coop Profile Approved</p>
+                                <p class="text-muted small">Admin Maria approved the profile update for Consumer Coop.</p>
+                                <span class="time-ago">1 hour ago</span>
                             </div>
-                        </section>
+                        </div>
 
-                        <section class="info-section">
-                            <h6
-                                class="section-title text-muted text-uppercase border-start border-4 border-danger ps-2 mb-3">
-                                Officers</h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Position</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Isabel Delacion</td>
-                                            <td>Chairperson</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Jasmin Esperida</td>
-                                            <td>Vice Chairperson</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Maria Lopez</td>
-                                            <td>Secretary</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-orange">
+                                <i class="bi bi-pencil-square"></i>
                             </div>
-                        </section>
-                    </div>
+                            <div class="timeline-content">
+                                <p class="text-dark fw-bold">Financials Updated</p>
+                                <p class="text-muted small">Staff Jose encoded 2024 Assets for Agriculture Coop.</p>
+                                <span class="time-ago">2 hours ago</span>
+                            </div>
+                        </div>
 
-                    <div class="mt-4 text-end">
-                        <button class="btn btn-sm btn-outline-secondary" id="downloadPdfBtn">
-                            <i class="bi bi-file-earmark-pdf"></i> Download PDF
-                        </button>
-                        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-purple">
+                                <i class="bi bi-gear-fill"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <p class="text-dark fw-bold">System Maintenance</p>
+                                <p class="text-muted small">System backup completed successfully.</p>
+                                <span class="time-ago">1 day ago</span>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-red">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <p class="text-dark fw-bold">Login Attempt Failed</p>
+                                <p class="text-muted small">Multiple failed attempts detected for user 'guest'.</p>
+                                <span class="time-ago">1 day ago</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
+
         </div>
+    </div>
+
+    <div class="dashboard-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700;">Cooperative Demographics</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <select id="coopDemoCategoryFilter" class="form-select-sm" style="min-width: 120px;">
+                    <option value="">All Categories</option><option value="Micro">Micro</option><option value="Small">Small</option><option value="Medium">Medium</option><option value="Large">Large</option>
+                </select>
+                <select id="coopDemoDistrictFilter" class="form-select-sm" style="min-width: 120px;">
+                    <option value="">All Districts</option><option value="East">East</option><option value="West">West</option><option value="North">North</option><option value="South">South</option><option value="Urban">Urban</option>
+                </select>
+                <button id="applyCoopDemoFilters" class="btn btn-sm btn-primary">Apply Filters</button>
+            </div>
+        </div>
+        <div class="analytics-grid-secondary">
+            <div class="chart-card"><div class="card-header-custom"><h3>Cooperatives by Category</h3></div><div class="chart-wrapper" style="height: 250px;"><canvas id="coopCategoryChart"></canvas></div></div>
+            <div class="chart-card"><div class="card-header-custom"><h3>Geographic District</h3></div><div class="chart-wrapper" style="height: 250px;"><canvas id="coopDistrictChart"></canvas></div></div>
+            <div class="chart-card"><div class="card-header-custom"><h3>Member Gender Distribution</h3></div><div class="chart-wrapper" style="height: 250px;"><canvas id="memberGenderChart"></canvas></div></div>
+        </div>
+    </div>
+
+    <div class="dashboard-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+        <h2 style="color: #2B3674; font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem;">Statistical Analytics</h2>
+        <div class="charts-section">
+            <div class="chart-card main-chart" style="flex: 2; min-width: 400px;">
+                <div class="card-header-custom"><h3>Business Activity Analytics</h3><select id="businessActivityYearFilter" class="form-select-sm"><option value="">All Years</option><option value="2025">2025</option><option value="2024">2024</option></select></div>
+                <div class="chart-wrapper"><canvas id="businessActivityChart"></canvas></div>
+            </div>
+            <div class="chart-card ranking-card" style="flex: 1; min-width: 300px;">
+                <div class="card-header-custom"><h3>Top 20 Ranking</h3></div>
+                <div class="ranking-list">
+                    <div class="rank-item"><span class="rank-num">1</span><div class="rank-info"><span class="coop-name">Lipa City Multi-Purpose Coop</span><span class="coop-asset">₱ 520M</span></div></div>
+                    <div class="rank-item"><span class="rank-num">2</span><div class="rank-info"><span class="coop-name">Batangas Health Care MPC</span><span class="coop-asset">₱ 480M</span></div></div>
+                    <div class="rank-item"><span class="rank-num">3</span><div class="rank-info"><span class="coop-name">Metro Lipa Water District</span><span class="coop-asset">₱ 350M</span></div></div>
+                </div>
+            </div>
+        </div>
+        <div class="analytics-grid-secondary">
+            <div class="chart-card"><div class="card-header-custom"><h3>Cooperatives by Category</h3></div><div class="chart-wrapper"><canvas id="categoryChart"></canvas></div></div>
+            <div class="chart-card"><div class="card-header-custom"><h3>Compliance Status</h3><div class="legend-box"><span class="dot active"></span> OK <span class="dot inactive"></span> Exp</div></div><div class="chart-wrapper"><canvas id="complianceChart"></canvas></div></div>
+            <div class="table-card"><div class="card-header-custom"><h3>Preview Cooperatives</h3></div><div class="table-responsive"><table class="admin-table"><thead><tr><th>Cooperative</th><th>Year</th><th>Assets</th><th>Action</th></tr></thead><tbody id="pendingReviewsTableBody"></tbody></table></div></div>
+        </div>
+        
+        <div class="dashboard-section" style="margin-top: 2rem;">
+            <div class="chart-card" id="districtMapCard" style="width: 100%; max-width: 100%; height: auto !important; min-height: 500px !important; max-height: none !important; display: flex; flex-direction: row; gap: 1rem; padding: 20px;">
+                <div style="flex: 3; display: flex; flex-direction: column;">
+                    <div class="card-header-custom" style="margin-bottom: 10px;"><h3>Geographic District Distribution</h3></div>
+                    <div class="chart-wrapper" id="districtMapWrapper" style="position: relative; height: 450px !important; min-height: 450px !important; max-height: none !important; overflow: hidden; width: 100%; flex: 1;">
+                        <div id="districtMap" style="height: 100%; width: 100%;"></div>
+                        <div class="map-legend" style="bottom: 20px; right: 20px;"><strong>Cooperatives</strong><div class="legend-item"><div class="legend-color" style="background: #FFEDA0;"></div> 0-5</div><div class="legend-item"><div class="legend-color" style="background: #FD8D3C;"></div> 6-10</div><div class="legend-item"><div class="legend-color" style="background: #E31A1C;"></div> 16-20</div><div class="legend-item"><div class="legend-color" style="background: #800026;"></div> 25+</div></div>
+                    </div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 0.75rem; min-width: 200px;">
+                    <div style="font-weight: 700; color: #2B3674; margin-bottom: 0.5rem; font-size: 0.9rem;">District Summary</div>
+                    <div id="districtInfoCards" style="display: flex; flex-direction: column; gap: 0.75rem; overflow-y: auto; max-height: 450px;"><div class="text-center text-muted p-3" style="font-size: 0.85rem;">Loading districts...</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section" style="margin-top: 1.5rem;">
+            <div class="chart-card" style="width: 100%; max-width: 100%;">
+                <div class="card-header-custom">
+                    <h3>Financial Growth Trend</h3>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="financeCurrentView" class="current-view-badge">All Data</span>
+                        <div class="chart-filter-wrapper">
+                            <button id="financeFilterToggle" class="filter-icon-btn" type="button" title="Filter Metrics"><i class="bi bi-funnel"></i></button>
+                            <div id="financeFilterControls" class="chart-filter-dropdown" style="display: none;">
+                                <div class="dropdown-header-text">Select View:</div>
+                                <div class="filter-option active" onclick="applyFinancialFilter('all', this)"><span>All Data</span><i class="bi bi-check-lg check-icon"></i></div>
+                                <div class="filter-option" onclick="applyFinancialFilter('assets', this)"><span><span class="dot asset-dot"></span> Assets</span><i class="bi bi-check-lg check-icon"></i></div>
+                                <div class="filter-option" onclick="applyFinancialFilter('capital', this)"><span><span class="dot capital-dot"></span> Paid-Up Capital</span><i class="bi bi-check-lg check-icon"></i></div>
+                                <div class="filter-option" onclick="applyFinancialFilter('surplus', this)"><span><span class="dot surplus-dot"></span> Net Surplus</span><i class="bi bi-check-lg check-icon"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-legend-inline">
+                    <span class="legend-item"><span class="dot asset-dot"></span> Assets</span><span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span><span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
+                </div>
+                <div class="chart-wrapper" style="height: 450px;"><canvas id="financialTrendChart"></canvas></div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <script>

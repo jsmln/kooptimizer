@@ -258,7 +258,7 @@ BREVO_SENDER_NAME = config('BREVO_SENDER_NAME', default='Kooptimizer')
 # ====================================================================
 #  TICKETMASTER API CONFIGURATION
 # ====================================================================
-TICKETMASTER_API_KEY = config('TICKETMASTER_API_KEY', default='')
+TICKETMASTER_API_KEY = config('TICKETMASTER_API_KEY')
 
 # ====================================================================
 #  OPTIIC OCR API CONFIGURATION
