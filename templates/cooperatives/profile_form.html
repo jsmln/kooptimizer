@@ -3,6 +3,8 @@
 
 {% block dashboard_title %}Profile Management{% endblock %}
 
+{% block page_header %}Profile Management{% endblock %}
+
 {% block extra_head %}
 {{ block.super }}
 
@@ -17,11 +19,6 @@
         <div>
             <div style="display: flex; align-items: center; gap: 12px;">
                 <h2><i class="bi bi-building"></i> Cooperative Profile</h2>
-                {% if profile %}
-                <button type="button" class="btn-print-profile" onclick="printProfile()" title="Print Profile">
-                    <i class="bi bi-printer"></i>
-                </button>
-                {% endif %}
             </div>
             <p class="text-muted mb-0">View and manage your cooperative's information</p>
         </div>
@@ -65,15 +62,12 @@
                 {% endif %}
             </div>
             <div class="header-right">
-                {% if is_editable %}
+                <button type="button" class="btn-print-profile" onclick="printProfile()" title="Print Profile">
+                    <i class="bi bi-printer"></i> Print
+                </button>
                 <button type="button" class="btn-edit" data-bs-toggle="modal" data-bs-target="#createProfileModal">
                     <i class="bi bi-pencil"></i> Edit Profile
                 </button>
-                {% else %}
-                <button type="button" class="btn-edit" disabled style="opacity: 0.6; cursor: not-allowed;" title="Cannot edit past year profiles">
-                    <i class="bi bi-lock"></i> View Only
-                </button>
-                {% endif %}
             </div>
         </div>
 
@@ -403,7 +397,7 @@
                         <tr>
                             <td>{{ officer.fullname }}</td>
                             <td>{{ officer.position }}</td>
-                            <td>{{ officer.gender }}</td>
+                            <td>{{ officer.gender|title|default:"N/A" }}</td>
                             <td>{{ officer.mobile_number|default:"N/A" }}</td>
                             <td>{{ officer.email|default:"N/A" }}</td>
                         </tr>
@@ -430,7 +424,7 @@
                         {% for member in members %}
                         <tr>
                             <td>{{ member.fullname }}</td>
-                            <td>{{ member.gender|default:"N/A" }}</td>
+                            <td>{{ member.gender|title|default:"N/A" }}</td>
                             <td>{{ member.mobile_number|default:"N/A" }}</td>
                         </tr>
                         {% endfor %}
@@ -541,16 +535,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                {% if not is_editable and profile %}
-                <div class="alert alert-warning" style="margin-bottom: 20px; background: var(--warning-bg); border: 1px solid var(--warning-border); color: var(--warning-text);">
-                    <i class="bi bi-exclamation-triangle"></i> 
-                    <strong>View Only Mode:</strong> This profile is for year {{ profile.report_year }}, which has ended. 
-                    Past year profiles cannot be edited. To make changes, please create or edit the profile for the current year ({{ current_year }}).
-                </div>
-                {% endif %}
                 <div class="profile-form-container">
                     <form method="POST" enctype="multipart/form-data" id="profileForm"
-                        action="{% url 'cooperatives:create_profile' %}" {% if not is_editable %}onsubmit="event.preventDefault(); alert('Cannot edit past year profiles. Please select the current year.'); return false;"{% endif %}>
+                        action="{% url 'cooperatives:create_profile' %}">
                         {% csrf_token %}
                         {# Hidden field for report_year - defaults to current year or profile's year #}
                         <input type="hidden" name="report_year" id="report-year-field" 
@@ -824,7 +811,7 @@
                                                     style="background-color: #f8f9fa;"></td>
                                             <td><input type="text" value="{{ officer.position }}" readonly
                                                     style="background-color: #f8f9fa;"></td>
-                                            <td><input type="text" value="{{ officer.gender }}" readonly
+                                            <td><input type="text" value="{{ officer.gender|title|default:"N/A" }}" readonly
                                                     style="background-color: #f8f9fa;"></td>
                                             <td><input type="text" value="{{ officer.mobile_number }}" readonly
                                                     style="background-color: #f8f9fa;"></td>
@@ -869,8 +856,8 @@
                                             <td>
                                                 <select name="member_gender[]" required>
                                                     <option value="">Select</option>
-                                                    <option value="Male" {% if member.gender == "Male" %}selected{% endif %}>Male</option>
-                                                    <option value="Female" {% if member.gender == "Female" %}selected{% endif %}>Female</option>
+                                                    <option value="Male" {% if member.gender|lower == "male" %}selected{% endif %}>Male</option>
+                                                    <option value="Female" {% if member.gender|lower == "female" %}selected{% endif %}>Female</option>
                                                 </select>
                                             </td>
                                             <td><input type="text" name="member_mobile[]"
@@ -1027,6 +1014,18 @@
                 {% endif %}
                 e.preventDefault();
 
+                // Client-side validation: Check for at least one member with a name
+                const memberNameInputs = profileForm.querySelectorAll('input[name="member_name[]"]');
+                const validMembers = Array.from(memberNameInputs).filter(input => {
+                    const name = input.value.trim();
+                    return name && name.length >= 2;
+                });
+                
+                if (validMembers.length === 0) {
+                    alert('At least one member with a valid name (at least 2 characters) is required.');
+                    return false;
+                }
+
                 if (saveBtn) {
                     saveBtn.disabled = true;
                     if (spinner) spinner.classList.remove('d-none');
@@ -1078,10 +1077,14 @@
                     credentials: 'include'
                 })
                     .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
+                        // Parse JSON response regardless of status code
+                        return response.json().then(data => {
+                            if (!response.ok) {
+                                // If response is not OK, throw error with message from server
+                                throw new Error(data.error || data.message || `HTTP error! status: ${response.status}`);
+                            }
+                            return data;
+                        });
                     })
                     .then(data => {
                         if (data.success) {
@@ -1090,7 +1093,7 @@
                         } else {
                             // IMPROVED ERROR LOGGING
                             console.error("Server Error Detail:", data.error);
-                            alert('Error saving data: ' + (data.error || 'Check console for details'));
+                            alert('Error saving data: ' + (data.error || data.message || 'Check console for details'));
 
                             if (saveBtn) {
                                 saveBtn.disabled = false;
@@ -1101,7 +1104,7 @@
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('An error occurred while communicating with the server. Please try again.');
+                        alert('An error occurred while communicating with the server: ' + (error.message || 'Please try again.'));
                         if (saveBtn) {
                             saveBtn.disabled = false;
                             saveBtn.innerHTML = '<i class="bi bi-save"></i> Save Profile';

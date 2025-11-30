@@ -248,14 +248,23 @@ class AuthenticationMiddleware:
                 # Check referer to see if coming from public page
                 referer = request.META.get('HTTP_REFERER', '')
                 base_url = f"{request.scheme}://{request.get_host()}/"
+                login_url = f"{base_url}login/"
+                
+                # Check if coming from login page - don't show access denied message
+                is_from_login = referer and login_url in referer
                 
                 # If no referer (typed URL) or referer is from same site (navigating from public page)
                 # Redirect to access denied page
                 if not referer or referer.startswith(base_url):
-                    # Add message before redirecting
-                    if not messages.get_messages(request):
-                        messages.warning(request, 'Access denied. Please log in to access this page.')
-                    return redirect('access_denied')
+                    # Don't show access denied message if coming from login page
+                    if not is_from_login:
+                        # Add message before redirecting
+                        if not messages.get_messages(request):
+                            messages.warning(request, 'Access denied. Please log in to access this page.')
+                        return redirect('access_denied')
+                    else:
+                        # Coming from login page - just redirect to login without message
+                        return redirect('login')
                 else:
                     # External referer - redirect to login
                     messages.warning(request, 'Please log in to access this page.')

@@ -21,6 +21,85 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import os
 
+# Import models for getting user email
+try:
+    from apps.communications.models import Admin, Staff as CommStaff
+    from apps.cooperatives.models import Officer
+except ImportError:
+    # Fallback if models are in different locations
+    Admin = None
+    CommStaff = None
+    Officer = None
+
+# Import models for account management
+try:
+    from apps.account_management.models import Admin as AccountAdmin, Staff as AccountStaff, Officers as AccountOfficers, Users as AccountUsers
+except ImportError:
+    AccountAdmin = None
+    AccountStaff = None
+    AccountOfficers = None
+    AccountUsers = None
+
+# ============================================
+# HELPER FUNCTIONS
+# ============================================
+
+def get_user_email(user_id, role):
+    """
+    Get the email address for a user based on their role.
+    Returns the email from admin, staff, or officers table, or None if not found.
+    """
+    if not user_id or not role:
+        return None
+    
+    # Check if models are available
+    if Admin is None or CommStaff is None or Officer is None:
+        print("DEBUG get_user_email: Models not imported. Skipping email lookup.")
+        return None
+    
+    try:
+        # Convert user_id to int if it's a string
+        if isinstance(user_id, str):
+            try:
+                user_id = int(user_id)
+            except ValueError:
+                return None
+        
+        if role == 'admin':
+            try:
+                admin = Admin.objects.get(user_id=user_id)
+                email = admin.email if admin and hasattr(admin, 'email') else None
+                print(f"DEBUG get_user_email: Admin email for user_id={user_id}: {email}")
+                return email
+            except (Admin.DoesNotExist, AttributeError) as e:
+                print(f"DEBUG get_user_email: Admin not found for user_id={user_id}: {e}")
+                return None
+        elif role == 'staff':
+            try:
+                staff = CommStaff.objects.get(user_id=user_id)
+                email = staff.email if staff and hasattr(staff, 'email') else None
+                print(f"DEBUG get_user_email: Staff email for user_id={user_id}: {email}")
+                return email
+            except (CommStaff.DoesNotExist, AttributeError) as e:
+                print(f"DEBUG get_user_email: Staff not found for user_id={user_id}: {e}")
+                return None
+        elif role == 'officer':
+            try:
+                officer = Officer.objects.filter(user_id=user_id).first()
+                email = officer.email if officer and hasattr(officer, 'email') else None
+                print(f"DEBUG get_user_email: Officer email for user_id={user_id}: {email}")
+                return email
+            except (AttributeError, Exception) as e:
+                print(f"DEBUG get_user_email: Officer lookup error for user_id={user_id}: {e}")
+                return None
+    except Exception as e:
+        print(f"DEBUG get_user_email: Error getting email for user_id={user_id}, role={role}: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+    
+    return None
+
 # ============================================
 # LOGIN & LOGOUT VIEWS
 # ============================================
@@ -187,6 +266,10 @@ def login_view(request):
             request.session['user_id'] = user_id
             request.session['role'] = role
             request.session['last_activity'] = time.time()
+            
+            # Set session username to full name from database
+            set_session_username(request, user_id, role)
+            
             messages.success(request, f'Welcome back, {username}!')
             if role == 'admin':
                 return redirect('dashboard:admin_dashboard')
@@ -395,9 +478,147 @@ def login_required_custom(view_func):
         return view_func(request, *args, **kwargs)
     return wrapper
 
+def get_user_profile_data(user_id, role):
+    """
+    Retrieve user profile data from the appropriate table based on role.
+    Returns a dictionary with user data including first_name, last_name, email, etc.
+    """
+    if not user_id or not role:
+        return None
+    
+    try:
+        # Convert user_id to int if it's a string
+        if isinstance(user_id, str):
+            try:
+                user_id = int(user_id)
+            except ValueError:
+                return None
+        
+        # Get base user data
+        try:
+            user = User.objects.get(user_id=user_id)
+        except User.DoesNotExist:
+            return None
+        
+        # Initialize profile data with user data
+        profile_data = {
+            'user_id': user.user_id,
+            'username': user.username,
+            'first_name': '',
+            'last_name': '',
+            'email': '',
+            'mobile_number': '',
+            'position': '',
+            'gender': '',
+            'fullname': '',
+        }
+        
+        # Get role-specific data
+        if role == 'admin' and AccountAdmin:
+            try:
+                admin = AccountAdmin.objects.get(user_id=user_id)
+                profile_data['fullname'] = admin.fullname or ''
+                profile_data['email'] = admin.email or ''
+                profile_data['mobile_number'] = admin.mobile_number or ''
+                profile_data['position'] = admin.position or ''
+                profile_data['gender'] = admin.gender or ''
+                
+                # Parse fullname into first_name and last_name
+                if admin.fullname:
+                    name_parts = admin.fullname.strip().split()
+                    if len(name_parts) >= 2:
+                        profile_data['first_name'] = name_parts[0]
+                        profile_data['last_name'] = ' '.join(name_parts[1:])
+                    elif len(name_parts) == 1:
+                        profile_data['first_name'] = name_parts[0]
+            except AccountAdmin.DoesNotExist:
+                pass
+                
+        elif role == 'staff' and AccountStaff:
+            try:
+                staff = AccountStaff.objects.get(user_id=user_id)
+                profile_data['fullname'] = staff.fullname or ''
+                profile_data['email'] = staff.email or ''
+                profile_data['mobile_number'] = staff.mobile_number or ''
+                profile_data['position'] = staff.position or ''
+                profile_data['gender'] = staff.gender or ''
+                
+                # Parse fullname into first_name and last_name
+                if staff.fullname:
+                    name_parts = staff.fullname.strip().split()
+                    if len(name_parts) >= 2:
+                        profile_data['first_name'] = name_parts[0]
+                        profile_data['last_name'] = ' '.join(name_parts[1:])
+                    elif len(name_parts) == 1:
+                        profile_data['first_name'] = name_parts[0]
+            except AccountStaff.DoesNotExist:
+                pass
+                
+        elif role == 'officer' and AccountOfficers:
+            try:
+                officer = AccountOfficers.objects.filter(user_id=user_id).first()
+                if officer:
+                    profile_data['fullname'] = officer.fullname or ''
+                    profile_data['email'] = officer.email or ''
+                    profile_data['mobile_number'] = officer.mobile_number or ''
+                    profile_data['position'] = officer.position or ''
+                    profile_data['gender'] = officer.gender or ''
+                    
+                    # Parse fullname into first_name and last_name
+                    if officer.fullname:
+                        name_parts = officer.fullname.strip().split()
+                        if len(name_parts) >= 2:
+                            profile_data['first_name'] = name_parts[0]
+                            profile_data['last_name'] = ' '.join(name_parts[1:])
+                        elif len(name_parts) == 1:
+                            profile_data['first_name'] = name_parts[0]
+            except Exception:
+                pass
+        
+        return profile_data
+        
+    except Exception as e:
+        print(f"Error getting user profile data: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def set_session_username(request, user_id, role):
+    """
+    Set the session username to the user's full name from the database.
+    Falls back to username if no full name is found.
+    """
+    try:
+        profile_data = get_user_profile_data(user_id, role)
+        if profile_data:
+            fullname = profile_data.get('fullname', '').strip()
+            if not fullname and (profile_data.get('first_name') or profile_data.get('last_name')):
+                # Fallback to first_name + last_name if fullname is not available
+                name_parts = [profile_data.get('first_name', ''), profile_data.get('last_name', '')]
+                fullname = ' '.join([p for p in name_parts if p]).strip()
+            
+            if fullname:
+                request.session['username'] = fullname
+                request.session.modified = True
+                return fullname
+    except Exception as e:
+        print(f"Error setting session username: {e}")
+    
+    # If no full name found, keep existing username or use the base username
+    if 'username' not in request.session:
+        try:
+            user = User.objects.get(user_id=user_id)
+            request.session['username'] = user.username
+            request.session.modified = True
+        except User.DoesNotExist:
+            pass
+    
+    return request.session.get('username', '')
+
 @login_required_custom
 def profile_settings(request):
     user_id = request.session.get('user_id')
+    role = request.session.get('role')
     
     # Test Account Handling
     if user_id == 9999:
@@ -411,13 +632,47 @@ def profile_settings(request):
         return render(request, 'users/settings.html', context)
 
     try:
+        # Get base user data
         user = User.objects.get(user_id=user_id)
+        
+        # Get role-specific profile data
+        profile_data = get_user_profile_data(user_id, role)
+        
+        if not profile_data:
+            messages.error(request, "Profile data not found.")
+            return redirect('login')
+        
+        # Create a combined user object for the template
+        class UserProfile:
+            def __init__(self, user, profile_data):
+                self.user_id = user.user_id
+                self.username = user.username
+                self.first_name = profile_data.get('first_name', '')
+                self.last_name = profile_data.get('last_name', '')
+                self.email = profile_data.get('email', '')
+                self.mobile_number = profile_data.get('mobile_number', '')
+                self.position = profile_data.get('position', '')
+                self.gender = profile_data.get('gender', '')
+                self.fullname = profile_data.get('fullname', '')
+                self.profile_picture = None  # Profile pictures not stored in these tables
+        
+        user_profile = UserProfile(user, profile_data)
+        
+        # Update session username with full name for header display
+        set_session_username(request, user_id, role)
+        
+        context = {'user': user_profile}
+        return render(request, 'users/settings.html', context)
+        
     except User.DoesNotExist:
         messages.error(request, "User not found.")
         return redirect('login')
-
-    context = {'user': user}
-    return render(request, 'users/settings.html', context)
+    except Exception as e:
+        print(f"Profile settings error: {e}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, "An error occurred while loading profile settings.")
+        return redirect('login')
 
 @login_required_custom
 def update_profile(request):
@@ -425,6 +680,7 @@ def update_profile(request):
         return redirect('users:profile_settings')
 
     user_id = request.session.get('user_id')
+    role = request.session.get('role')
 
     # Test Account Handling
     if user_id == 9999:
@@ -437,45 +693,122 @@ def update_profile(request):
         return redirect('users:profile_settings')
     
     try:
+        # Convert user_id to int if needed
+        if isinstance(user_id, str):
+            try:
+                user_id = int(user_id)
+            except ValueError:
+                messages.error(request, "Invalid user ID.")
+                return redirect('users:profile_settings')
+        
+        # Get base user data
         user = User.objects.get(user_id=user_id)
         
-        # 1. Get Data
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        email = request.POST.get('email')
+        # 1. Get Form Data
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
         avatar = request.FILES.get('avatar')
 
-        # 2. Update Fields
-        if first_name: user.first_name = first_name
-        if last_name: user.last_name = last_name
-        if email: user.email = email
-
-        # 3. Password Logic
-        if new_password:
+        # 2. Update Password in User table if provided (blank passwords are allowed - no update)
+        if new_password and new_password.strip():
+            # Only validate and update if password is provided
             if new_password != confirm_password:
                 messages.error(request, "Passwords do not match.")
                 return redirect('users:profile_settings')
             if len(new_password) < 8:
-                messages.error(request, "Password must be 8+ chars.")
+                messages.error(request, "Password must be at least 8 characters.")
                 return redirect('users:profile_settings')
             user.password_hash = make_password(new_password)
+            user.save()
 
-        # 4. Avatar Logic
-        if avatar:
-            if avatar.size > 2 * 1024 * 1024: # 2MB Limit
-                messages.error(request, "Image too large (Max 2MB).")
-                return redirect('users:profile_settings')
-            user.profile_picture = avatar
-
-        # 5. Save to Database
-        user.save()
+        # 3. Update role-specific profile data
+        fullname = f"{first_name} {last_name}".strip() if first_name or last_name else ''
+        profile_updated = False
         
-        # 6. Update Session Name (So sidebar updates instantly)
-        full_name = f"{user.first_name} {user.last_name}".strip()
-        if full_name:
-            request.session['username'] = full_name
+        if role == 'admin' and AccountAdmin and AccountUsers:
+            try:
+                admin = AccountAdmin.objects.get(user_id=user_id)
+                # Always update fields (even if empty, to allow clearing)
+                admin.fullname = fullname
+                admin.email = email
+                admin.save()
+                profile_updated = True
+            except AccountAdmin.DoesNotExist:
+                # Create admin profile if it doesn't exist
+                try:
+                    account_user = AccountUsers.objects.get(user_id=user_id)
+                    AccountAdmin.objects.create(
+                        user=account_user,
+                        fullname=fullname,
+                        email=email
+                    )
+                    profile_updated = True
+                except AccountUsers.DoesNotExist:
+                    print(f"Error: AccountUsers not found for user_id={user_id}")
+                except Exception as e:
+                    print(f"Error creating admin profile: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    
+        elif role == 'staff' and AccountStaff and AccountUsers:
+            try:
+                staff = AccountStaff.objects.get(user_id=user_id)
+                # Always update fields (even if empty, to allow clearing)
+                staff.fullname = fullname
+                staff.email = email
+                staff.save()
+                profile_updated = True
+            except AccountStaff.DoesNotExist:
+                # Create staff profile if it doesn't exist
+                try:
+                    account_user = AccountUsers.objects.get(user_id=user_id)
+                    AccountStaff.objects.create(
+                        user=account_user,
+                        fullname=fullname,
+                        email=email
+                    )
+                    profile_updated = True
+                except AccountUsers.DoesNotExist:
+                    print(f"Error: AccountUsers not found for user_id={user_id}")
+                except Exception as e:
+                    print(f"Error creating staff profile: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    
+        elif role == 'officer' and AccountOfficers:
+            try:
+                officer = AccountOfficers.objects.filter(user_id=user_id).first()
+                if officer:
+                    # Always update fields (even if empty, to allow clearing)
+                    officer.fullname = fullname
+                    officer.email = email
+                    officer.save()
+                    profile_updated = True
+                else:
+                    # Note: Officers need a coop_id, so we can't create without it
+                    print(f"Warning: Officer profile not found for user_id={user_id}")
+            except Exception as e:
+                print(f"Error updating officer profile: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        # Log if profile wasn't updated (for debugging)
+        if not profile_updated and role in ['admin', 'staff', 'officer']:
+            print(f"Warning: Profile not updated for user_id={user_id}, role={role}")
+            print(f"AccountAdmin available: {AccountAdmin is not None}")
+            print(f"AccountStaff available: {AccountStaff is not None}")
+            print(f"AccountOfficers available: {AccountOfficers is not None}")
+        
+        # 4. Avatar Logic (if profile pictures are stored elsewhere)
+        # Note: Profile pictures are not in the admin/staff/officers tables
+        # This would need to be handled separately if you have a profile_picture field
+        
+        # 5. Update Session Name (So sidebar updates instantly)
+        if fullname:
+            request.session['username'] = fullname
         else:
             request.session['username'] = user.username
             
@@ -489,6 +822,8 @@ def update_profile(request):
         return redirect('login')
     except Exception as e:
         print(f"Update Error: {e}")
+        import traceback
+        traceback.print_exc()
         messages.error(request, "An error occurred while saving changes.")
         return redirect('users:profile_settings')
 
@@ -640,27 +975,21 @@ def all_events(request):
         print(f"DEBUG all_events: Total events in database: {total_events}")
         
         if user_id:
-            # Try multiple query approaches to find events
-            # Approach 1: Filter by user_id directly (ForeignKey column)
-            events = Event.objects.filter(user_id=user_id)
+            # Filter by user_id - check both the FK column and description field (workaround)
+            # Since FK points to auth_user but our users are in custom users table,
+            # we need to check both user_id and description for USER_ID:xxx pattern
+            events_by_fk = Event.objects.filter(user_id=user_id)
+            # Also check description for USER_ID:xxx pattern as fallback
+            all_events_list = list(Event.objects.all())
+            events_by_desc = [e for e in all_events_list if e.description and f"USER_ID:{user_id}" in e.description]
+            
+            # Combine both, removing duplicates
+            event_ids = set(events_by_fk.values_list('id', flat=True))
+            event_ids.update([e.id for e in events_by_desc])
+            events = Event.objects.filter(id__in=event_ids) if event_ids else Event.objects.none()
+            
             event_count = events.count()
-            print(f"DEBUG all_events: Approach 1 (user_id={user_id}): Found {event_count} events")
-            
-            # Approach 2: If no results, try filtering by user's primary key
-            if event_count == 0:
-                from .models import User
-                try:
-                    user = User.objects.get(pk=user_id)
-                    events = Event.objects.filter(user=user)
-                    event_count = events.count()
-                    print(f"DEBUG all_events: Approach 2 (user object): Found {event_count} events")
-                except User.DoesNotExist:
-                    print(f"DEBUG all_events: User with pk={user_id} does not exist")
-            
-            # Approach 3: If still no results but events exist, show all (for debugging)
-            if event_count == 0 and total_events > 0:
-                print(f"DEBUG all_events: No events for user_id={user_id}, but {total_events} total events exist. Showing all events for debugging.")
-                events = Event.objects.all()
+            print(f"DEBUG all_events: Filtering by user_id={user_id}: Found {event_count} events")
         else:
             # If not logged in, show all events
             events = Event.objects.all()
@@ -773,17 +1102,46 @@ def add_event(request):
                 end_dt = timezone.make_aware(end_dt, timezone.get_current_timezone())
 
             # 3. SAVE TO DB
-            # Always use user_id directly to avoid model mismatch issues with AUTH_USER_MODEL
-            # The Event.user ForeignKey points to AUTH_USER_MODEL, which may be different from our custom User model
+            # The Event.user ForeignKey points to AUTH_USER_MODEL (Django's default User in auth_user table),
+            # but our users are in the custom users table. We'll use raw SQL to insert with user_id=NULL
+            # and then update it, or use a workaround to store the custom user_id.
             try:
-                new_event = Event.objects.create(
-                    user_id=user_id,  # Use user_id directly - Django will handle the ForeignKey
-                    title=data.get("title"),
-                    description=data.get("description"),
-                    start_date=start_dt,
-                    end_date=end_dt
-                )
-                print(f"✓ Event saved to database: ID={new_event.id}, user_id={user_id}, title={new_event.title}")
+                # Use raw SQL to insert event, setting user_id to NULL to avoid FK constraint violation
+                # We'll store the custom user_id in the description or use a workaround
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        INSERT INTO app_events (user_id, title, description, start_date, end_date)
+                        VALUES (NULL, %s, %s, %s, %s)
+                        RETURNING id
+                    """, [
+                        data.get("title"),
+                        data.get("description", ""),
+                        start_dt,
+                        end_dt
+                    ])
+                    event_id = cursor.fetchone()[0]
+                    
+                    # Try to update user_id - this will fail if FK constraint is enforced at DB level
+                    # If it fails, we'll store user_id in description as a workaround
+                    try:
+                        cursor.execute(
+                            "UPDATE app_events SET user_id = %s WHERE id = %s",
+                            [user_id, event_id]
+                        )
+                        print(f"✓ Event saved to database: ID={event_id}, user_id={user_id}, title={data.get('title')}")
+                    except Exception as fk_error:
+                        # FK constraint violation - store user_id in description as metadata
+                        # Format: "USER_ID:47|original description"
+                        original_desc = data.get("description", "")
+                        desc_with_user = f"USER_ID:{user_id}|{original_desc}" if original_desc else f"USER_ID:{user_id}"
+                        cursor.execute(
+                            "UPDATE app_events SET description = %s WHERE id = %s",
+                            [desc_with_user, event_id]
+                        )
+                        print(f"✓ Event saved (user_id in description): ID={event_id}, user_id={user_id}, title={data.get('title')}")
+                
+                new_event = Event.objects.get(id=event_id)
+                
             except Exception as db_error:
                 print(f"✗ Database save error: {db_error}")
                 import traceback
@@ -792,36 +1150,53 @@ def add_event(request):
             
             # 4. GOOGLE SYNC (Safety Bubble)
             try:
-                SCOPES = ['https://www.googleapis.com/auth/calendar']
-                SERVICE_ACCOUNT_FILE = 'service_account.json' 
+                # Get user's email based on their role
+                user_role = request.session.get('role')
+                user_email = get_user_email(user_id, user_role)
                 
-                if os.path.exists(SERVICE_ACCOUNT_FILE):
-                    creds = service_account.Credentials.from_service_account_file(
-                        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-                    service = build('calendar', 'v3', credentials=creds)
-
-                    google_event = {
-                        'summary': data.get("title"),
-                        'description': data.get("description"),
-                        'start': {
-                            'dateTime': final_start, # Uses the fixed format
-                            'timeZone': 'Asia/Manila',
-                        },
-                        'end': {
-                            'dateTime': final_end,   # Uses the fixed format
-                            'timeZone': 'Asia/Manila',
-                        },
-                    }
-
-                    # Use 'primary' if you shared with the robot email. 
-                    # If that fails, replace 'primary' with your actual Gmail address.
-                    # Replace 'your.email@gmail.com' with your REAL email address inside the quotes
-                    my_calendar_id = 'kooptimizer@gmail.com' 
-
-                    service.events().insert(calendarId=my_calendar_id, body=google_event).execute()
-                    print("SUCCESS: Synced to Google Calendar!")
+                if not user_email:
+                    print(f"DEBUG add_event: No email found for user_id={user_id}, role={user_role}. Skipping Google Calendar sync.")
                 else:
-                    print("WARNING: service_account.json not found.")
+                    SCOPES = ['https://www.googleapis.com/auth/calendar']
+                    SERVICE_ACCOUNT_FILE = 'service_account.json' 
+                    
+                    if os.path.exists(SERVICE_ACCOUNT_FILE):
+                        creds = service_account.Credentials.from_service_account_file(
+                            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+                        service = build('calendar', 'v3', credentials=creds)
+
+                        google_event = {
+                            'summary': data.get("title"),
+                            'description': data.get("description"),
+                            'start': {
+                                'dateTime': final_start, # Uses the fixed format
+                                'timeZone': 'Asia/Manila',
+                            },
+                            'end': {
+                                'dateTime': final_end,   # Uses the fixed format
+                                'timeZone': 'Asia/Manila',
+                            },
+                        }
+
+                        # Use the user's email as the calendar ID
+                        # For domain-wide delegation, the service account can impersonate the user
+                        # If using a regular service account, you may need to share the calendar with the service account email
+                        calendar_id = user_email
+                        print(f"DEBUG add_event: Syncing to Google Calendar for user: {calendar_id}")
+
+                        try:
+                            service.events().insert(calendarId=calendar_id, body=google_event).execute()
+                            print(f"SUCCESS: Synced to Google Calendar for {calendar_id}!")
+                        except Exception as calendar_error:
+                            # If direct access fails, try using 'primary' as fallback
+                            print(f"WARNING: Failed to sync to {calendar_id}, trying 'primary': {calendar_error}")
+                            try:
+                                service.events().insert(calendarId='primary', body=google_event).execute()
+                                print("SUCCESS: Synced to Google Calendar (primary)!")
+                            except Exception as fallback_error:
+                                print(f"GOOGLE SYNC FAILED: {fallback_error}")
+                    else:
+                        print("WARNING: service_account.json not found.")
 
             except Exception as google_error:
                 print(f"GOOGLE SYNC FAILED (Ignored): {google_error}")
@@ -830,5 +1205,166 @@ def add_event(request):
             
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)})
+
+    return JsonResponse({"status": "error"}, status=400)
+
+@csrf_exempt
+def update_event(request, event_id):
+    if request.method == "PUT" or request.method == "POST":
+        try:
+            # 1. SETUP USER_ID - Get user_id from session
+            user_id = request.session.get('user_id')
+            if not user_id:
+                return JsonResponse({"status": "error", "message": "User not authenticated"}, status=401)
+            print(f"DEBUG update_event: user_id from session = {user_id}, event_id = {event_id}")
+
+            # 2. VERIFY EVENT EXISTS AND BELONGS TO USER
+            try:
+                event = Event.objects.get(id=event_id)
+            except Event.DoesNotExist:
+                return JsonResponse({"status": "error", "message": "Event not found"}, status=404)
+            
+            # Check if event belongs to user (check both FK and description workaround)
+            event_belongs_to_user = False
+            if event.user_id == user_id:
+                event_belongs_to_user = True
+            elif event.description and f"USER_ID:{user_id}" in event.description:
+                event_belongs_to_user = True
+            
+            if not event_belongs_to_user:
+                print(f"DEBUG update_event: Event {event_id} does not belong to user_id {user_id}")
+                return JsonResponse({"status": "error", "message": "You don't have permission to edit this event"}, status=403)
+
+            # 3. PREPARE DATA
+            data = json.loads(request.body)
+            raw_start = data.get("start")
+            raw_end = data.get("end")
+
+            # --- SMART DATE FORMATTER ---
+            # Handle None or empty strings
+            if not raw_start:
+                # If no start date provided, keep existing start_date
+                final_start = event.start_date.isoformat() if event.start_date else None
+            elif 'T' not in str(raw_start):
+                final_start = f"{raw_start}T08:00:00"
+            else:
+                final_start = raw_start if len(raw_start) > 16 else f"{raw_start}:00"
+
+            if not raw_end:
+                # If no end date provided, keep existing end_date
+                final_end = event.end_date.isoformat() if event.end_date else None
+            elif 'T' not in str(raw_end):
+                final_end = f"{raw_end}T09:00:00"
+            else:
+                final_end = raw_end if len(raw_end) > 16 else f"{raw_end}:00"
+
+            # Parse datetime strings and make them timezone-aware
+            if final_start:
+                try:
+                    start_dt = datetime.datetime.fromisoformat(final_start.replace('Z', '+00:00'))
+                except (ValueError, AttributeError):
+                    try:
+                        if '+' in final_start or final_start.endswith('Z'):
+                            start_dt = datetime.datetime.fromisoformat(final_start.replace('Z', '+00:00'))
+                        else:
+                            start_dt = datetime.datetime.strptime(final_start, "%Y-%m-%dT%H:%M:%S")
+                    except ValueError:
+                        start_dt = event.start_date or timezone.now()
+                
+                # Make timezone-aware if naive (regardless of which parsing method succeeded)
+                if start_dt and timezone.is_naive(start_dt):
+                    start_dt = timezone.make_aware(start_dt, timezone.get_current_timezone())
+            else:
+                start_dt = event.start_date  # Keep existing if not provided
+
+            if final_end:
+                try:
+                    end_dt = datetime.datetime.fromisoformat(final_end.replace('Z', '+00:00'))
+                except (ValueError, AttributeError):
+                    try:
+                        if '+' in final_end or final_end.endswith('Z'):
+                            end_dt = datetime.datetime.fromisoformat(final_end.replace('Z', '+00:00'))
+                        else:
+                            end_dt = datetime.datetime.strptime(final_end, "%Y-%m-%dT%H:%M:%S")
+                    except ValueError:
+                        end_dt = event.end_date or timezone.now()
+                
+                # Make timezone-aware if naive (regardless of which parsing method succeeded)
+                if end_dt and timezone.is_naive(end_dt):
+                    end_dt = timezone.make_aware(end_dt, timezone.get_current_timezone())
+            else:
+                end_dt = event.end_date  # Keep existing if not provided
+
+            # 4. UPDATE EVENT
+            event.title = data.get("title", event.title)
+            event.description = data.get("description", event.description)
+            if start_dt:
+                event.start_date = start_dt
+            if end_dt:
+                event.end_date = end_dt
+            event.save()
+            
+            print(f"✓ Event updated: ID={event.id}, title={event.title}")
+
+            # 5. GOOGLE SYNC (if applicable)
+            try:
+                # Get user's email based on their role
+                user_role = request.session.get('role')
+                user_email = get_user_email(user_id, user_role)
+                
+                if not user_email:
+                    print(f"DEBUG update_event: No email found for user_id={user_id}, role={user_role}. Skipping Google Calendar sync.")
+                else:
+                    SCOPES = ['https://www.googleapis.com/auth/calendar']
+                    SERVICE_ACCOUNT_FILE = 'service_account.json' 
+                    
+                    if os.path.exists(SERVICE_ACCOUNT_FILE):
+                        creds = service_account.Credentials.from_service_account_file(
+                            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+                        service = build('calendar', 'v3', credentials=creds)
+
+                        google_event = {
+                            'summary': data.get("title"),
+                            'description': data.get("description"),
+                            'start': {
+                                'dateTime': final_start,
+                                'timeZone': 'Asia/Manila',
+                            },
+                            'end': {
+                                'dateTime': final_end,
+                                'timeZone': 'Asia/Manila',
+                            },
+                        }
+
+                        # Use the user's email as the calendar ID
+                        calendar_id = user_email
+                        print(f"DEBUG update_event: Syncing to Google Calendar for user: {calendar_id}")
+
+                        try:
+                            # Note: For updates, you'd need to track google_event_id to update existing events
+                            # For now, we'll create a new event (which may create duplicates)
+                            # TODO: Store google_event_id in Event model to enable proper updates
+                            service.events().insert(calendarId=calendar_id, body=google_event).execute()
+                            print(f"SUCCESS: Synced updated event to Google Calendar for {calendar_id}!")
+                        except Exception as calendar_error:
+                            # If direct access fails, try using 'primary' as fallback
+                            print(f"WARNING: Failed to sync to {calendar_id}, trying 'primary': {calendar_error}")
+                            try:
+                                service.events().insert(calendarId='primary', body=google_event).execute()
+                                print("SUCCESS: Synced to Google Calendar (primary)!")
+                            except Exception as fallback_error:
+                                print(f"GOOGLE SYNC FAILED: {fallback_error}")
+                    else:
+                        print("WARNING: service_account.json not found.")
+            except Exception as google_error:
+                print(f"GOOGLE SYNC FAILED (Ignored): {google_error}")
+
+            return JsonResponse({"status": "success"})
+            
+        except Exception as e:
+            print(f"ERROR update_event: {e}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
     return JsonResponse({"status": "error"}, status=400)

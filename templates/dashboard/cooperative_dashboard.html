@@ -3,11 +3,15 @@
 
 {% block dashboard_title %}Cooperative Dashboard{% endblock %}
 
+{% block page_header %}Cooperative Dashboard{% endblock %}
+
 {% block extra_head %}
-    {{ block.super }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link rel="stylesheet" href="{% static 'frontend/cooperative_dashboard.css' %}">
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link rel="stylesheet" href="{% static 'frontend/cooperative_dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'frontend/print_modal.css' %}">
+<script src="{% static 'frontend/print_modal.js' %}"></script>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -20,7 +24,8 @@
         </div>
         <div class="modal-body-blocking">
             <p class="modal-message">
-                Your cooperative profile has not been submitted yet. Please complete your profile data before accessing the dashboard.
+                Your cooperative profile has not been submitted yet. Please complete your profile data before accessing
+                the dashboard.
             </p>
             <p class="modal-submessage">
                 You need to submit your cooperative profile information to continue.
@@ -38,12 +43,18 @@
 </div>
 {% endif %}
 
-<div class="coop-dashboard-container" {% if not has_profile_data %}style="display: none;"{% endif %}>
-    
+<div class="coop-dashboard-container" {% if not has_profile_data %}style="display: none;" {% endif %}>
+
     <div class="dashboard-header">
         <div>
             <h4 class="subtitle">Cooperative Overview</h4>
             <h1>Welcome, {{ request.session.username|default:'Officer' }}!</h1>
+        </div>
+        <div>
+            <button id="printDashboardBtn" class="btn btn-primary"
+                style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-printer"></i> Print Dashboard
+            </button>
         </div>
     </div>
 
@@ -71,7 +82,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <hr class="divider">
 
         <div class="hero-details-grid">
@@ -132,7 +143,7 @@
             </div>
         </div>
 
-        <div class="stat-card">
+        {% comment %} <div class="stat-card">
             <div class="card-icon purple-bg"><i class="bi bi-wallet2"></i></div>
             <div class="card-content">
                 <p class="label">Total Assets</p>
@@ -148,7 +159,7 @@
                 <h3 class="value" id="stat-surplus">₱0</h3>
                 <small class="text-muted" id="stat-surplus-year">Latest financial year</small>
             </div>
-        </div>
+        </div> {% endcomment %}
     </div>
 
     <!-- Member Gender Distribution Card -->
@@ -181,7 +192,7 @@
                     <span class="gender-count" id="othersCount">0</span>
                 </div>
             </div>
-            
+
             <!-- Donut Chart on Right -->
             <div class="chart-container-small" style="flex: 1; max-width: 300px;">
                 <canvas id="genderRatioChart"></canvas>
@@ -221,13 +232,51 @@
                 </div>
             </div>
         </div>
-        <div class="chart-legend-inline">
-            <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
-            <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
-            <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
-        </div>
-        <div class="chart-wrapper" style="height: 350px;">
-            <canvas id="financialTrendChart"></canvas>
+        <div style="display: flex; gap: 20px;">
+            <!-- Chart Section - 2/3 width -->
+            <div style="flex: 2; display: flex; flex-direction: column;">
+                <div class="chart-legend-inline">
+                    <span class="legend-item"><span class="dot asset-dot"></span> Assets</span>
+                    <span class="legend-item"><span class="dot capital-dot"></span> Paid-Up Capital</span>
+                    <span class="legend-item"><span class="dot surplus-dot"></span> Net Surplus</span>
+                </div>
+                <div class="chart-wrapper" style="height: 350px;">
+                    <canvas id="financialTrendChart"></canvas>
+                </div>
+            </div>
+            <!-- KPI Subcards Section - 1/3 width -->
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+                <div id="kpi-assets-card" class="kpi-subcard">
+                    <div class="kpi-subcard-header">
+                        <span class="kpi-label">Assets</span>
+                        <span class="kpi-trend" id="kpi-assets-trend">
+                            <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </div>
+                    <div class="kpi-value" id="kpi-assets-value">₱0</div>
+                    <div class="kpi-comparison" id="kpi-assets-comparison">No previous data</div>
+                </div>
+                <div id="kpi-capital-card" class="kpi-subcard">
+                    <div class="kpi-subcard-header">
+                        <span class="kpi-label">Paid-Up Capital</span>
+                        <span class="kpi-trend" id="kpi-capital-trend">
+                            <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </div>
+                    <div class="kpi-value" id="kpi-capital-value">₱0</div>
+                    <div class="kpi-comparison" id="kpi-capital-comparison">No previous data</div>
+                </div>
+                <div id="kpi-surplus-card" class="kpi-subcard">
+                    <div class="kpi-subcard-header">
+                        <span class="kpi-label">Net Surplus</span>
+                        <span class="kpi-trend" id="kpi-surplus-trend">
+                            <i class="bi bi-arrow-right"></i>
+                        </span>
+                    </div>
+                    <div class="kpi-value" id="kpi-surplus-value">₱0</div>
+                    <div class="kpi-comparison" id="kpi-surplus-comparison">No previous data</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -238,12 +287,14 @@
                 <h3>Quick Actions</h3>
             </div>
             <div class="action-grid">
-                <a href="{% url 'cooperatives:profile_form' %}" class="action-btn" id="viewProfileBtn" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+                <a href="{% url 'cooperatives:profile_form' %}" class="action-btn" id="viewProfileBtn"
+                    style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
                     <i class="bi bi-eye-fill"></i>
                     <span>View Cooperative Profile</span>
                 </a>
-                
-                <a href="{% url 'cooperatives:profile_form' %}#edit" class="action-btn" id="updateProfileBtn" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+
+                <a href="{% url 'cooperatives:profile_form' %}#edit" class="action-btn" id="updateProfileBtn"
+                    style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
                     <i class="bi bi-pencil-square"></i>
                     <span>Update Profile</span>
                 </a>
@@ -309,7 +360,9 @@
                         </tr>
                     </thead>
                     <tbody id="officersTableBody">
-                        <tr><td colspan="2" class="text-center text-muted">Loading officers...</td></tr>
+                        <tr>
+                            <td colspan="2" class="text-center text-muted">Loading officers...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -328,15 +381,17 @@
                 <button class="modal-close-btn">&times;</button>
             </div>
         </div>
-        
+
         <div class="modal-scroll-area">
             <div id="printable-area">
                 <div class="modal-header-section">
                     <div class="coop-avatar">{{ cooperative.cooperative_name|first|default:"C" }}</div>
                     <div class="coop-title-info">
                         <h4 id="modal-coop-name">{{ cooperative.cooperative_name|default:"Consumer Cooperative" }}</h4>
-                        <span class="badge-cda">CDA: {{ cooperative.cda_registration_number|default:"1414-060923055" }}</span>
-                        <div class="update-info">Last Updated: {{ cooperative.updated_at|default:"Sept 30, 2025" }}</div>
+                        <span class="badge-cda">CDA: {{ cooperative.cda_registration_number|default:"1414-060923055"
+                            }}</span>
+                        <div class="update-info">Last Updated: {{ cooperative.updated_at|default:"Sept 30, 2025" }}
+                        </div>
                     </div>
                 </div>
 
@@ -344,30 +399,66 @@
                     <section class="info-section">
                         <h5 class="section-title">Cooperative General Information</h5>
                         <div class="info-grid two-col">
-                            <div class="info-item"><label>Cooperative Name</label><p>{{ cooperative.cooperative_name|default:"Consumer Cooperative" }}</p></div>
-                            <div class="info-item"><label>Address</label><p>{{ cooperative.address|default:"Sabang, Lipa City, Batangas" }}</p></div>
-                            <div class="info-item"><label>Contact Number</label><p>{{ cooperative.contact_number|default:"09929380925" }}</p></div>
-                            <div class="info-item"><label>Email Address</label><p>{{ cooperative.email|default:"consumercoop@gmail.com" }}</p></div>
-                            <div class="info-item"><label>CDA Reg. No.</label><p>{{ cooperative.cda_registration_number|default:"1414-060923055" }}</p></div>
-                            <div class="info-item"><label>CDA Reg. Date</label><p>{{ cooperative.cda_registration_date|default:"09-06-2005" }}</p></div>
-                            <div class="info-item"><label>LCCDC Membership</label><p>{{ cooperative.lccdc_membership_date|default:"09-14-2014" }}</p></div>
-                            <div class="info-item"><label>Area of Operation</label><p>{{ cooperative.area_operation|default:"Consumer" }}</p></div>
-                            <div class="info-item"><label>Business Activity</label><p>{{ cooperative.business_activity|default:"Supply and demand" }}</p></div>
-                            <div class="info-item"><label>Board Directors</label><p>{{ cooperative.bod_count|default:"3" }}</p></div>
-                            <div class="info-item"><label>Salaried Employees</label><p>{{ cooperative.employee_count|default:"14" }}</p></div>
-                            <div class="info-item"><label>Compliance Cert.</label><p><span class="status-yes">Yes</span></p></div>
-                            <div class="info-item"><label>Tax Exemption</label><p><span class="status-yes">Yes</span></p></div>
+                            <div class="info-item"><label>Cooperative Name</label>
+                                <p>{{ cooperative.cooperative_name|default:"Consumer Cooperative" }}</p>
+                            </div>
+                            <div class="info-item"><label>Address</label>
+                                <p>{{ cooperative.address|default:"Sabang, Lipa City, Batangas" }}</p>
+                            </div>
+                            <div class="info-item"><label>Contact Number</label>
+                                <p>{{ cooperative.contact_number|default:"09929380925" }}</p>
+                            </div>
+                            <div class="info-item"><label>Email Address</label>
+                                <p>{{ cooperative.email|default:"consumercoop@gmail.com" }}</p>
+                            </div>
+                            <div class="info-item"><label>CDA Reg. No.</label>
+                                <p>{{ cooperative.cda_registration_number|default:"1414-060923055" }}</p>
+                            </div>
+                            <div class="info-item"><label>CDA Reg. Date</label>
+                                <p>{{ cooperative.cda_registration_date|default:"09-06-2005" }}</p>
+                            </div>
+                            <div class="info-item"><label>LCCDC Membership</label>
+                                <p>{{ cooperative.lccdc_membership_date|default:"09-14-2014" }}</p>
+                            </div>
+                            <div class="info-item"><label>Area of Operation</label>
+                                <p>{{ cooperative.area_operation|default:"Consumer" }}</p>
+                            </div>
+                            <div class="info-item"><label>Business Activity</label>
+                                <p>{{ cooperative.business_activity|default:"Supply and demand" }}</p>
+                            </div>
+                            <div class="info-item"><label>Board Directors</label>
+                                <p>{{ cooperative.bod_count|default:"3" }}</p>
+                            </div>
+                            <div class="info-item"><label>Salaried Employees</label>
+                                <p>{{ cooperative.employee_count|default:"14" }}</p>
+                            </div>
+                            <div class="info-item"><label>Compliance Cert.</label>
+                                <p><span class="status-yes">Yes</span></p>
+                            </div>
+                            <div class="info-item"><label>Tax Exemption</label>
+                                <p><span class="status-yes">Yes</span></p>
+                            </div>
                         </div>
                     </section>
 
                     <section class="info-section">
                         <h5 class="section-title">Financial Records</h5>
                         <div class="info-grid three-col">
-                            <div class="info-item"><label>2022 Assets</label><p>₱ 142,657.00</p></div>
-                            <div class="info-item"><label>2023 Assets</label><p>₱ 258,843.00</p></div>
-                            <div class="info-item"><label>2024 Assets</label><p>₱ 356,964.68</p></div>
-                            <div class="info-item"><label>Paid Up Capital</label><p>₱ 108,243.78</p></div>
-                            <div class="info-item"><label>Net Surplus</label><p>₱ 10,653.54</p></div>
+                            <div class="info-item"><label>2022 Assets</label>
+                                <p>₱ 142,657.00</p>
+                            </div>
+                            <div class="info-item"><label>2023 Assets</label>
+                                <p>₱ 258,843.00</p>
+                            </div>
+                            <div class="info-item"><label>2024 Assets</label>
+                                <p>₱ 356,964.68</p>
+                            </div>
+                            <div class="info-item"><label>Paid Up Capital</label>
+                                <p>₱ 108,243.78</p>
+                            </div>
+                            <div class="info-item"><label>Net Surplus</label>
+                                <p>₱ 10,653.54</p>
+                            </div>
                         </div>
                     </section>
 
@@ -376,14 +467,50 @@
                         <div class="modal-table-wrapper">
                             <table class="modal-table">
                                 <thead>
-                                    <tr><th>Name</th><th>Position</th><th>Gender</th><th>Mobile</th><th>Email</th></tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                        <th>Gender</th>
+                                        <th>Mobile</th>
+                                        <th>Email</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td>Isabel Delacion</td><td>Chairperson</td><td>Female</td><td>0917-123-4567</td><td>isabel.d@email.com</td></tr>
-                                    <tr><td>Jasmin Esperida</td><td>Vice Chairperson</td><td>Female</td><td>0918-234-5678</td><td>jasmin.e@email.com</td></tr>
-                                    <tr><td>Art Delos Reyes</td><td>BOD Member</td><td>Male</td><td>0919-345-6789</td><td>art.dr@email.com</td></tr>
-                                    <tr><td>Maria Lopez</td><td>Secretary</td><td>Female</td><td>0921-567-8901</td><td>maria.l@email.com</td></tr>
-                                    <tr><td>Ramon Santos</td><td>Treasurer</td><td>Male</td><td>0922-678-9012</td><td>ramon.s@email.com</td></tr>
+                                    <tr>
+                                        <td>Isabel Delacion</td>
+                                        <td>Chairperson</td>
+                                        <td>Female</td>
+                                        <td>0917-123-4567</td>
+                                        <td>isabel.d@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jasmin Esperida</td>
+                                        <td>Vice Chairperson</td>
+                                        <td>Female</td>
+                                        <td>0918-234-5678</td>
+                                        <td>jasmin.e@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Art Delos Reyes</td>
+                                        <td>BOD Member</td>
+                                        <td>Male</td>
+                                        <td>0919-345-6789</td>
+                                        <td>art.dr@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Maria Lopez</td>
+                                        <td>Secretary</td>
+                                        <td>Female</td>
+                                        <td>0921-567-8901</td>
+                                        <td>maria.l@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Ramon Santos</td>
+                                        <td>Treasurer</td>
+                                        <td>Male</td>
+                                        <td>0922-678-9012</td>
+                                        <td>ramon.s@email.com</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -394,14 +521,44 @@
                         <div class="modal-table-wrapper">
                             <table class="modal-table">
                                 <thead>
-                                    <tr><th>Name</th><th>Gender</th><th>Mobile</th><th>Email</th></tr>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Gender</th>
+                                        <th>Mobile</th>
+                                        <th>Email</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td>Juan dela Cruz</td><td>Male</td><td>0950-111-2222</td><td>juan.dc@email.com</td></tr>
-                                    <tr><td>Maria Clara Santos</td><td>Female</td><td>0950-333-4444</td><td>maria.cs@email.com</td></tr>
-                                    <tr><td>Jose Rizalino</td><td>Male</td><td>0950-555-6666</td><td>jose.r@email.com</td></tr>
-                                    <tr><td>Andres Bonifacio Jr.</td><td>Male</td><td>0950-777-8888</td><td>andres.b@email.com</td></tr>
-                                    <tr><td>Gabriela Silang</td><td>Female</td><td>0950-999-0000</td><td>gabriela.s@email.com</td></tr>
+                                    <tr>
+                                        <td>Juan dela Cruz</td>
+                                        <td>Male</td>
+                                        <td>0950-111-2222</td>
+                                        <td>juan.dc@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Maria Clara Santos</td>
+                                        <td>Female</td>
+                                        <td>0950-333-4444</td>
+                                        <td>maria.cs@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Jose Rizalino</td>
+                                        <td>Male</td>
+                                        <td>0950-555-6666</td>
+                                        <td>jose.r@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Andres Bonifacio Jr.</td>
+                                        <td>Male</td>
+                                        <td>0950-777-8888</td>
+                                        <td>andres.b@email.com</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Gabriela Silang</td>
+                                        <td>Female</td>
+                                        <td>0950-999-0000</td>
+                                        <td>gabriela.s@email.com</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -412,7 +569,8 @@
 
         <div class="modal-footer">
             <button class="secondary-btn modal-close-btn-bottom">Close</button>
-            <a href="{% url 'cooperatives:profile_form' %}" class="primary-btn"><i class="bi bi-pencil-square"></i> Update Info</a>
+            <a href="{% url 'cooperatives:profile_form' %}" class="primary-btn"><i class="bi bi-pencil-square"></i>
+                Update Info</a>
         </div>
     </div>
 </div>
@@ -422,7 +580,7 @@
     let genderChart;
 
     // Global function for financial filter
-    window.applyFinancialFilter = function(type, clickedElement) {
+    window.applyFinancialFilter = function (type, clickedElement) {
         if (!financialChart) return;
 
         // Visibility Logic
@@ -525,12 +683,12 @@
         document.getElementById('stat-members').textContent = data.total_members || 0;
         document.getElementById('stat-employees').textContent = data.kpi_data?.total_employees || 0;
         document.getElementById('stat-board-directors').textContent = data.kpi_data?.board_directors || 0;
-        
+
         // Format and display financial KPIs
         const assets = parseFloat(data.financial_kpis?.total_assets || 0);
         const surplus = parseFloat(data.financial_kpis?.net_surplus || 0);
         const financialYear = data.financial_kpis?.financial_year || 'N/A';
-        
+
         let assetsText;
         if (assets >= 1000000) {
             assetsText = `₱ ${(assets / 1000000).toFixed(1)}M`;
@@ -539,7 +697,7 @@
         } else {
             assetsText = `₱ ${assets.toFixed(0)}`;
         }
-        
+
         let surplusText;
         if (Math.abs(surplus) >= 1000000) {
             surplusText = `₱ ${(surplus / 1000000).toFixed(1)}M`;
@@ -548,7 +706,7 @@
         } else {
             surplusText = `₱ ${surplus.toFixed(0)}`;
         }
-        
+
         document.getElementById('stat-assets').textContent = assetsText;
         document.getElementById('stat-surplus').textContent = surplusText;
         document.getElementById('stat-assets-year').textContent = `Year ${financialYear}`;
@@ -590,7 +748,7 @@
                         legend: { position: 'bottom' },
                         tooltip: {
                             callbacks: {
-                                label: function(context) {
+                                label: function (context) {
                                     const label = context.label || '';
                                     const value = context.parsed || 0;
                                     const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -643,7 +801,7 @@
         if (!tbody) return;
 
         tbody.innerHTML = '';
-        
+
         if (officers.length === 0) {
             tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No officers found</td></tr>';
             return;
@@ -657,7 +815,7 @@
                 <td class="fw-bold">${officer.name}</td>
                 <td><span class="badge-position">${officer.position}</span></td>
             `;
-            row.addEventListener('click', function() {
+            row.addEventListener('click', function () {
                 const modal = document.getElementById('profile-modal');
                 if (modal) {
                     modal.classList.add('visible');
@@ -665,6 +823,115 @@
             });
             tbody.appendChild(row);
         });
+    }
+
+    function updateKPISubcards(financialData) {
+        // Get years sorted
+        const years = Object.keys(financialData.assets || {}).sort();
+        if (years.length === 0) {
+            // No data available
+            document.getElementById('kpi-assets-value').textContent = '₱0';
+            document.getElementById('kpi-capital-value').textContent = '₱0';
+            document.getElementById('kpi-surplus-value').textContent = '₱0';
+            return;
+        }
+
+        // Get latest year
+        const latestYear = years[years.length - 1];
+        const previousYear = years.length >= 2 ? years[years.length - 2] : null;
+
+        // Helper function to format currency
+        const formatCurrency = (value) => {
+            const num = parseFloat(value) || 0;
+            if (num >= 1000000) {
+                return `₱ ${(num / 1000000).toFixed(1)}M`;
+            } else if (num >= 1000) {
+                return `₱ ${(num / 1000).toFixed(0)}K`;
+            } else {
+                return `₱ ${num.toFixed(0)}`;
+            }
+        };
+
+        // Helper function to calculate trend
+        const calculateTrend = (current, previous) => {
+            if (previous === null || previous === undefined) {
+                return { trend: 'same', change: 0, hasComparison: false };
+            }
+            if (previous === 0) {
+                if (current > 0) return { trend: 'increase', change: 100, hasComparison: true };
+                return { trend: 'same', change: 0, hasComparison: true };
+            }
+            const change = ((current - previous) / previous) * 100;
+            if (change > 0.01) return { trend: 'increase', change: Math.abs(change), hasComparison: true };
+            if (change < -0.01) return { trend: 'decrease', change: Math.abs(change), hasComparison: true };
+            return { trend: 'same', change: 0, hasComparison: true };
+        };
+
+        // Update Assets KPI
+        const assetsCurrent = parseFloat(financialData.assets[latestYear] || 0);
+        const assetsPrevious = previousYear ? parseFloat(financialData.assets[previousYear] || 0) : null;
+        const assetsTrend = calculateTrend(assetsCurrent, assetsPrevious);
+        
+        document.getElementById('kpi-assets-value').textContent = formatCurrency(assetsCurrent);
+        const assetsTrendEl = document.getElementById('kpi-assets-trend');
+        assetsTrendEl.className = 'kpi-trend trend-' + assetsTrend.trend;
+        if (assetsTrend.trend === 'increase') {
+            assetsTrendEl.innerHTML = '<i class="bi bi-arrow-up"></i>';
+        } else if (assetsTrend.trend === 'decrease') {
+            assetsTrendEl.innerHTML = '<i class="bi bi-arrow-down"></i>';
+        } else {
+            assetsTrendEl.innerHTML = '<i class="bi bi-arrow-right"></i>';
+        }
+        if (assetsTrend.hasComparison && previousYear) {
+            document.getElementById('kpi-assets-comparison').textContent = 
+                `vs ${previousYear}: ${formatCurrency(assetsPrevious)} (${assetsTrend.change.toFixed(1)}% ${assetsTrend.trend === 'increase' ? '↑' : assetsTrend.trend === 'decrease' ? '↓' : '→'})`;
+        } else {
+            document.getElementById('kpi-assets-comparison').textContent = 'No previous data';
+        }
+
+        // Update Paid-Up Capital KPI
+        const capitalCurrent = parseFloat(financialData.capital[latestYear] || 0);
+        const capitalPrevious = previousYear ? parseFloat(financialData.capital[previousYear] || 0) : null;
+        const capitalTrend = calculateTrend(capitalCurrent, capitalPrevious);
+        
+        document.getElementById('kpi-capital-value').textContent = formatCurrency(capitalCurrent);
+        const capitalTrendEl = document.getElementById('kpi-capital-trend');
+        capitalTrendEl.className = 'kpi-trend trend-' + capitalTrend.trend;
+        if (capitalTrend.trend === 'increase') {
+            capitalTrendEl.innerHTML = '<i class="bi bi-arrow-up"></i>';
+        } else if (capitalTrend.trend === 'decrease') {
+            capitalTrendEl.innerHTML = '<i class="bi bi-arrow-down"></i>';
+        } else {
+            capitalTrendEl.innerHTML = '<i class="bi bi-arrow-right"></i>';
+        }
+        if (capitalTrend.hasComparison && previousYear) {
+            document.getElementById('kpi-capital-comparison').textContent = 
+                `vs ${previousYear}: ${formatCurrency(capitalPrevious)} (${capitalTrend.change.toFixed(1)}% ${capitalTrend.trend === 'increase' ? '↑' : capitalTrend.trend === 'decrease' ? '↓' : '→'})`;
+        } else {
+            document.getElementById('kpi-capital-comparison').textContent = 'No previous data';
+        }
+
+        // Update Net Surplus KPI
+        const surplusCurrent = parseFloat(financialData.surplus[latestYear] || 0);
+        const surplusPrevious = previousYear ? parseFloat(financialData.surplus[previousYear] || 0) : null;
+        const surplusTrend = calculateTrend(surplusCurrent, surplusPrevious);
+        
+        document.getElementById('kpi-surplus-value').textContent = formatCurrency(surplusCurrent);
+        const surplusTrendEl = document.getElementById('kpi-surplus-trend');
+        surplusTrendEl.className = 'kpi-trend trend-' + surplusTrend.trend;
+        if (surplusTrend.trend === 'increase') {
+            surplusTrendEl.innerHTML = '<i class="bi bi-arrow-up"></i>';
+        } else if (surplusTrend.trend === 'decrease') {
+            surplusTrendEl.innerHTML = '<i class="bi bi-arrow-down"></i>';
+        } else {
+            surplusTrendEl.innerHTML = '<i class="bi bi-arrow-right"></i>';
+        }
+        if (surplusTrend.hasComparison && previousYear) {
+            document.getElementById('kpi-surplus-comparison').textContent = 
+                `vs ${previousYear}: ${formatCurrency(surplusPrevious)} (${surplusTrend.change.toFixed(1)}% ${surplusTrend.trend === 'increase' ? '↑' : surplusTrend.trend === 'decrease' ? '↓' : '→'})`;
+        } else {
+            document.getElementById('kpi-surplus-comparison').textContent = 'No previous data';
+        }
     }
 
     function initializeFinancialChart(financialData) {
@@ -676,6 +943,9 @@
         const assetsData = years.map(year => financialData.assets[year] || 0);
         const capitalData = years.map(year => financialData.capital[year] || 0);
         const surplusData = years.map(year => financialData.surplus[year] || 0);
+
+        // Update KPI subcards
+        updateKPISubcards(financialData);
 
         if (financialChart) financialChart.destroy();
 
@@ -722,9 +992,9 @@
                         mode: 'index',
                         intersect: false,
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 const value = context.parsed.y || 0;
-                                return `${context.dataset.label}: ₱${value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                return `${context.dataset.label}: ₱${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                             }
                         }
                     }
@@ -734,7 +1004,7 @@
                         beginAtZero: true,
                         grid: { borderDash: [5, 5] },
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return '₱' + value.toLocaleString('en-US');
                             }
                         }
@@ -748,9 +1018,9 @@
     function updateCooperativeActivity(activities) {
         const timeline = document.getElementById('coopActivityTimeline');
         if (!timeline) return;
-        
+
         timeline.innerHTML = '';
-        
+
         if (activities.length === 0) {
             timeline.innerHTML = '<div class="text-center text-muted p-3">No recent activity</div>';
             return;
@@ -760,14 +1030,14 @@
             const item = document.createElement('div');
             item.className = 'timeline-item';
             item.style.cursor = 'pointer';
-            item.addEventListener('click', function() {
+            item.addEventListener('click', function () {
                 // Redirect to profile form when activity is clicked
                 window.location.href = '{% url "cooperatives:profile_form" %}';
             });
             const timeAgo = activity.time ? getTimeAgo(new Date(activity.time)) : 'Recently';
-            const markerClass = activity.color === 'red' ? 'bg-danger' : 
-                               activity.color === 'green' ? 'bg-success' : 
-                               activity.color === 'blue' ? 'bg-primary' : 'bg-warning';
+            const markerClass = activity.color === 'red' ? 'bg-danger' :
+                activity.color === 'green' ? 'bg-success' :
+                    activity.color === 'blue' ? 'bg-primary' : 'bg-warning';
             item.innerHTML = `
                 <div class="timeline-marker ${markerClass}"></div>
                 <div class="timeline-content">
@@ -793,11 +1063,21 @@
     // Modal Logic and Filter Toggle
     document.addEventListener('DOMContentLoaded', () => {
         loadCooperativeDashboardData();
-        
+
+        // Print button handler
+        const printBtn = document.getElementById('printDashboardBtn');
+        if (printBtn) {
+            printBtn.addEventListener('click', () => {
+                if (window.printModal) {
+                    window.printModal.open();
+                }
+            });
+        }
+
         // Filter Toggle Event
         const filterToggleBtn = document.getElementById('financeFilterToggle');
         const filterDropdown = document.getElementById('financeFilterControls');
-        
+
         if (filterToggleBtn) {
             filterToggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -820,14 +1100,14 @@
         });
 
         if (filterDropdown) filterDropdown.addEventListener('click', (e) => e.stopPropagation());
-        
+
         // Handle document status clicks - redirect to profile form
         document.querySelectorAll('.clickable-compliance').forEach(item => {
-            item.addEventListener('click', function() {
+            item.addEventListener('click', function () {
                 window.location.href = '{% url "cooperatives:profile_form" %}';
             });
         });
-        
+
         // Both buttons are now links, so no JavaScript needed for redirect
         // The links will handle navigation automatically
 
@@ -850,10 +1130,10 @@
             });
 
             if (downloadPdfBtn) {
-                downloadPdfBtn.addEventListener('click', function() {
+                downloadPdfBtn.addEventListener('click', function () {
                     const element = document.getElementById('printable-area');
                     const coopName = document.getElementById('modal-coop-name')?.textContent.trim() || 'Cooperative';
-                    
+
                     const opt = {
                         margin: 0.2,
                         filename: `${coopName}_Profile.pdf`,
@@ -861,7 +1141,7 @@
                         html2canvas: { scale: 2, useCORS: true },
                         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
                     };
-                    
+
                     const originalContent = this.innerHTML;
                     this.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
                     this.disabled = true;
@@ -878,40 +1158,40 @@
             }
         }
     });
-    
+
     // --- BLOCKING MODAL FOR NO PROFILE DATA ---
     {% if not has_profile_data %}
-    (function() {
+    (function () {
         const modal = document.getElementById('noProfileModal');
         if (!modal) return;
-        
+
         // Prevent closing the modal
-        modal.addEventListener('click', function(e) {
+        modal.addEventListener('click', function (e) {
             // Only allow clicks on the buttons inside the modal
             if (!e.target.closest('.btn-modal-primary') && !e.target.closest('.btn-modal-secondary')) {
                 e.stopPropagation();
             }
         });
-        
+
         // Prevent navigation away from the page
-        window.addEventListener('beforeunload', function(e) {
+        window.addEventListener('beforeunload', function (e) {
             e.preventDefault();
             e.returnValue = 'You need to complete your profile before leaving. Are you sure you want to leave?';
             return e.returnValue;
         });
-        
+
         // Prevent back button
-        window.addEventListener('popstate', function(e) {
+        window.addEventListener('popstate', function (e) {
             history.pushState(null, null, window.location.href);
         });
-        
+
         // Push state to prevent back button
         history.pushState(null, null, window.location.href);
-        
+
         // Disable sidebar navigation
         const sidebarLinks = document.querySelectorAll('.sidebar a, .sidebar button');
         sidebarLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
+            link.addEventListener('click', function (e) {
                 const href = this.getAttribute('href');
                 // Only allow navigation to profile or messages
                 if (href && !href.includes('profile_form') && !href.includes('message') && !href.includes('#')) {
@@ -922,5 +1202,5 @@
         });
     })();
     {% endif %}
-</script>
+    </script>
 {% endblock %}

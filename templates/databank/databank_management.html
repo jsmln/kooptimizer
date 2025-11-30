@@ -145,8 +145,16 @@
     </div>
     {% endif %}
 
-    <!-- Top Table: Cooperatives Management -->
-    <div class="overview-panel">
+    <!-- Tab Header -->
+    <div class="databank-header-tabs">
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-target="cooperatives-management">Cooperatives Management</button>
+            <button class="tab-btn" data-target="submitted-profiles">Submitted Cooperative Profiles</button>
+        </div>
+    </div>
+
+    <!-- Tab Content: Cooperatives Management (Default) -->
+    <div class="table-section active" id="cooperatives-management">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
             <h5 class="section-divider-title" style="margin: 0;">Cooperatives Management</h5>
             {% if user_role == 'admin' %}
@@ -156,23 +164,29 @@
             {% endif %}
         </div>
 
-        {% if user_role == 'admin' %}
-        <div class="tab-buttons" style="margin-bottom: 15px; display: flex; gap: 10px;">
-            <button class="tab-btn {% if current_filter == 'active' %}active{% endif %}" data-target="active-coops" data-filter="active">
-                Active
-            </button>
-            <button class="tab-btn {% if current_filter == 'deactivated' %}active{% endif %}" data-target="deactivated-coops" data-filter="deactivated">
-                Deactivated
-            </button>
-        </div>
-        {% endif %}
 
-        <div class="databank-header">
-            <div class="table-controls">
+        {% if user_role == 'admin' %}
+        <div class="databank-header" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="tab-buttons" style="display: flex; gap: 10px; margin-bottom: 0;">
+                <button class="tab-btn {% if current_filter == 'active' %}active{% endif %}" data-target="active-coops" data-filter="active">
+                    Active
+                </button>
+                <button class="tab-btn {% if current_filter == 'deactivated' %}active{% endif %}" data-target="deactivated-coops" data-filter="deactivated">
+                    Deactivated
+                </button>
+            </div>
+            <div class="table-controls" style="margin-left: 30px; flex: 1 1 250px; min-width: 220px;">
+                <input type="text" id="searchCoopInput" class="search-input"placeholder="Search Cooperative Name, Category, District...">
+            </div>
+        </div>
+        {% else %}
+        <div class="databank-header" style="margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap;">
+            <div class="table-controls" style="flex: 1 1 250px; min-width: 200px;">
                 <input type="text" id="searchCoopInput" class="search-input"
                     placeholder="Search Cooperative Name, Category, District...">
             </div>
         </div>
+        {% endif %}
 
         <!-- Active Cooperatives Table -->
         <div class="table-section {% if current_filter != 'deactivated' %}active{% endif %}" id="active-coops" style="{% if current_filter == 'deactivated' %}display: none;{% endif %}">
@@ -283,8 +297,8 @@
         {% endif %}
     </div>
 
-    <!-- Bottom Table: Submitted Cooperative Profiles -->
-    <div class="detailed-panel">
+    <!-- Tab Content: Submitted Cooperative Profiles -->
+    <div class="table-section" id="submitted-profiles">
         <h5 class="section-divider-title">Submitted Cooperative Profiles</h5>
 
         <div class="table-controls" style="margin-bottom: 15px;">
@@ -1077,19 +1091,56 @@ document.addEventListener('DOMContentLoaded', () => {
         currentConfirmCallback = null;
     });
 
-    // ===== TAB SWITCHING HANDLER =====
+    // ===== MAIN TAB SWITCHING HANDLER (Cooperatives Management / Submitted Profiles) =====
+    document.querySelectorAll('.databank-header-tabs .tab-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            // Don't handle if this is a nested tab (has data-filter attribute)
+            if (this.dataset.filter) return;
+            
+            const target = this.dataset.target;
+            
+            // Update active tab in header
+            document.querySelectorAll('.databank-header-tabs .tab-btn').forEach(b => {
+                if (!b.dataset.filter) { // Only update main tabs, not nested tabs
+                    b.classList.remove('active');
+                }
+            });
+            this.classList.add('active');
+            
+            // Show/hide main table sections (cooperatives-management, submitted-profiles)
+            document.querySelectorAll('#cooperatives-management, #submitted-profiles').forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+            
+            const targetSection = document.getElementById(target);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                targetSection.style.display = 'flex';
+            }
+            
+            // Clear selected rows when switching tabs
+            selectedCoopRow = null;
+            selectedDeactivatedCoopRow = null;
+            selectedProfileRow = null;
+            document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');
+            document.querySelectorAll('tr.selected').forEach(row => row.classList.remove('selected'));
+        });
+    });
+
+    // ===== SUB-TAB SWITCHING HANDLER (Active/Deactivated within Cooperatives Management) =====
     if (USER_ROLE === 'admin') {
-        document.querySelectorAll('.tab-btn[data-target]').forEach(btn => {
+        document.querySelectorAll('#cooperatives-management .tab-btn[data-target]').forEach(btn => {
             btn.addEventListener('click', function() {
                 const target = this.dataset.target;
                 const filter = this.dataset.filter;
                 
-                // Update active tab
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                // Update active sub-tab
+                document.querySelectorAll('#cooperatives-management .tab-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Show/hide table sections
-                document.querySelectorAll('.table-section').forEach(section => {
+                // Show/hide sub-table sections (active-coops, deactivated-coops)
+                document.querySelectorAll('#active-coops, #deactivated-coops').forEach(section => {
                     section.classList.remove('active');
                     section.style.display = 'none';
                 });
@@ -1097,7 +1148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetSection = document.getElementById(target);
                 if (targetSection) {
                     targetSection.classList.add('active');
-                    targetSection.style.display = 'block';
+                    targetSection.style.display = 'flex';
                 }
                 
                 // Show/hide Add button
@@ -1109,8 +1160,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Clear selected rows
                 selectedCoopRow = null;
                 selectedDeactivatedCoopRow = null;
-                document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');
-                document.querySelectorAll('tr.selected').forEach(row => row.classList.remove('selected'));
+                document.querySelectorAll('#cooperatives-management .action-buttons').forEach(btn => btn.style.display = 'none');
+                document.querySelectorAll('#cooperatives-management tr.selected').forEach(row => row.classList.remove('selected'));
                 
                 // Reload page with filter parameter
                 window.location.href = `?filter=${filter}`;
@@ -1302,6 +1353,32 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // ===== EDIT DEACTIVATED COOPERATIVE =====
+    document.querySelector('#deactivated-coop-action-buttons .edit-btn')?.addEventListener('click', function () {
+        if (!selectedDeactivatedCoopRow) {
+            showNotification('Please select a deactivated cooperative first.', 'error');
+            return;
+        }
+        const coopId = selectedDeactivatedCoopRow.dataset.coopId;
+        openCoopModal(coopId);
+    });
+
+    // ===== DELETE DEACTIVATED COOPERATIVE =====
+    document.querySelector('#deactivated-coop-action-buttons .delete-btn')?.addEventListener('click', function () {
+        if (!selectedDeactivatedCoopRow) {
+            showNotification('Please select a deactivated cooperative first.', 'error');
+            return;
+        }
+
+        currentAction = 'delete';
+        document.getElementById('password-verify-title').textContent = 'Verify Deletion';
+        document.getElementById('password-verify-desc').textContent = 'Please enter your password to confirm permanent deletion.';
+        document.getElementById('password-verify-input').value = '';
+        document.getElementById('password-verify-error').style.display = 'none';
+        tempPassword = '';
+        openModal(el.passwordVerifyModal);
+    });
 
     // ===== REACTIVATE COOPERATIVE =====
     document.querySelector('#deactivated-coop-action-buttons .reactivate-btn')?.addEventListener('click', function () {

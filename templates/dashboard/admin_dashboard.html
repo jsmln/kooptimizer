@@ -3,6 +3,8 @@
 
 {% block dashboard_title %}Admin Dashboard{% endblock %}
 
+{% block page_header %}Admin Dashboard{% endblock %}
+
 {% block extra_head %}
 {{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,6 +13,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <link rel="stylesheet" href="{% static 'frontend/admin_dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'frontend/print_modal.css' %}">
+<script src="{% static 'frontend/print_modal.js' %}"></script>
 <style>
     #districtMap {
         height: 100%;
@@ -254,6 +258,12 @@
         <div>
             <h4 class="subtitle">Lipa City Cooperatives Office</h4>
             <h1>Admin Dashboard</h1>
+        </div>
+        <div>
+            <button id="printDashboardBtn" class="btn btn-primary"
+                style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-printer"></i> Print Dashboard
+            </button>
         </div>
     </div>
 
@@ -525,12 +535,12 @@
                 </div>
             </div>
 
-            <div class="table-card">
+            <div class="table-card preview-cooperatives-card">
                 <div class="card-header-custom">
                     <h3>Preview Cooperatives</h3>
                     {% comment %} <span class="badge bg-warning text-dark">Action Needed</span> {% endcomment %}
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive preview-cooperatives-scroll">
                     <table class="admin-table">
                         <thead>
                             <tr>
@@ -658,7 +668,7 @@
                 <div class="card-header-custom">
                     <h3>Staff Workload</h3>
                 </div>
-                <div class="table-responsive">
+                <div class="table-responsive workload-scroll">
                     <table class="admin-table">
                         <thead>
                             <tr>
@@ -701,7 +711,7 @@
                 </div>
             </div>
 
-            <div class="filter-section">
+            <div class="filter-section all-cooperatives-list-card">
                 <div class="card-header-custom">
                     <h3>All Cooperatives List</h3>
 
@@ -731,7 +741,7 @@
                     </div>
                 </div>
 
-                <div class="table-responsive">
+                <div class="table-responsive all-cooperatives-scroll">
                     <table class="coop-list-table">
                         <thead>
                             <tr>
@@ -2813,6 +2823,16 @@
             setupCooperativeDemographicsFilter();
             setupCooperativeListFilter();
             setupPdfDownload();
+
+            // Print button handler
+            const printBtn = document.getElementById('printDashboardBtn');
+            if (printBtn) {
+                printBtn.addEventListener('click', () => {
+                    if (window.printModal) {
+                        window.printModal.open();
+                    }
+                });
+            }
             setupModalListeners();
 
             // Update financial chart reference after initialization

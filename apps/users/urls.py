@@ -18,4 +18,5 @@ urlpatterns = [
     path('password-reset/verify/', views.perform_password_reset, name='perform_password_reset'),
     path('all_events/', views.all_events, name='all_events'),
     path('add_event/', views.add_event, name='add_event'),
+    path('update_event/<int:event_id>/', views.update_event, name='update_event'),
 ]

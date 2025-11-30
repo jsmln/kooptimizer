@@ -168,8 +168,8 @@ def profile_form_view(request):
     else:
         requested_year = current_year
     
-    # Check if the requested year is editable (only current year and future years can be edited)
-    is_editable = requested_year >= current_year
+    # Allow editing for all years (including past years)
+    is_editable = True
     
     # Fetch Related Data - Get profile for requested year, or latest if not found
     profile_data = ProfileData.objects.filter(coop=coop, report_year=requested_year).first()
@@ -178,7 +178,7 @@ def profile_form_view(request):
         profile_data = ProfileData.objects.filter(coop=coop).order_by('-report_year', '-created_at').first()
         if profile_data and profile_data.report_year:
             requested_year = profile_data.report_year
-            is_editable = requested_year >= current_year
+            is_editable = True
     
     # Get latest financial data for main display (matching the profile year if available)
     financial_data = FinancialData.objects.filter(coop=coop, report_year=requested_year).first()
@@ -304,13 +304,31 @@ def print_profile(request, coop_id):
             if profile_data and profile_data.report_year:
                 requested_year = profile_data.report_year
         
-        financial_data = FinancialData.objects.filter(coop_id=coop_id, report_year=requested_year).first()
-        if not financial_data:
-            financial_data = FinancialData.objects.filter(coop_id=coop_id).order_by('-report_year').first()
+        # Get latest financial data to determine the latest report year
+        latest_financial = FinancialData.objects.filter(coop_id=coop_id).order_by('-report_year').first()
+        
+        # Get financial data for last 3 years (latest year and 2 previous years)
+        assets_list = []
+        latest_year = None
+        if latest_financial and latest_financial.report_year:
+            latest_year = latest_financial.report_year
+            for year_offset in range(0, 3):  # Current year, 1 year ago, 2 years ago
+                year = latest_year - year_offset
+                year_data = FinancialData.objects.filter(coop_id=coop_id, report_year=year).first()
+                if year_data and year_data.assets and year_data.assets > 0:
+                    assets_list.append({
+                        'year': year,
+                        'assets': year_data.assets
+                    })
+        
+        # Get latest financial data for paid up capital and net surplus
+        financial_data = latest_financial
         
         context = {
             'coop_name': coop.cooperative_name,
-            'profile': {}
+            'profile': {},
+            'assets_list': assets_list,
+            'latest_year': latest_year,
         }
         
         if profile_data:
@@ -333,16 +351,23 @@ def print_profile(request, coop_id):
                 'approval_status': profile_data.approval_status,
             }
             
-            # Merge Financial Data if it exists
+            # Merge Financial Data if it exists (only latest year for paid up capital and net surplus)
             if financial_data:
+                # Only include paid_up_capital if it's greater than 0
+                # net_surplus can be negative (loss), so show if not None
+                paid_up = financial_data.paid_up_capital if financial_data.paid_up_capital and financial_data.paid_up_capital > 0 else None
+                net_surplus = financial_data.net_surplus if financial_data.net_surplus is not None else None
                 profile_ctx.update({
-                    'assets': financial_data.assets,
-                    'paid_up_capital': financial_data.paid_up_capital,
-                    'net_surplus': financial_data.net_surplus,
+                    'paid_up_capital': paid_up,
+                    'net_surplus': net_surplus,
                     'report_year': financial_data.report_year,
                 })
             
             context['profile'] = profile_ctx
+        
+        # Get officers and members for the cooperative
+        context['officers'] = Officer.objects.filter(coop=coop).order_by('position', 'fullname')
+        context['members'] = Member.objects.filter(coop=coop).order_by('fullname')
         
         return render(request, 'cooperatives/profile_print.html', context)
     
@@ -451,13 +476,7 @@ def create_profile(request):
         else:
             report_year = current_year
         
-        # Check if the year is editable (prevent editing past years)
-        if report_year < current_year:
-            return JsonResponse({
-                'success': False,
-                'message': f'Cannot edit profile for year {report_year}. Only current year ({current_year}) and future years can be edited.'
-            }, status=400)
-        
+        # Allow editing for all years (including past years)
         # --- UPDATE OR CREATE PROFILE ---
         # Use report_year in the lookup to get/create profile for specific year
         profile, created = ProfileData.objects.update_or_create(
@@ -489,7 +508,8 @@ def create_profile(request):
         profile.save()
 
         # --- UPDATE OR CREATE FINANCIALS ---
-        report_year = request.POST.get('reporting_year') or None
+        # Use the same report_year from profile (line 445) for financial data
+        report_year = request.POST.get('report_year') or request.POST.get('reporting_year') or None
         
         # NOTE: logic implies one financial record per year. 
         # If report_year is None, this might overwrite a record with null year.
@@ -515,7 +535,10 @@ def create_profile(request):
         # Validate at least one member is provided
         valid_members = [name for name in names if name and name.strip()]
         if not valid_members:
-            return JsonResponse({'success': False, 'error': 'At least one member is required'}, status=400)
+            return JsonResponse({
+                'success': False, 
+                'error': 'At least one member is required. Please add at least one member with a name.'
+            }, status=400)
 
         # Only delete/re-add if names were actually submitted
         if names: 
@@ -545,12 +568,18 @@ def create_profile(request):
         return JsonResponse({'success': True, 'message': 'Profile saved successfully'})
 
     except KeyError as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': f'Missing required field: {str(e)}'}, status=400)
     except ValueError as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'success': False, 'error': f'Invalid data format: {str(e)}'}, status=400)
     except Exception as e:
+        import traceback
         traceback.print_exc()
-        return JsonResponse({'success': False, 'error': 'An error occurred while saving the profile. Please try again.'}, status=500)
+        error_msg = str(e) if str(e) else 'An error occurred while saving the profile. Please try again.'
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 # ==========================================
 # 3. DOWNLOAD VIEW

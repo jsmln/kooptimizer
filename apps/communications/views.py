@@ -782,7 +782,13 @@ def send_message(request):
                 )
                 result = cursor.fetchone()
                 if result:
-                    created_message_ids.append(result[0])  # message_id is first column
+                    msg_id = result[0]
+                    # Prevent duplicate MessageRecipient
+                    from .models import MessageRecipient, Message
+                    if not MessageRecipient.objects.filter(message_id=msg_id, receiver_id=receiver_id).exists():
+                        created_message_ids.append(msg_id)
+                    else:
+                        print(f"[Duplicate Prevention] MessageRecipient already exists for message_id={msg_id}, receiver_id={receiver_id}")
         
         # --- 2. Send Files Individually (Loop) ---
         saved_attachments = 0
@@ -790,7 +796,6 @@ def send_message(request):
             try:
                 # Process attachment
                 data_bytes, content_type, fname, fsize = process_attachment(f, f.name)
-                
                 # Send as separate message
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -799,29 +804,18 @@ def send_message(request):
                     )
                     result = cursor.fetchone()
                     if result:
-                        created_message_ids.append(result[0])  # message_id is first column
+                        msg_id = result[0]
+                        # Prevent duplicate MessageRecipient
+                        from .models import MessageRecipient
+                        if not MessageRecipient.objects.filter(message_id=msg_id, receiver_id=receiver_id).exists():
+                            created_message_ids.append(msg_id)
+                        else:
+                            print(f"[Duplicate Prevention] MessageRecipient already exists for message_id={msg_id}, receiver_id={receiver_id}")
                 saved_attachments += 1
             except Exception as e:
                 print(f"Error sending file {f.name}: {e}")
         
-        # --- 3. Send Push Notifications (stored procedures bypass Django signals) ---
-        # Import here to avoid circular imports
-        from .signals import send_push_notification_for_message
-        from .models import Message
-        
-        for message_id in created_message_ids:
-            try:
-                # Fetch the message and receiver from database
-                message = Message.objects.get(message_id=message_id)
-                receiver_user = User.objects.get(user_id=receiver_id)
-                
-                # Send push notification (function handles User mapping internally)
-                send_push_notification_for_message(message, receiver_user)
-            except Exception as e:
-                # Don't fail the request if notification fails
-                print(f"Error sending push notification for message {message_id}: {e}")
-                import traceback
-                traceback.print_exc()
+        # Do not send push notifications here; handled by post_save signal for MessageRecipient.
 
         return JsonResponse({
             'status': 'success',

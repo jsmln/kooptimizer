@@ -3,6 +3,8 @@
 
 {% block dashboard_title %}Messages{% endblock %}
 
+{% block page_header %}Messages{% endblock %}
+
 {% block extra_head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'frontend/message.css' %}">
@@ -10,22 +12,13 @@
     
     <style>
     /* --- HIDE DASHBOARD HEADER ELEMENTS --- */
-    .top-bar .page-title,
     .top-bar .search-box {
-        display: none !important;
-    }
-    
-    .top-bar .user-menu {
         display: none !important;
     }
     
     /* Hide sidebar toggle on desktop only, keep it visible on mobile */
     @media (min-width: 901px) {
         .top-bar #sidebar-toggle-btn {
-            display: none !important;
-        }
-        
-        .top-bar .top-left {
             display: none !important;
         }
     }
@@ -35,41 +28,8 @@
         .top-bar {
             padding: 0 10px;
         }
-        
-        .top-bar .top-left {
-            display: flex !important;
-        }
     }
     
-    /* --- CUSTOM MESSAGES HEADER --- */
-    .messages-header {
-        position: fixed;
-        top: 0;
-        left: 250px;
-        right: 0;
-        height: 56px;
-        background: white;
-        border-bottom: 1px solid #edf2f7;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 20px;
-        z-index: 100;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    
-    .messages-header-left {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-    
-    .messages-header h1 {
-        margin: 0;
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #2B3674;
-    }
     
     /* Profile Dropdown */
     .profile-dropdown {
@@ -195,24 +155,8 @@
         color: #a91e2c;
     }
     
-    /* Adjust content area for fixed header */
-    .content-scrollable {
-        margin-top: 56px !important;
-        height: calc(100% - 56px) !important;
-    }
-    
     /* Mobile Responsive */
     @media (max-width: 992px) {
-        .messages-header {
-            left: 0;
-            padding: 0 15px;
-            height: 52px;
-            top: 56px; /* Position below dashboard top bar */
-        }
-        
-        .messages-header h1 {
-            font-size: 1.1rem;
-        }
         
         .profile-info {
             display: none;
@@ -1168,12 +1112,12 @@
         /* Adjust parent container to fixed positioning for mobile */
         .content-scrollable {
             position: fixed;
-            top: 108px; /* Dashboard top bar (56px) + Messages header (52px) */
+            top: 56px; /* Dashboard top bar (56px) */
             left: 0;
             right: 0;
             bottom: 0;
             margin-top: 0 !important;
-            height: calc(100vh - 108px) !important;
+            height: calc(100vh - 56px) !important;
             padding: 0 !important;
             overflow: hidden !important;
         }
@@ -1331,42 +1275,13 @@
 
 {% block dashboard_content %}
 
-<!-- Custom Messages Header -->
-<div class="messages-header">
-    <div class="messages-header-left">
-        <h1>Messages</h1>
-    </div>
-    
-    <div class="profile-dropdown" id="profileDropdown">
-        <div class="profile-trigger">
-            <div class="profile-avatar">{{ request.session.username|first|upper }}</div>
-            <div class="profile-info">
-                <span class="profile-name">{{ request.session.username }}</span>
-                <span class="profile-role">{{ request.session.role|capfirst }}</span>
-            </div>
-            <i class="bi bi-chevron-down dropdown-arrow"></i>
-        </div>
-        
-        <div class="dropdown-menu-custom">
-            <a href="{% url 'users:profile_settings' %}" class="dropdown-item-custom">
-                <i class="bi bi-gear"></i>
-                <span>Settings</span>
-            </a>
-            <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal" class="dropdown-item-custom logout">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Logout</span>
-            </a>
-        </div>
-    </div>
-</div>
-
 <div class="message-layout">
 
     <div class="conversation-list">
         <div class="list-header">
             <h2>Messages</h2>
             <a href="#" class="new-message-btn" title="New Message">
-                <i class="bi bi-pencil-square"></i>
+                {% comment %} <i class="bi bi-pencil-square"></i> {% endcomment %}
             </a>
         </div>
         <div class="search-bar">
@@ -3453,26 +3368,6 @@
                 }
             }
         }, 250);
-    });
-
-    // ========================================
-    // Profile Dropdown Functionality
-    // ========================================
-    const profileDropdown = document.getElementById('profileDropdown');
-    const profileTrigger = profileDropdown?.querySelector('.profile-trigger');
-    
-    if (profileTrigger) {
-        profileTrigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            profileDropdown.classList.toggle('active');
-        });
-    }
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-        if (profileDropdown && !profileDropdown.contains(e.target)) {
-            profileDropdown.classList.remove('active');
-        }
     });
 
 </script>{% endblock %}

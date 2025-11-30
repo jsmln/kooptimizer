@@ -266,38 +266,37 @@
                     <label>Name of Cooperative:</label>
                     <span class="value">{% if profile.coop_name %}{{ profile.coop_name }}{% else %}{{ coop_name }}{% endif %}</span>
                 </div>
+                {% if profile.address %}
                 <div class="form-field">
                     <label>Address:</label>
-                    <span class="value {% if not profile.address %}empty{% endif %}">{{ profile.address|default:"________________" }}</span>
+                    <span class="value">{{ profile.address }}</span>
                 </div>
-                <div class="form-field">
-                    <label>Tel. Number:</label>
-                    <span class="value empty">________________</span>
-                </div>
+                {% endif %}
+                {% if profile.mobile_number %}
                 <div class="form-field">
                     <label>Mobile Number:</label>
-                    <span class="value {% if not profile.mobile_number %}empty{% endif %}">{{ profile.mobile_number|default:"________________" }}</span>
+                    <span class="value">{{ profile.mobile_number }}</span>
                 </div>
+                {% endif %}
+                {% if profile.email_address %}
                 <div class="form-field">
                     <label>Email Address:</label>
-                    <span class="value {% if not profile.email_address %}empty{% endif %}">{{ profile.email_address|default:"________________" }}</span>
+                    <span class="value">{{ profile.email_address }}</span>
                 </div>
-                <div class="form-field">
-                    <label>Authorized Representative:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>CIN:</label>
-                    <span class="value empty">________________</span>
-                </div>
+                {% endif %}
+                {% if profile.cda_registration_number %}
                 <div class="form-field">
                     <label>CDA Registration Number:</label>
-                    <span class="value {% if not profile.cda_registration_number %}empty{% endif %}">{{ profile.cda_registration_number|default:"________________" }}</span>
+                    <span class="value">{{ profile.cda_registration_number }}</span>
                 </div>
+                {% endif %}
+                {% if profile.cda_registration_date %}
                 <div class="form-field">
                     <label>CDA Registration Date:</label>
-                    <span class="value {% if not profile.cda_registration_date %}empty{% endif %}">{% if profile.cda_registration_date %}{{ profile.cda_registration_date|date:"M d, Y" }}{% else %}________________{% endif %}</span>
+                    <span class="value">{{ profile.cda_registration_date|date:"M d, Y" }}</span>
                 </div>
+                {% endif %}
+                {% if profile.lccdc_membership is not None %}
                 <div class="form-field">
                     <label>LCCDC Membership:</label>
                     <div class="checkbox-group">
@@ -311,130 +310,34 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
+                {% if profile.operation_area %}
                 <div class="form-field">
                     <label>Area of Operation:</label>
-                    <span class="value {% if not profile.operation_area %}empty{% endif %}">{{ profile.operation_area|title|default:"________________" }}</span>
+                    <span class="value">{{ profile.operation_area|title }}</span>
                 </div>
-                <div class="form-field">
-                    <label>Bond of Membership:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Date of Gen. Assembly:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Quorum Requirement:</label>
-                    <span class="value empty">________________</span>
-                </div>
+                {% endif %}
+                {% if profile.business_activity %}
                 <div class="form-field">
                     <label>Business Activity:</label>
-                    <span class="value {% if not profile.business_activity %}empty{% endif %}">{{ profile.business_activity|default:"________________" }}</span>
+                    <span class="value">{{ profile.business_activity }}</span>
                 </div>
-                <div class="form-field">
-                    <label>Other Financial Services:</label>
-                    <span class="value empty">________________</span>
-                </div>
+                {% endif %}
+                {% if profile.board_of_directors_count %}
                 <div class="form-field">
                     <label>Number of Board of Directors:</label>
-                    <span class="value {% if not profile.board_of_directors_count %}empty{% endif %}">{{ profile.board_of_directors_count|default:"____" }}</span>
+                    <span class="value">{{ profile.board_of_directors_count }}</span>
                 </div>
-                <div class="form-field" style="margin-left: 20px;">
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Male:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Female:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
             </div>
             <div>
-                <div class="form-field">
-                    <label>Number of PART-TIME Employee:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Number of FULL-TIME Employee:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field" style="margin-left: 20px;">
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Male:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Female:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                    </div>
-                </div>
+                {% if profile.salaried_employees_count %}
                 <div class="form-field">
                     <label>Number of Salaried Employees:</label>
-                    <span class="value {% if not profile.salaried_employees_count %}empty{% endif %}">{{ profile.salaried_employees_count|default:"____" }}</span>
+                    <span class="value">{{ profile.salaried_employees_count }}</span>
                 </div>
-                <div class="form-field">
-                    <label>Number of Employees Receiving Allowances:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Employees with SSS:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Funding of Reserve Fund:</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" disabled>
-                            <span>Yes</span>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" disabled>
-                            <span>No</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-field">
-                    <label>Employees with PhilHealth:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Employees with Pagibig:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Funding Retirement Fund:</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" disabled>
-                            <span>Yes</span>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" disabled>
-                            <span>No</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-field">
-                    <label>Number of Regular Members:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field" style="margin-left: 20px;">
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Male:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Female:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
+                {% if profile.coc_renewal is not None %}
                 <div class="form-field">
                     <label>Cert. of Compliance:</label>
                     <div class="checkbox-group">
@@ -448,6 +351,8 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
+                {% if profile.cote_renewal is not None %}
                 <div class="form-field">
                     <label>Cert. of Tax Exemption:</label>
                     <div class="checkbox-group">
@@ -461,199 +366,90 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-field">
-                    <label>Number of Associate Members:</label>
-                    <span class="value">NA</span>
-                </div>
-                <div class="form-field" style="margin-left: 20px;">
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Male:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                        <div class="checkbox-item">
-                            <label style="min-width: auto;">Female:</label>
-                            <span class="value" style="min-width: 50px;">____</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-field">
-                    <label>Validity of Cert. of Compliance:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Validity of Tax Exemption:</label>
-                    <span class="value empty">________________</span>
-                </div>
+                {% endif %}
             </div>
         </div>
 
         <!-- II. Financial Information -->
+        {% if assets_list or profile.paid_up_capital or profile.net_surplus %}
         <div class="section-header">II. FINANCIAL INFORMATION</div>
         <div class="two-column">
             <div>
+                {% if assets_list %}
                 <div class="financial-years">
+                    {% for asset_item in assets_list %}
                     <div class="financial-year-item">
-                        <label>2022 Assets:</label>
-                        <span class="value empty">________________</span>
+                        <label>{{ asset_item.year }} Assets:</label>
+                        <span class="value">₱ {{ asset_item.assets|floatformat:2 }}</span>
                     </div>
-                    <div class="financial-year-item">
-                        <label>2023 Assets:</label>
-                        <span class="value empty">________________</span>
-                    </div>
-                    <div class="financial-year-item">
-                        <label>2024 Assets:</label>
-                        <span class="value {% if not profile.assets %}empty{% endif %}">{% if profile.assets %}₱ {{ profile.assets|floatformat:2 }}{% else %}________________{% endif %}</span>
-                    </div>
+                    {% endfor %}
                 </div>
-                <div class="form-field">
-                    <label>Current Loans to Other Agencies:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Donations from:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Amount:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Release Date:</label>
-                    <span class="value empty">________________</span>
-                </div>
+                {% endif %}
+                {% if profile.paid_up_capital %}
                 <div class="form-field">
                     <label>Total Paid Up Capital:</label>
-                    <span class="value {% if not profile.paid_up_capital %}empty{% endif %}">{% if profile.paid_up_capital %}₱ {{ profile.paid_up_capital|floatformat:2 }}{% else %}________________{% endif %}</span>
+                    <span class="value">₱ {{ profile.paid_up_capital|floatformat:2 }}</span>
                 </div>
+                {% endif %}
+                {% if profile.net_surplus %}
                 <div class="form-field">
                     <label>Net Surplus/Loss:</label>
-                    <span class="value {% if not profile.net_surplus %}empty{% endif %}">{% if profile.net_surplus %}₱ {{ profile.net_surplus|floatformat:2 }}{% else %}________________{% endif %}</span>
+                    <span class="value">₱ {{ profile.net_surplus|floatformat:2 }}</span>
                 </div>
-                <div class="form-field">
-                    <label>Local Accumulated CETF:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Accumulated CDF:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Accumulated RF:</label>
-                    <span class="value empty">________________</span>
-                </div>
-            </div>
-            <div>
-                <div class="form-field">
-                    <label>Amount:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Release Date:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Total Subscribed Capital:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Total Statutory Fund:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Local Accumulated CETF due to APEX 2020:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Accumulated OPF:</label>
-                    <span class="value empty">________________</span>
-                </div>
-                <div class="form-field">
-                    <label>Gross Income per Business:</label>
-                    <span class="value empty">________________</span>
-                </div>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
 
-        <!-- III. Policies -->
-        <div class="section-header">III. PRESENCE OF THE FOLLOWING:</div>
-        <div class="policy-list">
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Membership Policy</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Med Con Policy</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Election Policy</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>DOSRI</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Policy Retirement</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>GAD</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Code of Governance & Ethical Standards</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>CASA</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Audit & Inventory</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Human Resource Policy</span>
-            </div>
-            <div class="policy-item">
-                <input type="checkbox" disabled>
-                <span>Others</span>
-            </div>
-        </div>
+        <!-- III. Officers List -->
+        {% if officers %}
+        <div class="section-header">III. OFFICERS</div>
+        <table class="form-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Gender</th>
+                    <th>Mobile Number</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for officer in officers %}
+                <tr>
+                    <td>{{ officer.fullname|default:"N/A" }}</td>
+                    <td>{{ officer.position|default:"N/A" }}</td>
+                    <td>{{ officer.gender|default:"N/A"|title }}</td>
+                    <td>{{ officer.mobile_number|default:"N/A" }}</td>
+                    <td>{{ officer.email|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
 
-        <!-- IV. Lending & Credit -->
-        <div class="section-header">IV. LENDING & CREDIT</div>
-        <div class="two-column">
-            <div class="form-field">
-                <label>Do you adhere to Truth on Lending Act/Diminishing Balance:</label>
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" disabled>
-                        <span>Yes</span>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" disabled>
-                        <span>No</span>
-                    </div>
-                </div>
-            </div>
-            <div class="form-field">
-                <label>Do you have Credit Policy?</label>
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" disabled>
-                        <span>Yes</span>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" disabled>
-                        <span>No</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- IV. Members List -->
+        {% if members %}
+        <div class="section-header">IV. MEMBERS</div>
+        <table class="form-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Mobile Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td>{{ member.fullname|default:"N/A" }}</td>
+                    <td>{{ member.gender|default:"N/A"|title }}</td>
+                    <td>{{ member.mobile_number|default:"N/A" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
 
         <!-- Print Actions (Screen Only) -->
         <div class="print-actions">

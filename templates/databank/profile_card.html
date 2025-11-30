@@ -300,7 +300,7 @@
                     <tr>
                         <td>{{ officer.fullname }}</td>
                         <td>{{ officer.position }}</td>
-                        <td>{{ officer.gender }}</td>
+                        <td>{{ officer.gender|title|default:"N/A" }}</td>
                         <td>{{ officer.mobile_number|default:"N/A" }}</td>
                         <td>{{ officer.email|default:"N/A" }}</td>
                     </tr>
@@ -327,7 +327,7 @@
                     {% for member in members %}
                     <tr>
                         <td>{{ member.fullname }}</td>
-                        <td>{{ member.gender|default:"N/A" }}</td>
+                        <td>{{ member.gender|title|default:"N/A" }}</td>
                         <td>{{ member.mobile_number|default:"N/A" }}</td>
                     </tr>
                     {% endfor %}

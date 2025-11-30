@@ -12,3 +12,9 @@ python-decouple==3.8
 requests>=2.31.0
 certifi>=2023.7.22
 urllib3>=2.0.0
+
+# Google API client and dependencies
+google-api-python-client>=2.0.0
+google-auth>=2.0.0
+google-auth-httplib2>=0.1.0
+google-auth-oauthlib>=0.4.0

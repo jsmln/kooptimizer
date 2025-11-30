@@ -110,8 +110,8 @@
 
             <div class="mini-widget">
                 <h4 id="calendarTrigger" style="cursor: pointer;">
-                        <span class="nav-text">Calendar</span> 
-                        <i class="bi bi-calendar4-week"></i>
+                    <span class="nav-text">Calendar</span>
+                    <i class="bi bi-calendar4-week"></i>
                 </h4>
                 <div class="mini-calendar-box">
                     <div class="mini-date" id="current-date">{% now "M d" %}</div>
@@ -180,13 +180,14 @@
                         </div>
                         <i class="bi bi-chevron-down dropdown-arrow"></i>
                     </div>
-                    
+
                     <div class="dropdown-menu-custom">
                         <a href="{% url 'users:profile_settings' %}" class="dropdown-item-custom">
                             <i class="bi bi-gear"></i>
                             <span>Settings</span>
                         </a>
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal" class="dropdown-item-custom logout">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#logoutModal"
+                            class="dropdown-item-custom logout">
                             <i class="bi bi-box-arrow-right"></i>
                             <span>Logout</span>
                         </a>
@@ -207,228 +208,393 @@
 
 </div>
 <div id="myCalendarModal" class="custom-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>My Schedule</h2>
-      <span class="close-btn">&times;</span>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>My Schedule</h2>
+            <span class="close-btn">&times;</span>
+        </div>
+
+        <div id="calendar"></div>
     </div>
-    
-    <div id="calendar"></div>
-  </div>
 </div>
 
 <div id="eventFormModal" class="custom-modal" style="z-index: 10000;">
-  <div class="modal-content" style="max-width: 500px;">
-    <div class="modal-header">
-      <h3 style="margin:0;">Add New Event</h3>
-      <span class="close-form-btn" style="cursor:pointer; font-size:24px;">&times;</span>
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 id="modalTitle" style="margin:0;">Add New Event</h3>
+            <span class="close-form-btn" style="cursor:pointer; font-size:24px;">&times;</span>
+        </div>
+
+        <div class="modal-body" style="padding-top: 15px;">
+            <form id="addEventForm">
+
+                <div class="modal-input-group">
+                    <label>Event Title *</label>
+                    <input type="text" id="eventTitle" placeholder="Ex: General Assembly" required>
+                </div>
+
+                <div class="modal-input-group">
+                    <label>Description (Optional)</label>
+                    <textarea id="eventDesc" placeholder="Enter details..." style="height: 80px;"></textarea>
+                </div>
+
+                <div class="modal-input-group">
+                    <label>Start Date (Optional)</label>
+                    <input type="datetime-local" id="eventStart">
+                </div>
+
+                <div class="modal-input-group">
+                    <label>End Date (Optional)</label>
+                    <input type="datetime-local" id="eventEnd">
+                </div>
+
+                <input type="hidden" id="defaultStart">
+                <input type="hidden" id="defaultEnd">
+                <input type="hidden" id="eventId" value="">
+
+                <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" id="submitBtn"
+                        style="background-color: #A91B0D; color: white; padding: 8px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Save
+                        Event</button>
+                </div>
+            </form>
+        </div>
     </div>
-    
-    <div class="modal-body" style="padding-top: 15px;">
-      <form id="addEventForm">
-        
-        <div class="modal-input-group">
-          <label>Event Title *</label>
-          <input type="text" id="eventTitle" placeholder="Ex: General Assembly" required>
-        </div>
-
-        <div class="modal-input-group">
-          <label>Description (Optional)</label>
-          <textarea id="eventDesc" placeholder="Enter details..." style="height: 80px;"></textarea>
-        </div>
-
-        <div class="modal-input-group">
-          <label>Start Date (Optional)</label>
-          <input type="datetime-local" id="eventStart">
-        </div>
-
-        <div class="modal-input-group">
-          <label>End Date (Optional)</label>
-          <input type="datetime-local" id="eventEnd">
-        </div>
-
-        <input type="hidden" id="defaultStart">
-        <input type="hidden" id="defaultEnd">
-
-        <div style="text-align: right; margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
-          <button type="button" class="cancel-btn">Cancel</button>
-          <button type="submit" style="background-color: #A91B0D; color: white; padding: 8px 25px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Save Event</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>
 
 
 <div class="sidebar-overlay"></div>
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
 <style>
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    
-    var calendarModal = document.getElementById("myCalendarModal");
-    var formModal = document.getElementById("eventFormModal");
-    var btn = document.getElementById("calendarTrigger");
-    
-    // Close Buttons
-    var closeCalendarBtn = document.getElementsByClassName("close-btn")[0];
-    var closeFormBtn = document.getElementsByClassName("close-form-btn")[0];
-    var cancelFormBtn = document.querySelector(".cancel-btn");
-    
-    var calendarEl = document.getElementById('calendar');
-    var calendar = null;
+    document.addEventListener('DOMContentLoaded', function () {
 
-    function initCalendar() {
-       calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
-        height: 500,
-        selectable: true,
-        displayEventTime: false, 
-        eventColor: '#A91B0D',
-        timeZone: 'Asia/Manila',
-        events: {
-            url: '/users/all_events/',
-            failure: function() {
-                console.error('Failed to load events');
-                alert('Failed to load calendar events. Please refresh the page.');
+        var calendarModal = document.getElementById("myCalendarModal");
+        var formModal = document.getElementById("eventFormModal");
+        var btn = document.getElementById("calendarTrigger");
+
+        // Close Buttons
+        var closeCalendarBtn = document.getElementsByClassName("close-btn")[0];
+        var closeFormBtn = document.getElementsByClassName("close-form-btn")[0];
+        var cancelFormBtn = document.querySelector(".cancel-btn");
+
+        var calendarEl = document.getElementById('calendar');
+        var calendar = null;
+
+        // Helper function to show Django-style messages
+        function showDjangoMessage(message, tag = 'info') {
+            const container = document.getElementById('django-messages');
+            if (!container) {
+                console.warn('Django messages container not found');
+                return;
             }
-        },
-        eventDidMount: function(info) {
-            // Optional: Add tooltip or styling
-            if (info.event.extendedProps.description) {
-                info.el.setAttribute('title', info.event.extendedProps.description);
+
+            // Map common types to dj-message tags
+            const tagMap = {
+                'success': 'success',
+                'error': 'error',
+                'warning': 'warning',
+                'info': 'info'
+            };
+            const finalTag = tagMap[tag] || 'info';
+
+            // Create message element
+            const messageEl = document.createElement('div');
+            messageEl.className = `dj-message dj-${finalTag}`;
+            messageEl.setAttribute('role', 'status');
+            messageEl.innerHTML = `
+                <div class="dj-message-left">
+                    <div class="dj-message-icon" aria-hidden="true">!</div>
+                </div>
+                <div class="dj-message-body">
+                    <div class="dj-message-text">${message}</div>
+                </div>
+                <button class="dj-message-close" aria-label="Close message">×</button>
+            `;
+
+            // Add dismiss functionality
+            const closeBtn = messageEl.querySelector('.dj-message-close');
+            function dismiss() {
+                messageEl.style.transition = 'opacity 240ms ease, transform 240ms ease';
+                messageEl.style.opacity = '0';
+                messageEl.style.transform = 'translateX(18px)';
+                setTimeout(() => {
+                    if (messageEl.parentNode) {
+                        messageEl.parentNode.removeChild(messageEl);
+                    }
+                }, 260);
             }
-        },
 
-        select: function(info) {
-           // 1. SAVE THE CLICKED DATE AS DEFAULT
-           // info.startStr is what they clicked (e.g., "2025-11-28")
-           document.getElementById('defaultStart').value = info.startStr;
-           document.getElementById('defaultEnd').value = info.endStr;
-
-           // 2. Pre-fill visual inputs (Optional - you can leave these blank if you prefer)
-           // I'm leaving them blank so the user sees they are optional
-           document.getElementById('eventStart').value = ""; 
-           document.getElementById('eventEnd').value = "";
-           
-           document.getElementById('eventTitle').value = "";
-           document.getElementById('eventDesc').value = "";
-           
-           formModal.style.display = "block";
-        }
-      });
-      calendar.render();
-    }
-
-    // HANDLE FORM SUBMISSION
-    document.getElementById('addEventForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        var title = document.getElementById('eventTitle').value;
-        var desc = document.getElementById('eventDesc').value;
-        
-        // --- SMART DATE LOGIC ---
-        // Get input values
-        var inputStart = document.getElementById('eventStart').value;
-        var inputEnd = document.getElementById('eventEnd').value;
-        
-        // Get default (clicked) values
-        var defaultStart = document.getElementById('defaultStart').value;
-        var defaultEnd = document.getElementById('defaultEnd').value;
-
-        // Logic: If input is empty, use default. 
-        // Note: We might need to append time if default is just a date (YYYY-MM-DD)
-        var finalStart = inputStart ? inputStart : defaultStart;
-        var finalEnd = inputEnd ? inputEnd : defaultEnd;
-
-        if (!title) { alert("Title is required"); return; }
-
-        // Get save button and show loading state
-        var saveButton = document.querySelector('#addEventForm button[type="submit"]');
-        var originalButtonText = saveButton.innerHTML;
-        saveButton.disabled = true;
-        saveButton.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ffffff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px;"></span>Saving...';
-        saveButton.style.opacity = '0.7';
-        saveButton.style.cursor = 'not-allowed';
-
-        var eventData = { 
-            title: title, 
-            description: desc, 
-            start: finalStart, 
-            end: finalEnd 
-        };
-
-        fetch('/users/add_event/', {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(eventData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', dismiss);
             }
-            return response.json();
-        })
-        .then(data => {
-            // Reset button state
-            saveButton.disabled = false;
-            saveButton.innerHTML = originalButtonText;
-            saveButton.style.opacity = '1';
-            saveButton.style.cursor = 'pointer';
-            
-            if (data.status === 'success') {
-                // Clear form
-                document.getElementById('eventTitle').value = "";
-                document.getElementById('eventDesc').value = "";
-                document.getElementById('eventStart').value = "";
-                document.getElementById('eventEnd').value = "";
-                
-                // Close modal and refresh calendar
-                formModal.style.display = "none";
-                if (calendar) {
-                    calendar.refetchEvents();
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (document.body.contains(messageEl)) {
+                    dismiss();
                 }
-                alert('Event Saved!');
-            } else {
-                alert('Error: ' + (data.message || 'Unknown error occurred'));
-            }
-        })
-        .catch(error => {
-            console.error('Error saving event:', error);
-            // Reset button state on error
-            saveButton.disabled = false;
-            saveButton.innerHTML = originalButtonText;
-            saveButton.style.opacity = '1';
-            saveButton.style.cursor = 'pointer';
-            alert('Error saving event. Please try again.');
-        });
-    });
+            }, 5000);
 
-    // CONTROLS
-    if(btn) { 
-        btn.onclick = function() { 
-            calendarModal.style.display = "block"; 
-            setTimeout(function(){ 
-                if (!calendar) { 
-                    initCalendar(); 
-                } else { 
-                    calendar.render();
-                    calendar.refetchEvents(); // Refresh events when opening calendar
-                } 
-            }, 100); 
-        } 
-    }
-    if(closeCalendarBtn) closeCalendarBtn.onclick = function() { calendarModal.style.display = "none"; }
-    if(closeFormBtn) closeFormBtn.onclick = function() { formModal.style.display = "none"; }
-    if(cancelFormBtn) cancelFormBtn.onclick = function() { formModal.style.display = "none"; }
-    window.onclick = function(event) { if (event.target == calendarModal) calendarModal.style.display = "none"; }
-  });
+            // Append to container
+            container.appendChild(messageEl);
+        }
+
+        function initCalendar() {
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
+                height: 500,
+                selectable: true,
+                displayEventTime: false,
+                eventColor: '#A91B0D',
+                timeZone: 'Asia/Manila',
+                events: {
+                    url: '/users/all_events/',
+                    failure: function () {
+                        console.error('Failed to load events');
+                        showDjangoMessage('Failed to load calendar events. Please refresh the page.', 'error');
+                    }
+                },
+                eventDidMount: function (info) {
+                    // Optional: Add tooltip or styling
+                    if (info.event.extendedProps.description) {
+                        info.el.setAttribute('title', info.event.extendedProps.description);
+                    }
+                },
+
+                eventClick: function (info) {
+                    // Handle event click for editing
+                    var event = info.event;
+                    var eventId = event.id;
+                    var title = event.title;
+                    var description = event.extendedProps.description || "";
+                    var start = event.start;
+                    var end = event.end || start;
+
+                    // Format dates for datetime-local input (YYYY-MM-DDTHH:mm)
+                    function formatForInput(date) {
+                        if (!date) return "";
+                        try {
+                            var d = date instanceof Date ? date : new Date(date);
+                            if (isNaN(d.getTime())) return ""; // Invalid date
+                            var year = d.getFullYear();
+                            var month = String(d.getMonth() + 1).padStart(2, '0');
+                            var day = String(d.getDate()).padStart(2, '0');
+                            var hours = String(d.getHours()).padStart(2, '0');
+                            var minutes = String(d.getMinutes()).padStart(2, '0');
+                            return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+                        } catch (e) {
+                            console.error('Error formatting date:', e);
+                            return "";
+                        }
+                    }
+
+                    // Populate form with event data
+                    document.getElementById('eventId').value = eventId;
+                    document.getElementById('eventTitle').value = title;
+                    document.getElementById('eventDesc').value = description;
+                    document.getElementById('eventStart').value = formatForInput(start);
+                    document.getElementById('eventEnd').value = formatForInput(end);
+                    document.getElementById('defaultStart').value = "";
+                    document.getElementById('defaultEnd').value = "";
+
+                    // Update modal title and button
+                    document.getElementById('modalTitle').textContent = 'Edit Event';
+                    document.getElementById('submitBtn').textContent = 'Update Event';
+
+                    formModal.style.display = "block";
+                },
+
+                select: function (info) {
+                    // Reset form to "add" mode
+                    document.getElementById('eventId').value = "";
+                    document.getElementById('modalTitle').textContent = 'Add New Event';
+                    document.getElementById('submitBtn').textContent = 'Save Event';
+
+                    // 1. SAVE THE CLICKED DATE AS DEFAULT
+                    // info.startStr is what they clicked (e.g., "2025-11-28")
+                    document.getElementById('defaultStart').value = info.startStr;
+                    document.getElementById('defaultEnd').value = info.endStr;
+
+                    // 2. Pre-fill visual inputs (Optional - you can leave these blank if you prefer)
+                    // I'm leaving them blank so the user sees they are optional
+                    document.getElementById('eventStart').value = "";
+                    document.getElementById('eventEnd').value = "";
+
+                    document.getElementById('eventTitle').value = "";
+                    document.getElementById('eventDesc').value = "";
+
+                    formModal.style.display = "block";
+                }
+            });
+            calendar.render();
+        }
+
+        // HANDLE FORM SUBMISSION
+        document.getElementById('addEventForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var title = document.getElementById('eventTitle').value;
+            var desc = document.getElementById('eventDesc').value;
+            var eventId = document.getElementById('eventId').value;
+            var isEditMode = eventId !== "";
+
+            // --- SMART DATE LOGIC ---
+            // Get input values
+            var inputStart = document.getElementById('eventStart').value;
+            var inputEnd = document.getElementById('eventEnd').value;
+
+            // Get default (clicked) values
+            var defaultStart = document.getElementById('defaultStart').value;
+            var defaultEnd = document.getElementById('defaultEnd').value;
+
+            // Logic: If input is empty, use default. 
+            // Note: We might need to append time if default is just a date (YYYY-MM-DD)
+            var finalStart = inputStart ? inputStart : defaultStart;
+            var finalEnd = inputEnd ? inputEnd : defaultEnd;
+
+            if (!title) {
+                showDjangoMessage('Title is required', 'warning');
+                return;
+            }
+
+            // Get save button and show loading state
+            var saveButton = document.querySelector('#addEventForm button[type="submit"]');
+            var originalButtonText = saveButton.innerHTML;
+            saveButton.disabled = true;
+            var loadingText = isEditMode ? 'Updating...' : 'Saving...';
+            saveButton.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ffffff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px;"></span>' + loadingText;
+            saveButton.style.opacity = '0.7';
+            saveButton.style.cursor = 'not-allowed';
+
+            var eventData = {
+                title: title,
+                description: desc,
+                start: finalStart,
+                end: finalEnd
+            };
+
+            // Determine URL and method based on edit mode
+            // Use POST for both to ensure compatibility with Django
+            var url = isEditMode ? '/users/update_event/' + eventId + '/' : '/users/add_event/';
+            var method = 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(eventData)
+            })
+                .then(response => {
+                    // Try to parse JSON even if response is not ok
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Network response was not ok');
+                        }
+                        return data;
+                    }).catch(() => {
+                        // If JSON parsing fails, throw with status text
+                        if (!response.ok) {
+                            throw new Error('Server error: ' + response.statusText);
+                        }
+                        return {};
+                    });
+                })
+                .then(data => {
+                    // Reset button state
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = originalButtonText;
+                    saveButton.style.opacity = '1';
+                    saveButton.style.cursor = 'pointer';
+
+                    if (data.status === 'success') {
+                        // Clear form
+                        document.getElementById('eventId').value = "";
+                        document.getElementById('eventTitle').value = "";
+                        document.getElementById('eventDesc').value = "";
+                        document.getElementById('eventStart').value = "";
+                        document.getElementById('eventEnd').value = "";
+                        document.getElementById('defaultStart').value = "";
+                        document.getElementById('defaultEnd').value = "";
+
+                        // Reset modal title and button
+                        document.getElementById('modalTitle').textContent = 'Add New Event';
+                        document.getElementById('submitBtn').textContent = 'Save Event';
+
+                        // Close modal and refresh calendar
+                        formModal.style.display = "none";
+                        if (calendar) {
+                            calendar.refetchEvents();
+                        }
+                        showDjangoMessage(isEditMode ? 'Event Updated!' : 'Event Saved!', 'success');
+                    } else {
+                        showDjangoMessage('Error: ' + (data.message || 'Unknown error occurred'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving event:', error);
+                    // Reset button state on error
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = originalButtonText;
+                    saveButton.style.opacity = '1';
+                    saveButton.style.cursor = 'pointer';
+                    showDjangoMessage('Error ' + (isEditMode ? 'updating' : 'saving') + ' event: ' + error.message, 'error');
+                });
+        });
+
+        // CONTROLS
+        if (btn) {
+            btn.onclick = function () {
+                calendarModal.style.display = "block";
+                setTimeout(function () {
+                    if (!calendar) {
+                        initCalendar();
+                    } else {
+                        calendar.render();
+                        calendar.refetchEvents(); // Refresh events when opening calendar
+                    }
+                }, 100);
+            }
+        }
+        // Function to reset form to "add" mode
+        function resetFormToAddMode() {
+            document.getElementById('eventId').value = "";
+            document.getElementById('modalTitle').textContent = 'Add New Event';
+            document.getElementById('submitBtn').textContent = 'Save Event';
+            document.getElementById('eventTitle').value = "";
+            document.getElementById('eventDesc').value = "";
+            document.getElementById('eventStart').value = "";
+            document.getElementById('eventEnd').value = "";
+            document.getElementById('defaultStart').value = "";
+            document.getElementById('defaultEnd').value = "";
+        }
+
+        if (closeCalendarBtn) closeCalendarBtn.onclick = function () { calendarModal.style.display = "none"; }
+        if (closeFormBtn) {
+            closeFormBtn.onclick = function () {
+                formModal.style.display = "none";
+                resetFormToAddMode();
+            }
+        }
+        if (cancelFormBtn) {
+            cancelFormBtn.onclick = function () {
+                formModal.style.display = "none";
+                resetFormToAddMode();
+            }
+        }
+        window.onclick = function (event) { if (event.target == calendarModal) calendarModal.style.display = "none"; }
+    });
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -890,7 +1056,7 @@
                         browser: browser,
                         user_agent: navigator.userAgent
                     };
-                    
+
                     console.log('Sending push subscription request...');
                     const response = await fetch('/webpush/save_information', {
                         method: 'POST',
@@ -901,7 +1067,7 @@
                         credentials: 'include',
                         body: JSON.stringify(requestBody)
                     });
-                    
+
                     console.log('Response status:', response.status, response.statusText);
 
                     if (response.ok) {
@@ -922,12 +1088,12 @@
                         try {
                             const errorData = await response.json();
                             console.error('Push subscription error response:', errorData);
-                            
+
                             if (errorData.error) {
                                 // Use the server's error message if available
                                 const serverError = errorData.error;
                                 console.error('Server error:', serverError);
-                                
+
                                 // Make error messages user-friendly
                                 const error = serverError.toLowerCase();
                                 if (error.includes('authentication') || error.includes('login') || error.includes('user not found')) {
@@ -987,17 +1153,17 @@
     // ========================================
     // Unified Profile Dropdown Functionality
     // ========================================
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const profileDropdown = document.getElementById('profileDropdown');
         const profileTrigger = profileDropdown?.querySelector('.profile-trigger');
-        
+
         if (profileTrigger) {
             profileTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 profileDropdown.classList.toggle('active');
             });
         }
-        
+
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (profileDropdown && !profileDropdown.contains(e.target)) {

@@ -3,13 +3,18 @@
 
 {% block dashboard_title %}Staff Dashboard{% endblock %}
 
+{% block page_header %}Staff Dashboard{% endblock %}
+
 {% block extra_head %}
 {{ block.super }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/@turf/turf@6.5.0/turf.min.js"></script>
 <link rel="stylesheet" href="{% static 'frontend/staff_dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'frontend/print_modal.css' %}">
+<script src="{% static 'frontend/print_modal.js' %}"></script>
 <style>
     #staffDistrictMap {
         height: 100%;
@@ -214,6 +219,11 @@
         <div>
             <h4 class="subtitle">Workload Overview</h4>
             <h1>Welcome back, {{ request.session.username|default:'Staff' }}!</h1>
+        </div>
+        <div>
+            <button id="printDashboardBtn" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-printer"></i> Print Dashboard
+            </button>
         </div>
     </div>
 
@@ -1726,6 +1736,16 @@
     document.addEventListener('DOMContentLoaded', () => {
         loadStaffDashboardData();
         setupStaffFinancialFilter();
+        
+        // Print button handler
+        const printBtn = document.getElementById('printDashboardBtn');
+        if (printBtn) {
+            printBtn.addEventListener('click', () => {
+                if (window.printModal) {
+                    window.printModal.open();
+                }
+            });
+        }
 
         const toggle = document.getElementById('filterToggleStaff');
         const controls = document.getElementById('filterControlsStaff');
