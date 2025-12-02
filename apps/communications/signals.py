@@ -35,7 +35,7 @@ def send_push_notification_for_message(message, receiver_user):
         traceback.print_exc()
         return False
 
-@receiver(post_save, sender=MessageRecipient)
+@receiver(post_save, sender=MessageRecipient, dispatch_uid='message_recipient_post_save_notification')
 def send_message_notification(sender, instance, created, **kwargs):
     """
     Send push notification when a MessageRecipient is created.

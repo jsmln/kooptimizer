@@ -93,6 +93,9 @@
                     </li>
                     <li><a href="{% url 'download' %}" class="{% if request.resolver_match.url_name == 'download' %}active{% endif %}">Download</a></li>
                     <li><a href="{% url 'about' %}" class="{% if request.resolver_match.url_name == 'about' %}active{% endif %}">About</a></li>
+                    <li>
+                        <a href="{% url 'contact' %}" class="{% if request.resolver_match.url_name == 'contact' %}active{% endif %}">Contact</a>
+                    </li>
                 </ul>
             {% endif %}
         </nav>

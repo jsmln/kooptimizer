@@ -77,16 +77,45 @@ Kooptimizer/
    ```
 
 6. **Run the server**
+   
+   **Easiest way (recommended):**
    ```bash
-   python manage.py runserver
+   # Double-click START.bat or run:
+   .\START.bat
    ```
+   
+   **Alternative methods:**
+   ```bash
+   # PowerShell (after enabling scripts once):
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+   .\start_server.ps1
+   
+   # Command Prompt
+   start_server.bat
+   ```
+   
+   **Manual way:**
+   ```bash
+   .\.venv\Scripts\python.exe verify_requirements.py  # Verify packages
+   .\.venv\Scripts\python.exe manage.py runserver     # Start server
+   ```
+   
+   See **[START_SERVER.md](START_SERVER.md)** for detailed startup instructions and troubleshooting.
 
 ## 📚 Documentation
 
+### Getting Started
+- **[Quick Start](QUICK_START.txt)** - Quick reference card for starting the server
+- **[Server Startup Guide](START_SERVER.md)** - Comprehensive startup and troubleshooting guide
 - **[Setup Guide](docs/setup/DATABASE_SETUP_INSTRUCTIONS.md)** - Database setup and deployment
+
+### Development & Maintenance
+- **[Google API Fix](GOOGLEAPICLIENT_FIX.md)** - Fix for persistent package installation issues
+- **[Feature Docs](docs/implementation/)** - Implementation guides for all features
+
+### Security
 - **[Security Guide](docs/security/SECURITY.md)** - Security best practices
 - **[Credentials Reference](docs/security/CREDENTIALS_QUICK_REFERENCE.md)** - API key management
-- **[Feature Docs](docs/implementation/)** - Implementation guides for all features
 
 ## 🧪 Testing
 
@@ -123,4 +152,4 @@ This project is proprietary software developed for the Lipa City Cooperatives Of
 
 ---
 
-*Last updated: November 22, 2025*
+*Last updated: December 1, 2025*

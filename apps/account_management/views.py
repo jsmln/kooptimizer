@@ -63,14 +63,25 @@ def account_management(request):
         except DatabaseError as e:
             print(f"DatabaseError: {e}") 
 
-    cooperatives_list = Cooperatives.objects.all()
+    # Get cooperatives with staff information for the dropdown
+    cooperatives_list = Cooperatives.objects.select_related('staff__user').all()
+    
+    # Create a list of cooperatives with properly formatted staff user IDs
+    cooperatives_data = []
+    for coop in cooperatives_list:
+        coop_data = {
+            'coop_id': coop.coop_id,
+            'cooperative_name': coop.cooperative_name,
+            'staff_user_id': coop.staff.user.user_id if coop.staff and coop.staff.user else None
+        }
+        cooperatives_data.append(coop_data)
 
     context = {
         'staffs': staff_list,
         'officers': officer_list,
         'admins': admin_list,
         'deactivated_accounts': deactivated_list,
-        'cooperatives': cooperatives_list,
+        'cooperatives': cooperatives_data,
         'current_filter': account_filter,
     }
     

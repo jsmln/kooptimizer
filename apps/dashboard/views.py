@@ -47,7 +47,9 @@ def get_user_cooperatives(user_id, role):
             return Cooperatives.objects.none()
     elif role == 'officer':
         try:
-            officer = Officers.objects.filter(user_id=user_id).first()
+            # Import Officer from the correct place
+            from apps.cooperatives.models import Officer as CoopOfficer
+            officer = CoopOfficer.objects.filter(user_id=user_id).first()
             if officer:
                 return Cooperatives.objects.filter(coop_id=officer.coop_id)
             return Cooperatives.objects.none()
@@ -522,11 +524,16 @@ def dashboard_recent_activity_api(request):
         user_id = request.session.get('user_id')
         role = request.session.get('role')
         
+        print(f"DEBUG dashboard_recent_activity_api: user_id={user_id}, role={role}")
+        
         if not user_id or not role:
+            print("DEBUG: No user_id or role in session")
             return JsonResponse({'error': 'Unauthorized'}, status=401)
         
         user_coops = get_user_cooperatives(user_id, role)
         coop_ids = list(user_coops.values_list('coop_id', flat=True))
+        
+        print(f"DEBUG: Found coop_ids: {coop_ids}")
         
         activities = []
         if coop_ids:
@@ -568,8 +575,13 @@ def dashboard_recent_activity_api(request):
         activities.sort(key=lambda x: x['time'] if x['time'] else '', reverse=True)
         activities = activities[:10]
         
+        print(f"DEBUG: Returning {len(activities)} activities")
+        
         return JsonResponse({'activities': activities})
     except Exception as e:
+        print(f"DEBUG ERROR in dashboard_recent_activity_api: {e}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
 
 @login_required

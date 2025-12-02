@@ -663,9 +663,15 @@
             const activityResponse = await fetch('{% url "dashboard:dashboard_recent_activity_api" %}');
             if (activityResponse.ok) {
                 const activityData = await activityResponse.json();
-                if (!activityData.error) {
+                if (activityData.activities && Array.isArray(activityData.activities)) {
                     updateCooperativeActivity(activityData.activities);
+                } else {
+                    // Show empty state if no activities
+                    updateCooperativeActivity([]);
                 }
+            } else {
+                // Show empty state on error
+                updateCooperativeActivity([]);
             }
         } catch (error) {
             console.error('Error loading cooperative dashboard data:', error);
@@ -679,15 +685,22 @@
 
     function updateKPICards(data) {
         // Update KPI cards with comprehensive data
-        document.getElementById('stat-officers').textContent = data.total_officers || 0;
-        document.getElementById('stat-members').textContent = data.total_members || 0;
-        document.getElementById('stat-employees').textContent = data.kpi_data?.total_employees || 0;
-        document.getElementById('stat-board-directors').textContent = data.kpi_data?.board_directors || 0;
+        
+        // Safely update each element
+        const statOfficers = document.getElementById('stat-officers');
+        const statMembers = document.getElementById('stat-members');
+        const statEmployees = document.getElementById('stat-employees');
+        const statBoardDirectors = document.getElementById('stat-board-directors');
+        
+        if (statOfficers) statOfficers.textContent = data?.total_officers || 0;
+        if (statMembers) statMembers.textContent = data?.total_members || 0;
+        if (statEmployees) statEmployees.textContent = data?.kpi_data?.total_employees || 0;
+        if (statBoardDirectors) statBoardDirectors.textContent = data?.kpi_data?.board_directors || 0;
 
         // Format and display financial KPIs
-        const assets = parseFloat(data.financial_kpis?.total_assets || 0);
-        const surplus = parseFloat(data.financial_kpis?.net_surplus || 0);
-        const financialYear = data.financial_kpis?.financial_year || 'N/A';
+        const assets = parseFloat(data?.financial_kpis?.total_assets || 0);
+        const surplus = parseFloat(data?.financial_kpis?.net_surplus || 0);
+        const financialYear = data?.financial_kpis?.financial_year || 'N/A';
 
         let assetsText;
         if (assets >= 1000000) {
@@ -707,24 +720,36 @@
             surplusText = `₱ ${surplus.toFixed(0)}`;
         }
 
-        document.getElementById('stat-assets').textContent = assetsText;
-        document.getElementById('stat-surplus').textContent = surplusText;
-        document.getElementById('stat-assets-year').textContent = `Year ${financialYear}`;
-        document.getElementById('stat-surplus-year').textContent = `Year ${financialYear}`;
+        const statAssets = document.getElementById('stat-assets');
+        const statSurplus = document.getElementById('stat-surplus');
+        const statAssetsYear = document.getElementById('stat-assets-year');
+        const statSurplusYear = document.getElementById('stat-surplus-year');
+        
+        if (statAssets) statAssets.textContent = assetsText;
+        if (statSurplus) statSurplus.textContent = surplusText;
+        if (statAssetsYear) statAssetsYear.textContent = `Year ${financialYear}`;
+        if (statSurplusYear) statSurplusYear.textContent = `Year ${financialYear}`;
     }
 
     function updateMemberDemographics(data) {
-        const total = data.total || 1;
-        const malePercent = total > 0 ? (data.male / total) * 100 : 0;
-        const femalePercent = total > 0 ? (data.female / total) * 100 : 0;
-        const othersPercent = total > 0 ? (data.others / total) * 100 : 0;
+        const total = data?.total || 1;
+        const malePercent = total > 0 ? ((data?.male || 0) / total) * 100 : 0;
+        const femalePercent = total > 0 ? ((data?.female || 0) / total) * 100 : 0;
+        const othersPercent = total > 0 ? ((data?.others || 0) / total) * 100 : 0;
 
-        document.getElementById('maleCount').textContent = data.male || 0;
-        document.getElementById('femaleCount').textContent = data.female || 0;
-        document.getElementById('othersCount').textContent = data.others || 0;
-        document.getElementById('maleBar').style.width = `${malePercent}%`;
-        document.getElementById('femaleBar').style.width = `${femalePercent}%`;
-        document.getElementById('othersBar').style.width = `${othersPercent}%`;
+        const maleCountEl = document.getElementById('maleCount');
+        const femaleCountEl = document.getElementById('femaleCount');
+        const othersCountEl = document.getElementById('othersCount');
+        const maleBarEl = document.getElementById('maleBar');
+        const femaleBarEl = document.getElementById('femaleBar');
+        const othersBarEl = document.getElementById('othersBar');
+        
+        if (maleCountEl) maleCountEl.textContent = data?.male || 0;
+        if (femaleCountEl) femaleCountEl.textContent = data?.female || 0;
+        if (othersCountEl) othersCountEl.textContent = data?.others || 0;
+        if (maleBarEl) maleBarEl.style.width = `${malePercent}%`;
+        if (femaleBarEl) femaleBarEl.style.width = `${femalePercent}%`;
+        if (othersBarEl) othersBarEl.style.width = `${othersPercent}%`;
 
         // Update gender chart
         const ctxGender = document.getElementById('genderRatioChart');
@@ -1017,16 +1042,18 @@
 
     function updateCooperativeActivity(activities) {
         const timeline = document.getElementById('coopActivityTimeline');
-        if (!timeline) return;
+        if (!timeline) {
+            return;
+        }
 
         timeline.innerHTML = '';
 
-        if (activities.length === 0) {
+        if (!activities || activities.length === 0) {
             timeline.innerHTML = '<div class="text-center text-muted p-3">No recent activity</div>';
             return;
         }
 
-        activities.slice(0, 5).forEach(activity => {
+        activities.slice(0, 5).forEach((activity) => {
             const item = document.createElement('div');
             item.className = 'timeline-item';
             item.style.cursor = 'pointer';

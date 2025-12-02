@@ -276,3 +276,11 @@ WEBPUSH_SETTINGS = {
     "VAPID_ADMIN_EMAIL": config('VAPID_ADMIN_EMAIL')
 }
 
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'kooptimizer@gmail.com'  # Your email
+EMAIL_HOST_PASSWORD = 'mbgh wpss nvud kkuh' # Generate this from Google Account > Security > App Passwords

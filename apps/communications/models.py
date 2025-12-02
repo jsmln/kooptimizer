@@ -112,7 +112,7 @@ class Message(models.Model):
 
 # Update MessageRecipient to track status
 class MessageRecipient(models.Model):
-    message = models.ForeignKey(Message, on_delete=models.CASCADE, db_column='message_id')
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, db_column='message_id', primary_key=True)
     receiver = models.ForeignKey('users.User', on_delete=models.CASCADE, db_column='receiver_id', related_name='received_messages')
     received_at = models.DateTimeField(blank=True, null=True, db_column='received_at')
     
@@ -129,8 +129,6 @@ class MessageRecipient(models.Model):
         managed = False
         db_table = 'message_recipients'
         unique_together = (('message', 'receiver'),)
-        # Disable Django's automatic primary key creation
-        # The table uses a composite PK (message_id, receiver_id)
 # ======================================================
 # 9) ANNOUNCEMENTS MODEL (Updated)
 # ======================================================

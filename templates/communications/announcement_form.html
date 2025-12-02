@@ -723,10 +723,16 @@
 
 <script>
     // Embed data from Django view into JavaScript variables
-    const cooperativesData = {{ cooperatives_json| safe }};
-    const officersByCoopData = {{ officers_by_coop_json| safe }};
+    const cooperativesData = {{ cooperatives_json|safe }};
+    const officersByCoopData = {{ officers_by_coop_json|safe }};
     const currentUserRole = '{{ request.session.role }}';
-    const currentUserId = {% if request.session.user_id %}{ { request.session.user_id } } {% else %} null{% endif %};
+    const currentUserId = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
+    
+    // Debug: Log data to verify it's loaded correctly
+    console.log('Cooperatives Data:', cooperativesData);
+    console.log('Officers by Coop Data:', officersByCoopData);
+    console.log('User Role:', currentUserRole);
+    console.log('User ID:', currentUserId);
 </script>
 
 <div class="announcement-layout">

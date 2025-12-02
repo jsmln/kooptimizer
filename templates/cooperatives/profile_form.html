@@ -935,6 +935,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        
         // --- CHECK FOR #edit HASH AND OPEN MODAL ---
         if (window.location.hash === '#edit') {
             // Wait a bit for Bootstrap to be fully loaded
@@ -1088,8 +1089,12 @@
                     })
                     .then(data => {
                         if (data.success) {
-                            alert('Profile saved successfully!');
-                            location.reload();
+                            // Reload page to show Django message
+                            if (data.redirect) {
+                                window.location.href = data.redirect;
+                            } else {
+                                window.location.reload();
+                            }
                         } else {
                             // IMPROVED ERROR LOGGING
                             console.error("Server Error Detail:", data.error);

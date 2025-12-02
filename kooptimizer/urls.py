@@ -18,6 +18,7 @@ urlpatterns = [
     path('login/', user_views.login_view, name='login'),  # Login should be at /login/
     path('download/', core_views.download_view, name='download'),
     path('about/', core_views.about_view, name='about'),
+    path('contact/', user_views.contact_view, name='contact'),
     path('access-denied/', core_views.access_denied_view, name='access_denied'),  # Access denied page
     path('communications/', include('apps.communications.urls', namespace='communications')),
     path('account_management/', include('apps.account_management.urls', namespace='account_management')),

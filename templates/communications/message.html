@@ -1969,11 +1969,21 @@
     // Send Message (Updated: Refresh Contacts)
     // ========================================
     let isSending = false; // Flag to prevent double-submission
+    let lastSendTimestamp = 0; // Timestamp of last send to prevent rapid double-sends
+    const SEND_DEBOUNCE_MS = 500; // Minimum time between sends
 
     async function sendMessage() {
-        // Prevent double-submission
+        const now = Date.now();
+        
+        // Prevent double-submission with both flag and timestamp check
         if (isSending) {
             console.log('Message sending already in progress...');
+            return;
+        }
+        
+        // Debounce: prevent sends within 500ms of each other
+        if (now - lastSendTimestamp < SEND_DEBOUNCE_MS) {
+            console.log('Message send debounced - too soon after last send');
             return;
         }
 
@@ -1984,8 +1994,11 @@
             return;
         }
 
-        // Set sending flag and disable button
+        // Set sending flag and timestamp
         isSending = true;
+        lastSendTimestamp = now;
+        
+        // Disable button and show loading state
         sendBtn.disabled = true;
         sendBtn.style.opacity = '0.6';
         sendBtn.style.cursor = 'not-allowed';
@@ -2080,11 +2093,11 @@
     // ========================================
     // Event Listeners
     // ========================================
-    sendBtn.addEventListener('click', sendMessage);
-    
-    // Add touch support for mobile
-    sendBtn.addEventListener('touchend', (e) => {
+    // Use a single event listener that works for both mouse and touch
+    // This prevents duplicate events on touch devices
+    sendBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         sendMessage();
     });
     

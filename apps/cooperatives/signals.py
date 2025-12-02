@@ -13,7 +13,7 @@ from apps.core.notification_utils import send_notification_to_cooperative_office
 logger = logging.getLogger(__name__)
 
 
-@receiver(post_save, sender=ProfileData)
+@receiver(post_save, sender=ProfileData, dispatch_uid='profile_data_post_save_notification')
 def send_profile_update_notification(sender, instance, created, **kwargs):
     """
     Send push notification when a profile is created or updated.

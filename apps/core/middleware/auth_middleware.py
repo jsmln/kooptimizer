@@ -19,10 +19,13 @@ class AuthenticationMiddleware:
         'login',          # Login page
         'about',          # About page
         'download',       # Download page
+        'contact',        # Contact page
+        'password_reset', # Password reset initiation
         'users:logout',   # Logout (to clear session)
         'access_denied',  # Access denied page
         'users:initiate_password_reset', # Allow searching for account
         'users:perform_password_reset',
+        'users:password_reset_confirm',
         'users:all_events',
         'users:add_event',
     ]
@@ -105,7 +108,8 @@ class AuthenticationMiddleware:
         # ---------------------------------------------------------
         # 1. SESSION FRESHNESS CHECK
         # ---------------------------------------------------------
-        if request.session.session_key and user_id:
+        # Only perform session freshness check if user_id exists (user is logged in)
+        if user_id:
             # Check if session has last_activity timestamp
             last_activity = request.session.get('last_activity')
             current_time = __import__('time').time()
@@ -121,15 +125,17 @@ class AuthenticationMiddleware:
                     if request.path_info not in ['/login/', '/', '/about/', '/download/']:
                         messages.warning(request, 'Your session has expired due to inactivity. Please log in again.')
                         return redirect('login')
+                    # Re-check user_id after flush
+                    user_id = None
             else:
                 # No last_activity means this is a stale/restored session
-                request.session.flush()
-                if request.path_info not in ['/login/', '/', '/about/', '/download/']:
-                    messages.warning(request, 'Your session has expired. Please log in again.')
-                    return redirect('login')
+                # This can happen if session was created before last_activity tracking was added
+                # Initialize it instead of flushing for backward compatibility
+                request.session['last_activity'] = current_time
             
-            # Update last activity timestamp
-            request.session['last_activity'] = current_time
+            # Update last activity timestamp on every request (if session still valid)
+            if user_id:
+                request.session['last_activity'] = current_time
 
             # ---------------------------------------------------------
             # 2. ACCOUNT STATUS CHECK (NEW LOGIC)
@@ -235,6 +241,15 @@ class AuthenticationMiddleware:
             # This helps detect if session just expired vs. never existed
             last_page = request.session.get('current_page')
             
+            # Check referer to understand where the request is coming from
+            referer = request.META.get('HTTP_REFERER', '')
+            base_url = f"{request.scheme}://{request.get_host()}/"
+            login_url = f"{base_url}login/"
+            
+            # Determine if coming from login page or access denied page
+            is_from_login = referer and login_url in referer
+            is_from_access_denied = referer and '/access_denied' in referer
+            
             # If trying to access the same page they were just on (refresh scenario)
             # This means session might have expired naturally or hard refresh cleared cookie
             if last_page and request.path_info == last_page:
@@ -242,39 +257,31 @@ class AuthenticationMiddleware:
                 messages.warning(request, 'Your session has expired. Please log in again.')
                 return redirect('login')
             
-            # If no session/last_page (never logged in or on public page)
-            # User is trying to access protected page directly
+            # If no last_page (never logged in or session never established)
             if not last_page:
-                # Check referer to see if coming from public page
-                referer = request.META.get('HTTP_REFERER', '')
-                base_url = f"{request.scheme}://{request.get_host()}/"
-                login_url = f"{base_url}login/"
-                
-                # Check if coming from login page - don't show access denied message
-                is_from_login = referer and login_url in referer
-                
-                # If no referer (typed URL) or referer is from same site (navigating from public page)
-                # Redirect to access denied page
-                if not referer or referer.startswith(base_url):
-                    # Don't show access denied message if coming from login page
-                    if not is_from_login:
-                        # Add message before redirecting
-                        if not messages.get_messages(request):
-                            messages.warning(request, 'Access denied. Please log in to access this page.')
-                        return redirect('access_denied')
-                    else:
-                        # Coming from login page - just redirect to login without message
-                        return redirect('login')
-                else:
-                    # External referer - redirect to login
-                    messages.warning(request, 'Please log in to access this page.')
+                # If coming from login page or access denied page, redirect back to login
+                # This handles failed login attempts or navigation from access denied
+                # DON'T add messages here - let the login view handle messaging
+                if is_from_login or is_from_access_denied:
                     return redirect('login')
+                
+                # If no referer (directly typed URL), show access denied page
+                # This is the ONLY case where we show access denied
+                if not referer:
+                    return redirect('access_denied')
+                
+                # If referer is from same site (navigating from public page), redirect to login
+                if referer.startswith(base_url):
+                    return redirect('login')
+                
+                # External referer - redirect to login
+                return redirect('login')
             
-            # If there is a last_page but trying to access different URL (URL manipulation while logged in)
-            # Redirect back to last known page to prevent unauthorized access
+            # If there is a last_page but trying to access different URL (URL manipulation)
+            # User had a session but it expired, redirect to login
             if last_page and request.path_info != last_page:
-                messages.warning(request, 'Please use the navigation menu to access pages.')
-                return HttpResponseRedirect(last_page)
+                messages.warning(request, 'Your session has expired. Please log in again.')
+                return redirect('login')
         
         # If user IS logged in and accessing file/attachment endpoints
         # Always allow these through without redirection (for <img> tags, downloads, etc.)

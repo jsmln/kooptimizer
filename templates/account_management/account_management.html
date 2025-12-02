@@ -392,7 +392,7 @@
                         <option value="" disabled selected>Choose Cooperatives</option>
                         {% for coop in cooperatives %}
                         <option value="{{ coop.coop_id }}"
-                            data-owner-id="{{ coop.staff.user.user_id|default_if_none:'' }}">
+                            data-owner-id="{{ coop.staff_user_id|default:'' }}">
                             {{ coop.cooperative_name }}
                         </option>
                         {% endfor %}
@@ -813,7 +813,12 @@
             el.onboardForm.addEventListener('submit', (e) => handleFormSubmit(e, el));
             document.getElementById('confirm-edit-btn').addEventListener('click', () => { closeModal(el.confirmModal); openModal(el.onboardModal); });
             document.getElementById('confirm-btn').addEventListener('click', () => handleConfirmButton(el));
-            document.getElementById('send-final-btn').addEventListener('click', function () { handleSendCredentials(this, el); });
+            
+            // Use { once: false } but check with guard flag to prevent double submission
+            const sendFinalBtn = document.getElementById('send-final-btn');
+            if (sendFinalBtn) {
+                sendFinalBtn.addEventListener('click', function () { handleSendCredentials(this, el); });
+            }
 
             document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => handleEditClick(el)));
             document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => handleDeleteClick(el)));
@@ -1056,7 +1061,16 @@
             closeModal(el.confirmModal); openModal(el.sendCredModal);
         }
 
+        let isSendingCredentials = false; // Guard flag to prevent double submission
+        
         function handleSendCredentials(sendButton, el) {
+            // Prevent double submission
+            if (isSendingCredentials) {
+                console.log('Send credentials already in progress, ignoring duplicate request');
+                return;
+            }
+            
+            isSendingCredentials = true;
             sendButton.disabled = true; sendButton.innerHTML = '<span class="spinner"></span> Sending...';
             fetch('/account_management/api/send-credentials/', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
@@ -1074,7 +1088,11 @@
                     }
                     closeModal(el.sendCredModal); el.onboardForm.reset(); showNotification(`Created!`, 'success');
                 } else showNotification(data.message, 'error');
-            }).catch(e => showNotification(e.message, 'error')).finally(() => { sendButton.disabled = false; sendButton.innerHTML = "Send"; });
+            }).catch(e => showNotification(e.message, 'error')).finally(() => { 
+                sendButton.disabled = false; 
+                sendButton.innerHTML = "Send"; 
+                isSendingCredentials = false; // Reset guard flag
+            });
         }
 
         function handleEditClick(el) {

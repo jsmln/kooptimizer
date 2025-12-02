@@ -2,6 +2,7 @@ import json
 import traceback
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, Http404, HttpResponseForbidden, HttpResponseServerError
 from django.db import transaction, connection
@@ -565,7 +566,9 @@ def create_profile(request):
                             VALUES (%s, %s, %s, %s, NOW())
                         """, [coop.coop_id, fullname, gender, mobile_number])
 
-        return JsonResponse({'success': True, 'message': 'Profile saved successfully'})
+        messages.success(request, 'Profile saved successfully!')
+        from django.urls import reverse
+        return JsonResponse({'success': True, 'redirect': reverse('cooperatives:profile_form')})
 
     except KeyError as e:
         import traceback

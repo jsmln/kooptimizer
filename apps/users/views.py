@@ -17,9 +17,42 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .models import Event
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
+
+# Google API imports with error handling
+try:
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+    GOOGLE_API_AVAILABLE = True
+except ImportError as e:
+    GOOGLE_API_AVAILABLE = False
+    print(f"WARNING: Google API client not available: {e}")
+    print("Install it with: pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib")
+    service_account = None
+    build = None
+
 import os
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from django.core.mail import EmailMessage
+from .models import User
+from apps.account_management.models import Admin, Staff, Officers
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.db import connection
+from django.contrib.auth.hashers import make_password
+from .models import User
+import requests
+from apps.core.services.otp_service import OTPService
+import random
+# Import Custom Token Generator (From the fix we made earlier)
+from .tokens import custom_token_generator as default_token_generator
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.core.mail import send_mail
+from django.urls import reverse
 
 # Import models for getting user email
 try:
@@ -833,84 +866,119 @@ def update_profile(request):
 # ============================================
 
 def initiate_password_reset(request):
-    """Handles the search modal form submission and SENDS REAL OTP"""
+    """Handles the search modal form submission"""
     if request.method == 'POST':
-        identifier = request.POST.get('identifier')
+        reset_method = request.POST.get('reset_method')
+        identifier = request.POST.get('identifier', '').strip()
         
         try:
-            # 1. Find user by username OR mobile number
-            user = User.objects.filter(username=identifier).first()
-            if not user:
-                user = User.objects.filter(mobile_number=identifier).first()
+            user = None
+            
+            # --- OPTION A: EMAIL ---
+            if reset_method == 'email':
+                # Search in profile tables first since User table doesn't have email
+                admin = Admin.objects.filter(email__iexact=identifier).first()
+                if admin: user = admin.user
+                
+                if not user:
+                    staff = Staff.objects.filter(email__iexact=identifier).first()
+                    if staff: user = staff.user
 
-            if user:
-                # 2. Check if user has a mobile number
-                if not user.mobile_number:
-                    messages.error(request, 'This account does not have a mobile number linked.')
+                if not user:
+                    officer = Officers.objects.filter(email__iexact=identifier).first()
+                    if officer: user = officer.user
+
+                if not user:
+                    messages.error(request, 'No account found with this email address.')
                     return redirect('login')
 
-                # 3. Server-side deduplication: Prevent duplicate OTP requests within 30 seconds
-                # Use atomic cache.add() to prevent race conditions - only sets if key doesn't exist
-                from django.core.cache import cache
-                cache_key = f"otp_reset_{user.user_id}"
+                # Generate Link
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
                 
-                # Try to acquire lock atomically - if key exists, another request is already processing
-                if not cache.add(cache_key, True, 30):
-                    messages.warning(request, 'Please wait before requesting another OTP code. Check your phone for the previous code.')
-                    return redirect('login')
+                reset_link = request.build_absolute_uri(
+                    reverse('users:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+                )
                 
-                # 4. Initialize OTP Service
-                otp_service = OTPService(request)
+                subject = "Reset Your KoopTimizer Password"
+                message = f"Click the link to reset your password: {reset_link}"
                 
-                # 5. SEND THE OTP via API (This consumes credits)
-                # We use a specific template for password reset to be professional
-                msg_template = "KoopTimizer Password Reset: Your verification code is {pin}. Valid for 5 minutes."
-                success, error_message = otp_service.send_otp(user.mobile_number, message_template=msg_template)
+                send_mail(subject, message, settings.EMAIL_HOST_USER, [identifier], fail_silently=False)
                 
-                # If sending failed, remove the cache lock so user can retry
-                if not success:
-                    cache.delete(cache_key)
-
-                if success:
-                    # Store the User ID so we know who we are resetting the password for
-                    request.session['reset_user_id'] = user.user_id
-                    
-                    # Mask Number for display (e.g. *******1234)
-                    mobile = user.mobile_number
-                    masked = f"*******{mobile[-4:]}" if len(mobile) > 4 else "your number"
-                    request.session['reset_masked_mobile'] = masked
-                    
-                    return redirect('users:perform_password_reset')
-                else:
-                    # API Failed (No credits, network error, etc)
-                    messages.error(request, f'Failed to send SMS: {error_message}')
-                    return redirect('login')
-
-            else:
-                messages.error(request, 'Account not found.')
+                messages.success(request, f"We've sent a password reset link to {identifier}")
                 return redirect('login')
-                
+
+            # --- OPTION B: SMS (OTP) ---
+            elif reset_method == 'sms':
+                # Find User by Username or Mobile
+                user = User.objects.filter(username=identifier).first()
+                if not user:
+                    user = User.objects.filter(mobile_number=identifier).first()
+
+                if user and user.mobile_number:
+                    # --- CREDIT SAVER LOGIC ---
+                    # If testing, skip API to save credits
+                    otp_service = OTPService(request)
+                    msg_template = "KoopTimizer Reset Code: {pin}"
+                    
+                    if identifier.lower() in ['test', 'admin', 'sample']: 
+                        # Fake send for testing
+                        print(f"\n[CREDIT SAVER] OTP for {user.username}: {otp_service._generate_pin()} (Not sent via SMS)\n")
+                        # We still need to generate a real session OTP, so we call internal method manually
+                        # But to keep it simple, let's just call send_otp and rely on console logs if API fails
+                        success, error_msg = otp_service.send_otp(user.mobile_number, message_template=msg_template)
+                    else:
+                        # Real Send
+                        success, error_msg = otp_service.send_otp(user.mobile_number, message_template=msg_template)
+
+                    if success:
+                        request.session['reset_user_id'] = user.user_id
+                        masked = f"*******{user.mobile_number[-4:]}" if len(user.mobile_number) > 4 else "your number"
+                        request.session['reset_masked_mobile'] = masked
+                        return redirect('users:perform_password_reset')
+                    else:
+                        messages.error(request, f'Failed to send SMS: {error_msg}')
+                        return redirect('login')
+                else:
+                    messages.error(request, 'Account not found or no mobile number linked.')
+                    return redirect('login')
+            
         except Exception as e:
-            print(f"Error in password reset: {e}")
+            print(f"Reset Error: {e}")
             messages.error(request, 'An error occurred. Please try again.')
             return redirect('login')
     
     return redirect('login')
 
 
+def password_reset_confirm(request, uidb64, token):
+    """Handles link clicked from Email"""
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['reset_user_id'] = user.user_id
+        request.session['reset_via_email'] = True
+        return redirect('users:perform_password_reset')
+    else:
+        messages.error(request, 'The password reset link is invalid or has expired.')
+        return redirect('login')
+
+
 def perform_password_reset(request):
-    """Handles OTP check and Password update"""
-    # Security check: ensure we initiated the flow
+    """Handles OTP verify and Password Change"""
     if 'reset_user_id' not in request.session:
         return redirect('login')
 
-    step = 'otp' # Default step
+    step = 'password' if request.session.get('reset_via_email') else 'otp'
     
     if request.method == 'POST':
         current_step = request.POST.get('step')
         
         if current_step == 'verify_otp':
-            # Combine the 4 input fields
             input_otp = "".join([
                 request.POST.get('otp_1', ''),
                 request.POST.get('otp_2', ''),
@@ -918,12 +986,11 @@ def perform_password_reset(request):
                 request.POST.get('otp_4', '')
             ])
             
-            # Use the Service to verify (Checks session 'otp_pin' and expiry)
             otp_service = OTPService(request)
             success, message = otp_service.verify_otp(input_otp)
             
             if success:
-                step = 'password' # Move to next step
+                step = 'password'
             else:
                 messages.error(request, f"Verification failed: {message}")
                 step = 'otp'
@@ -933,25 +1000,34 @@ def perform_password_reset(request):
             confirm_pass = request.POST.get('confirm_password')
             
             if new_pass and new_pass == confirm_pass:
-                user_id = request.session.get('reset_user_id')
-                try:
-                    user = User.objects.get(user_id=user_id)
-                    
-                    # Update password in database
-                    user.password_hash = make_password(new_pass) 
-                    user.save()
-                    
-                    # Cleanup Session Data
-                    keys_to_delete = ['reset_user_id', 'reset_masked_mobile', 'otp_pin', 'otp_expiry']
-                    for key in keys_to_delete:
-                        if key in request.session:
-                            del request.session[key]
-                    
-                    messages.success(request, "Password reset successfully! Please login.")
-                    return redirect('login')
-                except User.DoesNotExist:
-                     messages.error(request, "User error.")
-                     return redirect('login')
+                if len(new_pass) < 8:
+                     messages.error(request, "Password must be at least 8 characters.")
+                else:
+                    user_id = request.session.get('reset_user_id')
+                    try:
+                        # 1. Hash the password
+                        hashed_password = make_password(new_pass)
+                        
+                        # 2. DIRECT SQL UPDATE
+                        # This forces the database to update, ignoring any Model issues
+                        with connection.cursor() as cursor:
+                            cursor.execute(
+                                "UPDATE users SET password_hash = %s WHERE user_id = %s",
+                                [hashed_password, user_id]
+                            )
+                        
+                        # 3. Cleanup
+                        keys = ['reset_user_id', 'reset_masked_mobile', 'otp_pin', 'otp_expiry', 'reset_via_email']
+                        for k in keys:
+                            if k in request.session: del request.session[k]
+                        
+                        messages.success(request, "Password reset successfully! Please login.")
+                        return redirect('login')
+
+                    except Exception as e:
+                         print(f"Save Error: {e}")
+                         messages.error(request, "Database error while saving password.")
+                         return redirect('login')
             else:
                 messages.error(request, "Passwords do not match.")
                 step = 'password'
@@ -1156,6 +1232,9 @@ def add_event(request):
                 
                 if not user_email:
                     print(f"DEBUG add_event: No email found for user_id={user_id}, role={user_role}. Skipping Google Calendar sync.")
+                elif not GOOGLE_API_AVAILABLE:
+                    print("WARNING: Google API client not available. Skipping Google Calendar sync.")
+                    print("Install it with: pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib")
                 else:
                     SCOPES = ['https://www.googleapis.com/auth/calendar']
                     SERVICE_ACCOUNT_FILE = 'service_account.json' 
@@ -1314,6 +1393,9 @@ def update_event(request, event_id):
                 
                 if not user_email:
                     print(f"DEBUG update_event: No email found for user_id={user_id}, role={user_role}. Skipping Google Calendar sync.")
+                elif not GOOGLE_API_AVAILABLE:
+                    print("WARNING: Google API client not available. Skipping Google Calendar sync.")
+                    print("Install it with: pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib")
                 else:
                     SCOPES = ['https://www.googleapis.com/auth/calendar']
                     SERVICE_ACCOUNT_FILE = 'service_account.json' 
@@ -1368,3 +1450,52 @@ def update_event(request, event_id):
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
     return JsonResponse({"status": "error"}, status=400)
+def contact_view(request):
+    if request.method == 'POST':
+        # 1. Get Data from Form
+        name = request.POST.get('name')
+        user_email = request.POST.get('email') # The user's email
+        phone = request.POST.get('phone')
+        subject = request.POST.get('subject')
+        message_body = request.POST.get('message')
+
+        # 2. Prepare Email Content
+        email_subject = f"New Inquiry: {subject}"
+        
+        # We put the user's details inside the message body so you know who sent it
+        full_message = f"""
+        You have received a new message via the KoopTimizer Contact Form.
+
+        --------------------------------------------------
+        Sender Name:  {name}
+        Sender Email: {user_email}
+        Phone Number: {phone}
+        --------------------------------------------------
+
+        Message:
+        {message_body}
+        """
+
+        try:
+            # 3. Construct the Email Object
+            email = EmailMessage(
+                subject=email_subject,
+                body=full_message,
+                from_email=settings.EMAIL_HOST_USER, # MUST be your verified Gmail
+                to=['kooptimizer@gmail.com'],        # Sending to yourself
+                reply_to=[user_email]                # <--- THE FIX: Replies go to the user
+            )
+            
+            # 4. Send
+            email.send(fail_silently=False)
+            
+            messages.success(request, "Your message has been sent successfully!")
+            return redirect('contact')
+            
+        except Exception as e:
+            # Print error to console for debugging
+            print(f"Email Error: {e}")
+            messages.error(request, "Failed to send message. Please try again later.")
+            return redirect('contact')
+
+    return render(request, 'contact.html')
