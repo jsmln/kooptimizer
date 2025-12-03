@@ -17,6 +17,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from .models import Event
+from django.core.cache import cache
 
 # Google API imports with error handling
 try:
@@ -150,25 +151,46 @@ def login_view(request):
         else:
             return redirect('home')
     
-    # Check for lockout on GET as well (for disabling login/home navigation)
     import time
     now = int(time.time())
-    lockout_until = request.session.get('login_lockout_until')
-    is_locked_out = lockout_until and now < lockout_until
+    
+    # For GET requests, we can't check username-specific lockout without username
+    # So we'll check it in POST and redirect from access_denied if needed
 
     if request.method == 'POST':
-        username = request.POST.get('username')
+        username = request.POST.get('username', '').strip()
         password = request.POST.get('password')
+        
+        if not username:
+            messages.error(request, 'Username is required.')
+            return render(request, 'login.html')
 
-        # --- LOGIN ATTEMPT LIMITING ---
+        # --- LOGIN ATTEMPT LIMITING (Account-based, not session-based) ---
         max_attempts = 5
-        lockout_minutes = 1
-        failed_attempts = request.session.get('failed_login_attempts', 0)
-        lockout_until = request.session.get('login_lockout_until')
+        lockout_hours = 3  # 3 hours lockout
+        
+        # Normalize username to lowercase for consistent cache keys
+        username_normalized = username.lower()
+        
+        # Check cache for account-based lockout (works across all browsers/devices)
+        lockout_cache_key = f'login_lockout_{username_normalized}'
+        attempts_cache_key = f'login_attempts_{username_normalized}'
+        
+        lockout_until = cache.get(lockout_cache_key)
+        failed_attempts = cache.get(attempts_cache_key, 0)
+        
+        # Recalculate lockout status with current time
+        now = int(time.time())
+        is_locked_out = lockout_until and now < lockout_until
 
         if is_locked_out:
-            # Still locked out
-            messages.error(request, f'Too many failed login attempts. Please wait {((lockout_until-now)//60)+1} minutes before trying again.')
+            # Still locked out - account is locked across all browsers/devices
+            remaining_seconds = lockout_until - now
+            remaining_hours = remaining_seconds // 3600
+            remaining_minutes = (remaining_seconds % 3600) // 60
+            # Store username in session so access_denied can check cache
+            request.session['locked_out_username'] = username_normalized
+            messages.error(request, f'Too many failed login attempts. Please wait {remaining_hours}h {remaining_minutes}m before trying again.')
             return redirect('access_denied')
 
         recaptcha_response = request.POST.get('g-recaptcha-response')
@@ -241,11 +263,17 @@ def login_view(request):
 
         if not login_result:
             failed_attempts += 1
-            request.session['failed_login_attempts'] = failed_attempts
+            # Store failed attempts in cache (account-based)
+            cache.set(attempts_cache_key, failed_attempts, 3600 * 24)  # Keep for 24 hours
+            
             if failed_attempts >= max_attempts:
-                lockout_until = now + lockout_minutes * 60
-                request.session['login_lockout_until'] = lockout_until
-                messages.error(request, f'Too many failed login attempts. Please wait {lockout_minutes} minutes before trying again.')
+                lockout_until = now + lockout_hours * 3600
+                # Store lockout in cache (account-based, works across all browsers)
+                # Use a longer timeout than lockout duration to ensure it persists
+                cache.set(lockout_cache_key, lockout_until, (lockout_hours * 3600) + 3600)  # Add 1 hour buffer
+                # Store username in session so access_denied can check cache
+                request.session['locked_out_username'] = username_normalized
+                messages.error(request, f'Too many failed login attempts. Please wait {lockout_hours} hours before trying again.')
                 return redirect('access_denied')
             messages.error(request, f'Invalid login attempt. ({failed_attempts}/{max_attempts})')
             return render(request, 'login.html')
@@ -257,6 +285,38 @@ def login_view(request):
         is_first_login = login_result['is_first_login']
 
         if status_code == 'SUCCESS':
+            # CRITICAL: Check lockout status again right before allowing login
+            # This prevents bypassing lockout with correct credentials
+            # Use normalized username to check cache (must match how we stored it)
+            lockout_cache_key_check = f'login_lockout_{username_normalized}'
+            lockout_until = cache.get(lockout_cache_key_check)
+            now = int(time.time())
+            is_locked_out = lockout_until and now < lockout_until
+            
+            # Also check with the username from the login result to be safe
+            # Get username from database to ensure exact match
+            try:
+                user_obj = User.objects.get(pk=user_id)
+                username_from_db = user_obj.username.lower()  # Normalize to lowercase
+                if username_from_db != username_normalized:
+                    # Username mismatch - check lockout with DB username too
+                    lockout_cache_key_db = f'login_lockout_{username_from_db}'
+                    lockout_until_db = cache.get(lockout_cache_key_db)
+                    if lockout_until_db and now < lockout_until_db:
+                        is_locked_out = True
+                        lockout_until = lockout_until_db
+                        username_normalized = username_from_db  # Use DB username for consistency
+            except User.DoesNotExist:
+                pass
+            
+            if is_locked_out:
+                # Account is locked - block login even with correct credentials
+                remaining_seconds = lockout_until - now
+                remaining_hours = remaining_seconds // 3600
+                remaining_minutes = (remaining_seconds % 3600) // 60
+                request.session['locked_out_username'] = username_normalized
+                messages.error(request, f'Account is locked due to too many failed login attempts. Please wait {remaining_hours}h {remaining_minutes}m before trying again.')
+                return redirect('access_denied')
 
             try:
                 user_check = User.objects.get(pk=user_id)
@@ -271,9 +331,22 @@ def login_view(request):
                 return render(request, 'login.html')
             
 
-            # Reset failed attempts on successful login
+            # Reset failed attempts and lockout on successful login (clear from cache)
+            # Use normalized username to ensure we clear the correct cache entries
+            cache.delete(attempts_cache_key)
+            cache.delete(lockout_cache_key)
+            # Also clear any potential case variations
+            try:
+                user_obj = User.objects.get(pk=user_id)
+                username_from_db_normalized = user_obj.username.lower()
+                if username_from_db_normalized != username_normalized:
+                    cache.delete(f'login_attempts_{username_from_db_normalized}')
+                    cache.delete(f'login_lockout_{username_from_db_normalized}')
+            except User.DoesNotExist:
+                pass
             request.session['failed_login_attempts'] = 0
             request.session['login_lockout_until'] = None
+            request.session.pop('locked_out_username', None)  # Clear locked out username from session
             if is_first_login or verification_status == 'pending':
                 request.session['pending_verification_user_id'] = user_id
                 request.session['pending_verification_role'] = role
@@ -296,6 +369,18 @@ def login_view(request):
                 messages.info(request, 'Please complete your account verification to continue.')
                 return render(request, 'login.html', context)
 
+            # FINAL CHECK: Verify lockout one more time before setting session
+            # This is the absolute last check before allowing login
+            final_lockout_check = cache.get(lockout_cache_key_check)
+            if final_lockout_check and now < final_lockout_check:
+                # Lockout was set between checks - block login
+                remaining_seconds = final_lockout_check - now
+                remaining_hours = remaining_seconds // 3600
+                remaining_minutes = (remaining_seconds % 3600) // 60
+                request.session['locked_out_username'] = username_normalized
+                messages.error(request, f'Account is locked due to too many failed login attempts. Please wait {remaining_hours}h {remaining_minutes}m before trying again.')
+                return redirect('access_denied')
+            
             request.session['user_id'] = user_id
             request.session['role'] = role
             request.session['last_activity'] = time.time()
@@ -316,22 +401,24 @@ def login_view(request):
 
         elif status_code == 'INVALID_USERNAME_OR_PASSWORD':
             failed_attempts += 1
-            request.session['failed_login_attempts'] = failed_attempts
+            # Store failed attempts in cache (account-based)
+            cache.set(attempts_cache_key, failed_attempts, 3600 * 24)  # Keep for 24 hours
+            
             if failed_attempts >= max_attempts:
-                lockout_until = now + lockout_minutes * 60
-                request.session['login_lockout_until'] = lockout_until
-                messages.error(request, f'Too many failed login attempts. Please wait {lockout_minutes} minutes before trying again.')
+                lockout_until = now + lockout_hours * 3600
+                # Store lockout in cache (account-based, works across all browsers)
+                # Use a longer timeout than lockout duration to ensure it persists
+                cache.set(lockout_cache_key, lockout_until, (lockout_hours * 3600) + 3600)  # Add 1 hour buffer
+                # Store username in session so access_denied can check cache
+                request.session['locked_out_username'] = username_normalized
+                messages.error(request, f'Too many failed login attempts. Please wait {lockout_hours} hours before trying again.')
                 return redirect('access_denied')
             messages.error(request, f'Invalid Username or Password. ({failed_attempts}/{max_attempts})')
         else:
             messages.error(request, 'An internal error occurred. Please contact support.')
 
-    # GET Request
-    # Pass lockout info to template for disabling login/home navigation
+    # GET Request - render login page
     context = {'now': now}
-    if is_locked_out:
-        context['lockout_until'] = lockout_until
-        context['lockout_seconds'] = lockout_until - now
     return render(request, 'login.html', context)
 
 def logout_view(request):

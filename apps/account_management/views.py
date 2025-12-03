@@ -15,6 +15,10 @@ from django.contrib.auth.hashers import make_password, check_password
 from .models import Cooperatives, Users, Admin, Staff, Officers
 from django.views.decorators.http import require_http_methods
 from psycopg2.extras import Json
+from apps.core.utils.activity_logger import (
+    log_user_creation, log_user_deactivation, log_user_reactivation, 
+    log_user_update, get_user_name
+)
 
 @ensure_csrf_cookie
 def account_management(request):
@@ -251,6 +255,16 @@ def send_credentials_view(request):
                 # Brevo returns 201 on success
                 if response.status_code in [200, 201]:
                     print("✓ Email sent successfully!")
+                    
+                    # Log activity
+                    performer_id = request.session.get('user_id')
+                    performer_role = request.session.get('role')
+                    if performer_id and performer_role:
+                        log_user_creation(
+                            performer_id, performer_role,
+                            new_user_data['user_id'], role, name
+                        )
+                    
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Credentials sent successfully!',
@@ -346,6 +360,15 @@ def update_user_view(request, user_id):
                     'status': 'error', 
                     'message': f"Cannot assign: {names} are already managed by another staff."
                 }, status=400)
+        # Get user info for logging
+        try:
+            user = Users.objects.get(user_id=user_id)
+            user_role = user.role
+            user_name = get_user_name(user_id, user_role)
+        except Users.DoesNotExist:
+            user_role = role or 'unknown'
+            user_name = data.get('name', 'Unknown User')
+        
         with connection.cursor() as cursor:
             cursor.execute("""
                 CALL sp_update_user_profile(
@@ -369,6 +392,12 @@ def update_user_view(request, user_id):
                 staff_coop_ids
             ])
         
+        # Log activity
+        performer_id = request.session.get('user_id')
+        performer_role = request.session.get('role')
+        if performer_id and performer_role:
+            log_user_update(performer_id, performer_role, user_id, user_role, user_name)
+        
         return JsonResponse({'status': 'success', 'message': 'User updated successfully.'})
     except Exception as e:
         print(f"Error updating user: {e}")
@@ -379,8 +408,23 @@ def update_user_view(request, user_id):
 @csrf_exempt
 def deactivate_user_view(request, user_id):
     try:
+        # Get user info before deactivation for logging
+        try:
+            user = Users.objects.get(user_id=user_id)
+            user_role = user.role
+            user_name = get_user_name(user_id, user_role)
+        except Users.DoesNotExist:
+            user_role = 'unknown'
+            user_name = 'Unknown User'
+        
         with connection.cursor() as cursor:
             cursor.execute("CALL sp_deactivate_user(%s::integer)", [user_id])
+        
+        # Log activity
+        performer_id = request.session.get('user_id')
+        performer_role = request.session.get('role')
+        if performer_id and performer_role:
+            log_user_deactivation(performer_id, performer_role, user_id, user_role, user_name)
         
         return JsonResponse({'status': 'success', 'message': 'User deactivated successfully.'})
     except Exception as e:
@@ -462,9 +506,22 @@ def reactivate_user_view(request, user_id):
         if not is_valid:
             return JsonResponse({'status': 'error', 'message': 'Incorrect password.'}, status=403)
 
+        # Get user info before reactivation for logging
+        try:
+            user = Users.objects.get(user_id=user_id)
+            user_role = user.role
+            user_name = get_user_name(user_id, user_role)
+        except Users.DoesNotExist:
+            user_role = 'unknown'
+            user_name = 'Unknown User'
+        
         # Call the stored procedure to reactivate user
         with connection.cursor() as cursor:
             cursor.execute("CALL sp_reactivate_user(%s::integer)", [user_id])
+
+        # Log activity
+        if current_user_id:
+            log_user_reactivation(current_user_id, user_role, user_id, user_role, user_name)
 
         return JsonResponse({'status': 'success', 'message': 'User reactivated successfully.'})
     except Exception as e:

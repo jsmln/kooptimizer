@@ -124,9 +124,6 @@
             {% endif %}
         </div>
 
-        <div id="table-controls" class="table-controls">
-            <input type="text" id="user-search" class="search-input" placeholder="Search users...">
-        </div>
 
         {% if request.session.role == 'admin' %}
         <div class="add-section" id="staff-add-section">
@@ -163,7 +160,15 @@
 
     {% if request.session.role == 'admin' %}
     <div class="table-section" id="all-users">
-        <h2>All User Accounts</h2>
+        <div class="table-header-row">
+            <h2>All User Accounts</h2>
+            <div class="table-header-controls">
+                <div class="search-bar-wrapper">
+                    <input type="text" id="all-users-search" class="search-bar" placeholder="Search by name, email, contact, position, cooperative, or type...">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+            </div>
+        </div>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -187,7 +192,15 @@
     </div>
 
     <div class="table-section" id="admins">
-        <h2>Admin User Accounts</h2>
+        <div class="table-header-row">
+            <h2>Admin User Accounts</h2>
+            <div class="table-header-controls">
+                <div class="search-bar-wrapper">
+                    <input type="text" id="admin-search" class="search-bar" placeholder="Search by name, email, contact, or position...">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+            </div>
+        </div>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -223,7 +236,15 @@
     </div>
 
     <div class="table-section active" id="staffs">
-        <h2>Staff User Accounts</h2>
+        <div class="table-header-row">
+            <h2>Staff User Accounts</h2>
+            <div class="table-header-controls">
+                <div class="search-bar-wrapper">
+                    <input type="text" id="staff-search" class="search-bar" placeholder="Search by name, email, cooperative, or position...">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+            </div>
+        </div>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -313,7 +334,15 @@
 
     {% if request.session.role == 'admin' %}
     <div class="table-section" id="deactivated">
-        <h2>Deactivated User Accounts</h2>
+        <div class="table-header-row">
+            <h2>Deactivated User Accounts</h2>
+            <div class="table-header-controls">
+                <div class="search-bar-wrapper">
+                    <input type="text" id="deactivated-search" class="search-bar" placeholder="Search by name, email, cooperative, position, or type...">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+            </div>
+        </div>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -651,16 +680,6 @@
                 document.getElementById('all-users-section')?.classList.remove('hidden');
             }
 
-            // Search Input Logic
-            const searchInput = document.getElementById('user-search');
-            if (searchInput) {
-                if (USER_ROLE === 'admin') {
-                    searchInput.style.display = activeTab === 'all-users' ? 'block' : 'none';
-                } else {
-                    searchInput.style.display = 'none';
-                }
-            }
-
             const elements = {
                 onboardStaffBtn: document.getElementById('onboard-staff-btn'),
                 onboardAdminBtn: document.getElementById('onboard-admin-btn'),
@@ -686,8 +705,7 @@
                 formButtonsEdit: document.getElementById('form-buttons-edit'),
                 confirmRoleLabel: document.getElementById('confirm-role-label'),
                 confirmCoopGroup: document.getElementById('confirm-coop-group'),
-                confirmCoopTextarea: document.getElementById('confirm-coop'),
-                searchInput: document.getElementById('user-search')
+                confirmCoopTextarea: document.getElementById('confirm-coop')
             };
 
             if (USER_ROLE === 'admin') {
@@ -814,7 +832,6 @@
 
         function setupEventListeners(el) {
             document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => handleTabClick(btn)));
-            if (USER_ROLE === 'admin' && el.searchInput) el.searchInput.addEventListener('keyup', handleSearch);
             document.querySelectorAll('tbody').forEach(tbody => tbody.addEventListener('click', handleRowClick));
 
             if (el.onboardStaffBtn && hasAccessToAccountType('staff')) el.onboardStaffBtn.addEventListener('click', () => handleAddButtonClick(el.onboardStaffBtn, el));
@@ -895,17 +912,28 @@
             window.location.href = `?filter=${filterParam}&tab=${target}`;
         }
 
-        function handleSearch(e) {
-            const searchTerm = e.target.value.toLowerCase().trim();
-            const filteredData = allUsersData.filter(user => {
-                return user.name.toLowerCase().includes(searchTerm) ||
-                    user.email.toLowerCase().includes(searchTerm) ||
-                    user.contact.toLowerCase().includes(searchTerm) ||
-                    user.role.toLowerCase().includes(searchTerm) ||
-                    user.coop.toLowerCase().includes(searchTerm) ||
-                    user.type.toLowerCase().includes(searchTerm);
-            });
-            renderAllUsersTable(filteredData);
+        // Search functionality for all users table
+        function initializeAllUsersSearch() {
+            const searchInput = document.getElementById('all-users-search');
+            
+            if (!searchInput) return;
+
+            // Apply search filter
+            function applyFilters() {
+                const query = searchInput.value.toLowerCase().trim();
+                const filteredData = allUsersData.filter(user => {
+                    return user.name.toLowerCase().includes(query) ||
+                        user.email.toLowerCase().includes(query) ||
+                        user.contact.toLowerCase().includes(query) ||
+                        user.role.toLowerCase().includes(query) ||
+                        user.coop.toLowerCase().includes(query) ||
+                        user.type.toLowerCase().includes(query);
+                });
+                renderAllUsersTable(filteredData);
+            }
+
+            // Event listener
+            searchInput.addEventListener('keyup', applyFilters);
         }
 
         function handleRowClick(e) {
@@ -1513,14 +1541,156 @@
             populateCoopFilter();
         }
 
+        // Search functionality for admins table
+        function initializeAdminSearch() {
+            const searchInput = document.getElementById('admin-search');
+            
+            if (!searchInput) return;
+
+            // Store original order of rows
+            const tableBody = document.getElementById('admin-table-body');
+            const originalRows = Array.from(tableBody.querySelectorAll('tr[data-user-id]'));
+
+            // Apply search filter
+            function applyFilters() {
+                const query = searchInput.value.toLowerCase();
+
+                // Filter rows based on search
+                let filteredRows = originalRows.filter(row => {
+                    const name = row.cells[1]?.textContent.toLowerCase() || '';
+                    const email = row.cells[2]?.textContent.toLowerCase() || '';
+                    const contact = row.cells[3]?.textContent.toLowerCase() || '';
+                    const position = row.cells[4]?.textContent.toLowerCase() || '';
+
+                    return name.includes(query) || 
+                           email.includes(query) || 
+                           contact.includes(query) || 
+                           position.includes(query);
+                });
+
+                // Hide all rows first
+                originalRows.forEach(row => row.style.display = 'none');
+
+                // Show filtered rows
+                filteredRows.forEach(row => row.style.display = '');
+                
+                // Renumber visible rows
+                let counter = 1;
+                filteredRows.forEach(row => {
+                    row.cells[0].textContent = counter++;
+                });
+            }
+
+            // Event listener
+            searchInput.addEventListener('keyup', applyFilters);
+        }
+
+        // Search functionality for staffs table
+        function initializeStaffSearch() {
+            const searchInput = document.getElementById('staff-search');
+            
+            if (!searchInput) return;
+
+            // Store original order of rows
+            const tableBody = document.getElementById('staff-table-body');
+            const originalRows = Array.from(tableBody.querySelectorAll('tr[data-user-id]'));
+
+            // Apply search filter
+            function applyFilters() {
+                const query = searchInput.value.toLowerCase();
+
+                // Filter rows based on search
+                let filteredRows = originalRows.filter(row => {
+                    const name = row.cells[1]?.textContent.toLowerCase() || '';
+                    const position = row.cells[2]?.textContent.toLowerCase() || '';
+                    const email = row.cells[3]?.textContent.toLowerCase() || '';
+                    const coop = row.cells[5]?.textContent.toLowerCase() || '';
+
+                    return name.includes(query) || 
+                           position.includes(query) || 
+                           email.includes(query) || 
+                           coop.includes(query);
+                });
+
+                // Hide all rows first
+                originalRows.forEach(row => row.style.display = 'none');
+
+                // Show filtered rows
+                filteredRows.forEach(row => row.style.display = '');
+                
+                // Renumber visible rows
+                let counter = 1;
+                filteredRows.forEach(row => {
+                    row.cells[0].textContent = counter++;
+                });
+            }
+
+            // Event listener
+            searchInput.addEventListener('keyup', applyFilters);
+        }
+
+        // Search functionality for deactivated table
+        function initializeDeactivatedSearch() {
+            const searchInput = document.getElementById('deactivated-search');
+            
+            if (!searchInput) return;
+
+            // Store original order of rows
+            const tableBody = document.getElementById('deactivated-table-body');
+            const originalRows = Array.from(tableBody.querySelectorAll('tr[data-user-id]'));
+
+            // Apply search filter
+            function applyFilters() {
+                const query = searchInput.value.toLowerCase();
+
+                // Filter rows based on search
+                let filteredRows = originalRows.filter(row => {
+                    const name = row.cells[1]?.textContent.toLowerCase() || '';
+                    const email = row.cells[2]?.textContent.toLowerCase() || '';
+                    const position = row.cells[4]?.textContent.toLowerCase() || '';
+                    const coop = row.cells[5]?.textContent.toLowerCase() || '';
+                    const type = row.cells[6]?.textContent.toLowerCase() || '';
+
+                    return name.includes(query) || 
+                           email.includes(query) || 
+                           position.includes(query) || 
+                           coop.includes(query) || 
+                           type.includes(query);
+                });
+
+                // Hide all rows first
+                originalRows.forEach(row => row.style.display = 'none');
+
+                // Show filtered rows
+                filteredRows.forEach(row => row.style.display = '');
+                
+                // Renumber visible rows
+                let counter = 1;
+                filteredRows.forEach(row => {
+                    row.cells[0].textContent = counter++;
+                });
+            }
+
+            // Event listener
+            searchInput.addEventListener('keyup', applyFilters);
+        }
+
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
                 initialize();
                 initializeOfficerSearch();
+                initializeAdminSearch();
+                initializeStaffSearch();
+                initializeDeactivatedSearch();
+                initializeAllUsersSearch();
             });
         } else {
             initialize();
             initializeOfficerSearch();
+            initializeAdminSearch();
+            initializeStaffSearch();
+            initializeDeactivatedSearch();
+            initializeAllUsersSearch();
         }
     })();
 </script>

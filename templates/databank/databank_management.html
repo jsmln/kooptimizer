@@ -81,6 +81,19 @@
         background: #e0a800;
     }
 
+    #profile-print-btn {
+        background-color: #8B0000 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    #profile-print-btn:hover {
+        background-color: #6B0000 !important;
+    }
+
     .tab-btn {
         background: #e0e0e0;
         border: none;
@@ -509,9 +522,14 @@
 <!-- Profile View Modal -->
 <div id="profile-modal" class="modal-overlay hidden">
     <div class="modal-content" style="max-width: 95%; max-height: 95vh; display: flex; flex-direction: column;">
-        <div class="modal-top-bar" style="flex-shrink: 0;">
+        <div class="modal-top-bar" style="flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;">
             <h3>Cooperative Profile</h3>
-            <button class="modal-close-btn" id="profile-modal-close">&times;</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn" id="profile-print-btn" style="padding: 6px 16px; font-size: 14px; display: none;">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+                <button class="modal-close-btn" id="profile-modal-close">&times;</button>
+            </div>
         </div>
         <div class="modal-scroll-area" style="flex: 1; overflow-y: auto; overflow-x: hidden;">
             <div class="modal-body" id="profile-modal-body" style="padding: 20px;">
@@ -1099,6 +1117,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const target = this.dataset.target;
             
+            // Reset ALL table wrappers to full height before switching
+            document.querySelectorAll('.coop-table-wrapper, .profile-table-wrapper').forEach(wrapper => {
+                wrapper.classList.remove('collapsed');
+            });
+            
             // Update active tab in header
             document.querySelectorAll('.databank-header-tabs .tab-btn').forEach(b => {
                 if (!b.dataset.filter) { // Only update main tabs, not nested tabs
@@ -1125,11 +1148,6 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedProfileRow = null;
             document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');
             document.querySelectorAll('tr.selected').forEach(row => row.classList.remove('selected'));
-            
-            // Reset all table wrappers to full height (independent for each table)
-            document.querySelectorAll('.coop-table-wrapper, .profile-table-wrapper, .table-wrapper, .summary-wrapper, .detailed-wrapper').forEach(wrapper => {
-                wrapper.classList.remove('collapsed');
-            });
         });
     });
 
@@ -1143,6 +1161,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update active sub-tab
                 document.querySelectorAll('#cooperatives-management .tab-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
+                
+                // Reset ALL table wrappers to full height before switching
+                document.querySelectorAll('.coop-table-wrapper').forEach(wrapper => {
+                    wrapper.classList.remove('collapsed');
+                });
                 
                 // Show/hide sub-table sections (active-coops, deactivated-coops)
                 document.querySelectorAll('#active-coops, #deactivated-coops').forEach(section => {
@@ -1162,16 +1185,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     addBtn.style.display = filter === 'deactivated' ? 'none' : 'flex';
                 }
                 
-                // Clear selected rows and reset table heights
+                // Clear selected rows
                 selectedCoopRow = null;
                 selectedDeactivatedCoopRow = null;
                 document.querySelectorAll('#cooperatives-management .action-buttons').forEach(btn => btn.style.display = 'none');
                 document.querySelectorAll('#cooperatives-management tr.selected').forEach(row => row.classList.remove('selected'));
-                
-                // Reset all coop table wrappers to full height
-                document.querySelectorAll('.coop-table-wrapper').forEach(wrapper => {
-                    wrapper.classList.remove('collapsed');
-                });
                 
                 // Reload page with filter parameter
                 window.location.href = `?filter=${filter}`;
@@ -1258,7 +1276,11 @@ document.addEventListener('DOMContentLoaded', () => {
             openModal(profileModal);
 
             const modalBody = document.getElementById('profile-modal-body');
+            const printBtn = document.getElementById('profile-print-btn');
             modalBody.innerHTML = '<div class="text-center" style="padding: 40px;"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading profile details...</p></div>';
+            
+            // Hide print button while loading
+            if (printBtn) printBtn.style.display = 'none';
 
             try {
                 const response = await fetch(`/databank/api/get-profile-details/${profileId}/`, {
@@ -1270,12 +1292,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     modalBody.innerHTML = data.html;
                     // Initialize file preview handlers
                     initializeFilePreviewHandlers(coopId);
+                    
+                    // Show and setup print button
+                    if (printBtn) {
+                        printBtn.style.display = 'block';
+                        // Remove existing listeners by cloning
+                        const newPrintBtn = printBtn.cloneNode(true);
+                        printBtn.parentNode.replaceChild(newPrintBtn, printBtn);
+                        newPrintBtn.addEventListener('click', function() {
+                            window.open(`/databank/profiles/${profileId}/print/`, '_blank');
+                        });
+                    }
                 } else {
                     modalBody.innerHTML = `<div class="alert alert-danger">Error: ${data.error || 'Failed to load profile'}</div>`;
+                    if (printBtn) printBtn.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error loading profile:', error);
                 modalBody.innerHTML = `<div class="alert alert-danger">Error loading profile details.</div>`;
+                if (printBtn) printBtn.style.display = 'none';
             }
         }
 

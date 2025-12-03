@@ -148,3 +148,23 @@ class Officer(models.Model):
 
     def __str__(self):
         return self.fullname or str(self.user.username);
+
+# ======================================================
+# ACTIVITY LOG MODEL
+# ======================================================
+class ActivityLog(models.Model):
+    activity_id = models.AutoField(primary_key=True)
+    action_type = models.CharField(max_length=50)
+    description = models.TextField()
+    user_fullname = models.CharField(max_length=100, blank=True, null=True)
+    user_organization = models.CharField(max_length=200, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    coop = models.ForeignKey(Cooperatives, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
+    
+    class Meta:
+        db_table = 'activity_logs'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.action_type} - {self.user_fullname or 'Unknown'} - {self.created_at}"

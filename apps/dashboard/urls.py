@@ -25,4 +25,7 @@ urlpatterns = [
     path('api/cooperative-locations/', views.dashboard_cooperative_locations_api, name='dashboard_cooperative_locations_api'),
     path('api/check-push-subscription/', views.dashboard_check_push_subscription_api, name='dashboard_check_push_subscription_api'),
     path('api/officer-data/', views.dashboard_officer_data_api, name='dashboard_officer_data_api'),
+    path('api/activity-logs/', views.dashboard_activity_logs_api, name='dashboard_activity_logs_api'),
+    path('api/staff-activity-logs/', views.dashboard_staff_activity_logs_api, name='dashboard_staff_activity_logs_api'),
+    path('api/officer-activity-logs/', views.dashboard_officer_activity_logs_api, name='dashboard_officer_activity_logs_api'),
 ]

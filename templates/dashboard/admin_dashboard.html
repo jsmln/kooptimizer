@@ -248,6 +248,94 @@
         margin-right: 8px;
         border: 1px solid #ccc;
     }
+
+    /* Activity Log List Styling */
+    .activity-log-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .activity-log-item {
+        padding: 12px 15px;
+        background: #f8f9fa;
+        border-left: 3px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        color: #2B3674;
+        transition: all 0.2s ease;
+    }
+
+    .activity-log-item:hover {
+        background: #f0f2f5;
+        border-left-color: #a91e2c;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .activity-log-item .timestamp {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-top: 4px;
+        font-style: italic;
+    }
+
+    .activity-log-item .action-type {
+        font-weight: 600;
+        color: #a91e2c;
+        text-transform: capitalize;
+    }
+
+    .activity-log-item .performer {
+        font-weight: 500;
+        color: #2B3674;
+    }
+
+    .activity-log-item .affected {
+        color: #495057;
+    }
+
+    /* Scrollbar styling for activity log lists */
+    .activity-log-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .activity-log-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .activity-log-list::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 10px;
+    }
+    
+    .activity-log-list::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }
+
+    /* Activity Log Filters Responsive */
+    @media (max-width: 1200px) {
+        .card-header-custom > div:last-child {
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        #activityLogSearch {
+            width: 100% !important;
+        }
+        
+        .card-header-custom > div:last-child > div:last-child {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        #activityLogDateFrom,
+        #activityLogDateTo {
+            flex: 1;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -793,6 +881,67 @@
         </div>
     </div>
 
+    <!-- Activity Logs Section - Full Row -->
+    <div class="dashboard-section" style="margin-top: 2rem;">
+        <div class="chart-card" style="width: 100%; max-width: 100%; height: 92vh; min-height: 600px; display: flex; flex-direction: column;">
+            <div class="card-header-custom" style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3>Activity Logs</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <!-- Search Bar -->
+                    <div style="position: relative;">
+                        <input type="text" id="activityLogSearch" class="form-control form-control-sm" 
+                               placeholder="Search activities..." 
+                               style="width: 250px; padding-left: 35px;">
+                        <i class="bi bi-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                    </div>
+                    <!-- Date Filter -->
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="date" id="activityLogDateFrom" class="form-control form-control-sm" 
+                               style="width: 150px;" title="Filter from date">
+                        <span style="color: #6c757d;">to</span>
+                        <input type="date" id="activityLogDateTo" class="form-control form-control-sm" 
+                               style="width: 150px;" title="Filter to date">
+                        <button id="clearActivityFilters" class="btn btn-sm btn-outline-secondary" 
+                                style="white-space: nowrap; display: none;" title="Clear filters">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; flex: 1; min-height: 0; padding: 0 20px 20px 20px;">
+                <!-- Admin Activities Sub-Card -->
+                <div class="table-card" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; height: 100%; min-height: 0;">
+                    <div class="card-header-custom" style="background: #f44336; color: white; flex-shrink: 0;">
+                        <h4 style="margin: 0; font-size: 1rem;">Admin Activities</h4>
+                    </div>
+                    <div id="adminActivitiesBody" class="activity-log-list" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; min-height: 0;">
+                        <div class="text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Staff Activities Sub-Card -->
+                <div class="table-card" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; height: 100%; min-height: 0;">
+                    <div class="card-header-custom" style="background: #2196F3; color: white; flex-shrink: 0;">
+                        <h4 style="margin: 0; font-size: 1rem;">Staff Activities</h4>
+                    </div>
+                    <div id="staffActivitiesBody" class="activity-log-list" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; min-height: 0;">
+                        <div class="text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Officer Activities Sub-Card -->
+                <div class="table-card" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; height: 100%; min-height: 0;">
+                    <div class="card-header-custom" style="background: #4CAF50; color: white; flex-shrink: 0;">
+                        <h4 style="margin: 0; font-size: 1rem;">Officer Activities</h4>
+                    </div>
+                    <div id="officerActivitiesBody" class="activity-log-list" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; min-height: 0;">
+                        <div class="text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="adminListModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -1060,6 +1209,13 @@
                     console.error('Error loading staff workload:', error);
                 }
 
+                // Load activity logs
+                try {
+                    await loadActivityLogs();
+                } catch (error) {
+                    console.error('Error loading activity logs:', error);
+                }
+
                 // Load pending reviews
                 try {
                     const reviewsResponse = await fetch('{% url "dashboard:dashboard_pending_reviews_api" %}');
@@ -1071,6 +1227,13 @@
                     }
                 } catch (error) {
                     console.error('Error loading pending reviews:', error);
+                }
+
+                // Load activity logs
+                try {
+                    await loadActivityLogs();
+                } catch (error) {
+                    console.error('Error loading activity logs:', error);
                 }
 
                 // Load top rankings
@@ -1133,6 +1296,391 @@
                     h3.textContent = data.lccdc_members || 0;
                 }
             });
+        }
+
+        // --- GLOBAL VARIABLES FOR ACTIVITY LOGS ---
+        let allActivityLogs = {
+            admin: [],
+            staff: [],
+            officer: []
+        };
+
+        // --- LOAD ACTIVITY LOGS ---
+        async function loadActivityLogs() {
+            try {
+                const response = await fetch('{% url "dashboard:dashboard_activity_logs_api" %}');
+                if (!response.ok) {
+                    throw new Error(`Activity logs API error: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Activity logs API returned error:', data.error);
+                    return;
+                }
+                
+                // Store all logs for filtering
+                allActivityLogs.admin = data.admin_activities || [];
+                allActivityLogs.staff = data.staff_activities || [];
+                allActivityLogs.officer = data.officer_activities || [];
+                
+                // Apply current filters
+                applyActivityLogFilters();
+            } catch (error) {
+                console.error('Error loading activity logs:', error);
+                // Show error message in containers
+                ['adminActivitiesBody', 'staffActivitiesBody', 'officerActivitiesBody'].forEach(id => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        container.innerHTML = '<div class="text-center text-danger" style="padding: 20px;">Error loading activity logs</div>';
+                    }
+                });
+            }
+        }
+
+        // --- TOGGLE CLEAR BUTTON VISIBILITY ---
+        function toggleClearButton() {
+            const searchInput = document.getElementById('activityLogSearch');
+            const dateFromInput = document.getElementById('activityLogDateFrom');
+            const dateToInput = document.getElementById('activityLogDateTo');
+            const clearButton = document.getElementById('clearActivityFilters');
+            
+            if (!clearButton) return;
+            
+            // Check if any filter is active
+            const hasSearch = searchInput && searchInput.value.trim() !== '';
+            const hasDateFrom = dateFromInput && dateFromInput.value !== '';
+            const hasDateTo = dateToInput && dateToInput.value !== '';
+            
+            // Show button if any filter is active, hide otherwise
+            if (hasSearch || hasDateFrom || hasDateTo) {
+                clearButton.style.display = 'inline-block';
+            } else {
+                clearButton.style.display = 'none';
+            }
+        }
+
+        // --- APPLY FILTERS TO ACTIVITY LOGS ---
+        function applyActivityLogFilters() {
+            const searchTerm = (document.getElementById('activityLogSearch')?.value || '').toLowerCase().trim();
+            const dateFrom = document.getElementById('activityLogDateFrom')?.value || '';
+            const dateTo = document.getElementById('activityLogDateTo')?.value || '';
+            
+            // Toggle clear button visibility
+            toggleClearButton();
+            
+            // Filter each category
+            const filteredAdmin = filterActivityLogs(allActivityLogs.admin, searchTerm, dateFrom, dateTo);
+            const filteredStaff = filterActivityLogs(allActivityLogs.staff, searchTerm, dateFrom, dateTo);
+            const filteredOfficer = filterActivityLogs(allActivityLogs.officer, searchTerm, dateFrom, dateTo);
+            
+            // Update displays
+            updateActivityLogsTable('adminActivitiesBody', filteredAdmin);
+            updateActivityLogsTable('staffActivitiesBody', filteredStaff);
+            updateActivityLogsTable('officerActivitiesBody', filteredOfficer);
+        }
+
+        // --- FILTER ACTIVITY LOGS ---
+        function filterActivityLogs(logs, searchTerm, dateFrom, dateTo) {
+            return logs.filter(log => {
+                // Search filter
+                if (searchTerm) {
+                    const searchableText = [
+                        log.action || '',
+                        log.description || '',
+                        log.performer_name || '',
+                        log.affected_entity || ''
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchableText.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+                
+                // Date filter
+                if (dateFrom || dateTo) {
+                    if (!log.timestamp) return false;
+                    
+                    try {
+                        const logDate = new Date(log.timestamp);
+                        // Get date in YYYY-MM-DD format for comparison
+                        const logDateStr = logDate.toISOString().split('T')[0];
+                        
+                        if (dateFrom && logDateStr < dateFrom) {
+                            return false;
+                        }
+                        if (dateTo && logDateStr > dateTo) {
+                            return false;
+                        }
+                    } catch (e) {
+                        // If date parsing fails, exclude from results if date filter is active
+                        if (dateFrom || dateTo) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            });
+        }
+
+        // --- SETUP ACTIVITY LOG FILTERS ---
+        function setupActivityLogFilters() {
+            // Search input event listener
+            const searchInput = document.getElementById('activityLogSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    applyActivityLogFilters();
+                });
+                searchInput.addEventListener('keyup', function() {
+                    applyActivityLogFilters();
+                });
+            }
+            
+            // Date filter event listeners
+            const dateFromInput = document.getElementById('activityLogDateFrom');
+            if (dateFromInput) {
+                dateFromInput.addEventListener('change', function() {
+                    applyActivityLogFilters();
+                });
+                dateFromInput.addEventListener('input', function() {
+                    applyActivityLogFilters();
+                });
+            }
+            
+            const dateToInput = document.getElementById('activityLogDateTo');
+            if (dateToInput) {
+                dateToInput.addEventListener('change', function() {
+                    applyActivityLogFilters();
+                });
+                dateToInput.addEventListener('input', function() {
+                    applyActivityLogFilters();
+                });
+            }
+            
+            // Clear button event listener
+            const clearButton = document.getElementById('clearActivityFilters');
+            if (clearButton) {
+                clearButton.addEventListener('click', function() {
+                    const search = document.getElementById('activityLogSearch');
+                    const dateFrom = document.getElementById('activityLogDateFrom');
+                    const dateTo = document.getElementById('activityLogDateTo');
+                    if (search) search.value = '';
+                    if (dateFrom) dateFrom.value = '';
+                    if (dateTo) dateTo.value = '';
+                    applyActivityLogFilters(); // This will also hide the button via toggleClearButton
+                });
+            }
+            
+            // Initial check for clear button visibility
+            toggleClearButton();
+        }
+
+        // --- UPDATE ACTIVITY LOGS LIST ---
+        function updateActivityLogsTable(containerId, logs) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            if (!logs || logs.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted" style="padding: 20px;">No activities found</div>';
+                return;
+            }
+            
+            container.innerHTML = logs.map(log => {
+                const action = log.action || 'Unknown';
+                const performer = log.performer_name || 'Unknown';
+                const affected = log.affected_entity || 'N/A';
+                const description = log.description || '';
+                const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A';
+                
+                // Format timestamp for display - Convert to Asia/Manila timezone
+                let formattedDateTime = 'N/A';
+                if (log.timestamp) {
+                    // Parse the ISO timestamp string
+                    const dateTime = new Date(log.timestamp);
+                    
+                    // Check if date is valid
+                    if (!isNaN(dateTime.getTime())) {
+                        // Format the date/time explicitly in Asia/Manila timezone
+                        // Using 'en-PH' locale ensures proper formatting for Philippines
+                        formattedDateTime = dateTime.toLocaleString('en-PH', {
+                            timeZone: 'Asia/Manila',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        });
+                    } else {
+                        // Fallback if date parsing fails
+                        formattedDateTime = 'Invalid Date';
+                    }
+                }
+                
+                // Determine role from container ID or action type
+                let role = 'Admin';
+                if (containerId.includes('staff')) {
+                    role = 'Staff';
+                } else if (containerId.includes('officer')) {
+                    role = 'Officer';
+                }
+                
+                // Build sentence based on action type and role
+                let sentence = '';
+                
+                // Admin Activities
+                if (role === 'Admin') {
+                    switch(action) {
+                        case 'create_user':
+                            sentence = `Admin ${performer} created a new user ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'deactivate_user':
+                            sentence = `Admin ${performer} deactivated user ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'reactivate_user':
+                            sentence = `Admin ${performer} reactivated user ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'update_user':
+                            sentence = `Admin ${performer} updated the data of user ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'approve_cooperative':
+                            sentence = `Admin ${performer} approved the cooperative profile of ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'decline_cooperative':
+                            sentence = `Admin ${performer} declined the cooperative profile of ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'deactivate_cooperative':
+                            sentence = `Admin ${performer} deactivated the cooperative ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'reactivate_cooperative':
+                            sentence = `Admin ${performer} reactivated the cooperative ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'send_announcement':
+                            // Parse announcement description
+                            // Format examples:
+                            // "Sent SMS announcement to John Doe, Jane Smith of cooperative ABC Coop"
+                            // "Sent Email announcement to officers of cooperative XYZ Coop"
+                            // "Sent SMS announcement to 5 cooperatives"
+                            const annMatch = description.match(/Sent (SMS|Email) announcement to (.+?)(?: of cooperative (.+))?$/i);
+                            if (annMatch) {
+                                const annType = annMatch[1];
+                                const recipients = annMatch[2] || '';
+                                const coopName = annMatch[3] || '';
+                                
+                                if (coopName) {
+                                    // Has cooperative name
+                                    sentence = `Admin ${performer} sent an ${annType} announcement to ${recipients} of cooperative ${coopName} on ${formattedDateTime}.`;
+                                } else {
+                                    // No cooperative name, use recipients as-is
+                                    sentence = `Admin ${performer} sent an ${annType} announcement to ${recipients} on ${formattedDateTime}.`;
+                                }
+                            } else {
+                                // Fallback: use description as-is or create basic sentence
+                                sentence = description || `Admin ${performer} sent an announcement on ${formattedDateTime}.`;
+                            }
+                            break;
+                        default:
+                            // Fallback to description if available
+                            sentence = description || `${action.replace(/_/g, ' ')} by ${performer} affecting ${affected} on ${formattedDateTime}.`;
+                    }
+                }
+                // Staff Activities
+                else if (role === 'Staff') {
+                    switch(action) {
+                        case 'create_user':
+                            sentence = `Staff ${performer} added a new user ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'deactivate_user':
+                            sentence = `Staff ${performer} deactivated user ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'update_user':
+                            sentence = `Staff ${performer} updated the data of user ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'approve_cooperative':
+                            sentence = `Staff ${performer} approved the cooperative profile of ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'decline_cooperative':
+                            sentence = `Staff ${performer} declined the cooperative profile of ${affected} on ${formattedDateTime}.`;
+                            break;
+                        case 'send_announcement':
+                            // Parse announcement description
+                            const staffAnnMatch = description.match(/Sent (SMS|Email) announcement to (.+?)(?: of cooperative (.+))?$/i);
+                            if (staffAnnMatch) {
+                                const annType = staffAnnMatch[1];
+                                const recipients = staffAnnMatch[2] || '';
+                                const coopName = staffAnnMatch[3] || '';
+                                
+                                if (coopName) {
+                                    // Has cooperative name
+                                    sentence = `Staff ${performer} sent an ${annType} announcement to ${recipients} of cooperative ${coopName} on ${formattedDateTime}.`;
+                                } else {
+                                    // No cooperative name, use recipients as-is
+                                    sentence = `Staff ${performer} sent an ${annType} announcement to ${recipients} on ${formattedDateTime}.`;
+                                }
+                            } else {
+                                // Fallback: use description as-is or create basic sentence
+                                sentence = description || `Staff ${performer} sent an announcement on ${formattedDateTime}.`;
+                            }
+                            break;
+                        default:
+                            // Fallback to description if available
+                            sentence = description || `${action.replace(/_/g, ' ')} by ${performer} affecting ${affected} on ${formattedDateTime}.`;
+                    }
+                }
+                // Officer Activities
+                else if (role === 'Officer') {
+                    switch(action) {
+                        case 'update_cooperative_profile':
+                            // Extract cooperative name from affected_entity or description
+                            let coopName = affected;
+                            if (!coopName || coopName === 'N/A' || coopName === 'Unknown Cooperative' || coopName === null || coopName === undefined) {
+                                // Try to extract from description - multiple patterns
+                                const coopMatch1 = description.match(/cooperative profile[:\s]+([^,\.]+)/i);
+                                const coopMatch2 = description.match(/cooperative[:\s]+([^,\.]+)/i);
+                                const coopMatch3 = description.match(/profile[:\s]+([^,\.]+)/i);
+                                
+                                if (coopMatch1) {
+                                    coopName = coopMatch1[1].trim();
+                                } else if (coopMatch2) {
+                                    coopName = coopMatch2[1].trim();
+                                } else if (coopMatch3) {
+                                    coopName = coopMatch3[1].trim();
+                                } else {
+                                    // Last resort: try to extract any name from description
+                                    const anyNameMatch = description.match(/(?:cooperative|profile)[:\s]+([A-Za-z0-9\s]+?)(?:\s+for|\s+on|$)/i);
+                                    if (anyNameMatch) {
+                                        coopName = anyNameMatch[1].trim();
+                                    } else {
+                                        coopName = 'their cooperative';
+                                    }
+                                }
+                            }
+                            // Ensure performer name is available
+                            const officerName = performer && performer !== 'Unknown' && performer !== 'N/A' ? performer : 'Unknown Officer';
+                            sentence = `Officer ${officerName} updated/edited the cooperative profile of ${coopName} on ${formattedDateTime}.`;
+                            break;
+                        default:
+                            // Fallback: always build sentence with available info
+                            let defaultCoopName = affected;
+                            if (!defaultCoopName || defaultCoopName === 'N/A' || defaultCoopName === null || defaultCoopName === undefined) {
+                                defaultCoopName = 'their cooperative';
+                            }
+                            const defaultOfficerName = performer && performer !== 'Unknown' && performer !== 'N/A' ? performer : 'Unknown Officer';
+                            sentence = `Officer ${defaultOfficerName} ${action.replace(/_/g, ' ')} for ${defaultCoopName} on ${formattedDateTime}.`;
+                    }
+                }
+                // Fallback for unknown roles
+                else {
+                    sentence = description || `${action.replace(/_/g, ' ')} by ${performer} affecting ${affected} on ${formattedDateTime}.`;
+                }
+                
+                return `
+                    <div class="activity-log-item">
+                        <div>${sentence}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // --- INITIALIZE TRAFFIC CHART ---
@@ -2823,6 +3371,7 @@
             setupCooperativeDemographicsFilter();
             setupCooperativeListFilter();
             setupPdfDownload();
+            setupActivityLogFilters();
 
             // Print button handler
             const printBtn = document.getElementById('printDashboardBtn');

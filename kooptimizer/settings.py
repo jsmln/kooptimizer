@@ -110,6 +110,14 @@ DATABASES = {
     }
 }
 
+# Cache configuration for account lockout (persists across server restarts)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

@@ -209,6 +209,42 @@
         margin-right: 8px;
         border: 1px solid #ccc;
     }
+
+    /* Activity Log Styles */
+    .activity-log-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .activity-log-item {
+        background: #f8f9fa;
+        border-left: 4px solid #2196F3;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .activity-log-item:hover {
+        background: #e9ecef;
+        transform: translateX(4px);
+    }
+
+    .activity-log-item div {
+        color: #2B3674;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .table-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
 </style>
 {% endblock %}
 
@@ -478,6 +514,56 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Activity Logs Section - Full Row -->
+    <div class="dashboard-section" style="margin-top: 2rem;">
+        <div class="chart-card" style="width: 100%; max-width: 100%; height: 92vh; min-height: 600px; display: flex; flex-direction: column;">
+            <div class="card-header-custom" style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+                <h3>Activity Logs</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <!-- Search Bar -->
+                    <div style="position: relative;">
+                        <input type="text" id="staffActivityLogSearch" class="form-control form-control-sm" 
+                               placeholder="Search activities..." 
+                               style="width: 250px; padding-left: 35px;">
+                        <i class="bi bi-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                    </div>
+                    <!-- Date Filter -->
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="date" id="staffActivityLogDateFrom" class="form-control form-control-sm" 
+                               style="width: 150px;" title="Filter from date">
+                        <span style="color: #6c757d;">to</span>
+                        <input type="date" id="staffActivityLogDateTo" class="form-control form-control-sm" 
+                               style="width: 150px;" title="Filter to date">
+                        <button id="clearStaffActivityFilters" class="btn btn-sm btn-outline-secondary" 
+                                style="white-space: nowrap; display: none;" title="Clear filters">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; flex: 1; min-height: 0; padding: 0 20px 20px 20px;">
+                <!-- Staff's Own Activities Sub-Card -->
+                <div class="table-card" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; height: 100%; min-height: 0;">
+                    <div class="card-header-custom" style="background: #2196F3; color: white; flex-shrink: 0;">
+                        <h4 style="margin: 0; font-size: 1rem;">Staff's Own Activities</h4>
+                    </div>
+                    <div id="staffOwnActivitiesBody" class="activity-log-list" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; min-height: 0;">
+                        <div class="text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+                <!-- Officer Activities Sub-Card -->
+                <div class="table-card" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; height: 100%; min-height: 0;">
+                    <div class="card-header-custom" style="background: #4CAF50; color: white; flex-shrink: 0;">
+                        <h4 style="margin: 0; font-size: 1rem;">Officer Activities</h4>
+                    </div>
+                    <div id="staffOfficerActivitiesBody" class="activity-log-list" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; min-height: 0;">
+                        <div class="text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1796,6 +1882,253 @@
         });
 
         [category, district].forEach(el => el?.addEventListener('change', applyStaffFilters));
+
+        // Load activity logs
+        loadStaffActivityLogs();
+    });
+
+    // --- GLOBAL VARIABLES FOR STAFF ACTIVITY LOGS ---
+    let allStaffActivityLogs = {
+        staff_own: [],
+        officer: []
+    };
+
+    // --- LOAD STAFF ACTIVITY LOGS ---
+    async function loadStaffActivityLogs() {
+        try {
+            const response = await fetch('{% url "dashboard:dashboard_staff_activity_logs_api" %}');
+            if (!response.ok) {
+                throw new Error(`Activity logs API error: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error('Activity logs API returned error:', data.error);
+                return;
+            }
+            
+            // Store all logs for filtering
+            allStaffActivityLogs.staff_own = data.staff_own_activities || [];
+            allStaffActivityLogs.officer = data.officer_activities || [];
+            
+            // Apply current filters
+            applyStaffActivityLogFilters();
+        } catch (error) {
+            console.error('Error loading activity logs:', error);
+            ['staffOwnActivitiesBody', 'staffOfficerActivitiesBody'].forEach(id => {
+                const container = document.getElementById(id);
+                if (container) {
+                    container.innerHTML = '<div class="text-center text-danger" style="padding: 20px;">Error loading activity logs</div>';
+                }
+            });
+        }
+    }
+
+    // --- TOGGLE CLEAR BUTTON VISIBILITY ---
+    function toggleStaffClearButton() {
+        const searchInput = document.getElementById('staffActivityLogSearch');
+        const dateFromInput = document.getElementById('staffActivityLogDateFrom');
+        const dateToInput = document.getElementById('staffActivityLogDateTo');
+        const clearButton = document.getElementById('clearStaffActivityFilters');
+        
+        if (!clearButton) return;
+        
+        const hasSearch = searchInput && searchInput.value.trim() !== '';
+        const hasDateFrom = dateFromInput && dateFromInput.value !== '';
+        const hasDateTo = dateToInput && dateToInput.value !== '';
+        
+        if (hasSearch || hasDateFrom || hasDateTo) {
+            clearButton.style.display = 'inline-block';
+        } else {
+            clearButton.style.display = 'none';
+        }
+    }
+
+    // --- APPLY FILTERS TO STAFF ACTIVITY LOGS ---
+    function applyStaffActivityLogFilters() {
+        const searchTerm = (document.getElementById('staffActivityLogSearch')?.value || '').toLowerCase().trim();
+        const dateFrom = document.getElementById('staffActivityLogDateFrom')?.value || '';
+        const dateTo = document.getElementById('staffActivityLogDateTo')?.value || '';
+        
+        toggleStaffClearButton();
+        
+        const filteredStaffOwn = filterStaffActivityLogs(allStaffActivityLogs.staff_own, searchTerm, dateFrom, dateTo);
+        const filteredOfficer = filterStaffActivityLogs(allStaffActivityLogs.officer, searchTerm, dateFrom, dateTo);
+        
+        updateStaffActivityLogsTable('staffOwnActivitiesBody', filteredStaffOwn, 'staff');
+        updateStaffActivityLogsTable('staffOfficerActivitiesBody', filteredOfficer, 'officer');
+    }
+
+    // --- FILTER STAFF ACTIVITY LOGS ---
+    function filterStaffActivityLogs(logs, searchTerm, dateFrom, dateTo) {
+        return logs.filter(log => {
+            if (searchTerm) {
+                const searchableText = [
+                    log.action || '',
+                    log.description || '',
+                    log.performer_name || '',
+                    log.affected_entity || ''
+                ].join(' ').toLowerCase();
+                
+                if (!searchableText.includes(searchTerm)) {
+                    return false;
+                }
+            }
+            
+            if (dateFrom || dateTo) {
+                if (!log.timestamp) return false;
+                
+                try {
+                    const logDate = new Date(log.timestamp);
+                    const logDateStr = logDate.toISOString().split('T')[0];
+                    
+                    if (dateFrom && logDateStr < dateFrom) {
+                        return false;
+                    }
+                    if (dateTo && logDateStr > dateTo) {
+                        return false;
+                    }
+                } catch (e) {
+                    if (dateFrom || dateTo) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        });
+    }
+
+    // --- UPDATE STAFF ACTIVITY LOGS LIST ---
+    function updateStaffActivityLogsTable(containerId, logs, role) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        if (!logs || logs.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted" style="padding: 20px;">No activities found</div>';
+            return;
+        }
+        
+        container.innerHTML = logs.map(log => {
+            const action = log.action || 'Unknown';
+            const performer = log.performer_name || 'Unknown';
+            const affected = log.affected_entity || 'N/A';
+            const description = log.description || '';
+            const timestamp = log.timestamp ? new Date(log.timestamp) : null;
+            
+            let formattedDateTime = 'N/A';
+            if (timestamp) {
+                formattedDateTime = timestamp.toLocaleString('en-PH', {
+                    timeZone: 'Asia/Manila',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+            
+            let sentence = '';
+            
+            if (role === 'staff') {
+                // Staff's own activities - use "You"
+                switch(action) {
+                    case 'create_user':
+                        sentence = `You added a new user ${affected} on ${formattedDateTime}.`;
+                        break;
+                    case 'deactivate_user':
+                        sentence = `You deactivated user ${affected} on ${formattedDateTime}.`;
+                        break;
+                    case 'update_user':
+                        sentence = `You updated the data of user ${affected} on ${formattedDateTime}.`;
+                        break;
+                    case 'approve_cooperative':
+                        sentence = `You approved the cooperative profile of ${affected} on ${formattedDateTime}.`;
+                        break;
+                    case 'decline_cooperative':
+                        sentence = `You declined the cooperative profile of ${affected} on ${formattedDateTime}.`;
+                        break;
+                    case 'send_announcement':
+                        const annMatch = description.match(/Sent (SMS|Email) announcement to (.+?)(?: of cooperative (.+))?$/i);
+                        if (annMatch) {
+                            const annType = annMatch[1];
+                            const recipients = annMatch[2] || '';
+                            sentence = `You sent an ${annType} announcement to ${recipients} on ${formattedDateTime}.`;
+                        } else {
+                            sentence = description || `You sent an announcement on ${formattedDateTime}.`;
+                        }
+                        break;
+                    default:
+                        sentence = description || `You ${action.replace(/_/g, ' ')} for ${affected} on ${formattedDateTime}.`;
+                }
+            } else if (role === 'officer') {
+                // Officer activities - show officer name
+                switch(action) {
+                    case 'update_cooperative_profile':
+                        let coopName = affected;
+                        if (!coopName || coopName === 'N/A' || coopName === 'Unknown Cooperative') {
+                            const coopMatch = description.match(/cooperative profile[:\s]+([^,\.]+)/i);
+                            if (coopMatch) {
+                                coopName = coopMatch[1].trim();
+                            } else {
+                                coopName = 'their cooperative';
+                            }
+                        }
+                        sentence = `Officer ${performer} updated or edited the cooperative profile of ${coopName} on ${formattedDateTime}.`;
+                        break;
+                    default:
+                        sentence = description || `Officer ${performer} ${action.replace(/_/g, ' ')} for ${affected} on ${formattedDateTime}.`;
+                }
+            }
+            
+            return `
+                <div class="activity-log-item">
+                    <div>${sentence}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // --- SETUP STAFF ACTIVITY LOG FILTERS ---
+    function setupStaffActivityLogFilters() {
+        const searchInput = document.getElementById('staffActivityLogSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', applyStaffActivityLogFilters);
+            searchInput.addEventListener('keyup', applyStaffActivityLogFilters);
+        }
+        
+        const dateFromInput = document.getElementById('staffActivityLogDateFrom');
+        if (dateFromInput) {
+            dateFromInput.addEventListener('change', applyStaffActivityLogFilters);
+            dateFromInput.addEventListener('input', applyStaffActivityLogFilters);
+        }
+        
+        const dateToInput = document.getElementById('staffActivityLogDateTo');
+        if (dateToInput) {
+            dateToInput.addEventListener('change', applyStaffActivityLogFilters);
+            dateToInput.addEventListener('input', applyStaffActivityLogFilters);
+        }
+        
+        const clearButton = document.getElementById('clearStaffActivityFilters');
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                const search = document.getElementById('staffActivityLogSearch');
+                const dateFrom = document.getElementById('staffActivityLogDateFrom');
+                const dateTo = document.getElementById('staffActivityLogDateTo');
+                if (search) search.value = '';
+                if (dateFrom) dateFrom.value = '';
+                if (dateTo) dateTo.value = '';
+                applyStaffActivityLogFilters();
+            });
+        }
+        
+        toggleStaffClearButton();
+    }
+
+    // Initialize filters on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        setupStaffActivityLogFilters();
     });
 </script>
 {% endblock %}

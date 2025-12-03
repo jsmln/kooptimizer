@@ -24,7 +24,7 @@ class CoreConfig(AppConfig):
             print("✓ Google API client is available")
         except ImportError:
             print("\n" + "="*70)
-            print("⚠ WARNING: google-api-python-client is not installed!")
+            print("WARNING: google-api-python-client is not installed!")
             print("="*70)
             print("Google Calendar integration will not work.")
             print("\nTo fix this, run:")

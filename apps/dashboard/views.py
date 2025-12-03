@@ -5,11 +5,13 @@ from django.db.models import Count, Sum, Q, Avg, Max, Min
 from django.db import connection
 from functools import wraps
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 import json
+from django.utils import timezone as django_timezone
+from django.conf import settings
 
 from apps.account_management.models import Users, Staff as AccountStaff, Cooperatives, Officers, Admin
-from apps.cooperatives.models import ProfileData, FinancialData, Member, Staff as CoopStaff, Officer
+from apps.cooperatives.models import ProfileData, FinancialData, Member, Staff as CoopStaff, Officer, ActivityLog
 from apps.users.models import User
 from django.contrib.auth.models import User as DjangoUser
 from webpush.models import PushInformation
@@ -1004,12 +1006,23 @@ def dashboard_officer_data_api(request):
             'financial_year': latest_financial.report_year if latest_financial else None,
         }
         
+        # Members List
+        members_list = []
+        members = Member.objects.filter(coop__coop_id=coop_id)
+        for member in members:
+            members_list.append({
+                'name': member.fullname or 'N/A',
+                'gender': (member.gender or 'N/A').title(),
+                'mobile': member.mobile_number or 'N/A'
+            })
+        
         # Count Members
-        total_members = Member.objects.filter(coop__coop_id=coop_id).count()
+        total_members = len(members_list)
         
         return JsonResponse({
             'document_status': document_status,
             'officers': officers_list,
+            'members': members_list,
             'financial_growth': financial_growth,
             'kpi_data': kpi_data,
             'financial_kpis': financial_kpis,
@@ -1120,5 +1133,282 @@ def dashboard_check_push_subscription_api(request):
             return JsonResponse({'has_subscription': False})
         
     except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@role_required(['admin'])
+def dashboard_activity_logs_api(request):
+    """Get activity logs for admin dashboard - separated by role"""
+    try:
+        user_id = request.session.get('user_id')
+        role = request.session.get('role')
+        
+        if role != 'admin':
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+        # Get logs for each role
+        admin_logs = []
+        staff_logs = []
+        officer_logs = []
+        
+        # Get all activity logs
+        all_logs = ActivityLog.objects.select_related('user', 'coop').order_by('-created_at')[:100]
+        
+        for log in all_logs:
+            # Determine which role performed the action based on action_type and user role
+            # Ensure timestamp is timezone-aware UTC for proper JavaScript conversion
+            timestamp_str = None
+            if log.created_at:
+                # Ensure datetime is timezone-aware (should be UTC if USE_TZ=True)
+                if django_timezone.is_aware(log.created_at):
+                    # Already timezone-aware, convert to UTC if not already
+                    utc_dt = log.created_at.astimezone(dt_timezone.utc)
+                    timestamp_str = utc_dt.isoformat()
+                else:
+                    # If naive, Django with USE_TZ=True should store in UTC, but if naive, 
+                    # we'll assume it's UTC (common when data was migrated or created before timezone awareness)
+                    # Make it timezone-aware as UTC so JavaScript can properly convert to Manila time
+                    utc_dt = django_timezone.make_aware(log.created_at, dt_timezone.utc)
+                    timestamp_str = utc_dt.isoformat()
+            
+            log_entry = {
+                'action': log.action_type,
+                'description': log.description,
+                'performer_name': log.user_fullname or 'Unknown',
+                'affected_entity': None,
+                'timestamp': timestamp_str
+            }
+            
+            # Determine affected entity (user or cooperative)
+            if log.coop:
+                log_entry['affected_entity'] = log.coop.cooperative_name
+            elif log.user_organization:
+                # For officer activities, user_organization contains the cooperative name
+                log_entry['affected_entity'] = log.user_organization
+            elif log.action_type == 'update_cooperative_profile':
+                # For officer profile updates, try to extract cooperative from description
+                if log.description:
+                    import re
+                    # Try different patterns: "cooperative profile: Name" or "cooperative Name" or "profile: Name"
+                    coop_match = re.search(r'cooperative profile[:\s]+([^,\.]+)|cooperative[:\s]+([^,\.]+)', log.description, re.IGNORECASE)
+                    if coop_match:
+                        log_entry['affected_entity'] = (coop_match.group(1) or coop_match.group(2)).strip()
+                # If still no cooperative name, set a default
+                if not log_entry['affected_entity']:
+                    log_entry['affected_entity'] = 'Unknown Cooperative'
+            elif log.action_type in ['create_user', 'deactivate_user', 'reactivate_user', 'update_user']:
+                # For user management actions, extract affected user name from description
+                # Description format: "Created admin account: John Doe" or "Deactivated staff account: Jane Smith"
+                try:
+                    import re
+                    # Try to extract name from description patterns like:
+                    # "Created admin account: John Doe"
+                    # "Deactivated staff account: Jane Smith"
+                    # "Updated officer account data: Bob Johnson"
+                    # "Reactivated admin account: Alice Brown"
+                    # Pattern: look for colon followed by the name (everything after colon)
+                    colon_match = re.search(r':\s*(.+)$', log.description)
+                    if colon_match:
+                        affected_name = colon_match.group(1).strip()
+                        log_entry['affected_entity'] = affected_name
+                    else:
+                        # Fallback: try to extract from "account: Name" or "account data: Name"
+                        desc_match = re.search(r'account(?:\s+data)?[:\s]+(.+?)(?:\s*$|$)', log.description, re.IGNORECASE)
+                        if desc_match:
+                            affected_name = desc_match.group(1).strip()
+                            log_entry['affected_entity'] = affected_name
+                        else:
+                            log_entry['affected_entity'] = 'Unknown User'
+                except Exception as e:
+                    log_entry['affected_entity'] = 'Unknown User'
+            
+            # Categorize logs by the role of the performer
+            # We need to check the user's role who performed the action
+            if log.user:
+                performer_role = log.user.role
+                
+                if performer_role == 'admin':
+                    admin_logs.append(log_entry)
+                elif performer_role == 'staff':
+                    staff_logs.append(log_entry)
+                elif performer_role == 'officer':
+                    officer_logs.append(log_entry)
+                else:
+                    # If we can't determine, check action_type
+                    if 'cooperative' in log.action_type.lower() or 'profile' in log.action_type.lower():
+                        officer_logs.append(log_entry)
+                    elif 'user' in log.action_type.lower() or 'announcement' in log.action_type.lower():
+                        # Could be admin or staff, check description
+                        if 'admin' in log.description.lower():
+                            admin_logs.append(log_entry)
+                        else:
+                            staff_logs.append(log_entry)
+        
+        return JsonResponse({
+            'admin_activities': admin_logs[:50],  # Limit to 50 most recent
+            'staff_activities': staff_logs[:50],
+            'officer_activities': officer_logs[:50]
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@role_required(['staff'])
+def dashboard_staff_activity_logs_api(request):
+    """Get activity logs for staff dashboard - own activities + officer activities from assigned cooperatives"""
+    try:
+        user_id = request.session.get('user_id')
+        role = request.session.get('role')
+        
+        if role != 'staff':
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+        # Get staff's assigned cooperatives
+        try:
+            staff = AccountStaff.objects.get(user_id=user_id)
+            assigned_coops = Cooperatives.objects.filter(staff=staff)
+            coop_ids = list(assigned_coops.values_list('coop_id', flat=True))
+        except AccountStaff.DoesNotExist:
+            return JsonResponse({'error': 'Staff not found'}, status=404)
+        
+        # Get officers under assigned cooperatives
+        officers_under_coops = Officers.objects.filter(coop_id__in=coop_ids).values_list('user_id', flat=True)
+        
+        staff_own_logs = []
+        officer_logs = []
+        
+        # Get all activity logs
+        all_logs = ActivityLog.objects.select_related('user', 'coop').order_by('-created_at')[:100]
+        
+        for log in all_logs:
+            # Ensure timestamp is timezone-aware UTC
+            timestamp_str = None
+            if log.created_at:
+                if django_timezone.is_aware(log.created_at):
+                    utc_dt = log.created_at.astimezone(dt_timezone.utc)
+                    timestamp_str = utc_dt.isoformat()
+                else:
+                    utc_dt = django_timezone.make_aware(log.created_at, dt_timezone.utc)
+                    timestamp_str = utc_dt.isoformat()
+            
+            log_entry = {
+                'action': log.action_type,
+                'description': log.description,
+                'performer_name': log.user_fullname or 'Unknown',
+                'affected_entity': None,
+                'timestamp': timestamp_str
+            }
+            
+            # Determine affected entity
+            if log.coop:
+                log_entry['affected_entity'] = log.coop.cooperative_name
+            elif log.user_organization:
+                log_entry['affected_entity'] = log.user_organization
+            elif log.action_type == 'update_cooperative_profile':
+                if log.description:
+                    import re
+                    coop_match = re.search(r'cooperative profile[:\s]+([^,\.]+)|cooperative[:\s]+([^,\.]+)', log.description, re.IGNORECASE)
+                    if coop_match:
+                        log_entry['affected_entity'] = (coop_match.group(1) or coop_match.group(2)).strip()
+                if not log_entry['affected_entity']:
+                    log_entry['affected_entity'] = 'Unknown Cooperative'
+            elif log.action_type in ['create_user', 'deactivate_user', 'reactivate_user', 'update_user']:
+                try:
+                    import re
+                    colon_match = re.search(r':\s*(.+)$', log.description)
+                    if colon_match:
+                        affected_name = colon_match.group(1).strip()
+                        log_entry['affected_entity'] = affected_name
+                    else:
+                        desc_match = re.search(r'account(?:\s+data)?[:\s]+(.+?)(?:\s*$|$)', log.description, re.IGNORECASE)
+                        if desc_match:
+                            affected_name = desc_match.group(1).strip()
+                            log_entry['affected_entity'] = affected_name
+                        else:
+                            log_entry['affected_entity'] = 'Unknown User'
+                except Exception:
+                    log_entry['affected_entity'] = 'Unknown User'
+            
+            # Categorize logs
+            if log.user:
+                performer_role = log.user.role
+                performer_id = log.user.user_id
+                
+                # Staff's own activities
+                if performer_role == 'staff' and performer_id == user_id:
+                    staff_own_logs.append(log_entry)
+                # Officer activities from assigned cooperatives
+                elif performer_role == 'officer' and performer_id in officers_under_coops:
+                    # Only include if it's a cooperative profile update for assigned cooperatives
+                    if log.action_type == 'update_cooperative_profile' and log.coop and log.coop.coop_id in coop_ids:
+                        officer_logs.append(log_entry)
+        
+        return JsonResponse({
+            'staff_own_activities': staff_own_logs[:50],
+            'officer_activities': officer_logs[:50]
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@role_required(['officer'])
+def dashboard_officer_activity_logs_api(request):
+    """Get activity logs for officer dashboard - only their own cooperative profile updates"""
+    try:
+        user_id = request.session.get('user_id')
+        role = request.session.get('role')
+        
+        if role != 'officer':
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+        # Get officer's cooperative
+        try:
+            officer = Officers.objects.filter(user_id=user_id).first()
+            if not officer or not officer.coop_id:
+                return JsonResponse({'error': 'No cooperative found'}, status=404)
+            coop_id = officer.coop_id
+            coop_name = officer.coop.cooperative_name if officer.coop else 'Unknown Cooperative'
+        except Exception as e:
+            return JsonResponse({'error': 'Error getting cooperative'}, status=500)
+        
+        officer_logs = []
+        
+        # Get activity logs for this officer's cooperative profile updates
+        all_logs = ActivityLog.objects.filter(
+            action_type='update_cooperative_profile',
+            coop__coop_id=coop_id
+        ).select_related('user', 'coop').order_by('-created_at')[:50]
+        
+        for log in all_logs:
+            # Ensure timestamp is timezone-aware UTC
+            timestamp_str = None
+            if log.created_at:
+                if django_timezone.is_aware(log.created_at):
+                    utc_dt = log.created_at.astimezone(dt_timezone.utc)
+                    timestamp_str = utc_dt.isoformat()
+                else:
+                    utc_dt = django_timezone.make_aware(log.created_at, dt_timezone.utc)
+                    timestamp_str = utc_dt.isoformat()
+            
+            log_entry = {
+                'action': log.action_type,
+                'description': log.description,
+                'performer_name': log.user_fullname or 'Unknown',
+                'affected_entity': coop_name,
+                'timestamp': timestamp_str
+            }
+            
+            officer_logs.append(log_entry)
+        
+        return JsonResponse({
+            'officer_activities': officer_logs
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
 

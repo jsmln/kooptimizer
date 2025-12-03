@@ -1,5 +1,10 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, JsonResponse, FileResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from apps.core.utils.activity_logger import (
+    log_cooperative_approval, log_cooperative_decline,
+    log_cooperative_deactivation, log_cooperative_reactivation,
+    get_cooperative_name
+)
+from django.http import HttpResponse, JsonResponse, FileResponse, HttpResponseForbidden, HttpResponseServerError
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
@@ -7,7 +12,8 @@ from django.template.loader import render_to_string
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
+from functools import wraps
 import json
 import base64
 import io
@@ -17,6 +23,15 @@ from apps.account_management.models import Staff, Cooperatives, Users
 from apps.cooperatives.models import ProfileData, FinancialData, Officer, Member
 from apps.databank.models import OCRScanSession
 from django.contrib.auth.hashers import check_password
+
+# Helper decorator for session-based authentication
+def login_required_custom(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if not request.session.get('user_id'):
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 def databank_management_view(request):
     try:
@@ -549,9 +564,18 @@ def delete_cooperative(request, coop_id):
         if not is_valid:
             return JsonResponse({'success': False, 'error': 'Incorrect password.'}, status=403)
         
+        # Get cooperative name before deactivation
+        coop_name = get_cooperative_name(coop_id)
+        
         with connection.cursor() as cursor:
             # Deactivate instead of delete (soft delete)
             cursor.execute("UPDATE cooperatives SET is_active = FALSE, updated_at = NOW() WHERE coop_id = %s", [coop_id])
+        
+        # Log activity
+        performer_id = request.session.get('user_id')
+        performer_role = request.session.get('role')
+        if performer_id and performer_role:
+            log_cooperative_deactivation(performer_id, performer_role, coop_id, coop_name)
             
         return JsonResponse({'success': True, 'message': 'Cooperative deactivated successfully'})
     except Exception as e:
@@ -593,8 +617,16 @@ def restore_cooperative(request, coop_id):
         if not is_valid:
             return JsonResponse({'success': False, 'error': 'Incorrect password.'}, status=403)
         
+        # Get cooperative name before reactivation
+        coop_name = get_cooperative_name(coop_id)
+        
         with connection.cursor() as cursor:
             cursor.execute("UPDATE cooperatives SET is_active = TRUE, updated_at = NOW() WHERE coop_id = %s", [coop_id])
+        
+        # Log activity
+        if current_user_id:
+            log_cooperative_reactivation(current_user_id, user_role, coop_id, coop_name)
+        
         return JsonResponse({'success': True, 'message': 'Cooperative restored successfully'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -811,6 +843,14 @@ def approve_profile(request, profile_id):
                 financial_data.approval_status = 'approved'
                 financial_data.save()
             
+            # Log activity
+            performer_id = request.session.get('user_id')
+            performer_role = request.session.get('role')
+            coop_id = profile.coop.coop_id
+            coop_name = get_cooperative_name(coop_id)
+            if performer_id and performer_role:
+                log_cooperative_approval(performer_id, performer_role, coop_id, coop_name)
+            
             return JsonResponse({
                 'success': True, 
                 'message': 'Profile and financial data approved successfully',
@@ -831,6 +871,14 @@ def approve_profile(request, profile_id):
                 if financial_data:
                     financial_data.approval_status = 'pending'
                     financial_data.save()
+                
+                # Log activity
+                performer_id = request.session.get('user_id')
+                performer_role = request.session.get('role')
+                coop_id = profile.coop.coop_id
+                coop_name = get_cooperative_name(coop_id)
+                if performer_id and performer_role:
+                    log_cooperative_decline(performer_id, performer_role, coop_id, coop_name)
                 
                 return JsonResponse({
                     'success': True, 
@@ -1072,3 +1120,118 @@ def update_profile_from_databank(request, profile_id):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required_custom
+def print_profile(request, profile_id):
+    """
+    Renders a printable version of the cooperative profile from databank.
+    Accessible to admin and staff.
+    """
+    try:
+        user_id = request.session.get('user_id')
+        user_role = request.session.get('role')
+        
+        if not user_id:
+            return redirect('login')
+        
+        # Only admin and staff can access
+        if user_role not in ['admin', 'staff']:
+            return HttpResponseForbidden("You don't have permission to view this profile.")
+        
+        # Get profile data
+        profile_data = get_object_or_404(ProfileData, profile_id=profile_id)
+        coop = profile_data.coop
+        
+        if not coop:
+            return HttpResponseServerError("Cooperative not found for this profile.")
+        
+        # Get requested year from query parameter, default to profile's report year
+        requested_year = request.GET.get('year')
+        if requested_year:
+            try:
+                requested_year = int(requested_year)
+            except ValueError:
+                requested_year = profile_data.report_year
+        else:
+            requested_year = profile_data.report_year
+        
+        # Get financial data for the same report year
+        financial_data = FinancialData.objects.filter(
+            coop_id=coop.coop_id,
+            report_year=requested_year
+        ).first()
+        
+        # Get latest financial data to determine the latest report year for assets
+        latest_financial = FinancialData.objects.filter(coop_id=coop.coop_id).order_by('-report_year').first()
+        
+        # Get financial data for last 3 years (latest year and 2 previous years)
+        assets_list = []
+        latest_year = None
+        if latest_financial and latest_financial.report_year:
+            latest_year = latest_financial.report_year
+            for year_offset in range(0, 3):  # Current year, 1 year ago, 2 years ago
+                year = latest_year - year_offset
+                year_data = FinancialData.objects.filter(coop_id=coop.coop_id, report_year=year).first()
+                if year_data and year_data.assets and year_data.assets > 0:
+                    assets_list.append({
+                        'year': year,
+                        'assets': year_data.assets
+                    })
+        
+        # Use latest financial data for paid up capital and net surplus
+        if not financial_data:
+            financial_data = latest_financial
+        
+        context = {
+            'coop_name': coop.cooperative_name,
+            'profile': {},
+            'assets_list': assets_list,
+            'latest_year': latest_year,
+        }
+        
+        if profile_data:
+            profile_ctx = {
+                'coop_name': coop.cooperative_name,
+                'coop_id': coop.coop_id,
+                'address': profile_data.address,
+                'operation_area': profile_data.operation_area,
+                'mobile_number': profile_data.mobile_number,
+                'email_address': profile_data.email_address,
+                'cda_registration_number': profile_data.cda_registration_number,
+                'cda_registration_date': profile_data.cda_registration_date,
+                'lccdc_membership': profile_data.lccdc_membership,
+                'lccdc_membership_date': profile_data.lccdc_membership_date,
+                'business_activity': profile_data.business_activity,
+                'board_of_directors_count': profile_data.board_of_directors_count,
+                'salaried_employees_count': profile_data.salaried_employees_count,
+                'coc_renewal': profile_data.coc_renewal,
+                'cote_renewal': profile_data.cote_renewal,
+                'approval_status': profile_data.approval_status,
+            }
+            
+            # Merge Financial Data if it exists (only latest year for paid up capital and net surplus)
+            if financial_data:
+                # Only include paid_up_capital if it's greater than 0
+                # net_surplus can be negative (loss), so show if not None
+                paid_up = financial_data.paid_up_capital if financial_data.paid_up_capital and financial_data.paid_up_capital > 0 else None
+                net_surplus = financial_data.net_surplus if financial_data.net_surplus is not None else None
+                profile_ctx.update({
+                    'paid_up_capital': paid_up,
+                    'net_surplus': net_surplus,
+                    'report_year': financial_data.report_year,
+                })
+            
+            context['profile'] = profile_ctx
+        
+        # Get officers and members for the cooperative
+        context['officers'] = Officer.objects.filter(coop=coop).order_by('position', 'fullname')
+        context['members'] = Member.objects.filter(coop=coop).order_by('fullname')
+        
+        return render(request, 'cooperatives/profile_print.html', context)
+    
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in print_profile: {str(e)}", exc_info=True)
+        return HttpResponseServerError("An error occurred while generating the printable profile.")

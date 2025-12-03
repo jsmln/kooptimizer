@@ -16,6 +16,7 @@ from apps.core.services.sms_service import SmsService
 from .utils import process_attachment, MAX_ATTACHMENT_SIZE
 # from apps.core.services.email_service import EmailService
 from datetime import datetime
+from apps.core.utils.activity_logger import log_announcement_sent
 
 # Import your models
 from .models import Cooperative, Officer, Announcement, Message, MessageRecipient
@@ -393,12 +394,34 @@ def handle_announcement(request):
                 }, status=500)
 
         # --- 7. Send via appropriate service ---
+        recipient_count = len(coop_ids) if coop_ids else len(officer_ids) if officer_ids else 0
+        recipient_type = 'cooperatives' if coop_ids else 'officers' if officer_ids else 'recipients'
+        
+        # Get recipient names for logging
+        coop_names = []
+        officer_names = []
+        if coop_ids:
+            from apps.account_management.models import Cooperatives
+            cooperatives = Cooperatives.objects.filter(coop_id__in=coop_ids)
+            coop_names = [c.cooperative_name for c in cooperatives]
+        if officer_ids:
+            from apps.cooperatives.models import Officer
+            officers = Officer.objects.filter(officer_id__in=officer_ids)
+            officer_names = [o.fullname for o in officers if o.fullname]
+            # Also get cooperative names for officers
+            if not coop_names:
+                coop_names = [o.coop.cooperative_name for o in officers if o.coop and o.coop.cooperative_name]
+        
         if action == 'send_sms' and ann_type == 'sms':
             sms_service = SmsService()
             success, message = sms_service.send_bulk_announcement(saved_announcement_id, content)
             
             if not success:
                 return JsonResponse({'status': 'error', 'message': f"SMS API Error: {message}"}, status=500)
+            
+            # Log activity
+            if creator_id and creator_role:
+                log_announcement_sent(creator_id, creator_role, 'SMS', recipient_count, recipient_type, coop_names, officer_names)
         
         elif action == 'send_email' and ann_type == 'e-mail':
             from apps.core.services.email_service import EmailService
@@ -410,6 +433,10 @@ def handle_announcement(request):
             
             if not success:
                 return JsonResponse({'status': 'error', 'message': f"Email API Error: {message}"}, status=500)
+            
+            # Log activity
+            if creator_id and creator_role:
+                log_announcement_sent(creator_id, creator_role, 'Email', recipient_count, recipient_type, coop_names, officer_names)
         
         return JsonResponse({
             'status': 'success', 

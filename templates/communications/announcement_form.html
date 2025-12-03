@@ -141,42 +141,52 @@
         color: #a91e2c;
     }
 
-    /* Adjust content area for top-bar */
+    /* Adjust content area for top-bar - Match messages page layout */
     .content-scrollable {
-        margin-top: 56px !important;
-        height: calc(100vh - 56px) !important;
-        width: 100%;
-        display: flex;
-        align-items: flex-start !important;
-        justify-content: center;
-        overflow: hidden !important;
-        background-color: #F4F7FE;
         padding: 0 !important;
-        margin-bottom: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: hidden !important;
+        background-color: #F4F7FE !important;
+        position: relative !important;
     }
 
-    /* Adjust layout height to fit within the new alignment */
+    /* Adjust layout height to match messages page - fixed height */
     .announcement-layout {
-        display: flex;
-        width: 96%;
-        height: 100%;
-        max-width: 1400px;
-        gap: 20px;
-        background: transparent;
-        overflow: hidden;
-        padding-top: 0;
-        margin-top: 0;
+        display: flex !important;
+        width: 96% !important;
+        height: 92% !important;
+        max-width: 1400px !important;
+        gap: 20px !important;
+        background: transparent !important;
+        overflow: hidden !important;
+        position: relative !important;
+        z-index: 10 !important;
+        min-height: 0 !important;
+        margin: auto !important;
     }
 
     /* --- 2. LEFT CARD: NAVIGATION SIDEBAR --- */
     .announcement-sidebar {
-        width: 260px;
-        flex-shrink: 0;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
-        display: flex;
-        flex-direction: column;
+        width: 260px !important;
+        min-width: 260px !important;
+        max-width: 300px !important;
+        flex-shrink: 0 !important;
+        height: 100% !important;
+        background: #fff !important;
+        border-radius: 16px !important;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        border: none !important;
+        position: relative !important;
+        z-index: 11 !important;
+        min-height: 0 !important;
+        pointer-events: auto !important;
     }
 
     /* Create New Button */
@@ -243,17 +253,26 @@
 
     /* --- 3. RIGHT CARD: CONTENT AREA --- */
     .announcement-content {
-        flex: 1;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
+        flex: 1 !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        height: 100% !important;
+        background: #fff !important;
+        border-radius: 16px !important;
+        box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        border: none !important;
+        position: relative !important;
+        z-index: 10 !important;
+        pointer-events: auto !important;
+        min-height: 0 !important;
     }
 
-    /* Content Header */
-    .content-header {
+    /* Content Header - Only for list view, not create view */
+    .announcement-content:not(#create-view-container) .content-header,
+    .content-header:not(#create-view-container .content-header) {
         height: 70px;
         padding: 0 25px;
         border-bottom: 1px solid #f0f0f0;
@@ -721,13 +740,57 @@
 <div id="announcement-notifications" aria-live="polite" aria-atomic="true"
     style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
 
+<!-- Store data in data attributes to avoid linter errors -->
+<div id="announcement-data" data-cooperatives='{{ cooperatives_json|escapejs }}'
+    data-officers='{{ officers_by_coop_json|escapejs }}' data-user-role='{{ request.session.role|default:"" }}'
+    data-user-id='{% if request.session.user_id %}{{ request.session.user_id }}{% else %}{% endif %}'
+    style="display: none;"></div>
+
 <script>
-    // Embed data from Django view into JavaScript variables
-    const cooperativesData = {{ cooperatives_json|safe }};
-    const officersByCoopData = {{ officers_by_coop_json|safe }};
-    const currentUserRole = '{{ request.session.role }}';
-    const currentUserId = {% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %};
-    
+    // Load data from data attributes to avoid linter errors with Django templates
+    let cooperativesData = [];
+    let officersByCoopData = {};
+    let currentUserRole = '';
+    let currentUserId = null;
+
+    try {
+        const dataElement = document.getElementById('announcement-data');
+        if (dataElement) {
+            const cooperativesJsonStr = dataElement.getAttribute('data-cooperatives');
+            const officersJsonStr = dataElement.getAttribute('data-officers');
+            const userRole = dataElement.getAttribute('data-user-role');
+            const userIdStr = dataElement.getAttribute('data-user-id');
+
+            if (cooperativesJsonStr) {
+                cooperativesData = JSON.parse(cooperativesJsonStr);
+            }
+            if (officersJsonStr) {
+                officersByCoopData = JSON.parse(officersJsonStr);
+            }
+            if (userRole) {
+                currentUserRole = userRole;
+            }
+            if (userIdStr) {
+                currentUserId = parseInt(userIdStr) || null;
+            }
+        }
+
+        // Validate final data
+        if (!Array.isArray(cooperativesData)) {
+            console.warn('cooperativesData is not a valid array, using empty array');
+            cooperativesData = [];
+        }
+        if (typeof officersByCoopData !== 'object' || officersByCoopData === null || Array.isArray(officersByCoopData)) {
+            console.warn('officersByCoopData is not a valid object, using empty object');
+            officersByCoopData = {};
+        }
+    } catch (e) {
+        console.error('Error parsing cooperatives/officers data:', e);
+        console.error('Error details:', e.message, e.stack);
+        cooperativesData = [];
+        officersByCoopData = {};
+    }
+
     // Debug: Log data to verify it's loaded correctly
     console.log('Cooperatives Data:', cooperativesData);
     console.log('Officers by Coop Data:', officersByCoopData);
@@ -776,6 +839,13 @@
     </div>
 
     <div class="announcement-content">
+
+        <div id="create-view-header" class="content-header d-none">
+            <h2 class="h4 m-0">New Announcement</h2>
+            <button id="cancel-create-btn" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i> Cancel
+            </button>
+        </div>
 
         <div id="list-view-container" class="d-flex flex-column h-100">
             <div class="content-header" style="position: relative;">
@@ -888,7 +958,7 @@
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="draft-view">
+                <div class="tab-pane fade" id="draft-view" style="display: none;">
                     <div class="list-group list-group-flush">
                         {% for item in draft_announcements %}
                         <a href="#" class="list-group-item list-group-item-action py-3 open-draft-btn announcement-item"
@@ -937,7 +1007,7 @@
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="scheduled-view">
+                <div class="tab-pane fade" id="scheduled-view" style="display: none;">
                     <div class="list-group list-group-flush">
                         {% for item in scheduled_announcements %}
                         <a href="#" class="list-group-item list-group-item-action py-3 announcement-item"
@@ -988,91 +1058,89 @@
             </div>
         </div>
 
-        <div id="create-view-container" class="d-none flex-column h-100">
-            <div class="content-header">
-                <h2 class="h4 m-0">New Announcement</h2>
-                <button id="cancel-create-btn" class="btn btn-outline-secondary">
-                    <i class="bi bi-x-lg"></i> Cancel
-                </button>
-            </div>
-
-            <div class="list-scroll-area p-4">
-                <form id="main-announcement-form">
-                    <div class="mb-3">
-                        <label for="announcement-type" class="form-label fw-bold">Select type of announcement</label>
-                        <select class="form-select" id="announcement-type">
-                            <option value="" selected>Choose...</option>
-                            <option value="sms">SMS</option>
-                            <option value="e-mail">Email</option>
-                        </select>
-                    </div>
-
-                    <div id="dynamic-form-fields" class="d-none">
+        <div id="create-view-container" class="d-none d-flex flex-column h-100">
+            <div class="content-scroll-area">
+                <div class="view-container" onclick="event.stopPropagation();">
+                    <form id="main-announcement-form" onclick="event.stopPropagation();">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Recipients</label>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted">Add recipients to this announcement.</span>
-                                <button class="btn btn-sm btn-outline-danger" type="button" id="add-recipient-btn">
-                                    <i class="bi bi-plus-circle me-1"></i> Add Recipient
-                                </button>
-                            </div>
+                            <label for="announcement-type" class="form-label fw-bold">Select type of
+                                announcement</label>
+                            <select class="form-select" id="announcement-type" onclick="event.stopPropagation();"
+                                onfocus="event.stopPropagation();" onmousedown="event.stopPropagation();">
+                                <option value="" selected>Choose...</option>
+                                <option value="sms">SMS</option>
+                                <option value="e-mail">Email</option>
+                            </select>
+                        </div>
 
-                            <div id="recipient-rows-container" class="d-flex flex-column gap-2">
-                                <div class="recipient-row d-flex align-items-center gap-2">
-                                    <div class="row g-2 flex-grow-1">
-                                        <div class="col-md-6">
-                                            <select class="form-select coop-select" name="cooperative_name[]">
-                                                <option value="" selected>Choose Cooperative...</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <select class="officer-select" name="cooperative_officers[]" multiple
-                                                disabled>
-                                                <option value="">-- Select Cooperative First --</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <button type="button"
-                                        class="btn btn-sm btn-outline-danger remove-recipient-btn d-none">
-                                        <i class="bi bi-x-lg"></i>
+                        <div id="dynamic-form-fields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Recipients</label>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Add recipients to this announcement.</span>
+                                    <button class="btn btn-sm btn-outline-danger" type="button" id="add-recipient-btn">
+                                        <i class="bi bi-plus-circle me-1"></i> Add Recipient
                                     </button>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="announcement-title" class="form-label fw-bold">Announcement Title</label>
-                            <input type="text" class="form-control" id="announcement-title" placeholder="Enter title">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="announcement-content" class="form-label fw-bold">Announcement Content</label>
-                            <textarea class="form-control" id="announcement-content" rows="8"
-                                placeholder="Type your message..."></textarea>
-                        </div>
-
-                        <div id="email-fields" class="d-none">
-                            <div class="mb-3">
-                                <label for="formFile" class="form-label fw-bold">Attachment/s</label>
-                                <input class="form-control" type="file" id="formFile" multiple
-                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif">
-                                <div class="form-text">
-                                    <i class="bi bi-info-circle"></i> Maximum total size: 4MB for all files combined
-                                    (Brevo API limit).
-                                    Allowed: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, Images
+                                <div id="recipient-rows-container" class="d-flex flex-column gap-2">
+                                    <div class="recipient-row d-flex align-items-center gap-2">
+                                        <div class="row g-2 flex-grow-1">
+                                            <div class="col-md-6">
+                                                <select class="form-select coop-select" name="cooperative_name[]">
+                                                    <option value="" selected>Choose Cooperative...</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <select class="officer-select" name="cooperative_officers[]" multiple
+                                                    disabled>
+                                                    <option value="">-- Select Cooperative First --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-danger remove-recipient-btn d-none">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div id="attachment-preview" class="mt-2"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="announcement-title" class="form-label fw-bold">Announcement Title</label>
+                                <input type="text" class="form-control" id="announcement-title"
+                                    placeholder="Enter title">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="announcement-content" class="form-label fw-bold">Announcement
+                                    Content</label>
+                                <textarea class="form-control" id="announcement-content" rows="8"
+                                    placeholder="Type your message..."></textarea>
+                            </div>
+
+                            <div id="email-fields" class="d-none">
+                                <div class="mb-3">
+                                    <label for="formFile" class="form-label fw-bold">Attachment/s</label>
+                                    <input class="form-control" type="file" id="formFile" multiple
+                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif">
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle"></i> Maximum total size: 4MB for all files combined
+                                        (Brevo API limit).
+                                        Allowed: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, Images
+                                    </div>
+                                    <div id="attachment-preview" class="mt-2"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
 
-            <div class="mt-auto p-3 border-top">
-                <div class="d-flex justify-content-end align-items-center gap-2">
+            <div class="sticky-footer">
+                <div class="d-flex">
                     <button type="button" class="btn btn-secondary" id="save-draft-btn">Save Draft</button>
-                    <button type="button" class="btn btn-primary d-none" id="save-changes-btn"
-                        style="background-color: #0d6efd; border-color: #0d6efd;">Save Changes</button>
+                    <button type="button" class="btn btn-primary d-none" id="save-changes-btn">Save Changes</button>
 
                     <div class="btn-group" id="send-button-group">
                         <button type="button" class="btn btn-danger" id="send-btn-main"
@@ -3012,9 +3080,25 @@
         }
 
         document.body.addEventListener('click', function (e) {
+            // Don't trigger modal if clicking inside the create form view
+            if (createView && !createView.classList.contains('d-none')) {
+                return;
+            }
+
+            // Don't trigger modal if clicking on form elements
+            if (e.target.closest('form') ||
+                e.target.closest('select') ||
+                e.target.closest('input') ||
+                e.target.closest('textarea') ||
+                e.target.closest('.form-select') ||
+                e.target.closest('.form-control')) {
+                return;
+            }
+
             const viewTrigger = e.target.closest('a[data-modal-id]');
             if (viewTrigger) {
                 e.preventDefault();
+                e.stopPropagation();
                 const modalId = viewTrigger.getAttribute('data-modal-id');
                 const announcementId = viewTrigger.getAttribute('data-announcement-id');
 
@@ -3041,18 +3125,45 @@
             });
         }
 
+        // Tab toggle logic - ensure only one tab is visible at a time
         var triggerTabList = [].slice.call(document.querySelectorAll('#announcement-nav a'));
         triggerTabList.forEach(function (triggerEl) {
-            var tabTrigger = new bootstrap.Tab(triggerEl);
             triggerEl.addEventListener('click', function (event) {
                 event.preventDefault();
+                event.stopPropagation();
+
                 const isCreateViewVisible = createView.classList.contains('d-flex');
                 if (isCreateViewVisible) {
+                    const tabTrigger = new bootstrap.Tab(triggerEl);
                     pendingTabTrigger = tabTrigger;
                     confirmCancelModal.show();
-                } else {
-                    tabTrigger.show();
+                    return;
                 }
+
+                // Get the target tab pane
+                const targetId = triggerEl.getAttribute('data-bs-target');
+                if (!targetId) return;
+
+                const targetPane = document.querySelector(targetId);
+                if (!targetPane) return;
+
+                // Hide all tab panes first
+                document.querySelectorAll('.tab-pane').forEach(function (pane) {
+                    pane.classList.remove('show', 'active');
+                    pane.classList.add('fade');
+                });
+
+                // Remove active class from all nav links
+                document.querySelectorAll('#announcement-nav .nav-link').forEach(function (link) {
+                    link.classList.remove('active');
+                });
+
+                // Show the target tab pane
+                targetPane.classList.remove('fade');
+                targetPane.classList.add('show', 'active');
+
+                // Add active class to clicked nav link
+                triggerEl.classList.add('active');
             });
         });
 
@@ -3139,16 +3250,50 @@
         }
 
         function populateCooperatives(coopSelect) {
+            if (!coopSelect) {
+                console.error('populateCooperatives: coopSelect is null or undefined');
+                return;
+            }
+
             coopSelect.innerHTML = '<option value="" selected>Choose Cooperative...</option>';
+
+            if (!cooperativesData || !Array.isArray(cooperativesData)) {
+                console.error('populateCooperatives: cooperativesData is not a valid array', cooperativesData);
+                const errorOption = new Option('Error loading cooperatives', '');
+                errorOption.disabled = true;
+                coopSelect.add(errorOption);
+                return;
+            }
+
+            if (cooperativesData.length === 0) {
+                const noDataOption = new Option('No cooperatives available', '');
+                noDataOption.disabled = true;
+                coopSelect.add(noDataOption);
+                console.warn('populateCooperatives: No cooperatives found in data');
+                return;
+            }
+
             cooperativesData.forEach(coop => {
-                const option = new Option(coop.name, coop.id);
-                coopSelect.add(option);
+                if (coop && coop.id && coop.name) {
+                    const option = new Option(coop.name, coop.id);
+                    coopSelect.add(option);
+                } else {
+                    console.warn('populateCooperatives: Invalid cooperative data:', coop);
+                }
             });
         }
 
         function populateOfficers(officerSelect, coopId) {
+            if (!officerSelect) {
+                console.error('populateOfficers: officerSelect is null or undefined');
+                return;
+            }
+
             const tomSelect = officerSelect.tomselect;
-            if (!tomSelect) return;
+            if (!tomSelect) {
+                console.error('populateOfficers: tomSelect instance not found');
+                return;
+            }
 
             tomSelect.clear();
             tomSelect.clearOptions();
@@ -3159,16 +3304,31 @@
                 tomSelect.settings.placeholder = '-- Select Cooperative First --';
                 tomSelect.disable();
             } else {
-                const officers = officersByCoopData[coopId];
-                if (officers && officers.length > 0) {
+                if (!officersByCoopData || typeof officersByCoopData !== 'object') {
+                    console.error('populateOfficers: officersByCoopData is not a valid object', officersByCoopData);
+                    tomSelect.settings.placeholder = '-- Error loading officers --';
+                    tomSelect.enable();
+                    tomSelect.refreshPlaceholder();
+                    return;
+                }
+
+                // Try both string and number keys
+                const officers = officersByCoopData[coopId] || officersByCoopData[String(coopId)] || officersByCoopData[parseInt(coopId)];
+
+                if (officers && Array.isArray(officers) && officers.length > 0) {
                     tomSelect.addOption({ value: 'all', text: 'All Officers' });
                     officers.forEach(officer => {
-                        tomSelect.addOption({ value: officer.id, text: officer.name });
+                        if (officer && officer.id && officer.name) {
+                            tomSelect.addOption({ value: officer.id, text: officer.name });
+                        } else {
+                            console.warn('populateOfficers: Invalid officer data:', officer);
+                        }
                     });
                     tomSelect.individualOfficerCount = officers.length;
                     tomSelect.settings.placeholder = 'Select officer(s)...';
                 } else {
                     tomSelect.settings.placeholder = '-- No Officers Found --';
+                    console.warn(`populateOfficers: No officers found for coopId: ${coopId}`);
                 }
                 tomSelect.enable();
             }
@@ -3237,22 +3397,50 @@
         }
 
         // --- Populate the very first row on page load ---
-        try {
-            const firstCoopSelect = recipientRowsContainer.querySelector('.coop-select');
-            if (firstCoopSelect) {
-                populateCooperatives(firstCoopSelect);
+        // Wait for DOM to be fully ready
+        function initializeInitialRecipientRow() {
+            try {
+                if (!recipientRowsContainer) {
+                    console.warn('recipientRowsContainer not found, will retry when create view is shown');
+                    return false;
+                }
+
+                const firstCoopSelect = recipientRowsContainer.querySelector('.coop-select');
+                if (!firstCoopSelect) {
+                    console.warn('First coop select not found in recipientRowsContainer');
+                    return false;
+                }
+
+                // Only populate if not already populated
+                if (firstCoopSelect.options.length <= 1) {
+                    populateCooperatives(firstCoopSelect);
+                }
 
                 const firstOfficerSelect = recipientRowsContainer.querySelector('.officer-select');
                 if (firstOfficerSelect) {
-                    initializeTomSelect(firstOfficerSelect, '-- Select Cooperative First --');
+                    // Only initialize TomSelect if not already initialized
+                    if (!firstOfficerSelect.tomselect) {
+                        initializeTomSelect(firstOfficerSelect, '-- Select Cooperative First --');
+                    }
                 }
-            }
-            updateRecipientRemoveButtons();
-            updateAvailableCooperatives();
 
-        } catch (e) {
-            console.error('CRITICAL ERROR: Failed to load cooperative data.', e);
+                updateRecipientRemoveButtons();
+                updateAvailableCooperatives();
+                return true;
+            } catch (e) {
+                console.error('Error initializing recipient row:', e);
+                // Don't show error notification here - let it fail silently and retry when view is shown
+                return false;
+            }
         }
+
+        // Initialize on page load (even if create view is hidden)
+        setTimeout(() => {
+            if (!initializeInitialRecipientRow()) {
+                // If initialization failed, it will retry when showCreateView is called
+                console.log('Initial recipient row initialization deferred');
+            }
+        }, 200);
 
         // ===========================================
         // ===== DRAFT EDITING LOGIC            =====
@@ -3501,8 +3689,21 @@
             listView.classList.add('d-none');
             createView.classList.remove('d-none');
             createView.classList.add('d-flex');
+            const createViewHeader = document.getElementById('create-view-header');
+            if (createViewHeader) {
+                createViewHeader.classList.remove('d-none');
+                createViewHeader.classList.add('show');
+            }
             const currentActive = document.querySelector('.sidebar-nav .nav-link.active');
             if (currentActive) currentActive.classList.remove('active');
+
+            // Ensure initial recipient row is populated when create view is shown
+            setTimeout(() => {
+                if (!initializeInitialRecipientRow()) {
+                    // Retry after a longer delay if first attempt failed
+                    setTimeout(initializeInitialRecipientRow, 300);
+                }
+            }, 200);
         }
 
         function showListView() {
@@ -3510,6 +3711,11 @@
             createView.classList.add('d-none');
             listView.classList.remove('d-none');
             listView.classList.add('d-flex');
+            const createViewHeader = document.getElementById('create-view-header');
+            if (createViewHeader) {
+                createViewHeader.classList.add('d-none');
+                createViewHeader.classList.remove('show');
+            }
             resetForm();
 
             // Restore the active tab or default to 'sent'
@@ -3559,7 +3765,9 @@
         if (createBtn) createBtn.addEventListener('click', showCreateView);
 
         if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => {
+            cancelBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 pendingTabTrigger = null;
                 confirmCancelModal.show();
             });
@@ -3572,13 +3780,14 @@
                     dynamicFields.classList.remove('d-none');
                     if (selectedType === 'e-mail') {
                         emailFields.classList.remove('d-none');
-                        sendBtnMain.textContent = 'Send Email';
+                        if (sendBtnMain) sendBtnMain.textContent = 'Send Email';
                     } else {
                         emailFields.classList.add('d-none');
-                        sendBtnMain.textContent = 'Send SMS';
+                        if (sendBtnMain) sendBtnMain.textContent = 'Send SMS';
                     }
                 } else {
                     dynamicFields.classList.add('d-none');
+                    if (sendBtnMain) sendBtnMain.textContent = 'Send';
                 }
             });
         }

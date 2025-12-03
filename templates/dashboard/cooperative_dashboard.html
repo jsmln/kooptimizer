@@ -12,6 +12,49 @@
 <link rel="stylesheet" href="{% static 'frontend/cooperative_dashboard.css' %}">
 <link rel="stylesheet" href="{% static 'frontend/print_modal.css' %}">
 <script src="{% static 'frontend/print_modal.js' %}"></script>
+<style>
+    /* Activity Log Styles */
+    .activity-log-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .activity-log-item {
+        background: #f8f9fa;
+        border-left: 4px solid #4CAF50;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .activity-log-item:hover {
+        background: #e9ecef;
+        transform: translateX(4px);
+    }
+
+    .activity-log-item div {
+        color: #2B3674;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .table-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-section {
+        margin-bottom: 1.5rem;
+        width: 100%;
+        max-width: 100%;
+    }
+</style>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -280,7 +323,7 @@
         </div>
     </div>
 
-    <!-- Quick Actions and Recent Activity -->
+    <!-- Quick Actions and Document Status -->
     <div class="content-split" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
         <div class="card-section">
             <div class="section-header">
@@ -301,57 +344,45 @@
             </div>
         </div>
 
+        <!-- Document Status -->
         <div class="card-section">
-            <div class="section-header">
-                <h3>Recent Activity</h3>
+            <div class="card-header-custom">
+                <h3>Document Status</h3>
             </div>
-            <div class="timeline" id="coopActivityTimeline">
-                <div class="text-center text-muted p-3">Loading activities...</div>
+            <div class="compliance-list" id="documentStatusList">
+                <div class="compliance-item clickable-compliance" data-doc-type="coc" style="cursor: pointer;">
+                    <div class="compliance-info">
+                        <span class="compliance-label">Certificate of Compliance (COC)</span>
+                        <small class="text-muted">Required for operation</small>
+                    </div>
+                    <span class="status-pill" id="cocStatus">Loading...</span>
+                </div>
+                <div class="compliance-item clickable-compliance" data-doc-type="cote" style="cursor: pointer;">
+                    <div class="compliance-info">
+                        <span class="compliance-label">Tax Exemption (COTE)</span>
+                        <small class="text-muted">Bureau of Internal Revenue</small>
+                    </div>
+                    <span class="status-pill" id="coteStatus">Loading...</span>
+                </div>
+                <div class="compliance-item clickable-compliance" data-doc-type="lccdc" style="cursor: pointer;">
+                    <div class="compliance-info">
+                        <span class="compliance-label">LCCDC Membership</span>
+                        <small class="text-muted">Council Membership</small>
+                    </div>
+                    <span class="status-pill" id="lccdcStatus">Loading...</span>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Officers and Members -->
     <div class="content-split" style="margin-top: 1.5rem;">
-        <!-- Document Status and Gender Demographics -->
-        <div style="display: flex; flex-direction: column; gap: 25px;">
-            <!-- Document Status -->
-            <div class="card-section">
-                <div class="card-header-custom">
-                    <h3>Document Status</h3>
-                </div>
-                <div class="compliance-list" id="documentStatusList">
-                    <div class="compliance-item clickable-compliance" data-doc-type="coc" style="cursor: pointer;">
-                        <div class="compliance-info">
-                            <span class="compliance-label">Certificate of Compliance (COC)</span>
-                            <small class="text-muted">Required for operation</small>
-                        </div>
-                        <span class="status-pill" id="cocStatus">Loading...</span>
-                    </div>
-                    <div class="compliance-item clickable-compliance" data-doc-type="cote" style="cursor: pointer;">
-                        <div class="compliance-info">
-                            <span class="compliance-label">Tax Exemption (COTE)</span>
-                            <small class="text-muted">Bureau of Internal Revenue</small>
-                        </div>
-                        <span class="status-pill" id="coteStatus">Loading...</span>
-                    </div>
-                    <div class="compliance-item clickable-compliance" data-doc-type="lccdc" style="cursor: pointer;">
-                        <div class="compliance-info">
-                            <span class="compliance-label">LCCDC Membership</span>
-                            <small class="text-muted">Council Membership</small>
-                        </div>
-                        <span class="status-pill" id="lccdcStatus">Loading...</span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
         <!-- Officers List -->
         <div class="card-section">
             <div class="card-header-custom">
                 <h3>Officers</h3>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" style="max-height: 240px; overflow-y: auto; overflow-x: hidden;">
                 <table class="simple-table">
                     <thead>
                         <tr>
@@ -365,6 +396,68 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Members List -->
+        <div class="card-section">
+            <div class="card-header-custom">
+                <h3>Members</h3>
+            </div>
+            <div class="table-responsive" style="max-height: 240px; overflow-y: auto; overflow-x: hidden;">
+                <table class="simple-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Mobile</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersTableBody">
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">Loading members...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Logs Section - Full Row at Bottom -->
+    <div class="card-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem; width: 100%;">
+        <div class="card-header-custom" style="flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>Activity Logs</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <!-- Search Bar -->
+                <div style="position: relative;">
+                    <input type="text" id="officerActivityLogSearch" class="form-control form-control-sm" 
+                           placeholder="Search activities..." 
+                           style="width: 250px; padding-left: 35px;">
+                    <i class="bi bi-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                </div>
+                <!-- Date Filter -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="date" id="officerActivityLogDateFrom" class="form-control form-control-sm" 
+                           style="width: 150px;" title="Filter from date">
+                    <span style="color: #6c757d;">to</span>
+                    <input type="date" id="officerActivityLogDateTo" class="form-control form-control-sm" 
+                           style="width: 150px;" title="Filter to date">
+                    <button id="clearOfficerActivityFilters" class="btn btn-sm btn-outline-secondary" 
+                            style="white-space: nowrap; display: none;" title="Clear filters">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; flex: 1; min-height: 0;">
+            <!-- Officer Activities Sub-Card -->
+            <div class="table-card" style="flex: 1; min-width: 300px; display: flex; flex-direction: column; height: 500px; min-height: 500px;">
+                <div class="card-header-custom" style="background: #4CAF50; color: white; flex-shrink: 0; margin-bottom: 15px;">
+                    <h4 style="margin: 0; font-size: 1rem;">Officer Activities</h4>
+                </div>
+                <div id="officerActivitiesBody" class="activity-log-list" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; min-height: 0;">
+                    <div class="text-center text-muted">Loading...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -655,23 +748,9 @@
             } else {
                 updateDocumentStatus(officerData.document_status);
                 updateOfficersList(officerData.officers);
+                updateMembersList(officerData.members || []);
                 initializeFinancialChart(officerData.financial_growth);
                 updateKPICards(officerData);
-            }
-
-            // Load recent activity
-            const activityResponse = await fetch('{% url "dashboard:dashboard_recent_activity_api" %}');
-            if (activityResponse.ok) {
-                const activityData = await activityResponse.json();
-                if (activityData.activities && Array.isArray(activityData.activities)) {
-                    updateCooperativeActivity(activityData.activities);
-                } else {
-                    // Show empty state if no activities
-                    updateCooperativeActivity([]);
-                }
-            } else {
-                // Show empty state on error
-                updateCooperativeActivity([]);
             }
         } catch (error) {
             console.error('Error loading cooperative dashboard data:', error);
@@ -843,6 +922,7 @@
             row.addEventListener('click', function () {
                 const modal = document.getElementById('profile-modal');
                 if (modal) {
+                    modal.style.display = 'flex';
                     modal.classList.add('visible');
                 }
             });
@@ -1040,39 +1120,29 @@
         });
     }
 
-    function updateCooperativeActivity(activities) {
-        const timeline = document.getElementById('coopActivityTimeline');
-        if (!timeline) {
+    function updateMembersList(members) {
+        const tbody = document.getElementById('membersTableBody');
+        if (!tbody) {
+            console.warn('updateMembersList: membersTableBody not found');
             return;
         }
 
-        timeline.innerHTML = '';
+        tbody.innerHTML = '';
 
-        if (!activities || activities.length === 0) {
-            timeline.innerHTML = '<div class="text-center text-muted p-3">No recent activity</div>';
+        if (!members || members.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No members found</td></tr>';
             return;
         }
 
-        activities.slice(0, 5).forEach((activity) => {
-            const item = document.createElement('div');
-            item.className = 'timeline-item';
-            item.style.cursor = 'pointer';
-            item.addEventListener('click', function () {
-                // Redirect to profile form when activity is clicked
-                window.location.href = '{% url "cooperatives:profile_form" %}';
-            });
-            const timeAgo = activity.time ? getTimeAgo(new Date(activity.time)) : 'Recently';
-            const markerClass = activity.color === 'red' ? 'bg-danger' :
-                activity.color === 'green' ? 'bg-success' :
-                    activity.color === 'blue' ? 'bg-primary' : 'bg-warning';
-            item.innerHTML = `
-                <div class="timeline-marker ${markerClass}"></div>
-                <div class="timeline-content">
-                    <p class="text-main">${activity.title}</p>
-                    <span class="time">${timeAgo}</span>
-                </div>
+        members.forEach(member => {
+            const row = document.createElement('tr');
+            row.className = 'officer-row';
+            row.innerHTML = `
+                <td class="fw-bold">${member.name || 'N/A'}</td>
+                <td>${member.gender || 'N/A'}</td>
+                <td>${member.mobile || 'N/A'}</td>
             `;
-            timeline.appendChild(item);
+            tbody.appendChild(row);
         });
     }
 
@@ -1144,7 +1214,12 @@
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
 
         if (modal) {
+            // Ensure modal is hidden by default
+            modal.style.display = 'none';
+            modal.classList.remove('visible');
+            
             const closeModal = () => {
+                modal.style.display = 'none';
                 modal.classList.remove('visible');
             };
 
@@ -1229,5 +1304,204 @@
         });
     })();
     {% endif %}
+
+    // --- GLOBAL VARIABLES FOR OFFICER ACTIVITY LOGS ---
+    let allOfficerActivityLogs = {
+        officer: []
+    };
+
+    // --- LOAD OFFICER ACTIVITY LOGS ---
+    async function loadOfficerActivityLogs() {
+        try {
+            const response = await fetch('{% url "dashboard:dashboard_officer_activity_logs_api" %}');
+            if (!response.ok) {
+                throw new Error(`Activity logs API error: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error('Activity logs API returned error:', data.error);
+                return;
+            }
+            
+            // Store all logs for filtering
+            allOfficerActivityLogs.officer = data.officer_activities || [];
+            
+            // Apply current filters
+            applyOfficerActivityLogFilters();
+        } catch (error) {
+            console.error('Error loading activity logs:', error);
+            const container = document.getElementById('officerActivitiesBody');
+            if (container) {
+                container.innerHTML = '<div class="text-center text-danger" style="padding: 20px;">Error loading activity logs</div>';
+            }
+        }
+    }
+
+    // --- TOGGLE CLEAR BUTTON VISIBILITY ---
+    function toggleOfficerClearButton() {
+        const searchInput = document.getElementById('officerActivityLogSearch');
+        const dateFromInput = document.getElementById('officerActivityLogDateFrom');
+        const dateToInput = document.getElementById('officerActivityLogDateTo');
+        const clearButton = document.getElementById('clearOfficerActivityFilters');
+        
+        if (!clearButton) return;
+        
+        const hasSearch = searchInput && searchInput.value.trim() !== '';
+        const hasDateFrom = dateFromInput && dateFromInput.value !== '';
+        const hasDateTo = dateToInput && dateToInput.value !== '';
+        
+        if (hasSearch || hasDateFrom || hasDateTo) {
+            clearButton.style.display = 'inline-block';
+        } else {
+            clearButton.style.display = 'none';
+        }
+    }
+
+    // --- APPLY FILTERS TO OFFICER ACTIVITY LOGS ---
+    function applyOfficerActivityLogFilters() {
+        const searchTerm = (document.getElementById('officerActivityLogSearch')?.value || '').toLowerCase().trim();
+        const dateFrom = document.getElementById('officerActivityLogDateFrom')?.value || '';
+        const dateTo = document.getElementById('officerActivityLogDateTo')?.value || '';
+        
+        toggleOfficerClearButton();
+        
+        const filteredOfficer = filterOfficerActivityLogs(allOfficerActivityLogs.officer, searchTerm, dateFrom, dateTo);
+        
+        updateOfficerActivityLogsTable('officerActivitiesBody', filteredOfficer);
+    }
+
+    // --- FILTER OFFICER ACTIVITY LOGS ---
+    function filterOfficerActivityLogs(logs, searchTerm, dateFrom, dateTo) {
+        return logs.filter(log => {
+            if (searchTerm) {
+                const searchableText = [
+                    log.action || '',
+                    log.description || '',
+                    log.performer_name || '',
+                    log.affected_entity || ''
+                ].join(' ').toLowerCase();
+                
+                if (!searchableText.includes(searchTerm)) {
+                    return false;
+                }
+            }
+            
+            if (dateFrom || dateTo) {
+                if (!log.timestamp) return false;
+                
+                try {
+                    const logDate = new Date(log.timestamp);
+                    const logDateStr = logDate.toISOString().split('T')[0];
+                    
+                    if (dateFrom && logDateStr < dateFrom) {
+                        return false;
+                    }
+                    if (dateTo && logDateStr > dateTo) {
+                        return false;
+                    }
+                } catch (e) {
+                    if (dateFrom || dateTo) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        });
+    }
+
+    // --- UPDATE OFFICER ACTIVITY LOGS LIST ---
+    function updateOfficerActivityLogsTable(containerId, logs) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        if (!logs || logs.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted" style="padding: 20px;">No activities found</div>';
+            return;
+        }
+        
+        container.innerHTML = logs.map(log => {
+            const action = log.action || 'Unknown';
+            const performer = log.performer_name || 'Unknown';
+            const affected = log.affected_entity || 'your cooperative';
+            const description = log.description || '';
+            const timestamp = log.timestamp ? new Date(log.timestamp) : null;
+            
+            let formattedDateTime = 'N/A';
+            if (timestamp) {
+                formattedDateTime = timestamp.toLocaleString('en-PH', {
+                    timeZone: 'Asia/Manila',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+            }
+            
+            let sentence = '';
+            
+            // Officer activities - show officer name and "your cooperative"
+            switch(action) {
+                case 'update_cooperative_profile':
+                    sentence = `Officer ${performer} updated or edited your cooperative profile on ${formattedDateTime}.`;
+                    break;
+                default:
+                    sentence = description || `Officer ${performer} ${action.replace(/_/g, ' ')} for your cooperative on ${formattedDateTime}.`;
+            }
+            
+            return `
+                <div class="activity-log-item">
+                    <div>${sentence}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // --- SETUP OFFICER ACTIVITY LOG FILTERS ---
+    function setupOfficerActivityLogFilters() {
+        const searchInput = document.getElementById('officerActivityLogSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', applyOfficerActivityLogFilters);
+            searchInput.addEventListener('keyup', applyOfficerActivityLogFilters);
+        }
+        
+        const dateFromInput = document.getElementById('officerActivityLogDateFrom');
+        if (dateFromInput) {
+            dateFromInput.addEventListener('change', applyOfficerActivityLogFilters);
+            dateFromInput.addEventListener('input', applyOfficerActivityLogFilters);
+        }
+        
+        const dateToInput = document.getElementById('officerActivityLogDateTo');
+        if (dateToInput) {
+            dateToInput.addEventListener('change', applyOfficerActivityLogFilters);
+            dateToInput.addEventListener('input', applyOfficerActivityLogFilters);
+        }
+        
+        const clearButton = document.getElementById('clearOfficerActivityFilters');
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                const search = document.getElementById('officerActivityLogSearch');
+                const dateFrom = document.getElementById('officerActivityLogDateFrom');
+                const dateTo = document.getElementById('officerActivityLogDateTo');
+                if (search) search.value = '';
+                if (dateFrom) dateFrom.value = '';
+                if (dateTo) dateTo.value = '';
+                applyOfficerActivityLogFilters();
+            });
+        }
+        
+        toggleOfficerClearButton();
+    }
+
+    // Initialize filters and load logs on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        {% if has_profile_data %}
+        setupOfficerActivityLogFilters();
+        loadOfficerActivityLogs();
+        {% endif %}
+    });
     </script>
 {% endblock %}

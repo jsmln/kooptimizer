@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, Http404, HttpResponseForbidden, HttpResponseServerError
 from django.db import transaction, connection
+from apps.core.utils.activity_logger import log_officer_profile_update
 from functools import wraps
 
 # Import your models
@@ -507,6 +508,14 @@ def create_profile(request):
         if cte_binary:
             profile.cote_attachment = cte_binary
         profile.save()
+
+        # Log activity if officer is updating their cooperative profile
+        user_role = request.session.get('role')
+        if user_role == 'officer' and user_id:
+            try:
+                log_officer_profile_update(user_id, coop.coop_id, coop.cooperative_name)
+            except Exception as e:
+                print(f"Error logging officer profile update: {e}")
 
         # --- UPDATE OR CREATE FINANCIALS ---
         # Use the same report_year from profile (line 445) for financial data
