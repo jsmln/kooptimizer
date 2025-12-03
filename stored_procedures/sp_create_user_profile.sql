@@ -1,5 +1,6 @@
 -- Stored Procedure: sp_create_user_profile
 -- Creates a new user account with appropriate role-specific profile
+-- Now handles duplicate usernames gracefully
 
 CREATE OR REPLACE FUNCTION public.sp_create_user_profile(
     p_username character varying,
@@ -34,6 +35,14 @@ BEGIN
         WHEN p_gender IS NOT NULL THEN p_gender::gender_enum 
         ELSE NULL 
     END;
+
+    -- Check if user already exists
+    SELECT user_id INTO v_user_id FROM users WHERE username = p_username;
+    
+    IF v_user_id IS NOT NULL THEN
+        -- User already exists, raise exception
+        RAISE EXCEPTION 'USERNAME_EXISTS: User with email % already exists', p_username;
+    END IF;
 
     -- 1. Create the user
     INSERT INTO users (username, password_hash, role)

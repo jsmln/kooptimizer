@@ -553,6 +553,14 @@ header, main, footer {
 
 /* Logout Modal Styles - Uniform across all pages */
 /* High specificity to override any other modal styles */
+#logoutModal.modal {
+  z-index: 10100 !important;
+}
+
+#logoutModal.modal .modal-backdrop {
+  z-index: 10099 !important;
+}
+
 .logout-modal-content,
 #logoutModal .modal-content,
 #logoutModal.modal .modal-content {
@@ -563,12 +571,14 @@ header, main, footer {
   display: flex !important;
   flex-direction: column !important;
   max-height: none !important;
+  z-index: 10100 !important;
 }
 
 /* Modal backdrop blur effect */
 #logoutModal.modal.show .modal-backdrop {
   backdrop-filter: blur(2px);
   background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10099 !important;
 }
 
 .logout-modal-header,
@@ -632,6 +642,8 @@ header, main, footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  pointer-events: auto !important;
+  z-index: 10101 !important;
 }
 
 .logout-btn-cancel,
@@ -646,6 +658,8 @@ header, main, footer {
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 100px;
+  pointer-events: auto !important;
+  z-index: 10101 !important;
 }
 
 .logout-btn-cancel:hover,
@@ -653,6 +667,7 @@ header, main, footer {
   background: #f5f5f5;
   border-color: #b0b0b0;
   color: #222;
+  pointer-events: auto !important;
 }
 
 .logout-btn-confirm,
@@ -669,6 +684,8 @@ header, main, footer {
   transition: all 0.2s ease;
   min-width: 140px;
   text-align: center;
+  pointer-events: auto !important;
+  z-index: 10101 !important;
 }
 
 .logout-btn-confirm:hover,
@@ -677,6 +694,7 @@ header, main, footer {
   border-color: #8a1515;
   color: #ffffff;
   text-decoration: none;
+  pointer-events: auto !important;
 }
 
 /* Responsive Logout Modal */

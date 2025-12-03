@@ -139,44 +139,55 @@ def send_credentials_view(request):
             # Create user in database
             new_user_data = {}
             with connection.cursor() as cursor:
-                # Call the stored procedure directly with proper casting for all parameters
-                cursor.execute("""
-                    SELECT * FROM sp_create_user_profile(
-                        %s::varchar,           -- p_username
-                        %s::varchar,           -- p_password_hash
-                        %s::user_role_enum,    -- p_role
-                        %s::varchar,           -- p_fullname
-                        %s::varchar,           -- p_email
-                        %s::varchar,           -- p_mobile_number
-                        %s::gender_enum,       -- p_gender
-                        %s::varchar,           -- p_position
-                        %s::integer,           -- p_officer_coop_id
-                        %s::integer[]          -- p_staff_coop_ids
-                    )
-                """, [
-                    email,           # p_username
-                    password_hash,   # p_password_hash
-                    role,            # p_role
-                    name,            # p_fullname
-                    email,           # p_email
-                    contact,         # p_mobile_number
-                    gender,          # p_gender
-                    position,        # p_position
-                    officer_coop_id, # p_officer_coop_id
-                    staff_coop_ids   # p_staff_coop_ids
-                ])
-                result = cursor.fetchone()
-                new_user_data = {
-                    'user_id': result[0],
-                    'profile_id': result[1],
-                    'formatted_id': result[2],
-                    'role': result[3],
-                    'name': name,
-                    'email': email,
-                    'contact': contact,
-                    'position': position,
-                    'coop_name': coop_name_for_email
-                }
+                try:
+                    # Call the stored procedure directly with proper casting for all parameters
+                    cursor.execute("""
+                        SELECT * FROM sp_create_user_profile(
+                            %s::varchar,           -- p_username
+                            %s::varchar,           -- p_password_hash
+                            %s::user_role_enum,    -- p_role
+                            %s::varchar,           -- p_fullname
+                            %s::varchar,           -- p_email
+                            %s::varchar,           -- p_mobile_number
+                            %s::gender_enum,       -- p_gender
+                            %s::varchar,           -- p_position
+                            %s::integer,           -- p_officer_coop_id
+                            %s::integer[]          -- p_staff_coop_ids
+                        )
+                    """, [
+                        email,           # p_username
+                        password_hash,   # p_password_hash
+                        role,            # p_role
+                        name,            # p_fullname
+                        email,           # p_email
+                        contact,         # p_mobile_number
+                        gender,          # p_gender
+                        position,        # p_position
+                        officer_coop_id, # p_officer_coop_id
+                        staff_coop_ids   # p_staff_coop_ids
+                    ])
+                    result = cursor.fetchone()
+                    new_user_data = {
+                        'user_id': result[0],
+                        'profile_id': result[1],
+                        'formatted_id': result[2],
+                        'role': result[3],
+                        'name': name,
+                        'email': email,
+                        'contact': contact,
+                        'position': position,
+                        'coop_name': coop_name_for_email
+                    }
+                except Exception as db_error:
+                    error_str = str(db_error)
+                    # Check for duplicate user error
+                    if 'USERNAME_EXISTS' in error_str or 'duplicate key value violates unique constraint' in error_str:
+                        return JsonResponse({
+                            'status': 'error',
+                            'message': f'This email address ({email}) is already registered in the system. Please use a different email address or check if the user already exists.'
+                        }, status=400)
+                    else:
+                        raise
 
             # Send email via Brevo
             try:
@@ -278,7 +289,19 @@ def send_credentials_view(request):
             print(f"General Error: {e}")
             import traceback
             traceback.print_exc()
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            
+            # Provide user-friendly error messages
+            error_str = str(e)
+            if 'duplicate key value violates unique constraint' in error_str or 'USERNAME_EXISTS' in error_str:
+                message = 'This email address is already registered. Please use a different email or contact support.'
+            elif 'Cooperative is required' in error_str:
+                message = 'Please select a cooperative for this officer.'
+            elif 'already owned by another staff member' in error_str:
+                message = error_str
+            else:
+                message = 'An error occurred while creating the account. Please try again or contact support.'
+            
+            return JsonResponse({'status': 'error', 'message': message}, status=400)
 
 
 @require_http_methods(["GET"])

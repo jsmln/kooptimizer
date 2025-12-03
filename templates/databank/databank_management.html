@@ -190,7 +190,7 @@
 
         <!-- Active Cooperatives Table -->
         <div class="table-section {% if current_filter != 'deactivated' %}active{% endif %}" id="active-coops" style="{% if current_filter == 'deactivated' %}display: none;{% endif %}">
-            <div class="table-wrapper summary-wrapper">
+            <div class="coop-table-wrapper">
                 <table id="cooperatives-table">
                     <thead>
                         <tr>
@@ -248,7 +248,7 @@
         <!-- Deactivated Cooperatives Table (Admin Only) -->
         {% if user_role == 'admin' %}
         <div class="table-section {% if current_filter == 'deactivated' %}active{% endif %}" id="deactivated-coops" style="{% if current_filter != 'deactivated' %}display: none;{% endif %}">
-            <div class="table-wrapper summary-wrapper">
+            <div class="coop-table-wrapper">
                 <table id="deactivated-cooperatives-table">
                     <thead>
                         <tr>
@@ -305,7 +305,7 @@
             <input type="text" id="searchProfileInput" class="search-input" placeholder="Search Profile Data...">
         </div>
 
-        <div class="table-wrapper detailed-wrapper">
+        <div class="table-wrapper profile-table-wrapper">
             <table id="profiles-table">
                 <thead>
                     <tr>
@@ -1125,6 +1125,11 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedProfileRow = null;
             document.querySelectorAll('.action-buttons').forEach(btn => btn.style.display = 'none');
             document.querySelectorAll('tr.selected').forEach(row => row.classList.remove('selected'));
+            
+            // Reset all table wrappers to full height (independent for each table)
+            document.querySelectorAll('.coop-table-wrapper, .profile-table-wrapper, .table-wrapper, .summary-wrapper, .detailed-wrapper').forEach(wrapper => {
+                wrapper.classList.remove('collapsed');
+            });
         });
     });
 
@@ -1157,11 +1162,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     addBtn.style.display = filter === 'deactivated' ? 'none' : 'flex';
                 }
                 
-                // Clear selected rows
+                // Clear selected rows and reset table heights
                 selectedCoopRow = null;
                 selectedDeactivatedCoopRow = null;
                 document.querySelectorAll('#cooperatives-management .action-buttons').forEach(btn => btn.style.display = 'none');
                 document.querySelectorAll('#cooperatives-management tr.selected').forEach(row => row.classList.remove('selected'));
+                
+                // Reset all coop table wrappers to full height
+                document.querySelectorAll('.coop-table-wrapper').forEach(wrapper => {
+                    wrapper.classList.remove('collapsed');
+                });
                 
                 // Reload page with filter parameter
                 window.location.href = `?filter=${filter}`;
@@ -1178,10 +1188,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = e.target.closest('tr[data-coop-id]');
                 if (!row || row.querySelector('td[colspan]')) return;
 
+                const coopWrapper = document.querySelector('#active-coops .coop-table-wrapper');
+
                 if (selectedCoopRow === row) {
                     row.classList.remove('selected');
                     coopActionButtons.style.display = 'none';
                     selectedCoopRow = null;
+                    // Restore full height
+                    if (coopWrapper) {
+                        coopWrapper.classList.remove('collapsed');
+                    }
                 } else {
                     if (selectedCoopRow) {
                         selectedCoopRow.classList.remove('selected');
@@ -1189,6 +1205,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     row.classList.add('selected');
                     coopActionButtons.style.display = 'flex';
                     selectedCoopRow = row;
+                    // Reduce height to keep buttons visible
+                    if (coopWrapper) {
+                        coopWrapper.classList.add('collapsed');
+                    }
                 }
             });
         }
@@ -1203,10 +1223,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = e.target.closest('tr[data-profile-id]');
                 if (!row || row.querySelector('td[colspan]')) return;
 
+                const profileWrapper = document.querySelector('.profile-table-wrapper');
+
                 if (selectedProfileRow === row) {
                     row.classList.remove('selected');
                     profileActionButtons.style.display = 'none';
                     selectedProfileRow = null;
+                    // Restore full height
+                    if (profileWrapper) {
+                        profileWrapper.classList.remove('collapsed');
+                    }
                 } else {
                     if (selectedProfileRow) {
                         selectedProfileRow.classList.remove('selected');
@@ -1214,6 +1240,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     row.classList.add('selected');
                     profileActionButtons.style.display = 'flex';
                     selectedProfileRow = row;
+                    // Reduce height to keep buttons visible
+                    if (profileWrapper) {
+                        profileWrapper.classList.add('collapsed');
+                    }
 
                     // Load and show profile modal
                     loadProfileModal(row.dataset.profileId, row.dataset.coopId);
@@ -1339,10 +1369,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = e.target.closest('tr[data-coop-id]');
             if (!row || row.querySelector('td[colspan]')) return;
 
+            const deactivatedWrapper = document.querySelector('#deactivated-coops .coop-table-wrapper');
+
             if (selectedDeactivatedCoopRow === row) {
                 row.classList.remove('selected');
                 deactivatedActionButtons.style.display = 'none';
                 selectedDeactivatedCoopRow = null;
+                // Restore full height
+                if (deactivatedWrapper) {
+                    deactivatedWrapper.classList.remove('collapsed');
+                }
             } else {
                 if (selectedDeactivatedCoopRow) {
                     selectedDeactivatedCoopRow.classList.remove('selected');
@@ -1350,6 +1386,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.classList.add('selected');
                 deactivatedActionButtons.style.display = 'flex';
                 selectedDeactivatedCoopRow = row;
+                // Reduce height to keep buttons visible
+                if (deactivatedWrapper) {
+                    deactivatedWrapper.classList.add('collapsed');
+                }
             }
         });
     }

@@ -144,6 +144,85 @@
     margin-bottom: 10px;
 }
 
+/* Table Header Row with Controls */
+.table-header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.table-header-row h2 {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.table-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex: 1;
+}
+
+/* Search Bar Wrapper */
+.search-bar-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 10px 14px 10px 36px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9em;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    box-sizing: border-box;
+}
+
+.search-bar:focus {
+    border-color: #860000;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(134, 0, 0, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    pointer-events: none;
+    font-size: 1rem;
+}
+
+/* Filter Select Styles */
+.filter-select {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9em;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    color: #333;
+    min-width: 140px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.filter-select:focus {
+    border-color: #860000;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(134, 0, 0, 0.1);
+}
+
 .table-wrapper {
     height: 400px;
     /* FIX: Changed from auto to scroll to prevent UI jumping when switching tabs */
@@ -672,5 +751,25 @@ table tbody tr.selected {
         flex: 1;
         min-width: 120px;
         justify-content: center;
+    }
+
+    /* Table header responsive */
+    .table-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .table-header-controls {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .search-bar-wrapper {
+        width: 100%;
+        max-width: none;
+    }
+
+    .filter-select {
+        width: 100%;
     }
 }

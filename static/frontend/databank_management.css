@@ -211,18 +211,10 @@
 }
 .search-bar input:focus { border-color: #a91e2c; background: #fff; }
 
-/* =========================================
-   3. Table Styles (Fixed Layout logic)
-   ========================================= */
-.table-section {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-}
 
-.table-wrapper {
-    height: 200px; /* Fixed height like account management */
+/* COOPERATIVES MANAGEMENT TABLES - Separate styles */
+.coop-table-wrapper {
+    height: 250px; /* Increased from 200px to show 1 more row */
     overflow-y: auto; /* Vertical scroll */
     overflow-x: auto; /* Horizontal scroll if needed */
     padding-right: 5px;
@@ -232,10 +224,54 @@
     background: #fff;
     width: 100%;
     box-sizing: border-box;
+    transition: height 0.3s ease; /* Smooth transition when height changes */
+}
+
+/* Collapsed state when a row is selected in coop table */
+.coop-table-wrapper.collapsed {
+    height: 180px; /* Reduce height to keep action buttons visible */
+}
+
+/* SUBMITTED PROFILES TABLE - Separate styles */
+.profile-table-wrapper {
+    height: 500px; /* Increased from 450px to show 1 more row */
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fff;
+    padding-right: 5px;
+    box-sizing: border-box;
+    margin-bottom: 15px;
+    width: 100%;
+    transition: height 0.3s ease; /* Smooth transition when height changes */
+}
+
+/* Collapsed state when a row is selected in profiles table */
+.profile-table-wrapper.collapsed {
+    height: 300px; /* Reduce height to keep approve/cancel buttons visible */
+}
+
+.table-wrapper {
+    height: 250px; /* Increased from 200px to show 1 more row */
+    overflow-y: auto; /* Vertical scroll */
+    overflow-x: auto; /* Horizontal scroll if needed */
+    padding-right: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd; /* Match account management border */
+    border-radius: 10px;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    transition: height 0.3s ease; /* Smooth transition when height changes */
+}
+
+.table-wrapper.collapsed {
+    height: 180px; /* Reduce height to keep action buttons visible */
 }
 
 .summary-wrapper {
-    height: 200px; /* Fits header + 3 data rows (approx 50px per row + header) */
+    height: 250px; /* Increased from 200px to show 1 more row */
     overflow-y: auto;
     overflow-x: auto;
     border: 1px solid #ddd;
@@ -245,10 +281,15 @@
     box-sizing: border-box;
     margin-bottom: 15px;
     width: 100%;
+    transition: height 0.3s ease; /* Smooth transition when height changes */
+}
+
+.summary-wrapper.collapsed {
+    height: 180px; /* Reduce height to keep action buttons visible */
 }
 
 .detailed-wrapper {
-    height: 200px; /* Fixed height like account management - same for both tabs */
+    height: 500px; /* Increased from 450px to show 1 more row */
     overflow-y: auto;
     overflow-x: auto;
     border: 1px solid #ddd;
@@ -258,20 +299,38 @@
     box-sizing: border-box;
     margin-bottom: 15px;
     width: 100%;
+    transition: height 0.3s ease; /* Smooth transition when height changes */
 }
-.table-wrapper::-webkit-scrollbar { 
+
+/* Collapsed state when a row is selected */
+.detailed-wrapper.collapsed {
+    height: 300px; /* Reduce height to keep approve/cancel buttons visible */
+}
+
+.table-wrapper::-webkit-scrollbar,
+.coop-table-wrapper::-webkit-scrollbar,
+.profile-table-wrapper::-webkit-scrollbar { 
     width: 10px; 
     height: 10px; 
 }
-.table-wrapper::-webkit-scrollbar-track {
+
+.table-wrapper::-webkit-scrollbar-track,
+.coop-table-wrapper::-webkit-scrollbar-track,
+.profile-table-wrapper::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
 }
-.table-wrapper::-webkit-scrollbar-thumb { 
+
+.table-wrapper::-webkit-scrollbar-thumb,
+.coop-table-wrapper::-webkit-scrollbar-thumb,
+.profile-table-wrapper::-webkit-scrollbar-thumb { 
     background: #c1c1c1; 
     border-radius: 10px; 
 }
-.table-wrapper::-webkit-scrollbar-thumb:hover {
+
+.table-wrapper::-webkit-scrollbar-thumb:hover,
+.coop-table-wrapper::-webkit-scrollbar-thumb:hover,
+.profile-table-wrapper::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
 }
 

@@ -262,7 +262,18 @@
     {% endif %}
 
     <div class="table-section {% if request.session.role == 'staff' %}active{% endif %}" id="officers">
-        <h2>Officer User Accounts</h2>
+        <div class="table-header-row">
+            <h2>Officer User Accounts</h2>
+            <div class="table-header-controls">
+                <select id="officer-coop-filter" class="filter-select">
+                    <option value="">All Cooperatives</option>
+                </select>
+                <div class="search-bar-wrapper">
+                    <input type="text" id="officer-search" class="search-bar" placeholder="Search by name, email, cooperative, or position...">
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+            </div>
+        </div>
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -814,15 +825,30 @@
             document.getElementById('confirm-edit-btn').addEventListener('click', () => { closeModal(el.confirmModal); openModal(el.onboardModal); });
             document.getElementById('confirm-btn').addEventListener('click', () => handleConfirmButton(el));
             
-            // Use { once: false } but check with guard flag to prevent double submission
+            // Use { once: true } to ensure the listener only fires once
             const sendFinalBtn = document.getElementById('send-final-btn');
             if (sendFinalBtn) {
-                sendFinalBtn.addEventListener('click', function () { handleSendCredentials(this, el); });
+                // Clone and replace to remove any previous listeners
+                const newSendBtn = sendFinalBtn.cloneNode(true);
+                sendFinalBtn.parentNode.replaceChild(newSendBtn, sendFinalBtn);
+                newSendBtn.addEventListener('click', function () { handleSendCredentials(this, el); }, { once: false });
             }
 
-            document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => handleEditClick(el)));
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => handleDeleteClick(el)));
-            document.querySelectorAll('.reactivate-btn').forEach(btn => btn.addEventListener('click', () => handleReactivateClick(el)));
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', () => handleEditClick(el));
+            });
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', () => handleDeleteClick(el));
+            });
+            document.querySelectorAll('.reactivate-btn').forEach(btn => {
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                newBtn.addEventListener('click', () => handleReactivateClick(el));
+            });
 
             // Password Verify Listeners
             document.getElementById('password-verify-cancel-btn').addEventListener('click', () => {
@@ -1064,16 +1090,29 @@
         let isSendingCredentials = false; // Guard flag to prevent double submission
         
         function handleSendCredentials(sendButton, el) {
-            // Prevent double submission
+            // Prevent double submission with multiple checks
             if (isSendingCredentials) {
                 console.log('Send credentials already in progress, ignoring duplicate request');
                 return;
             }
             
+            // Double-check that button isn't already disabled
+            if (sendButton.disabled) {
+                console.log('Button is already disabled, preventing duplicate submission');
+                return;
+            }
+            
             isSendingCredentials = true;
-            sendButton.disabled = true; sendButton.innerHTML = '<span class="spinner"></span> Sending...';
+            sendButton.disabled = true; 
+            const originalText = sendButton.innerHTML;
+            sendButton.innerHTML = '<span class="spinner"></span> Sending...';
+            
             fetch('/account_management/api/send-credentials/', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken() },
+                method: 'POST', 
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': getCsrfToken() 
+                },
                 body: JSON.stringify(submittedData)
             }).then(r => r.json()).then(data => {
                 if (data.status === 'success') {
@@ -1088,9 +1127,12 @@
                     }
                     closeModal(el.sendCredModal); el.onboardForm.reset(); showNotification(`Created!`, 'success');
                 } else showNotification(data.message, 'error');
-            }).catch(e => showNotification(e.message, 'error')).finally(() => { 
+            }).catch(e => {
+                console.error('Fetch error:', e);
+                showNotification(e.message || 'An error occurred', 'error');
+            }).finally(() => { 
                 sendButton.disabled = false; 
-                sendButton.innerHTML = "Send"; 
+                sendButton.innerHTML = originalText; 
                 isSendingCredentials = false; // Reset guard flag
             });
         }
@@ -1398,8 +1440,88 @@
         function openModal(modal) { modal.classList.remove('hidden'); }
         function closeModal(modal) { modal.classList.add('hidden'); }
 
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize);
-        else initialize();
+        // Search and filter functionality for officers table
+        function initializeOfficerSearch() {
+            const searchInput = document.getElementById('officer-search');
+            const coopFilterSelect = document.getElementById('officer-coop-filter');
+            
+            if (!searchInput) return;
+
+            // Store original order of rows
+            const tableBody = document.getElementById('officer-table-body');
+            const originalRows = Array.from(tableBody.querySelectorAll('tr[data-user-id]'));
+
+            // Populate cooperative filter dropdown
+            function populateCoopFilter() {
+                const rows = tableBody.querySelectorAll('tr[data-user-id]');
+                const coops = new Set();
+                
+                rows.forEach(row => {
+                    const coop = row.cells[2]?.textContent.trim();
+                    if (coop) coops.add(coop);
+                });
+                
+                coopFilterSelect.innerHTML = '<option value="">All Cooperatives</option>';
+                Array.from(coops).sort().forEach(coop => {
+                    const option = document.createElement('option');
+                    option.value = coop;
+                    option.textContent = coop;
+                    coopFilterSelect.appendChild(option);
+                });
+            }
+
+            // Apply filters and search
+            function applyFilters() {
+                const query = searchInput.value.toLowerCase();
+                const selectedCoop = coopFilterSelect.value;
+
+                // Filter rows based on search and coop
+                let filteredRows = originalRows.filter(row => {
+                    const name = row.cells[1]?.textContent.toLowerCase() || '';
+                    const coop = row.cells[2]?.textContent.toLowerCase() || '';
+                    const email = row.cells[3]?.textContent.toLowerCase() || '';
+                    const position = row.cells[5]?.textContent.toLowerCase() || '';
+
+                    const matchesSearch = name.includes(query) || 
+                                        coop.includes(query) || 
+                                        email.includes(query) || 
+                                        position.includes(query);
+
+                    const matchesCoop = !selectedCoop || row.cells[2]?.textContent === selectedCoop;
+
+                    return matchesSearch && matchesCoop;
+                });
+
+                // Hide all rows first
+                originalRows.forEach(row => row.style.display = 'none');
+
+                // Show filtered rows
+                filteredRows.forEach(row => row.style.display = '');
+                
+                // Renumber visible rows
+                let counter = 1;
+                filteredRows.forEach(row => {
+                    row.cells[0].textContent = counter++;
+                });
+            }
+
+            // Event listeners
+            searchInput.addEventListener('keyup', applyFilters);
+            coopFilterSelect.addEventListener('change', applyFilters);
+
+            // Initialize
+            populateCoopFilter();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                initialize();
+                initializeOfficerSearch();
+            });
+        } else {
+            initialize();
+            initializeOfficerSearch();
+        }
     })();
 </script>
 {% endblock %}

@@ -429,6 +429,17 @@ a { text-decoration: none; }
 .content-scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 20px 30px; }
 .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; opacity: 0; pointer-events: none; transition: 0.3s; }
 
+/* Ensure modals are always above sidebar-overlay and clickable */
+.modal {
+  z-index: 10100 !important;
+  pointer-events: auto !important;
+}
+
+.modal-backdrop {
+  z-index: 10099 !important;
+  pointer-events: auto !important;
+}
+
 /* RESPONSIVE */
 @media (max-width: 992px) {
     .dashboard-layout { grid-template-columns: 1fr; }
