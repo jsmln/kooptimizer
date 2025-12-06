@@ -109,7 +109,10 @@ class AnnouncementScheduler:
                             announcement.save()
                             logger.info(f"✓ Sent SMS announcement: {announcement.title}")
                         else:
-                            logger.error(f"✗ Failed to send SMS announcement: {announcement.title} - {message}")
+                            # Log technical error for admins
+                            logger.error(f"✗ Failed to send SMS announcement: {announcement.title} - Technical Error: {message}")
+                            # Could store user-friendly message for future UI display
+                            logger.warning(f"User-friendly message: SMS service temporarily unavailable. Contact support for assistance.")
                     
                     elif announcement.type == 'e-mail':
                         from apps.core.services.email_service import EmailService
@@ -125,7 +128,10 @@ class AnnouncementScheduler:
                             announcement.save()
                             logger.info(f"✓ Sent Email announcement: {announcement.title}")
                         else:
-                            logger.error(f"✗ Failed to send Email announcement: {announcement.title} - {message}")
+                            # Log technical error for admins
+                            logger.error(f"✗ Failed to send Email announcement: {announcement.title} - Technical Error: {message}")
+                            # Could store user-friendly message for future UI display
+                            logger.warning(f"User-friendly message: Email service temporarily unavailable. Contact support for assistance.")
                 
                 except Exception as e:
                     logger.error(f"Error processing announcement {announcement.announcement_id}: {str(e)}")

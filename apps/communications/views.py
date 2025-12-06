@@ -18,6 +18,33 @@ from .utils import process_attachment, MAX_ATTACHMENT_SIZE
 from datetime import datetime
 from apps.core.utils.activity_logger import log_announcement_sent
 
+def get_user_friendly_error_message(service_type, technical_error):
+    """
+    Convert technical error messages to user-friendly messages.
+    
+    Args:
+        service_type: 'SMS' or 'Email'
+        technical_error: The technical error message from the service
+    
+    Returns:
+        A user-friendly error message
+    """
+    error_lower = str(technical_error).lower()
+    
+    # Common error patterns
+    if 'api token' in error_lower or 'authentication' in error_lower or 'unauthorized' in error_lower:
+        return f"{service_type} service is currently unavailable. Please contact support for assistance."
+    elif 'timeout' in error_lower or 'connection' in error_lower:
+        return f"{service_type} service is experiencing connectivity issues. Please try again later or contact support."
+    elif 'invalid' in error_lower and 'number' in error_lower:
+        return f"Some recipient phone numbers are invalid. Please verify the contact information."
+    elif 'no recipients' in error_lower or 'empty' in error_lower:
+        return f"No recipients found for this announcement. Please check your recipient settings."
+    elif 'quota' in error_lower or 'limit' in error_lower or 'balance' in error_lower:
+        return f"{service_type} service has reached its sending limit. Please contact support to resolve this issue."
+    else:
+        return f"{service_type} service is temporarily unavailable. Please try again later or contact support for assistance."
+
 # Import your models
 from .models import Cooperative, Officer, Announcement, Message, MessageRecipient
 from apps.users.models import User
@@ -417,7 +444,8 @@ def handle_announcement(request):
             success, message = sms_service.send_bulk_announcement(saved_announcement_id, content)
             
             if not success:
-                return JsonResponse({'status': 'error', 'message': f"SMS API Error: {message}"}, status=500)
+                user_friendly_msg = get_user_friendly_error_message('SMS', message)
+                return JsonResponse({'status': 'error', 'message': user_friendly_msg}, status=500)
             
             # Log activity
             if creator_id and creator_role:
@@ -432,7 +460,8 @@ def handle_announcement(request):
             )
             
             if not success:
-                return JsonResponse({'status': 'error', 'message': f"Email API Error: {message}"}, status=500)
+                user_friendly_msg = get_user_friendly_error_message('Email', message)
+                return JsonResponse({'status': 'error', 'message': user_friendly_msg}, status=500)
             
             # Log activity
             if creator_id and creator_role:

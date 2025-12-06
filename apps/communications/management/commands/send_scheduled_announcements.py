@@ -51,9 +51,17 @@ class Command(BaseCommand):
                         )
                     else:
                         error_count += 1
+                        # Show user-friendly message in command output
+                        user_msg = "SMS service temporarily unavailable. Contact support for assistance."
                         self.stdout.write(
                             self.style.ERROR(
-                                f"✗ Failed to send SMS announcement: {announcement.title} - {message}"
+                                f"✗ Failed to send SMS announcement: {announcement.title} - {user_msg}"
+                            )
+                        )
+                        # Log technical details for debugging
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"   Technical details: {message}"
                             )
                         )
                         
@@ -77,9 +85,17 @@ class Command(BaseCommand):
                         )
                     else:
                         error_count += 1
+                        # Show user-friendly message in command output
+                        user_msg = "Email service temporarily unavailable. Contact support for assistance."
                         self.stdout.write(
                             self.style.ERROR(
-                                f"✗ Failed to send Email announcement: {announcement.title} - {message}"
+                                f"✗ Failed to send Email announcement: {announcement.title} - {user_msg}"
+                            )
+                        )
+                        # Log technical details for debugging
+                        self.stdout.write(
+                            self.style.WARNING(
+                                f"   Technical details: {message}"
                             )
                         )
                     

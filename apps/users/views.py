@@ -522,7 +522,7 @@ def first_login_setup(request):
                 return render(request, 'login.html', context)
             
             otp_code = f"{otp_1}{otp_2}{otp_3}{otp_4}"
-            success, error = otp_service.verify_otp(otp_code)
+            success, error = otp_service.verify_otp(user.mobile_number, otp_code)
             
             if success:
                 messages.success(request, 'Phone number verified successfully.')

@@ -17,6 +17,24 @@
 <!-- PDF.js library for document preview -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
+/* *** AGGRESSIVE OVERRIDE: FORCE SCROLLING ON PARENTS *** */
+/* Target the main body and HTML elements */
+    html, body {
+        height: 100% !important;
+        overflow-y: auto !important; /* Ensure the main viewport can scroll */
+        overflow-x: hidden !important;
+    }
+
+    /* Target the main dashboard content wrapper (Likely the culprit) */
+    .dashboard-content-wrapper, 
+    .dashboard-main-area, 
+    .announcement-layout {
+        height: 100% !important;
+        overflow: visible !important; /* Allow the content to exceed this boundary */
+        /* If visible doesn't work, try auto, but usually a parent should be visible */
+        padding: 0 !important;
+        margin: 0 !important;
+    }
     /* Profile Dropdown */
     .profile-dropdown {
         position: relative;
@@ -157,8 +175,8 @@
     /* Adjust layout height to match messages page - fixed height */
     .announcement-layout {
         display: flex !important;
-        width: 96% !important;
-        height: 92% !important;
+        width: calc(100% - 40px) !important;
+        height: calc(100vh - 120px) !important;
         max-width: 1400px !important;
         gap: 20px !important;
         background: transparent !important;
@@ -166,7 +184,22 @@
         position: relative !important;
         z-index: 10 !important;
         min-height: 0 !important;
-        margin: auto !important;
+        margin: 20px auto !important;
+        padding: 0 !important;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .announcement-layout {
+            width: 100% !important;
+            gap: 10px !important;
+            padding: 0 10px !important;
+        }
+
+        .announcement-sidebar {
+            width: 200px !important;
+            min-width: 200px !important;
+        }
     }
 
     /* --- 2. LEFT CARD: NAVIGATION SIDEBAR --- */
@@ -257,6 +290,7 @@
         width: 0 !important;
         min-width: 0 !important;
         height: 100% !important;
+        max-height: 100% !important;
         background: #fff !important;
         border-radius: 16px !important;
         box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.03) !important;
@@ -270,16 +304,83 @@
         min-height: 0 !important;
     }
 
-    /* Content Header - Only for list view, not create view */
-    .announcement-content:not(#create-view-container) .content-header,
-    .content-header:not(#create-view-container .content-header) {
-        height: 70px;
-        padding: 0 25px;
-        border-bottom: 1px solid #f0f0f0;
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
-        background: #fff;
+    /* Content Header - Unified header for both views */
+    .announcement-content > .content-header {
+        flex-shrink: 0 !important;
+        height: 70px !important;
+        min-height: 70px !important;
+        max-height: 70px !important;
+        width: 100% !important;
+        padding: 0 25px !important;
+        border-bottom: 1px solid #f0f0f0 !important;
+        display: flex !important;
+        align-items: center !important;
+        background: #fff !important;
+        position: relative !important;
+        z-index: 100 !important;
+    }
+
+    .announcement-layout .announcement-content {
+        flex: 1 !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow: hidden !important;
+    }
+
+    /* Ensure list and create containers fill remaining space */
+    #list-view-container,
+    #create-view-container {
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+    }
+
+    /* Create view specific header - Match design: title left, cancel right */
+    #create-view-container .content-header {
+        height: 70px !important;
+        min-height: 70px !important;
+        max-height: 70px !important;
+        padding: 0 25px !important;
+        border-bottom: 1px solid #f0f0f0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-shrink: 0 !important;
+        background: #fff !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+    }
+
+    #create-view-container .content-header h2 {
+        margin: 0 !important;
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        color: #2B3674 !important;
+    }
+
+    #create-view-container .content-header #cancel-create-btn {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        color: #495057 !important;
+        padding: 8px 16px !important;
+        border-radius: 6px !important;
+        font-size: 0.9rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        pointer-events: auto !important;
+        z-index: 101 !important;
+        position: relative !important;
+    }
+
+    #create-view-container .content-header #cancel-create-btn:hover {
+        background: #e9ecef !important;
+        border-color: #adb5bd !important;
+    }
+
+    #create-view-container .content-header #cancel-create-btn i {
+        font-size: 1rem !important;
     }
 
     /* Search Input */
@@ -398,14 +499,453 @@
 
     /* Tom Select Customization */
     .ts-control {
-        border-radius: 8px;
-        border: 1px solid #eee;
-        padding: 10px;
+        border: 1px solid #b71c1c !important;
+        border-radius: 8px !important;
+        padding: 10px 15px !important;
+        min-height: 42px !important;
+        background-color: #fcfcfc !important;
+        font-size: 1rem !important;
+        width: 100% !important;
+        line-height: 1.5 !important;
     }
 
     .ts-control.focus {
-        border-color: #b71c1c;
-        box-shadow: none;
+        border-color: #b71c1c !important;
+        box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1) !important;
+        outline: none !important;
+        background: #fff !important;
+    }
+
+    .ts-control.disabled {
+        background-color: #e9ecef !important;
+        opacity: 1 !important;
+        cursor: not-allowed !important;
+        color: #6c757d !important;
+    }
+
+    .ts-control.disabled.focus {
+        border-color: #b71c1c !important;
+        box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1) !important;
+    }
+
+    .ts-wrapper {
+        width: 100% !important;
+        position: relative !important;
+    }
+
+    .ts-wrapper.multi .ts-control {
+        padding: 8px 12px !important;
+        min-height: 42px !important;
+    }
+
+    .ts-dropdown {
+        border: 1px solid #eee !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+        z-index: 1000 !important;
+        margin-top: 4px !important;
+    }
+
+    .ts-dropdown .option {
+        padding: 10px 15px !important;
+        cursor: pointer !important;
+    }
+
+    .ts-dropdown .option:hover,
+    .ts-dropdown .option.active {
+        background-color: #fff0f2 !important;
+        color: #b71c1c !important;
+    }
+
+    .ts-dropdown .option.selected {
+        background-color: #b71c1c !important;
+        color: #fff !important;
+    }
+
+    /* Tom Select selected items (tags) styling */
+    .ts-wrapper.multi .ts-control > div {
+        background-color: #b71c1c !important;
+        color: #fff !important;
+        border: none !important;
+        padding: 4px 8px !important;
+        border-radius: 4px !important;
+        margin: 2px !important;
+    }
+
+    .ts-wrapper.multi .ts-control > div .remove {
+        color: #fff !important;
+        border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+        padding-left: 6px !important;
+        margin-left: 6px !important;
+    }
+
+    .ts-wrapper.multi .ts-control > div .remove:hover {
+        background-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* --- CREATE VIEW STYLES --- */
+    #create-view-container {
+        flex-direction: column !important;
+        height: 92% !important;
+        max-height: 92% !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+
+    /* Ensure create view fills parent when visible */
+    .announcement-content>#create-view-container {
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
+        height: 100% !important;
+    }
+
+    /* Override d-none when create-view is shown */
+    #create-view-container.d-flex {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    {% comment %} #create-view-container .list-scroll-area {
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background: #fff !important;
+        min-height: 0 !important;
+        height: 0 !important;
+        /* Force flex to calculate height */
+        -webkit-overflow-scrolling: touch !important;
+        position: relative !important;
+        z-index: 1 !important;
+        /* Ensure scrolling works */
+        overscroll-behavior: contain !important;
+        padding: 25px !important;
+        padding-bottom: 40px !important;
+        box-sizing: border-box !important;
+    } {% endcomment %}
+
+    {% comment %} /* FIXED: Form Scroll Container */
+    #create-view-container .list-scroll-area {
+        flex: 1 1 auto !important;      /* Grow to fill available space */
+        height: auto !important;        /* Allow height to adjust dynamically */
+        min-height: 0 !important;       /* Prevent flex item from overflowing parent */
+        overflow-y: auto !important;    /* Enable vertical scrolling */
+        overflow-x: hidden !important;
+        background: #fff !important;
+        
+        /* Spacing adjustments */
+        padding: 25px !important;
+        padding-bottom: 100px !important; /* Extra space at bottom so form isn't covered by footer */
+        box-sizing: border-box !important;
+        
+        /* Positioning context */
+        position: relative !important;
+        z-index: 1 !important;
+    } {% endcomment %}
+
+    /* FIXED: Form Scroll Container */
+    {% comment %} #create-view-container .list-scroll-area {
+        /* Flex magic: Grow to fill space, shrinking allowed */
+        flex: 1 1 0 !important; 
+        
+        /* Layout */
+        width: 100% !important;
+        
+        /* Scrolling: Auto Y-axis, hidden X-axis */
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        
+        /* Reset height constraints that cause squashing */
+        height: auto !important;
+        min-height: 0 !important; 
+        max-height: none !important;
+        
+        /* Visuals */
+        background: #fff !important;
+        padding: 25px !important;
+        
+        /* Ensure it's positioned correctly in stack */
+        position: relative !important;
+        display: block !important;
+    } {% endcomment %}
+
+    /* FINAL ATTEMPT: Robust Scroll Area */
+    /* TARGET: .list-scroll-area (The content that needs to scroll) */
+    {% comment %} #create-view-container .list-scroll-area {
+        position: absolute !important;
+        top: 70px !important;     /* Below the header height */
+        bottom: 80px !important;  /* Above the footer height (70px + 10px margin) */
+        left: 0 !important;
+        right: 0 !important;
+        
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding: 0 !important; 
+        
+        background: #fff !important;
+        z-index: 1 !important;
+    } {% endcomment %}
+    /* NEW: Form Scroll Container - fills space between header and footer */
+    .form-scroll-container {
+        flex: 1 !important;
+        min-height: 0 !important;
+        max-height: calc(100vh - 240px) !important; /* Reduced to leave space for footer */
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        background: #fff !important;
+        position: relative !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .form-scroll-content {
+        padding: 25px !important;
+        padding-bottom: 100px !important;
+        min-height: 100% !important;
+    }
+
+    #create-view-container form {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Ensure all form elements are interactive and visible */
+    #create-view-container form * {
+        pointer-events: auto !important;
+        opacity: 1 !important;
+    }
+
+    /* Sticky Footer - Fixed at bottom with fixed height */
+    .sticky-footer {
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        background: #fff !important;
+        border-top: 1px solid #f0f0f0 !important;
+        height: 70px !important;
+        min-height: 70px !important;
+        max-height: 70px !important;
+        padding: 0 25px !important;
+        z-index: 200 !important;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05) !important;
+        display: none !important;
+        pointer-events: auto !important;
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+    }
+
+    .sticky-footer.show {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }
+
+    /* Ensure footer buttons are clickable and visible */
+    .sticky-footer button,
+    .sticky-footer .btn,
+    .sticky-footer .btn-group {
+        pointer-events: auto !important;
+        z-index: 201 !important;
+        position: relative !important;
+        opacity: 1 !important;
+    }
+
+    /* Recipient Row - Ensure side-by-side layout */
+    .recipient-container {
+        background-color: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+    }
+
+    .recipient-row > .d-flex {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
+        align-items: flex-start !important;
+        width: 100% !important;
+    }
+
+    .recipient-row > .d-flex > .flex-fill {
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        max-width: 50% !important;
+    }
+
+    .recipient-row .flex-fill .form-select,
+    .recipient-row .flex-fill .ts-wrapper {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .recipient-row > .d-flex > .btn {
+        flex: 0 0 auto !important;
+        align-self: flex-start !important;
+        margin-top: 0 !important;
+    }
+
+    /* Select All Cooperatives Button */
+    #select-all-coops-btn:hover:not(:disabled) {
+        background-color: #a50000 !important;
+        border-color: #a50000 !important;
+    }
+
+    #select-all-coops-btn:disabled,
+    #select-all-coops-btn.disabled {
+        background-color: #6b6b6b !important;
+        border-color: #6b6b6b !important;
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+    }
+
+    /* IMPORTANT: Remove or comment out the @media block that was here.
+       It was forcing the column layout on smaller screens.
+    */
+    /* @media (max-width: 768px) {
+        .recipient-container .d-flex {
+            flex-direction: column !important;
+        }
+        .recipient-container .flex-fill {
+            width: 100% !important;
+        }
+    } 
+    */
+
+    /* Button group alignment - ensure buttons are on one row, aligned right with minimal spacing */
+    #form-footer .d-flex {
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Ensure all buttons stay on one row with minimal spacing */
+    #form-footer button,
+    #form-footer .btn-group {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        margin: 0 !important;
+    }
+
+    /* Ensure scrollbar is visible and functional */
+    .form-scroll-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .form-scroll-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .form-scroll-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    .form-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    /* Connected button group - no gap between send and dropdown */
+    #send-button-group {
+        display: inline-flex;
+        margin: 0;
+        gap: 0;
+        position: relative;
+        z-index: 102;
+    }
+
+    #send-button-group .btn {
+        border-radius: 0;
+        margin: 0;
+        margin-left: 0;
+    }
+
+    #send-button-group .btn:first-child {
+        border-top-left-radius: 6px;
+        border-bottom-left-radius: 6px;
+        margin-right: 0;
+    }
+
+    #send-button-group .dropdown-toggle-split {
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
+        border-left: 1px solid rgba(255, 255, 255, 0.2);
+        padding-left: 8px;
+        padding-right: 8px;
+        margin-left: 0;
+    }
+
+    #send-button-group .btn:not(:first-child):not(:last-child) {
+        border-radius: 0;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    #send-button-group .btn {
+        border-radius: 0;
+    }
+
+    #send-button-group .btn:first-child {
+        border-top-left-radius: 6px;
+        border-bottom-left-radius: 6px;
+    }
+
+    #send-button-group .dropdown-toggle-split {
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
+        border-left: 1px solid rgba(255, 255, 255, 0.2);
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    /* Ensure dropdown menu is visible above all elements */
+    #send-button-group .dropdown-menu {
+        z-index: 1050 !important;
+        position: absolute !important;
+        bottom: 100% !important;
+        top: auto !important;
+        margin-bottom: 4px !important;
+        margin-top: 0 !important;
+        min-width: 160px !important;
+        width: auto !important;
+        right: 0 !important;
+        left: auto !important;
+        padding: 4px 0 !important;
+    }
+
+    #send-button-group .dropdown-menu li {
+        padding: 0 !important;
+        margin: 0 !important;
+        list-style: none !important;
+    }
+
+    #send-button-group .dropdown-menu .dropdown-item {
+        padding: 10px 16px !important;
+        font-size: 0.9rem !important;
+        white-space: nowrap !important;
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        text-decoration: none !important;
+        color: #2B3674 !important;
+        cursor: pointer !important;
+    }
+
+    #send-button-group .dropdown-menu .dropdown-item:hover {
+        background-color: #f8f9fa !important;
+        color: #2B3674 !important;
+    }
+
+    #send-button-group .dropdown-menu .dropdown-item i {
+        margin-right: 8px !important;
     }
 
     /* ========================================
@@ -740,39 +1280,28 @@
 <div id="announcement-notifications" aria-live="polite" aria-atomic="true"
     style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
 
-<!-- Store data in data attributes to avoid linter errors -->
-<div id="announcement-data" data-cooperatives='{{ cooperatives_json|escapejs }}'
-    data-officers='{{ officers_by_coop_json|escapejs }}' data-user-role='{{ request.session.role|default:"" }}'
-    data-user-id='{% if request.session.user_id %}{{ request.session.user_id }}{% else %}{% endif %}'
-    style="display: none;"></div>
+<!-- JSON data for JavaScript (safe method) -->
+<script id="cooperatives-data" type="application/json">{{ cooperatives_json|safe }}</script>
+<script id="officers-data" type="application/json">{{ officers_by_coop_json|safe }}</script>
+<script id="userId"
+    type="application/json">{% if request.session.user_id %}{{ request.session.user_id }}{% else %}null{% endif %}</script>
 
 <script>
-    // Load data from data attributes to avoid linter errors with Django templates
+    // Embed data from Django view into JavaScript variables
+    // Data is loaded from JSON script tags (safest method)
     let cooperativesData = [];
     let officersByCoopData = {};
-    let currentUserRole = '';
-    let currentUserId = null;
 
     try {
-        const dataElement = document.getElementById('announcement-data');
-        if (dataElement) {
-            const cooperativesJsonStr = dataElement.getAttribute('data-cooperatives');
-            const officersJsonStr = dataElement.getAttribute('data-officers');
-            const userRole = dataElement.getAttribute('data-user-role');
-            const userIdStr = dataElement.getAttribute('data-user-id');
+        // Parse JSON from script tags (safest method, avoids escaping issues)
+        const cooperativesScript = document.getElementById('cooperatives-data');
+        const officersScript = document.getElementById('officers-data');
 
-            if (cooperativesJsonStr) {
-                cooperativesData = JSON.parse(cooperativesJsonStr);
-            }
-            if (officersJsonStr) {
-                officersByCoopData = JSON.parse(officersJsonStr);
-            }
-            if (userRole) {
-                currentUserRole = userRole;
-            }
-            if (userIdStr) {
-                currentUserId = parseInt(userIdStr) || null;
-            }
+        if (cooperativesScript) {
+            cooperativesData = JSON.parse(cooperativesScript.textContent);
+        }
+        if (officersScript) {
+            officersByCoopData = JSON.parse(officersScript.textContent);
         }
 
         // Validate final data
@@ -789,11 +1318,40 @@
         console.error('Error details:', e.message, e.stack);
         cooperativesData = [];
         officersByCoopData = {};
+        // Show notification after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof showNotification === 'function') {
+                    showNotification('Error loading cooperatives. Please refresh the page.', 'error');
+                }
+            });
+        } else {
+            // DOM already loaded, show notification after a short delay to ensure showNotification is defined
+            setTimeout(() => {
+                if (typeof showNotification === 'function') {
+                    showNotification('Error loading cooperatives. Please refresh the page.', 'error');
+                }
+            }, 500);
+        }
+    }
+    const currentUserRole = '{{ request.session.role|default:"" }}';
+
+    // Get user ID from script tag (safer for JSON)
+    let currentUserId = null;
+    try {
+        const userIdScript = document.getElementById('userId');
+        if (userIdScript) {
+            const userIdText = userIdScript.textContent.trim();
+            currentUserId = userIdText === 'null' ? null : JSON.parse(userIdText);
+        }
+    } catch (e) {
+        console.warn('Error parsing userId from JSON script tag:', e);
+        currentUserId = null;
     }
 
     // Debug: Log data to verify it's loaded correctly
-    console.log('Cooperatives Data:', cooperativesData);
-    console.log('Officers by Coop Data:', officersByCoopData);
+    console.log("Cooperatives Data:", cooperativesData);
+    console.log("Officers by Coop Data:", officersByCoopData);
     console.log('User Role:', currentUserRole);
     console.log('User ID:', currentUserId);
 </script>
@@ -839,16 +1397,9 @@
     </div>
 
     <div class="announcement-content">
-
-        <div id="create-view-header" class="content-header d-none">
-            <h2 class="h4 m-0">New Announcement</h2>
-            <button id="cancel-create-btn" class="btn btn-outline-secondary">
-                <i class="bi bi-x-lg"></i> Cancel
-            </button>
-        </div>
-
-        <div id="list-view-container" class="d-flex flex-column h-100">
-            <div class="content-header" style="position: relative;">
+        <!-- Header for both list and create views -->
+        <div class="content-header" id="announcement-header">
+            <div id="list-header" style="display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px;">
                 <div style="display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px;">
                     <div class="search-wrapper">
                         <i class="bi bi-search"></i>
@@ -909,7 +1460,15 @@
                     </div>
                 </div>
             </div>
+            <div id="create-header" class="d-none" style="display:flex; width:100%; align-items:center; justify-content:space-between;">
+                <h2 class="h4 m-0">New Announcement</h2>
+                <button id="cancel-create-btn" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </button>
+            </div>
+        </div>
 
+        <div id="list-view-container" class="d-flex flex-column" style="flex: 1; min-height: 0;">
             <div class="tab-content list-scroll-area">
 
                 <div class="tab-pane fade show active" id="sent-view">
@@ -958,7 +1517,7 @@
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="draft-view" style="display: none;">
+                <div class="tab-pane fade" id="draft-view">
                     <div class="list-group list-group-flush">
                         {% for item in draft_announcements %}
                         <a href="#" class="list-group-item list-group-item-action py-3 open-draft-btn announcement-item"
@@ -1007,7 +1566,7 @@
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="scheduled-view" style="display: none;">
+                <div class="tab-pane fade" id="scheduled-view">
                     <div class="list-group list-group-flush">
                         {% for item in scheduled_announcements %}
                         <a href="#" class="list-group-item list-group-item-action py-3 announcement-item"
@@ -1058,15 +1617,15 @@
             </div>
         </div>
 
-        <div id="create-view-container" class="d-none d-flex flex-column h-100">
-            <div class="content-scroll-area">
-                <div class="view-container" onclick="event.stopPropagation();">
-                    <form id="main-announcement-form" onclick="event.stopPropagation();">
+        <div id="create-view-container" class="d-none" style="flex: 1; min-height: 0; flex-direction: column;">
+            <!-- Scrollable Form Container -->
+            <div class="form-scroll-container">
+                <div class="form-scroll-content">
+                    <form id="main-announcement-form">
                         <div class="mb-3">
                             <label for="announcement-type" class="form-label fw-bold">Select type of
                                 announcement</label>
-                            <select class="form-select" id="announcement-type" onclick="event.stopPropagation();"
-                                onfocus="event.stopPropagation();" onmousedown="event.stopPropagation();">
+                            <select class="form-select" id="announcement-type">
                                 <option value="" selected>Choose...</option>
                                 <option value="sms">SMS</option>
                                 <option value="e-mail">Email</option>
@@ -1074,85 +1633,93 @@
                         </div>
 
                         <div id="dynamic-form-fields" class="d-none">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Recipients</label>
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="text-muted">Add recipients to this announcement.</span>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Recipients</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">Add recipients to this announcement.</span>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm" type="button" id="select-all-coops-btn" style="background-color: #8b0000; color: white; border-color: #8b0000;">
+                                        <i class="bi bi-check-all me-1"></i> Select All Cooperatives
+                                    </button>
                                     <button class="btn btn-sm btn-outline-danger" type="button" id="add-recipient-btn">
                                         <i class="bi bi-plus-circle me-1"></i> Add Recipient
                                     </button>
                                 </div>
+                            </div>
 
-                                <div id="recipient-rows-container" class="d-flex flex-column gap-2">
-                                    <div class="recipient-row d-flex align-items-center gap-2">
-                                        <div class="row g-2 flex-grow-1">
-                                            <div class="col-md-6">
+                            <div id="recipient-rows-container" class="d-flex flex-column gap-3">
+                                <div class="recipient-container border rounded p-3 bg-light">
+                                    <div class="recipient-row">
+                                        <div class="d-flex gap-2 align-items-start">
+                                            <div class="flex-fill">
                                                 <select class="form-select coop-select" name="cooperative_name[]">
                                                     <option value="" selected>Choose Cooperative...</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-6">
+                                            <div class="flex-fill">
                                                 <select class="officer-select" name="cooperative_officers[]" multiple
                                                     disabled>
                                                     <option value="">-- Select Cooperative First --</option>
                                                 </select>
                                             </div>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-danger remove-recipient-btn d-none">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
                                         </div>
-                                        <button type="button"
-                                            class="btn btn-sm btn-outline-danger remove-recipient-btn d-none">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="announcement-title" class="form-label fw-bold">Announcement Title</label>
-                                <input type="text" class="form-control" id="announcement-title"
-                                    placeholder="Enter title">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="announcement-content" class="form-label fw-bold">Announcement
-                                    Content</label>
-                                <textarea class="form-control" id="announcement-content" rows="8"
-                                    placeholder="Type your message..."></textarea>
-                            </div>
-
-                            <div id="email-fields" class="d-none">
-                                <div class="mb-3">
-                                    <label for="formFile" class="form-label fw-bold">Attachment/s</label>
-                                    <input class="form-control" type="file" id="formFile" multiple
-                                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif">
-                                    <div class="form-text">
-                                        <i class="bi bi-info-circle"></i> Maximum total size: 4MB for all files combined
-                                        (Brevo API limit).
-                                        Allowed: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, Images
-                                    </div>
-                                    <div id="attachment-preview" class="mt-2"></div>
                                 </div>
                             </div>
                         </div>
+
+                        <div class="mb-3">
+                            <label for="announcement-title" class="form-label fw-bold">Announcement Title</label>
+                            <input type="text" class="form-control" id="announcement-title" placeholder="Enter title">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="announcement-content" class="form-label fw-bold">Announcement
+                                Content</label>
+                            <textarea class="form-control" id="announcement-content" rows="8"
+                                placeholder="Type your message..."></textarea>
+                        </div>
+
+                        <div id="email-fields" class="d-none">
+                            <div class="mb-3">
+                                <label for="formFile" class="form-label fw-bold">Attachment/s</label>
+                                <input class="form-control" type="file" id="formFile" multiple
+                                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif">
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle"></i> Maximum total size: 4MB for all files combined
+                                    (Brevo API limit).
+                                    Allowed: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, Images
+                                </div>
+                                <div id="attachment-preview" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
                     </form>
                 </div>
             </div>
 
-            <div class="sticky-footer">
-                <div class="d-flex">
+            <!-- Fixed Footer -->
+            <div class="border-top sticky-footer" id="form-footer">
+                <div class="d-flex justify-content-end align-items-right gap-1 flex-nowrap">
                     <button type="button" class="btn btn-secondary" id="save-draft-btn">Save Draft</button>
                     <button type="button" class="btn btn-primary d-none" id="save-changes-btn">Save Changes</button>
 
-                    <div class="btn-group" id="send-button-group">
+                    <div class="btn-group" id="send-button-group" role="group">
                         <button type="button" class="btn btn-danger" id="send-btn-main"
-                            style="background-color: #b71c1c;">
+                            style="background-color: #b71c1c; border-color: #b71c1c;">
                             Send
                         </button>
-                        <button type="button"
-                            class="btn btn-danger dropdown-toggle dropdown-toggle-split btn-split-dropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #b71c1c;">
+                        <button type="button" class="btn btn-danger dropdown-toggle dropdown-toggle-split"
+                            id="send-dropdown-toggle"
+                            aria-expanded="false"
+                            style="background-color: #b71c1c; border-color: #b71c1c; border-left: 1px solid rgba(255, 255, 255, 0.2);">
                             <span class="visually-hidden">Toggle Dropdown</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
+                        <ul class="dropdown-menu dropdown-menu-end" id="send-dropdown-menu">
                             <li><a class="dropdown-item" href="#" id="schedule-send-link">
                                     <i class="bi bi-clock me-2"></i>Schedule Send
                                 </a></li>
@@ -1161,22 +1728,25 @@
                 </div>
             </div>
             <template id="recipient-row-template">
-                <div class="recipient-row d-flex align-items-center gap-2">
-                    <div class="row g-2 flex-grow-1">
-                        <div class="col-md-6">
-                            <select class="form-select coop-select" name="cooperative_name[]">
-                                <option value="" selected>Choose Cooperative...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <select class="officer-select" name="cooperative_officers[]" multiple disabled>
-                                <option value="">-- Select Cooperative First --</option>
-                            </select>
+                <div class="recipient-container border rounded p-3 bg-light">
+                    <div class="recipient-row">
+                        <div class="d-flex gap-2 align-items-start">
+                            <div class="flex-fill">
+                                <select class="form-select coop-select" name="cooperative_name[]">
+                                    <option value="" selected>Choose Cooperative...</option>
+                                </select>
+                            </div>
+                            <div class="flex-fill">
+                                <select class="officer-select" name="cooperative_officers[]" multiple disabled>
+                                    <option value="">-- Select Cooperative First --</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-recipient-btn">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-outline-danger remove-recipient-btn">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
+                </div>
                 </div>
             </template>
 
@@ -1246,8 +1816,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="schedule-send-modal" tabindex="-1" aria-labelledby="schedule-send-modal-label"
-    aria-hidden="true">
+<div class="modal fade" id="schedule-send-modal" tabindex="-1" aria-labelledby="schedule-send-modal-label">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -1395,6 +1964,16 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Check URL fragment and activate the appropriate tab on page load
+        const hash = window.location.hash;
+        if (hash) {
+            const targetTab = document.querySelector(`a[data-bs-target="${hash}"]`);
+            if (targetTab) {
+                const tabTrigger = new bootstrap.Tab(targetTab);
+                tabTrigger.show();
+            }
+        }
+
         // Prevent annoying beforeunload warning after successful save/send/schedule
         window.onbeforeunload = function (e) {
             if (window.isNavigating) return;
@@ -1423,6 +2002,7 @@
         const emailFields = document.getElementById('email-fields');
         const sendBtnMain = document.getElementById('send-btn-main');
         const addRecipientBtn = document.getElementById('add-recipient-btn');
+        const selectAllCoopsBtn = document.getElementById('select-all-coops-btn');
         const recipientRowsContainer = document.getElementById('recipient-rows-container');
         const recipientRowTemplate = document.getElementById('recipient-row-template');
         const saveDraftBtn = document.getElementById('save-draft-btn');
@@ -3125,45 +3705,18 @@
             });
         }
 
-        // Tab toggle logic - ensure only one tab is visible at a time
         var triggerTabList = [].slice.call(document.querySelectorAll('#announcement-nav a'));
         triggerTabList.forEach(function (triggerEl) {
+            var tabTrigger = new bootstrap.Tab(triggerEl);
             triggerEl.addEventListener('click', function (event) {
                 event.preventDefault();
-                event.stopPropagation();
-
                 const isCreateViewVisible = createView.classList.contains('d-flex');
                 if (isCreateViewVisible) {
-                    const tabTrigger = new bootstrap.Tab(triggerEl);
                     pendingTabTrigger = tabTrigger;
                     confirmCancelModal.show();
-                    return;
+                } else {
+                    tabTrigger.show();
                 }
-
-                // Get the target tab pane
-                const targetId = triggerEl.getAttribute('data-bs-target');
-                if (!targetId) return;
-
-                const targetPane = document.querySelector(targetId);
-                if (!targetPane) return;
-
-                // Hide all tab panes first
-                document.querySelectorAll('.tab-pane').forEach(function (pane) {
-                    pane.classList.remove('show', 'active');
-                    pane.classList.add('fade');
-                });
-
-                // Remove active class from all nav links
-                document.querySelectorAll('#announcement-nav .nav-link').forEach(function (link) {
-                    link.classList.remove('active');
-                });
-
-                // Show the target tab pane
-                targetPane.classList.remove('fade');
-                targetPane.classList.add('show', 'active');
-
-                // Add active class to clicked nav link
-                triggerEl.classList.add('active');
             });
         });
 
@@ -3217,36 +3770,49 @@
         }
 
         function initializeTomSelect(selectElement, placeholderText) {
+            if (!selectElement) {
+                console.error('initializeTomSelect: selectElement is null or undefined');
+                return;
+            }
+
             if (selectElement.tomselect) {
                 selectElement.tomselect.destroy();
             }
-            new TomSelect(selectElement, {
-                plugins: ['remove_button'],
-                placeholder: placeholderText,
 
-                onItemAdd: function (value, $item) {
-                    const tomSelect = this;
-                    const totalIndividuals = tomSelect.individualOfficerCount || 0;
-                    let currentSelection = tomSelect.getValue();
+            try {
+                new TomSelect(selectElement, {
+                    plugins: ['remove_button'],
+                    placeholder: placeholderText,
+                    maxItems: null,
+                    create: false,
+                    allowEmptyOption: false,
 
-                    if (value === 'all') {
-                        if (currentSelection.length > 1) {
+                    onItemAdd: function (value, $item) {
+                        const tomSelect = this;
+                        const totalIndividuals = tomSelect.individualOfficerCount || 0;
+                        let currentSelection = tomSelect.getValue();
+
+                        if (value === 'all') {
+                            if (currentSelection.length > 1) {
+                                tomSelect.setValue(['all']);
+                            }
+                            return;
+                        }
+
+                        if (currentSelection.includes('all')) {
+                            const newSelection = currentSelection.filter(v => v !== 'all');
+                            tomSelect.setValue(newSelection);
+                            return;
+                        }
+
+                        if (totalIndividuals > 0 && currentSelection.length === totalIndividuals) {
                             tomSelect.setValue(['all']);
                         }
-                        return;
                     }
-
-                    if (currentSelection.includes('all')) {
-                        const newSelection = currentSelection.filter(v => v !== 'all');
-                        tomSelect.setValue(newSelection);
-                        return;
-                    }
-
-                    if (totalIndividuals > 0 && currentSelection.length === totalIndividuals) {
-                        tomSelect.setValue(['all']);
-                    }
-                }
-            });
+                });
+            } catch (e) {
+                console.error('Error initializing TomSelect:', e);
+            }
         }
 
         function populateCooperatives(coopSelect) {
@@ -3262,6 +3828,10 @@
                 const errorOption = new Option('Error loading cooperatives', '');
                 errorOption.disabled = true;
                 coopSelect.add(errorOption);
+                // Show notification if this is the first row and data is invalid
+                if (coopSelect.closest('.recipient-row') === recipientRowsContainer?.querySelector('.recipient-row:first-child')) {
+                    showNotification('Error loading cooperatives. Please refresh the page.', 'error');
+                }
                 return;
             }
 
@@ -3332,7 +3902,11 @@
                 }
                 tomSelect.enable();
             }
-            tomSelect.refreshPlaceholder();
+            
+            // Check if refreshPlaceholder exists before calling it
+            if (tomSelect.refreshPlaceholder && typeof tomSelect.refreshPlaceholder === 'function') {
+                tomSelect.refreshPlaceholder();
+            }
         }
 
         // --- Event Listener for Adding New Rows ---
@@ -3351,20 +3925,144 @@
             });
         }
 
+        // --- Event Listener for Select All Cooperatives ---
+        if (selectAllCoopsBtn) {
+            selectAllCoopsBtn.addEventListener('click', () => {
+                // Create and show loading overlay
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'select-all-loading-overlay';
+                loadingOverlay.innerHTML = `
+                    <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="text-light mt-3 fw-bold" style="font-size: 18px;">Loading all cooperatives and officers...</div>
+                        <div class="text-light mt-2" style="font-size: 14px;">Please wait, this may take a moment</div>
+                    </div>
+                `;
+                document.body.appendChild(loadingOverlay);
+
+                // Clear existing recipients
+                recipientRowsContainer.innerHTML = '';
+
+                // Get all cooperatives from the data
+                const cooperatives = Array.from(cooperativesData || []);
+
+                if (cooperatives.length === 0) {
+                    const overlay = document.getElementById('select-all-loading-overlay');
+                    if (overlay) overlay.remove();
+                    showNotification('No cooperatives available', 'warning');
+                    return;
+                }
+
+                let loadedCount = 0;
+
+                // Add each cooperative with all officers selected
+                cooperatives.forEach((coop, index) => {
+                    setTimeout(() => {
+                        const newRow = recipientRowTemplate.content.cloneNode(true);
+                        const newCoopSelect = newRow.querySelector('.coop-select');
+                        const newOfficerSelect = newRow.querySelector('.officer-select');
+
+                        // Populate cooperative select
+                        populateCooperatives(newCoopSelect);
+
+                        // Append row to container first
+                        recipientRowsContainer.appendChild(newRow);
+
+                        // Get the actual appended elements from the DOM
+                        const allRows = recipientRowsContainer.querySelectorAll('.recipient-container');
+                        const currentRow = allRows[allRows.length - 1];
+                        const actualCoopSelect = currentRow.querySelector('.coop-select');
+                        const actualOfficerSelect = currentRow.querySelector('.officer-select');
+
+                        // Set the cooperative value (don't initialize TomSelect on coop-select, it's a regular select)
+                        actualCoopSelect.value = String(coop.id);
+
+                        // Initialize Tom Select for officers only
+                        if (!actualOfficerSelect.tomselect) {
+                            initializeTomSelect(actualOfficerSelect, 'Loading officers...');
+                        }
+
+                        // Wait a bit for TomSelect to fully initialize, then populate officers
+                        setTimeout(() => {
+                            // Get the value that was set
+                            const selectedCoopId = actualCoopSelect.value;
+                            
+                            if (selectedCoopId) {
+                                populateOfficers(actualOfficerSelect, selectedCoopId);
+                                
+                                // Wait for officers to be populated, then select all
+                                setTimeout(() => {
+                                    if (actualOfficerSelect && actualOfficerSelect.tomselect) {
+                                        const officerOptions = actualOfficerSelect.tomselect.options;
+                                        
+                                        // If officers are loaded, select 'all'
+                                        if (Object.keys(officerOptions).length > 0) {
+                                            actualOfficerSelect.tomselect.setValue('all');
+                                        }
+                                    }
+
+                                    loadedCount++;
+                                    
+                                    // Check if all cooperatives have been loaded
+                                    if (loadedCount === cooperatives.length) {
+                                        const overlay = document.getElementById('select-all-loading-overlay');
+                                        if (overlay) overlay.remove();
+                                        updateRecipientRemoveButtons();
+                                        selectAllCoopsBtn.disabled = true;
+                                        selectAllCoopsBtn.classList.add('disabled');
+                                        
+                                        // Also disable the Add Recipient button
+                                        if (addRecipientBtn) {
+                                            addRecipientBtn.disabled = true;
+                                            addRecipientBtn.classList.add('disabled');
+                                        }
+                                        
+                                        showNotification(`All ${cooperatives.length} cooperatives and their officers selected`, 'success');
+                                    }
+                                }, 100);
+                            } else {
+                                console.error('Failed to set cooperative value for:', coop);
+                                loadedCount++;
+                                
+                                if (loadedCount === cooperatives.length) {
+                                    const overlay = document.getElementById('select-all-loading-overlay');
+                                    if (overlay) overlay.remove();
+                                    updateRecipientRemoveButtons();
+                                }
+                            }
+                        }, 100);
+                    }, index * 150);
+                });
+            });
+        }
+
         // --- Event Listener for Removing Rows ---
         if (recipientRowsContainer) {
             recipientRowsContainer.addEventListener('click', (e) => {
                 const removeBtn = e.target.closest('.remove-recipient-btn');
                 if (removeBtn) {
-                    const rowToRemove = removeBtn.closest('.recipient-row');
-                    if (rowToRemove) {
-                        const officerSelect = rowToRemove.querySelector('.officer-select');
+                    const containerToRemove = removeBtn.closest('.recipient-container');
+                    if (containerToRemove) {
+                        const officerSelect = containerToRemove.querySelector('.officer-select');
                         if (officerSelect && officerSelect.tomselect) {
                             officerSelect.tomselect.destroy();
                         }
-                        rowToRemove.remove();
+                        containerToRemove.remove();
                         updateRecipientRemoveButtons();
                         updateAvailableCooperatives();
+                        
+                        // Re-enable select all button and add recipient button when recipients are removed
+                        if (selectAllCoopsBtn) {
+                            selectAllCoopsBtn.disabled = false;
+                            selectAllCoopsBtn.classList.remove('disabled');
+                        }
+                        
+                        if (addRecipientBtn) {
+                            addRecipientBtn.disabled = false;
+                            addRecipientBtn.classList.remove('disabled');
+                        }
                     }
                 }
             });
@@ -3375,11 +4073,15 @@
             recipientRowsContainer.addEventListener('change', (e) => {
                 if (e.target && e.target.classList.contains('coop-select')) {
                     const selectedCoopId = e.target.value;
+                    const recipientContainer = e.target.closest('.recipient-container');
                     const recipientRow = e.target.closest('.recipient-row');
-                    const officerSelect = recipientRow.querySelector('.officer-select');
-
-                    populateOfficers(officerSelect, selectedCoopId);
-                    updateAvailableCooperatives();
+                    const container = recipientContainer || recipientRow;
+                    
+                    if (container) {
+                        const officerSelect = container.querySelector('.officer-select');
+                        populateOfficers(officerSelect, selectedCoopId);
+                        updateAvailableCooperatives();
+                    }
                 }
             });
         }
@@ -3400,6 +4102,12 @@
         // Wait for DOM to be fully ready
         function initializeInitialRecipientRow() {
             try {
+                // Ensure cooperativesData is loaded before proceeding
+                if (typeof cooperativesData === 'undefined' || !Array.isArray(cooperativesData)) {
+                    console.warn('cooperativesData not yet loaded, will retry');
+                    return false;
+                }
+
                 if (!recipientRowsContainer) {
                     console.warn('recipientRowsContainer not found, will retry when create view is shown');
                     return false;
@@ -3435,12 +4143,26 @@
         }
 
         // Initialize on page load (even if create view is hidden)
-        setTimeout(() => {
-            if (!initializeInitialRecipientRow()) {
-                // If initialization failed, it will retry when showCreateView is called
-                console.log('Initial recipient row initialization deferred');
-            }
-        }, 200);
+        // Wait for cooperativesData to be loaded
+        function waitForDataAndInitialize(maxRetries = 10, retryDelay = 200) {
+            let retries = 0;
+            const checkData = () => {
+                if (typeof cooperativesData !== 'undefined' && Array.isArray(cooperativesData)) {
+                    console.log('Cooperatives data loaded, initializing recipient row...', cooperativesData.length, 'cooperatives');
+                    if (!initializeInitialRecipientRow()) {
+                        console.log('Initial recipient row initialization deferred');
+                    }
+                } else if (retries < maxRetries) {
+                    retries++;
+                    setTimeout(checkData, retryDelay);
+                } else {
+                    console.error('Cooperatives data not loaded after', maxRetries, 'retries');
+                }
+            };
+            checkData();
+        }
+
+        waitForDataAndInitialize();
 
         // ===========================================
         // ===== DRAFT EDITING LOGIC            =====
@@ -3643,11 +4365,57 @@
             return true;
         }
 
-        document.getElementById('schedule-send-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            setMinDateTime();
-            scheduleSendModal.show();
-        });
+        // Handle schedule send link click
+        const scheduleSendLink = document.getElementById('schedule-send-link');
+        if (scheduleSendLink) {
+            scheduleSendLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Schedule send clicked');
+                
+                // Close the dropdown manually
+                const dropdownMenu = document.getElementById('send-dropdown-menu');
+                const dropdownToggle = document.getElementById('send-dropdown-toggle');
+                if (dropdownMenu) {
+                    dropdownMenu.classList.remove('show');
+                }
+                if (dropdownToggle) {
+                    dropdownToggle.setAttribute('aria-expanded', 'false');
+                }
+                
+                setMinDateTime();
+                scheduleSendModal.show();
+            });
+        }
+
+        // Manual dropdown toggle handler
+        const sendDropdownToggle = document.getElementById('send-dropdown-toggle');
+        const sendDropdownMenu = document.getElementById('send-dropdown-menu');
+        
+        if (sendDropdownToggle && sendDropdownMenu) {
+            sendDropdownToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                
+                if (isExpanded) {
+                    sendDropdownMenu.classList.remove('show');
+                    this.setAttribute('aria-expanded', 'false');
+                } else {
+                    sendDropdownMenu.classList.add('show');
+                    this.setAttribute('aria-expanded', 'true');
+                }
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!sendDropdownToggle.contains(e.target) && !sendDropdownMenu.contains(e.target)) {
+                    sendDropdownMenu.classList.remove('show');
+                    sendDropdownToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
 
         if (saveScheduleBtn) {
             saveScheduleBtn.addEventListener('click', () => {
@@ -3685,37 +4453,63 @@
         // ===========================================
 
         function showCreateView() {
+            // Hide list view and show create view
             listView.classList.remove('d-flex');
             listView.classList.add('d-none');
             createView.classList.remove('d-none');
-            createView.classList.add('d-flex');
-            const createViewHeader = document.getElementById('create-view-header');
-            if (createViewHeader) {
-                createViewHeader.classList.remove('d-none');
-                createViewHeader.classList.add('show');
+            createView.style.display = 'flex';
+            
+            // Switch headers
+            const listHeader = document.getElementById('list-header');
+            const createHeader = document.getElementById('create-header');
+            if (listHeader) listHeader.classList.add('d-none');
+            if (createHeader) {
+                createHeader.classList.remove('d-none');
+                createHeader.style.display = 'flex';
             }
+            
             const currentActive = document.querySelector('.sidebar-nav .nav-link.active');
             if (currentActive) currentActive.classList.remove('active');
 
             // Ensure initial recipient row is populated when create view is shown
-            setTimeout(() => {
-                if (!initializeInitialRecipientRow()) {
-                    // Retry after a longer delay if first attempt failed
-                    setTimeout(initializeInitialRecipientRow, 300);
-                }
-            }, 200);
+            function waitAndInitialize(maxRetries = 5, retryDelay = 300) {
+                let retries = 0;
+                const checkAndInit = () => {
+                    if (typeof cooperativesData !== 'undefined' && Array.isArray(cooperativesData)) {
+                        if (!initializeInitialRecipientRow() && retries < maxRetries) {
+                            retries++;
+                            setTimeout(checkAndInit, retryDelay);
+                        }
+                    } else if (retries < maxRetries) {
+                        retries++;
+                        setTimeout(checkAndInit, retryDelay);
+                    } else {
+                        console.error('Failed to initialize recipient row: cooperativesData not loaded');
+                    }
+                };
+                checkAndInit();
+            }
+
+            setTimeout(waitAndInitialize, 200);
         }
 
         function showListView() {
+            // Hide create view and show list view
             createView.classList.remove('d-flex');
             createView.classList.add('d-none');
+            createView.style.display = 'none';
             listView.classList.remove('d-none');
             listView.classList.add('d-flex');
-            const createViewHeader = document.getElementById('create-view-header');
-            if (createViewHeader) {
-                createViewHeader.classList.add('d-none');
-                createViewHeader.classList.remove('show');
+            
+            // Switch headers
+            const listHeader = document.getElementById('list-header');
+            const createHeader = document.getElementById('create-header');
+            if (listHeader) {
+                listHeader.classList.remove('d-none');
+                listHeader.style.display = 'flex';
             }
+            if (createHeader) createHeader.classList.add('d-none');
+            
             resetForm();
 
             // Restore the active tab or default to 'sent'
@@ -3742,6 +4536,10 @@
             dynamicFields.classList.add('d-none');
             emailFields.classList.add('d-none');
 
+            // Hide footer when form is reset
+            const formFooter = document.getElementById('form-footer');
+            if (formFooter) formFooter.classList.remove('show');
+
             recipientRowsContainer.querySelectorAll('.officer-select').forEach(select => {
                 if (select.tomselect) {
                     select.tomselect.destroy();
@@ -3765,9 +4563,7 @@
         if (createBtn) createBtn.addEventListener('click', showCreateView);
 
         if (cancelBtn) {
-            cancelBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
+            cancelBtn.addEventListener('click', () => {
                 pendingTabTrigger = null;
                 confirmCancelModal.show();
             });
@@ -3776,8 +4572,22 @@
         if (announcementType) {
             announcementType.addEventListener('change', () => {
                 const selectedType = announcementType.value;
+                const formFooter = document.getElementById('form-footer');
+
                 if (selectedType === 'sms' || selectedType === 'e-mail') {
                     dynamicFields.classList.remove('d-none');
+                    if (formFooter) {
+                        formFooter.classList.add('show');
+                        
+                        // Initialize dropdown after footer is visible
+                        setTimeout(() => {
+                            const dropdownToggle = document.querySelector('#send-button-group .dropdown-toggle');
+                            if (dropdownToggle && !bootstrap.Dropdown.getInstance(dropdownToggle)) {
+                                new bootstrap.Dropdown(dropdownToggle);
+                            }
+                        }, 100);
+                    }
+
                     if (selectedType === 'e-mail') {
                         emailFields.classList.remove('d-none');
                         if (sendBtnMain) sendBtnMain.textContent = 'Send Email';
@@ -3787,6 +4597,7 @@
                     }
                 } else {
                     dynamicFields.classList.add('d-none');
+                    if (formFooter) formFooter.classList.remove('show');
                     if (sendBtnMain) sendBtnMain.textContent = 'Send';
                 }
             });
@@ -3966,10 +4777,22 @@
                     // Mark as navigating to prevent beforeunload warning
                     window.isNavigating = true;
                     window.onbeforeunload = null; // Remove handler before reload
-                    // Use replace instead of reload to avoid confirmation dialog
+
+                    // Determine which URL fragment to use based on action
+                    let targetFragment = '';
+                    if (action === 'send_sms' || action === 'send_email') {
+                        targetFragment = '#sent-view';
+                    } else if (action === 'save_draft') {
+                        targetFragment = '#draft-view';
+                    } else if (action === 'schedule_send') {
+                        targetFragment = '#scheduled-view';
+                    }
+
+                    // Reload page with the appropriate tab fragment
                     setTimeout(() => {
-                        window.location.replace(window.location.href);
-                    }, 1500);
+                        window.location.href = window.location.pathname + targetFragment;
+                        window.location.reload();
+                    }, 800);
                 } else {
                     showNotification(result.message || 'Failed to process announcement', 'error');
                 }
