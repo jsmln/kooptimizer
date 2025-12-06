@@ -13,6 +13,109 @@ This system transforms legacy operations from scattered physical records and dis
 * 📨 **Integrated Communication Tools:** Built-in SMS and Email API integration for sending bulk announcements, notifications, and alerts to cooperative officers.
 * 🔒 **Robust Security:** Protected by Google ReCAPTCHA to prevent spam, bots, and automated intrusions, ensuring data integrity and platform reliability.
 
+Overview
+========
+
+Kooptimizer is a Django-based web platform focused on cooperative and account management features, notifications, and integrations with external APIs for email, push and calendar synchronization. This README summarizes the repository structure, the API integrations used, quickstart instructions, and a short database summary. For a detailed database schema and migration instructions see `docs/database.md` and `db/schema.sql`.
+
+API Integrations and Providers
+------------------------------
+- **Google APIs**: Used in the `apps/users` area for features like Google Calendar synchronization and Google reCAPTCHA verification. The project uses the `google-api-python-client` and `google-auth` libraries and expects a `service_account.json` for service account usage where applicable.
+- **ReCAPTCHA (Google)**: reCAPTCHA v2/v3 verification is used for forms and authentication flows. Configure `RECAPTCHA_SECRET_KEY` in environment settings.
+- **Brevo (SMTP/API)**: Email sending is done via the Brevo API (formerly Sendinblue). Environment variables include `BREVO_API_URL` and an API key. See `requirements.txt` for the HTTP client used.
+- **Web Push / VAPID**: Web push notifications are supported via `django-webpush` / `pywebpush` and require VAPID keys and related settings. The app references `webpush.models.PushInformation` and related code in `apps/dashboard`.
+- **Firebase Cloud Messaging (FCM)**: Mobile push notifications use FCM (Google Firebase). Logs show `fcm.googleapis.com` usage for sending device messages.
+
+Repository Structure (important folders only)
+-------------------------------------------
+- `kooptimizer/` - Django project settings and WSGI/ASGI entrypoints (`settings.py`, `urls.py`, `wsgi.py`, `asgi.py`).
+- `apps/` - Main Django apps (examples: `users`, `dashboard`, `account_management`, `communications`, `cooperatives`, `core`).
+- `database/` - Database artifacts: backups, migrations, updates. (Contents are often environment-specific.)
+- `docs/` - Project documentation. See `docs/database.md` for DB details.
+- `scripts/` - Helper scripts and stored procedure installers for database operations.
+- `logs/` - Runtime logs (scheduler, workers, etc.).
+- `static/`, `templates/` - Static assets and Django templates.
+- `tests/` - Test suite for automated checks.
+
+Quickstart (Windows PowerShell)
+-------------------------------
+Prerequisites
+- Python 3.10+ (project defined in `requirements.txt` — use the version that matches this file)
+- Git
+- Postgres or your configured DB (see `kooptimizer/settings.py` for DB engine)
+
+1. Clone the repo and create a virtual environment
+
+```powershell
+git clone <repo-url>
+cd Kooptimizer
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+2. Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+3. Create environment variables
+- Copy `.env.example` (or `.env.production.template`) into `.env` and fill values such as DB connection, `SECRET_KEY`, `BREVO_API_KEY`, `RECAPTCHA_SECRET_KEY`, VAPID keys, and Google `service_account.json` path.
+
+4. Database setup and migrations
+
+```powershell
+# create DB (example for Postgres - run externally or using your DB admin)
+# psql -c "CREATE DATABASE kooptimizer;"
+
+python manage.py makemigrations
+python manage.py migrate
+python manage.py loaddata initial_data.json  # if fixtures exist
+python manage.py createsuperuser
+```
+
+5. Run the development server
+
+```powershell
+python manage.py runserver 0.0.0.0:8000
+```
+
+Notes about API keys and files
+- `service_account.json` (Google API service account) — see `service_account.json.template` for placement and format.
+- `BREVO_API_KEY`, `BREVO_API_URL` — configure in `.env`.
+- VAPID keys for web push — generate and store in environment variables used by `django-webpush`.
+
+Database Summary
+----------------
+Kooptimizer uses Django ORM with migration-based schema management. The `database/` folder contains backups and DB-related scripts used for administration. The app also contains SQL scripts / stored procedures under `scripts/` for special DB operations. For a full schema dump, migrations, and details see `docs/database.md` and the placeholder `db/schema.sql`.
+
+Where to find more details
+- Detailed DB schema and migration notes: `docs/database.md` (committed). 
+- Raw SQL export placeholder: `db/schema.sql` (committed as a starting point). 
+- Developer guides, duplication analysis, and debugging notes: `docs/` (some files may be environment-specific and ignored — see `.gitignore`).
+
+Security & Secrets
+------------------
+Do NOT commit `service_account.json` or production secret values. Remove secrets before pushing. A `service_account.json.template` is included to show required keys.
+
+Contributing
+------------
+Follow the usual Git flow. See below for an example branch-and-push workflow.
+
+Example: create branch, commit and push
+
+```powershell
+# create and switch to a new branch
+git checkout -b DEG-dev
+
+# stage, commit, and push changes
+git add README.md docs/database.md db/schema.sql .gitignore
+git commit -m "docs: update README with API integrations and add DB docs; update .gitignore"
+git push -u origin DEG-dev
+```
+
+If you need further setup specifics for production (supervisors, gunicorn, nginx, SSL, systemd, containerization), ask and we will add tailored instructions.
+
 The ultimate goal of Kooptimizer is to enhance transparency, streamline complex workflows, and foster sustainable growth for the Lipa City Cooperatives Office and its members.
 
 ---

@@ -40,3 +40,15 @@ service_account.json
 # Test Results (can be regenerated)
 test_results/
 *.test.log
+
+# Ignore full folders of environment-specific/generated files
+# (leave explicit exceptions below for files we still want committed)
+/database/*
+/logs/*
+/scripts/*
+/templates/*
+/tests/*
+
+# Ignore docs by default but allow `docs/database.md` to be committed
+/docs/*
+!/docs/database.md
