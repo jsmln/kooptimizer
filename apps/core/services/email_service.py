@@ -131,7 +131,7 @@ class EmailService:
     
     def _send_bulk_email(self, subject: str, html_content: str, recipients_list: list, attachment_data: dict = None) -> Tuple[bool, str]:
         """
-        Send email to multiple recipients using Brevo API.
+        Send email to multiple recipients using Brevo API with embedded header image.
         
         Args:
             subject: Email subject
@@ -152,11 +152,26 @@ class EmailService:
             'content-type': 'application/json'
         }
         
-        # Prepare attachments for Brevo (base64 encoded)
+        # Prepare header image as inline attachment
+        import base64
+        import os
+        from django.conf import settings as django_settings
+        
+        header_image_path = os.path.join(django_settings.BASE_DIR, 'static', 'frontend', 'images', 'header.png')
+        inline_attachments = []
+        
+        if os.path.exists(header_image_path):
+            with open(header_image_path, 'rb') as img:
+                encoded_image = base64.b64encode(img.read()).decode('utf-8')
+                inline_attachments.append({
+                    'content': encoded_image,
+                    'name': 'header.png',
+                    'cid': 'header_image'  # This matches cid:header_image in HTML
+                })
+        
+        # Prepare regular attachments for Brevo (base64 encoded)
         attachments = []
         if attachment_data and attachment_data.get('content') and attachment_data.get('filenames'):
-            import base64
-            
             # Get filenames (semicolon-separated)
             filenames = attachment_data['filenames'].split(';')
             attachment_bytes = attachment_data['content']
@@ -193,7 +208,11 @@ class EmailService:
                 'htmlContent': html_content
             }
             
-            # Add attachments if present
+            # Add inline attachments (header image)
+            if inline_attachments:
+                payload['inlineAttachments'] = inline_attachments
+            
+            # Add regular attachments if present
             if attachments:
                 payload['attachment'] = attachments
             
@@ -236,7 +255,7 @@ class EmailService:
     def _format_html_content(self, title: str, content: str, sender_name: str) -> str:
         """
         Format plain text content into a professional HTML email template.
-        Uses the same image hosting approach as account management.
+        Uses embedded images for better email client compatibility.
         """
         # Escape HTML to prevent injection
         escaped_content = html.escape(content)
@@ -250,11 +269,7 @@ class EmailService:
         from datetime import datetime
         current_year = datetime.now().year
         
-        # Use the same public tunnel URL as account management
-        PUBLIC_TUNNEL_URL = 'https://rv9qfbq1-8000.asse.devtunnels.ms/'
-        logo_url = f"{PUBLIC_TUNNEL_URL}/static/frontend/images/header.png"
-        
-        # Wrap in professional email template
+        # Wrap in professional email template with embedded image reference
         return f"""
         <!DOCTYPE html>
         <html>
@@ -341,7 +356,7 @@ class EmailService:
         <body>
             <div class="email-container">
                 <div class="email-header">
-                    <img src="{'static/frontend/images/header.png'}" alt="KoopTimizer Header" style="width: 100%; height: auto; display: block;">
+                    <img src="cid:header_image" alt="KoopTimizer Header" style="width: 100%; height: auto; display: block;">
                     <div class="announcement-badge">
                         Official Cooperative Announcement
                     </div>

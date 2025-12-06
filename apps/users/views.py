@@ -987,10 +987,202 @@ def initiate_password_reset(request):
                     reverse('users:password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
                 )
                 
-                subject = "Reset Your KoopTimizer Password"
-                message = f"Click the link to reset your password: {reset_link}"
+                # Create professional HTML email using same template as announcements
+                from datetime import datetime
+                current_year = datetime.now().year
                 
-                send_mail(subject, message, settings.EMAIL_HOST_USER, [identifier], fail_silently=False)
+                # Get user's display name
+                user_name = user.username
+                try:
+                    if hasattr(user, 'admin'):
+                        user_name = f"{user.admin.first_name} {user.admin.last_name}".strip() or user.username
+                    elif hasattr(user, 'staff'):
+                        user_name = f"{user.staff.first_name} {user.staff.last_name}".strip() or user.username
+                    elif hasattr(user, 'officer'):
+                        user_name = f"{user.officer.first_name} {user.officer.last_name}".strip() or user.username
+                except:
+                    pass
+                
+                html_content = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        body {{
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            background-color: #f4f4f4;
+                            margin: 0;
+                            padding: 0;
+                        }}
+                        .email-container {{
+                            max-width: 600px;
+                            margin: 20px auto;
+                            background: #ffffff;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        }}
+                        .email-header {{
+                            background: linear-gradient(135deg, #8B0000 0%, #b71c1c 100%);
+                            color: #ffffff;
+                            padding: 0;
+                            text-align: left;
+                            position: relative;
+                        }}
+                        .email-header img {{
+                            width: 100%;
+                            height: auto;
+                            display: block;
+                        }}
+                        .announcement-badge {{
+                            background: rgba(255, 255, 255, 0.95);
+                            color: #b71c1c;
+                            padding: 12px 24px;
+                            font-size: 18px;
+                            font-weight: 600;
+                            text-align: center;
+                            border-bottom: 3px solid #b71c1c;
+                        }}
+                        .email-body {{
+                            padding: 30px;
+                            background: #ffffff;
+                        }}
+                        .email-title {{
+                            font-size: 22px;
+                            font-weight: 600;
+                            color: #b71c1c;
+                            margin-bottom: 20px;
+                            padding-bottom: 10px;
+                            border-bottom: 2px solid #f0f0f0;
+                        }}
+                        .email-content {{
+                            font-size: 15px;
+                            color: #333;
+                            margin-bottom: 30px;
+                            line-height: 1.8;
+                        }}
+                        .reset-button {{
+                            display: inline-block;
+                            padding: 14px 32px;
+                            background: linear-gradient(135deg, #b71c1c 0%, #8B0000 100%);
+                            color: #ffffff !important;
+                            text-decoration: none;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            font-size: 16px;
+                            margin: 20px 0;
+                            text-align: center;
+                            box-shadow: 0 2px 8px rgba(183, 28, 28, 0.3);
+                        }}
+                        .reset-button:hover {{
+                            background: linear-gradient(135deg, #8B0000 0%, #6d0000 100%);
+                        }}
+                        .link-info {{
+                            background: #f9f9f9;
+                            padding: 15px;
+                            border-radius: 6px;
+                            margin: 20px 0;
+                            font-size: 13px;
+                            color: #666;
+                            border-left: 4px solid #b71c1c;
+                        }}
+                        .email-sender {{
+                            padding: 15px;
+                            background: #f9f9f9;
+                            border-left: 4px solid #b71c1c;
+                            margin-top: 20px;
+                            font-size: 14px;
+                            color: #666;
+                        }}
+                        .email-footer {{
+                            background: #f9f9f9;
+                            padding: 20px;
+                            text-align: center;
+                            font-size: 12px;
+                            color: #666;
+                            border-top: 1px solid #e0e0e0;
+                        }}
+                        .email-footer p {{
+                            margin: 5px 0;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class="email-container">
+                        <div class="email-header">
+                            <img src="cid:header_image" alt="KoopTimizer Header" style="width: 100%; height: auto; display: block;">
+                            <div class="announcement-badge">
+                                Password Reset Request
+                            </div>
+                        </div>
+                        <div class="email-body">
+                            <div class="email-title">Reset Your Password</div>
+                            <div class="email-content">
+                                <p>Hello {user_name},</p>
+                                
+                                <p>We received a request to reset the password for your KoopTimizer account. Click the button below to create a new password:</p>
+                                
+                                <div style="text-align: center;">
+                                    <a href="{reset_link}" class="reset-button">Reset My Password</a>
+                                </div>
+                                
+                                <div class="link-info">
+                                    <strong>⚠️ Security Note:</strong><br>
+                                    • This link will expire in 24 hours for your security<br>
+                                    • If you didn't request this password reset, please ignore this email<br>
+                                    • Your password will remain unchanged until you create a new one
+                                </div>
+                                
+                                <p>If the button doesn't work, copy and paste this link into your browser:</p>
+                                <p style="word-break: break-all; font-size: 13px; color: #666;">{reset_link}</p>
+                            </div>
+                            <div class="email-sender">
+                                <strong>From:</strong> KoopTimizer Security Team<br>
+                                <strong>Via:</strong> KoopTimizer Password Reset System
+                            </div>
+                        </div>
+                        <div class="email-footer">
+                            <p><strong>KoopTimizer - Cooperative Management System</strong></p>
+                            <p>This is an automated security message. Please do not reply to this email.</p>
+                            <p>&copy; {current_year} Lipa City Cooperatives Office. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                # Send HTML email
+                from django.core.mail import EmailMultiAlternatives
+                subject = "Reset Your KoopTimizer Password"
+                plain_message = f"Click the link to reset your password: {reset_link}"
+                
+                email = EmailMultiAlternatives(
+                    subject,
+                    plain_message,
+                    settings.EMAIL_HOST_USER,
+                    [identifier]
+                )
+                email.attach_alternative(html_content, "text/html")
+                
+                # Attach header image as embedded content
+                import os
+                from django.conf import settings as django_settings
+                header_image_path = os.path.join(django_settings.BASE_DIR, 'static', 'frontend', 'images', 'header.png')
+                
+                if os.path.exists(header_image_path):
+                    with open(header_image_path, 'rb') as img:
+                        from email.mime.image import MIMEImage
+                        img_data = img.read()
+                        image = MIMEImage(img_data)
+                        image.add_header('Content-ID', '<header_image>')
+                        image.add_header('Content-Disposition', 'inline', filename='header.png')
+                        email.attach(image)
+                
+                email.send(fail_silently=False)
                 
                 messages.success(request, f"We've sent a password reset link to {identifier}")
                 return redirect('login')

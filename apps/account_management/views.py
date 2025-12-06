@@ -195,23 +195,37 @@ def send_credentials_view(request):
                     else:
                         raise
 
-            # Send email via Brevo
+            # Send email via Brevo with embedded header image
             try:
                 subject = "Your New Kooptimizer Account Credentials"
-                PUBLIC_TUNNEL_URL = 'https://rv9qfbq1-8000.asse.devtunnels.ms/'
-                logo_url = f"{PUBLIC_TUNNEL_URL}/static/frontend/images/header.png"
                 
                 context = {
                     'name': name,
                     'email': email,
                     'role': role.capitalize(),
-                    'temp_password': temp_password,
-                    'logo_url': logo_url
+                    'temp_password': temp_password
                 }
                 
                 html_content = render_to_string('account_management/credential_email.html', context)
                 
-                # Brevo API payload - EXACT format from working code
+                # Prepare embedded header image
+                import base64
+                import os
+                from django.conf import settings as django_settings
+                
+                header_image_path = os.path.join(django_settings.BASE_DIR, 'static', 'frontend', 'images', 'header.png')
+                inline_attachments = []
+                
+                if os.path.exists(header_image_path):
+                    with open(header_image_path, 'rb') as img:
+                        encoded_image = base64.b64encode(img.read()).decode('utf-8')
+                        inline_attachments.append({
+                            'content': encoded_image,
+                            'name': 'header.png',
+                            'cid': 'header_image'
+                        })
+                
+                # Brevo API payload with inline attachments
                 headers = {
                     'accept': 'application/json',
                     'api-key': settings.BREVO_API_KEY,
@@ -232,6 +246,10 @@ def send_credentials_view(request):
                     'subject': subject,
                     'htmlContent': html_content
                 }
+                
+                # Add inline attachments (header image)
+                if inline_attachments:
+                    payload['inlineAttachments'] = inline_attachments
                 
                 print("=" * 80)
                 print("BREVO EMAIL REQUEST")
