@@ -23,6 +23,9 @@ API Integrations and Providers
 - **Google APIs**: Used in the `apps/users` area for features like Google Calendar synchronization and Google reCAPTCHA verification. The project uses the `google-api-python-client` and `google-auth` libraries and expects a `service_account.json` for service account usage where applicable.
 - **ReCAPTCHA (Google)**: reCAPTCHA v2/v3 verification is used for forms and authentication flows. Configure `RECAPTCHA_SECRET_KEY` in environment settings.
 - **Brevo (SMTP/API)**: Email sending is done via the Brevo API (formerly Sendinblue). Environment variables include `BREVO_API_URL` and an API key. See `requirements.txt` for the HTTP client used.
+- **OPTIIC OCR**: Primary OCR service used in the `apps/databank` for digitizing physical cooperative records and documents. Integrated for automated data extraction from scanned images and PDFs.
+- **OCR.space**: Fallback OCR service used when OPTIIC is unavailable. Provides redundancy for document digitization in the databank management system.
+- **IPROGSMS**: SMS and OTP (One-Time Password) service provider for sending authentication codes, notifications, and bulk SMS messages to cooperative officers and members.
 - **Web Push / VAPID**: Web push notifications are supported via `django-webpush` / `pywebpush` and require VAPID keys and related settings. The app references `webpush.models.PushInformation` and related code in `apps/dashboard`.
 - **Firebase Cloud Messaging (FCM)**: Mobile push notifications use FCM (Google Firebase). Logs show `fcm.googleapis.com` usage for sending device messages.
 
@@ -255,4 +258,4 @@ This project is proprietary software developed for the Lipa City Cooperatives Of
 
 ---
 
-*Last updated: December 1, 2025*
+*Last updated: December 6, 2025*
