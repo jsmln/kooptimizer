@@ -31,6 +31,9 @@ database/backups/*.sql
 database/dumps/*.sql
 *.dump
 
+# Exception: Allow db/schema.sql (schema definition for version control)
+!/db/schema.sql
+
 # Service Account Credentials (CRITICAL - DO NOT COMMIT)
 service_account.json
 *service_account*.json
