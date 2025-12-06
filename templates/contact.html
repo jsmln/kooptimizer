@@ -59,11 +59,21 @@
         <h2>Send Us Your Message</h2>
 
         {% if messages %}
+            <div class="messages-container" style="margin-bottom: 20px;">
             {% for message in messages %}
-                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
-                    {{ message }}
+                <div class="alert alert-dismissible fade show {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %}" role="alert" style="border-radius: 8px; padding: 15px; display: flex; align-items: center; gap: 10px;">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle-fill" style="font-size: 20px;"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 20px;"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill" style="font-size: 20px;"></i>
+                    {% endif %}
+                    <span style="flex: 1;">{{ message }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
+            </div>
         {% endif %}
 
         <form method="POST">
@@ -94,10 +104,18 @@
                 <textarea id="message" name="message" class="form-control" placeholder="Provide details about your request" required></textarea>
             </div>
 
-            <div id="recaptcha-placeholder" class="g-recaptcha" data-sitekey="6LeepvErAAAAAP3XNLdmBipdELXOuZqfo13T6lYE">
+            <div class="form-group" style="display: flex; justify-content: center; margin: 20px 0;">
+                <div id="recaptcha-placeholder" class="g-recaptcha" data-sitekey="6LeepvErAAAAAP3XNLdmBipdELXOuZqfo13T6lYE">
+                </div>
             </div>
 
-            <button type="submit" class="btn-submit">Submit</button>
+            <button type="submit" class="btn-submit" id="submit-btn">
+                <span class="btn-text">Submit</span>
+                <span class="btn-loading" style="display: none;">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Sending...
+                </span>
+            </button>
 
             <p class="legal-text">
                 By clicking submit, you agree to our <a href="#">Privacy policy</a> and <a href="#">terms</a>.
@@ -108,4 +126,58 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contactForm = document.querySelector('form');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoading = submitBtn.querySelector('.btn-loading');
+    
+    let isSubmitting = false;
+
+    contactForm.addEventListener('submit', function(e) {
+        // Prevent double submission
+        if (isSubmitting) {
+            e.preventDefault();
+            return false;
+        }
+        
+        isSubmitting = true;
+        
+        // Show loading state
+        btnText.style.display = 'none';
+        btnLoading.style.display = 'inline-block';
+        submitBtn.disabled = true;
+        
+        // Failsafe: Reset after 10 seconds if something goes wrong
+        setTimeout(function() {
+            if (isSubmitting) {
+                resetButton();
+            }
+        }, 10000);
+    });
+    
+    function resetButton() {
+        isSubmitting = false;
+        btnText.style.display = 'inline-block';
+        btnLoading.style.display = 'none';
+        submitBtn.disabled = false;
+    }
+    
+    // Reset button on page show (back button, etc.)
+    window.addEventListener('pageshow', function(e) {
+        resetButton();
+    });
+
+    // Auto-dismiss alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        setTimeout(function() {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 5000);
+    });
+});
+</script>
 {% endblock %}

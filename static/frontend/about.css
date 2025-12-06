@@ -152,6 +152,51 @@
     transform: translateY(-2px);
 }
 
+/* LCCO Image Container */
+.lcco-image-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.lcco-image {
+    max-width: 100%;
+    height: auto;
+    max-height: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.lcco-image:hover {
+    transform: scale(1.02);
+}
+
+/* Lipa Website Link */
+.lipa-website-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #a91e2c;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    padding: 10px 20px;
+    border: 2px solid #a91e2c;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.lipa-website-link:hover {
+    background: #a91e2c;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(169, 30, 44, 0.3);
+}
+
+.lipa-website-link i {
+    font-size: 1.2rem;
+}
+
 /* Tablet Responsiveness */
 @media (max-width: 1024px) {
     #about-page {
@@ -207,6 +252,10 @@
     .btn-secondary {
         width: 100%;
         text-align: center;
+    }
+    
+    .lcco-image {
+        max-height: 250px;
     }
 }
 

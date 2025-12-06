@@ -1539,50 +1539,284 @@ def update_event(request, event_id):
     return JsonResponse({"status": "error"}, status=400)
 def contact_view(request):
     if request.method == 'POST':
-        # 1. Get Data from Form
-        name = request.POST.get('name')
-        user_email = request.POST.get('email') # The user's email
-        phone = request.POST.get('phone')
-        subject = request.POST.get('subject')
-        message_body = request.POST.get('message')
+        # 1. Verify reCAPTCHA
+        recaptcha_response = request.POST.get('g-recaptcha-response')
+        if not recaptcha_response:
+            messages.error(request, 'Please complete the reCAPTCHA verification.')
+            return redirect('contact')
 
-        # 2. Prepare Email Content
-        email_subject = f"New Inquiry: {subject}"
+        # Verify reCAPTCHA with Google
+        data = {'secret': settings.RECAPTCHA_SECRET_KEY, 'response': recaptcha_response}
+        try:
+            recaptcha_result = requests.post(
+                'https://www.google.com/recaptcha/api/siteverify',
+                data=data,
+                timeout=5
+            )
+            result_json = recaptcha_result.json()
+            if not result_json.get('success'):
+                messages.error(request, 'Invalid reCAPTCHA. Please try again.')
+                return redirect('contact')
+        except Exception as e:
+            print(f"reCAPTCHA verification error: {e}")
+            messages.error(request, 'Unable to verify reCAPTCHA. Please try again.')
+            return redirect('contact')
+
+        # 2. Get Data from Form
+        name = request.POST.get('name', '').strip()
+        user_email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        subject = request.POST.get('subject', '').strip()
+        message_body = request.POST.get('message', '').strip()
+
+        # 3. Validate required fields
+        if not all([name, user_email, subject, message_body]):
+            messages.error(request, 'Please fill in all required fields.')
+            return redirect('contact')
+
+        # 4. Prepare structured HTML email with dark red, white, and grey branding
+        email_subject = f"New Contact Form Inquiry: {subject}"
         
-        # We put the user's details inside the message body so you know who sent it
-        full_message = f"""
-        You have received a new message via the KoopTimizer Contact Form.
+        # Get the full URL for the header image
+        header_image_url = request.build_absolute_uri(settings.STATIC_URL + 'frontend/images/header.png')
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{ 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    line-height: 1.6; 
+                    color: #2d2d2d; 
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f5f5f5;
+                }}
+                .email-wrapper {{ 
+                    max-width: 600px; 
+                    margin: 0 auto; 
+                    background-color: #ffffff;
+                }}
+                .header {{ 
+                    background-color: #8B0000;
+                    padding: 0;
+                    text-align: center;
+                    border-radius: 0;
+                }}
+                .header-image {{ 
+                    width: 100%; 
+                    max-width: 600px; 
+                    height: auto; 
+                    display: block;
+                }}
+                .header-title {{
+                    background-color: #8B0000;
+                    color: #ffffff;
+                    padding: 20px;
+                    margin: 0;
+                }}
+                .header-title h1 {{ 
+                    margin: 0; 
+                    font-size: 24px; 
+                    font-weight: 600;
+                }}
+                .header-title p {{ 
+                    margin: 8px 0 0 0; 
+                    opacity: 0.95; 
+                    font-size: 14px;
+                }}
+                .content {{ 
+                    background: #ffffff; 
+                    padding: 30px;
+                }}
+                .info-section {{ 
+                    background: #f5f5f5; 
+                    padding: 20px; 
+                    border-radius: 8px; 
+                    margin: 20px 0; 
+                    border-left: 4px solid #8B0000;
+                }}
+                .info-section h2 {{
+                    margin-top: 0; 
+                    color: #8B0000; 
+                    font-size: 18px;
+                    font-weight: 600;
+                }}
+                .info-row {{ 
+                    margin: 12px 0;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #e0e0e0;
+                }}
+                .info-row:last-child {{
+                    border-bottom: none;
+                }}
+                .info-label {{ 
+                    font-weight: 600; 
+                    color: #8B0000; 
+                    display: inline-block;
+                    width: 120px;
+                }}
+                .info-value {{ 
+                    color: #2d2d2d;
+                    display: inline-block;
+                }}
+                .info-value a {{
+                    color: #8B0000;
+                    text-decoration: none;
+                    font-weight: 500;
+                }}
+                .info-value a:hover {{
+                    text-decoration: underline;
+                }}
+                .message-section {{ 
+                    background: #ffffff; 
+                    padding: 20px; 
+                    border: 2px solid #e0e0e0; 
+                    border-radius: 8px; 
+                    margin: 20px 0;
+                }}
+                .message-header {{ 
+                    font-weight: 600; 
+                    color: #8B0000; 
+                    margin-bottom: 15px; 
+                    font-size: 16px;
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid #8B0000;
+                }}
+                .message-body {{ 
+                    color: #2d2d2d; 
+                    white-space: pre-wrap; 
+                    line-height: 1.8;
+                    padding: 10px 0;
+                }}
+                .footer {{ 
+                    background: #d3d3d3; 
+                    padding: 25px; 
+                    text-align: center; 
+                    font-size: 12px; 
+                    color: #2d2d2d;
+                }}
+                .footer p {{
+                    margin: 8px 0;
+                    color: #2d2d2d;
+                }}
+                .timestamp {{ 
+                    color: #666666; 
+                    font-size: 11px; 
+                    font-style: italic;
+                    text-align: center;
+                    padding: 15px 0;
+                    border-top: 1px solid #e0e0e0;
+                }}
+                .divider {{
+                    height: 2px;
+                    background: linear-gradient(to right, #8B0000, #ffffff, #8B0000);
+                    margin: 20px 0;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="email-wrapper">
+                <div class="header">
+                    <img src="{header_image_url}" alt="KoopTimizer Header" class="header-image" />
+                    <div class="header-title">
+                        <h1>New Contact Form Submission</h1>
+                        <p>KoopTimizer Contact Form</p>
+                    </div>
+                </div>
+                
+                <div class="content">
+                    <div class="info-section">
+                        <h2>Sender Information</h2>
+                        <div class="info-row">
+                            <span class="info-label">Name:</span>
+                            <span class="info-value">{name}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email:</span>
+                            <span class="info-value"><a href="mailto:{user_email}">{user_email}</a></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Phone:</span>
+                            <span class="info-value">{phone if phone else 'Not provided'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Subject:</span>
+                            <span class="info-value"><strong>{subject}</strong></span>
+                        </div>
+                    </div>
 
-        --------------------------------------------------
-        Sender Name:  {name}
-        Sender Email: {user_email}
-        Phone Number: {phone}
-        --------------------------------------------------
+                    <div class="divider"></div>
 
-        Message:
-        {message_body}
+                    <div class="message-section">
+                        <div class="message-header">Message Content</div>
+                        <div class="message-body">{message_body}</div>
+                    </div>
+
+                    <div class="timestamp">
+                        Received: {timezone.now().strftime('%B %d, %Y at %I:%M %p')} (UTC+8)
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p style="margin: 0; font-weight: 600;">KoopTimizer</p>
+                    <p style="margin: 8px 0;">This email was sent from the KoopTimizer Contact Form</p>
+                    <p style="margin: 8px 0;">Reply directly to this email to contact {name}</p>
+                    <p style="margin: 12px 0 0 0; font-size: 11px; opacity: 0.8;">&copy; 2025 KoopTimizer. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
         """
 
         try:
-            # 3. Construct the Email Object
-            email = EmailMessage(
-                subject=email_subject,
-                body=full_message,
-                from_email=settings.EMAIL_HOST_USER, # MUST be your verified Gmail
-                to=['kooptimizer@gmail.com'],        # Sending to yourself
-                reply_to=[user_email]                # <--- THE FIX: Replies go to the user
-            )
+            # 5. Send email via Brevo API
+            brevo_api_url = settings.BREVO_API_URL
+            brevo_api_key = settings.BREVO_API_KEY
             
-            # 4. Send
-            email.send(fail_silently=False)
+            payload = {
+                "sender": {
+                    "name": "KoopTimizer Contact Form",
+                    "email": settings.BREVO_SENDER_EMAIL
+                },
+                "to": [
+                    {
+                        "email": "kooptimizer@gmail.com",
+                        "name": "KoopTimizer Support"
+                    }
+                ],
+                "subject": email_subject,
+                "htmlContent": html_content,
+                "replyTo": {
+                    "email": user_email,
+                    "name": name
+                }
+            }
             
-            messages.success(request, "Your message has been sent successfully!")
+            headers = {
+                'accept': 'application/json',
+                'api-key': brevo_api_key,
+                'content-type': 'application/json'
+            }
+            
+            response = requests.post(brevo_api_url, json=payload, headers=headers, timeout=10)
+            
+            if response.status_code == 201:
+                messages.success(request, "Your message has been sent successfully! We'll get back to you soon.")
+                print(f"Contact form email sent successfully to kooptimizer@gmail.com from {user_email}")
+            else:
+                print(f"Brevo API error: {response.status_code} - {response.text}")
+                messages.error(request, "Failed to send message. Please try again later.")
+            
             return redirect('contact')
             
         except Exception as e:
             # Print error to console for debugging
-            print(f"Email Error: {e}")
-            messages.error(request, "Failed to send message. Please try again later.")
+            print(f"Contact Form Email Error: {e}")
+            messages.error(request, "Failed to send message. Please try again later or email us directly at kooptimizer@gmail.com")
             return redirect('contact')
 
     return render(request, 'contact.html')

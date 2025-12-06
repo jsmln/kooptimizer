@@ -463,28 +463,40 @@
                 const submitBtn = form.querySelector('button[type="submit"]');
                 
                 if (submitBtn) {
+                    const originalText = submitBtn.textContent;
+                    let isSubmitting = false;
+                    
                     form.addEventListener('submit', function(e) {
                         // Check if already submitting
-                        if (submitBtn.disabled) {
+                        if (isSubmitting || submitBtn.disabled) {
                             e.preventDefault();
                             return false;
                         }
                         
+                        isSubmitting = true;
+                        
                         // Disable button and show loading state
                         submitBtn.disabled = true;
-                        const originalText = submitBtn.textContent;
                         submitBtn.innerHTML = '<span class="spinner-border-sm"></span> Sending...';
                         submitBtn.style.opacity = '0.6';
                         submitBtn.style.cursor = 'not-allowed';
                         
-                        // Re-enable after 5 seconds (in case of error, user can retry)
+                        // Re-enable after 10 seconds (failsafe)
                         setTimeout(() => {
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = originalText;
-                            submitBtn.style.opacity = '1';
-                            submitBtn.style.cursor = 'pointer';
-                        }, 5000);
+                            resetButton();
+                        }, 10000);
                     });
+                    
+                    function resetButton() {
+                        isSubmitting = false;
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = originalText;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                    }
+                    
+                    // Reset on pageshow
+                    window.addEventListener('pageshow', resetButton);
                 }
             }
         });
@@ -495,28 +507,40 @@
             const submitBtn = passwordResetForm.querySelector('button[type="submit"]');
             
             if (submitBtn) {
+                const originalText = submitBtn.textContent;
+                let isSubmitting = false;
+                
                 passwordResetForm.addEventListener('submit', function(e) {
                     // Check if already submitting
-                    if (submitBtn.disabled) {
+                    if (isSubmitting || submitBtn.disabled) {
                         e.preventDefault();
                         return false;
                     }
                     
+                    isSubmitting = true;
+                    
                     // Disable button and show loading state
                     submitBtn.disabled = true;
-                    const originalText = submitBtn.textContent;
                     submitBtn.innerHTML = '<span class="spinner-border-sm"></span> Searching...';
                     submitBtn.style.opacity = '0.6';
                     submitBtn.style.cursor = 'not-allowed';
                     
-                    // Re-enable after 5 seconds (in case of error, user can retry)
+                    // Re-enable after 10 seconds (failsafe)
                     setTimeout(() => {
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalText;
-                        submitBtn.style.opacity = '1';
-                        submitBtn.style.cursor = 'pointer';
-                    }, 5000);
+                        resetButton();
+                    }, 10000);
                 });
+                
+                function resetButton() {
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+                
+                // Reset on pageshow
+                window.addEventListener('pageshow', resetButton);
             }
         }
     </script>

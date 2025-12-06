@@ -171,6 +171,39 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
 
+    <!-- Global fetch wrapper to handle NProgress for AJAX calls -->
+    <script>
+        // Store original fetch
+        const originalFetch = window.fetch;
+        
+        // Override fetch to auto-handle progress bar
+        window.fetch = function(...args) {
+            // Don't show progress for background activity checks
+            const url = args[0];
+            const isBackgroundCall = url && (
+                url.includes('api_recent_activity') || 
+                url.includes('method: \'HEAD\'') ||
+                (args[1] && args[1].method === 'HEAD')
+            );
+            
+            return originalFetch.apply(this, args)
+                .then(response => {
+                    // Stop progress on response
+                    if (!isBackgroundCall && window.stopProgress) {
+                        window.stopProgress();
+                    }
+                    return response;
+                })
+                .catch(error => {
+                    // Stop progress on error
+                    if (!isBackgroundCall && window.stopProgress) {
+                        window.stopProgress();
+                    }
+                    throw error;
+                });
+        };
+    </script>
+
     <!-- Global activity/profile dropdown JS (used across modules) -->
     <script>
     document.addEventListener('DOMContentLoaded', function(){
@@ -207,13 +240,115 @@
     </script>
 
     <script>
-        // NProgress Logic
-        NProgress.configure({ showSpinner: true, easing: 'ease', speed: 500 });
+        // NProgress Logic - Enhanced with proper cleanup
+        NProgress.configure({ showSpinner: true, easing: 'ease', speed: 300, minimum: 0.08 });
+        
         const allLinks = document.querySelectorAll('a[href]:not([data-bs-toggle])');
         const allForms = document.querySelectorAll('form');
-        allLinks.forEach(link => link.addEventListener('click', () => NProgress.start()));
-        allForms.forEach(form => form.addEventListener('submit', () => NProgress.start()));
-        window.addEventListener('pageshow', (e) => { if (e.persisted) NProgress.done(); });
+        
+        // Track if NProgress is currently active
+        let nprogressActive = false;
+        
+        // Start NProgress with tracking - EXPOSED GLOBALLY
+        window.startProgress = function() {
+            if (!nprogressActive) {
+                NProgress.start();
+                nprogressActive = true;
+            }
+        }
+        
+        // Stop NProgress with tracking - EXPOSED GLOBALLY
+        window.stopProgress = function() {
+            if (nprogressActive) {
+                NProgress.done();
+                nprogressActive = false;
+            }
+        }
+        
+        // Force stop NProgress (emergency cleanup) - EXPOSED GLOBALLY
+        window.forceStopProgress = function() {
+            NProgress.done(true);
+            nprogressActive = false;
+        }
+        
+        // Add click listeners to links
+        allLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                // Don't start progress for links that open in new tab or are just anchors
+                const href = link.getAttribute('href');
+                const target = link.getAttribute('target');
+                
+                if (target === '_blank' || !href || href === '#' || href.startsWith('#')) {
+                    return;
+                }
+                
+                window.startProgress();
+            });
+        });
+        
+        // Add submit listeners to forms
+        allForms.forEach(form => {
+            form.addEventListener('submit', () => window.startProgress());
+        });
+        
+        // Stop progress IMMEDIATELY when page starts loading (before full load)
+        // This ensures it stops as soon as navigation begins
+        if (document.readyState === 'loading') {
+            window.stopProgress();
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            window.stopProgress();
+        });
+        
+        // Stop progress when page loads
+        window.addEventListener('load', () => {
+            window.stopProgress();
+        });
+        
+        // Handle browser back/forward navigation - immediate stop
+        window.addEventListener('pageshow', (e) => {
+            window.forceStopProgress();
+        });
+        
+        // Handle page hide (when leaving) - stop immediately
+        window.addEventListener('pagehide', () => {
+            window.forceStopProgress();
+        });
+        
+        // Stop immediately before unload
+        window.addEventListener('beforeunload', () => {
+            window.forceStopProgress();
+        });
+        
+        // Handle visibility change (tab switching)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                // Stop progress when returning to tab
+                window.stopProgress();
+            }
+        });
+        
+        // Global error handler - stop progress on errors
+        window.addEventListener('error', () => {
+            window.stopProgress();
+        });
+        
+        // Reduced failsafe timer - stop if running > 10 seconds
+        setInterval(() => {
+            if (nprogressActive) {
+                const progressElement = document.querySelector('#nprogress');
+                if (progressElement) {
+                    const startTime = progressElement.dataset.startTime;
+                    if (!startTime) {
+                        progressElement.dataset.startTime = Date.now();
+                    } else if (Date.now() - parseInt(startTime) > 10000) {
+                        console.warn('NProgress running too long, forcing stop');
+                        window.forceStopProgress();
+                    }
+                }
+            }
+        }, 2000);
     </script>
 
     {% if request.session.user_id and not request.session.pending_verification_user_id %}
