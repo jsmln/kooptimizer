@@ -164,7 +164,7 @@
             <h2>All User Accounts</h2>
             <div class="table-header-controls">
                 <div class="search-bar-wrapper">
-                    <input type="text" id="all-users-search" class="search-bar" placeholder="Search by name, email, contact, position, cooperative, or type...">
+                    <input type="text" id="all-users-search" class="search-bar" placeholder="Search by name, email, contact, position, cooperative, type, or date (YYYY-MM-DD)...">
                     <i class="bi bi-search search-icon"></i>
                 </div>
             </div>
@@ -180,6 +180,8 @@
                         <th>Position</th>
                         <th>Cooperative</th>
                         <th>Account Type</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
                     </tr>
                 </thead>
                 <tbody id="all-users-table-body"></tbody>
@@ -196,7 +198,7 @@
             <h2>Admin User Accounts</h2>
             <div class="table-header-controls">
                 <div class="search-bar-wrapper">
-                    <input type="text" id="admin-search" class="search-bar" placeholder="Search by name, email, contact, or position...">
+                    <input type="text" id="admin-search" class="search-bar" placeholder="Search by name, email, contact, position, or date (YYYY-MM-DD)...">
                     <i class="bi bi-search search-icon"></i>
                 </div>
             </div>
@@ -210,6 +212,8 @@
                         <th>Email Address</th>
                         <th>Contact Number</th>
                         <th>Position</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
                     </tr>
                 </thead>
                 <tbody id="admin-table-body">
@@ -220,10 +224,12 @@
                         <td>{{ admin.email }}</td>
                         <td>{{ admin.contact }}</td>
                         <td>{{ admin.position }}</td>
+                        <td>{{ admin.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ admin.updated_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align:center;">No admin accounts found.</td>
+                        <td colspan="7" style="text-align:center;">No admin accounts found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -240,7 +246,7 @@
             <h2>Staff User Accounts</h2>
             <div class="table-header-controls">
                 <div class="search-bar-wrapper">
-                    <input type="text" id="staff-search" class="search-bar" placeholder="Search by name, email, cooperative, or position...">
+                    <input type="text" id="staff-search" class="search-bar" placeholder="Search by name, email, cooperative, position, or date (YYYY-MM-DD)...">
                     <i class="bi bi-search search-icon"></i>
                 </div>
             </div>
@@ -255,6 +261,8 @@
                         <th>Email Address</th>
                         <th>Contact Number</th>
                         <th>Cooperative Assigned</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
                     </tr>
                 </thead>
                 <tbody id="staff-table-body">
@@ -266,10 +274,12 @@
                         <td>{{ staff.email }}</td>
                         <td>{{ staff.contact }}</td>
                         <td>{{ staff.coop_name }}</td>
+                        <td>{{ staff.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ staff.updated_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align:center;">No staff accounts found.</td>
+                        <td colspan="8" style="text-align:center;">No staff accounts found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -290,7 +300,7 @@
                     <option value="">All Cooperatives</option>
                 </select>
                 <div class="search-bar-wrapper">
-                    <input type="text" id="officer-search" class="search-bar" placeholder="Search by name, email, cooperative, or position...">
+                    <input type="text" id="officer-search" class="search-bar" placeholder="Search by name, email, cooperative, position, or date (YYYY-MM-DD)...">
                     <i class="bi bi-search search-icon"></i>
                 </div>
             </div>
@@ -305,6 +315,8 @@
                         <th>Email Address</th>
                         <th>Contact Number</th>
                         <th>Position</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
                     </tr>
                 </thead>
                 <tbody id="officer-table-body">
@@ -317,10 +329,12 @@
                         <td>{{ officer.email }}</td>
                         <td>{{ officer.contact }}</td>
                         <td>{{ officer.position }}</td>
+                        <td>{{ officer.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ officer.updated_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" style="text-align:center;">No officer accounts found.</td>
+                        <td colspan="8" style="text-align:center;">No officer accounts found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -338,7 +352,7 @@
             <h2>Deactivated User Accounts</h2>
             <div class="table-header-controls">
                 <div class="search-bar-wrapper">
-                    <input type="text" id="deactivated-search" class="search-bar" placeholder="Search by name, email, cooperative, position, or type...">
+                    <input type="text" id="deactivated-search" class="search-bar" placeholder="Search by name, email, cooperative, position, type, or date (YYYY-MM-DD)...">
                     <i class="bi bi-search search-icon"></i>
                 </div>
             </div>
@@ -354,6 +368,8 @@
                         <th>Role/Perm.</th>
                         <th>Cooperative</th>
                         <th>Type</th>
+                        <th>Created At</th>
+                        <th>Updated At</th>
                     </tr>
                 </thead>
                 <tbody id="deactivated-table-body">
@@ -367,10 +383,12 @@
                         <td>{{ user.position }}</td>
                         <td>{{ user.coop_name }}</td>
                         <td>{{ user.account_type }}</td>
+                        <td>{{ user.created_at|date:"Y-m-d H:i" }}</td>
+                        <td>{{ user.updated_at|date:"Y-m-d H:i" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" style="text-align:center;">No deactivated accounts found.</td>
+                        <td colspan="9" style="text-align:center;">No deactivated accounts found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -723,7 +741,7 @@
             const adminTableBody = document.getElementById('admin-table-body');
 
             /* INDEX MAPPING GUIDE (Based on your screenshot errors):
-               Staff Table usually: #, Name, Position, Email, Contact, Coop
+               Staff Table: #, Name, Position, Email, Contact, Coop, Created At, Updated At
             */
 
             const tables = [
@@ -731,37 +749,43 @@
                 {
                     body: staffTableBody,
                     type: 'Staff',
-                    // Indices: Name(1), Position(2), Email(3), Contact(4), Coop(5)
-                    indices: [1, 2, 3, 4, 5],
+                    // Indices: Name(1), Position(2), Email(3), Contact(4), Coop(5), Created(6), Updated(7)
+                    indices: [1, 2, 3, 4, 5, 6, 7],
                     nameIndex: 1,
                     positionIndex: 2, // Capture Position
                     emailIndex: 3,    // Capture Email
                     contactIndex: 4,  // Capture Contact
-                    coopIndex: 5      // Capture Coop
+                    coopIndex: 5,     // Capture Coop
+                    createdAtIndex: 6, // Capture Created At
+                    updatedAtIndex: 7  // Capture Updated At
                 },
                 // OFFICER MAPPING
                 {
                     body: officerTableBody,
                     type: 'Officer',
-                    // Indices: Name(1), Coop(2), Email(3), Contact(4), Position(5)
-                    indices: [1, 2, 3, 4, 5],
+                    // Indices: Name(1), Coop(2), Email(3), Contact(4), Position(5), Created(6), Updated(7)
+                    indices: [1, 2, 3, 4, 5, 6, 7],
                     nameIndex: 1,
                     positionIndex: 5, // Position is usually last for officers
                     emailIndex: 3,
                     contactIndex: 4,
-                    coopIndex: 2      // Coop is usually 2nd for officers
+                    coopIndex: 2,      // Coop is usually 2nd for officers
+                    createdAtIndex: 6, // Capture Created At
+                    updatedAtIndex: 7  // Capture Updated At
                 },
                 // ADMIN MAPPING
                 {
                     body: adminTableBody,
                     type: 'Admin',
-                    // Indices: Name(1), Email(2), Contact(3), Position(4)
-                    indices: [1, 2, 3, 4],
+                    // Indices: Name(1), Email(2), Contact(3), Position(4), Created(5), Updated(6)
+                    indices: [1, 2, 3, 4, 5, 6],
                     nameIndex: 1,
                     positionIndex: 4,
                     emailIndex: 2,
                     contactIndex: 3,
-                    coopIndex: -1 // Admin has no coop column
+                    coopIndex: -1,     // Admin has no coop column
+                    createdAtIndex: 5, // Capture Created At
+                    updatedAtIndex: 6  // Capture Updated At
                 }
             ];
 
@@ -776,6 +800,8 @@
                         const positionText = cells[table.positionIndex] || '-';
                         const emailText = cells[table.emailIndex] || '';
                         const contactText = cells[table.contactIndex] || '';
+                        const createdAtText = cells[table.createdAtIndex] || '-';
+                        const updatedAtText = cells[table.updatedAtIndex] || '-';
 
                         // Handle Coop Text (with Admin fallback)
                         let coopText = '-';
@@ -793,7 +819,9 @@
                             contact: contactText,
                             role: positionText,
                             coop: coopText,
-                            type: table.type
+                            type: table.type,
+                            created_at: createdAtText,
+                            updated_at: updatedAtText
                         });
                     });
                 }
@@ -809,7 +837,7 @@
             if (!allUsersTableBody) return;
             allUsersTableBody.innerHTML = '';
             if (data.length === 0) {
-                allUsersTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No users found.</td></tr>';
+                allUsersTableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No users found.</td></tr>';
                 return;
             }
             data.forEach((user, index) => {
@@ -825,6 +853,8 @@
                 <td>${user.role}</td>
                 <td>${user.coop}</td>
                 <td>${user.type}</td>
+                <td>${user.created_at}</td>
+                <td>${user.updated_at}</td>
             `;
                 allUsersTableBody.appendChild(newRow);
             });
@@ -927,7 +957,9 @@
                         user.contact.toLowerCase().includes(query) ||
                         user.role.toLowerCase().includes(query) ||
                         user.coop.toLowerCase().includes(query) ||
-                        user.type.toLowerCase().includes(query);
+                        user.type.toLowerCase().includes(query) ||
+                        user.created_at.toLowerCase().includes(query) ||
+                        user.updated_at.toLowerCase().includes(query);
                 });
                 renderAllUsersTable(filteredData);
             }
@@ -1509,11 +1541,15 @@
                     const coop = row.cells[2]?.textContent.toLowerCase() || '';
                     const email = row.cells[3]?.textContent.toLowerCase() || '';
                     const position = row.cells[5]?.textContent.toLowerCase() || '';
+                    const createdAt = row.cells[6]?.textContent.toLowerCase() || '';
+                    const updatedAt = row.cells[7]?.textContent.toLowerCase() || '';
 
                     const matchesSearch = name.includes(query) || 
                                         coop.includes(query) || 
                                         email.includes(query) || 
-                                        position.includes(query);
+                                        position.includes(query) ||
+                                        createdAt.includes(query) ||
+                                        updatedAt.includes(query);
 
                     const matchesCoop = !selectedCoop || row.cells[2]?.textContent === selectedCoop;
 
@@ -1561,11 +1597,15 @@
                     const email = row.cells[2]?.textContent.toLowerCase() || '';
                     const contact = row.cells[3]?.textContent.toLowerCase() || '';
                     const position = row.cells[4]?.textContent.toLowerCase() || '';
+                    const createdAt = row.cells[5]?.textContent.toLowerCase() || '';
+                    const updatedAt = row.cells[6]?.textContent.toLowerCase() || '';
 
                     return name.includes(query) || 
                            email.includes(query) || 
                            contact.includes(query) || 
-                           position.includes(query);
+                           position.includes(query) ||
+                           createdAt.includes(query) ||
+                           updatedAt.includes(query);
                 });
 
                 // Hide all rows first
@@ -1605,11 +1645,15 @@
                     const position = row.cells[2]?.textContent.toLowerCase() || '';
                     const email = row.cells[3]?.textContent.toLowerCase() || '';
                     const coop = row.cells[5]?.textContent.toLowerCase() || '';
+                    const createdAt = row.cells[6]?.textContent.toLowerCase() || '';
+                    const updatedAt = row.cells[7]?.textContent.toLowerCase() || '';
 
                     return name.includes(query) || 
                            position.includes(query) || 
                            email.includes(query) || 
-                           coop.includes(query);
+                           coop.includes(query) ||
+                           createdAt.includes(query) ||
+                           updatedAt.includes(query);
                 });
 
                 // Hide all rows first
@@ -1650,12 +1694,16 @@
                     const position = row.cells[4]?.textContent.toLowerCase() || '';
                     const coop = row.cells[5]?.textContent.toLowerCase() || '';
                     const type = row.cells[6]?.textContent.toLowerCase() || '';
+                    const createdAt = row.cells[7]?.textContent.toLowerCase() || '';
+                    const updatedAt = row.cells[8]?.textContent.toLowerCase() || '';
 
                     return name.includes(query) || 
                            email.includes(query) || 
                            position.includes(query) || 
                            coop.includes(query) || 
-                           type.includes(query);
+                           type.includes(query) ||
+                           createdAt.includes(query) ||
+                           updatedAt.includes(query);
                 });
 
                 // Hide all rows first

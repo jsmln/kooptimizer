@@ -51,6 +51,8 @@ def account_management(request):
                     'coop_name': row[7],
                     'account_type': row[8],
                     'is_active': row[9],
+                    'created_at': row[10],
+                    'updated_at': row[11],
                 }
 
                 # Separate active and deactivated accounts
