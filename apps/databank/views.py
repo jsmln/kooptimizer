@@ -302,22 +302,38 @@ def process_ocr(request):
         
         # Save to database (save image even if OCR fails)
         try:
-            user = User.objects.get(user_id=user_id)
             extracted_text = result.get('text', '') if result.get('success') else ''
             
-            # Save the session with the preserved image file
+            # Debug log
+            print(f"Creating OCR session for user_id: {user_id}, has image: {bool(image_file_for_save)}")
+            
+            # Save the session with the preserved image file (use user_id directly)
             ocr_session = OCRScanSession.objects.create(
-                user=user,
+                user_id=user_id,
                 image=image_file_for_save if image_file_for_save else None,
                 extracted_text=extracted_text,
                 is_consumed=False
             )
+            
+            # Generate the image URL
+            image_url = None
+            if ocr_session.image:
+                try:
+                    image_url = ocr_session.image.url
+                except Exception as url_error:
+                    print(f"Error getting image URL: {url_error}")
+                    # Try to construct URL manually
+                    if hasattr(ocr_session.image, 'name'):
+                        from django.conf import settings
+                        image_url = f"{settings.MEDIA_URL}{ocr_session.image.name}"
+            
             result['session_id'] = ocr_session.id
-            result['image_url'] = ocr_session.image.url if ocr_session.image else None
-            print(f"Successfully saved OCR session {ocr_session.id} with image: {bool(ocr_session.image)}")
+            result['image_url'] = image_url
+            
+            print(f"✅ Successfully saved OCR session {ocr_session.id} with image: {bool(ocr_session.image)}, image_url: {image_url}")
         except Exception as db_error:
             import traceback
-            print(f"Error saving OCR session: {db_error}")
+            print(f"❌ Error saving OCR session: {db_error}")
             print(traceback.format_exc())
             # Continue even if save fails
         
@@ -334,47 +350,60 @@ def get_ocr_sessions(request):
     try:
         user_id = request.session.get('user_id')
         if not user_id:
+            print("❌ User not authenticated - no user_id in session")
             return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
         
-        # Get the User object to ensure proper ForeignKey relationship
-        try:
-            user = User.objects.get(user_id=user_id)
-        except User.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'User not found'}, status=404)
+        print(f"✅ Getting OCR sessions for user_id: {user_id}")
         
         # Auto-delete unconsumed sessions older than 5 minutes
         five_minutes_ago = timezone.now() - timedelta(minutes=5)
         deleted_count = OCRScanSession.objects.filter(
-            user=user,
+            user_id=user_id,
             created_at__lt=five_minutes_ago,
             is_consumed=False  # Only delete unconsumed sessions
         ).delete()[0]
         
         if deleted_count > 0:
-            print(f"Auto-deleted {deleted_count} unconsumed OCR session(s) older than 5 minutes for user {user_id}")
+            print(f"🗑️ Auto-deleted {deleted_count} unconsumed OCR session(s) older than 5 minutes for user {user_id}")
         
         # Get recent OCR sessions (not consumed, ordered by newest first)
-        # Remove the limit to show all recent scans
         sessions = OCRScanSession.objects.filter(
-            user=user,
+            user_id=user_id,
             is_consumed=False
-        ).order_by('-created_at')  # Get all unconsumed sessions
+        ).order_by('-created_at')
+        
+        print(f"📊 Found {sessions.count()} OCR sessions for user {user_id}")
         
         sessions_data = []
         for session in sessions:
+            image_url = None
+            if session.image:
+                try:
+                    image_url = session.image.url
+                except Exception as url_error:
+                    print(f"⚠️ Error getting image URL for session {session.id}: {url_error}")
+                    # Try to construct URL manually
+                    if hasattr(session.image, 'name'):
+                        from django.conf import settings
+                        image_url = f"{settings.MEDIA_URL}{session.image.name}"
+            
             sessions_data.append({
                 'id': session.id,
-                'image_url': session.image.url if session.image else None,
+                'image_url': image_url,
                 'extracted_text': session.extracted_text,
                 'created_at': session.created_at.isoformat(),
                 'is_consumed': session.is_consumed
             })
         
+        print(f"✅ Returning {len(sessions_data)} OCR sessions")
         return JsonResponse({
             'success': True,
             'sessions': sessions_data
         })
     except Exception as e:
+        import traceback
+        print(f"❌ Error in get_ocr_sessions: {str(e)}")
+        print(traceback.format_exc())
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @require_http_methods(["POST"])

@@ -53,8 +53,8 @@
                     </button>
                     <div id="global-activity-dropdown" class="activity-dropdown" style="display:none; position:absolute; right:0; top:36px; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.08); width:320px; z-index:120;">
                         <div style="padding:8px 12px; border-bottom:1px solid #f5f5f5; font-weight:700;">Recent Activity</div>
-                        <div id="global-activity-dropdown-list" style="max-height:260px; overflow:auto;"></div>
-                        <div style="padding:8px 12px; border-top:1px solid #f5f5f5; text-align:center;"><a href="#" class="small">View all</a></div>
+                        <div id="global-activity-dropdown-list" style="max-height:260px; overflow-y:auto; overflow-x:hidden;"></div>
+                        <div style="padding:8px 12px; border-top:1px solid #f5f5f5; text-align:center;"><a href="{% url 'communications:message' %}" class="small" id="view-all-messages-link">View Messages</a></div>
                     </div>
                 </div>
 
@@ -215,7 +215,16 @@
 
         function setGlobalBadge(n){ if(!badge) return; if(n>0){ badge.textContent = n>99? '99+': n; badge.style.display='inline-block'; } else badge.style.display='none'; }
 
-        function buildHtml(items){ if(!items || items.length===0) return '<div style="padding:12px;color:#A3AED0;">No recent messages</div>'; return items.map(it=>`<div style="padding:10px 12px;border-bottom:1px solid #f5f5f5;"><div style="font-weight:600;color:var(--text-dark);">${it.title}</div><div style="font-size:0.8rem;color:#707EAE;margin-top:4px;">${it.sender} · ${it.time}</div></div>`).join(''); }
+        function buildHtml(items){ 
+            if(!items || items.length===0) return '<div style="padding:12px;color:#A3AED0;">No recent messages</div>'; 
+            return items.map(it=>{
+                const url = it.sender_id ? `/communications/message/?user=${it.sender_id}` : '/communications/message/';
+                return `<a href="${url}" style="display:block;padding:10px 12px;border-bottom:1px solid #f5f5f5;text-decoration:none;color:inherit;cursor:pointer;transition:background-color 0.2s;" class="notification-item" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'">
+                    <div style="font-weight:600;color:var(--text-dark);">${it.title}</div>
+                    <div style="font-size:0.8rem;color:#707EAE;margin-top:4px;">${it.sender} · ${it.time}</div>
+                </a>`;
+            }).join(''); 
+        }
 
         function loadActivity(){
             fetch('{% url "communications:api_recent_activity" %}')

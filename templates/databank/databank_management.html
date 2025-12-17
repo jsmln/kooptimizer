@@ -640,10 +640,9 @@
 </div>
 
 <!-- Edit Profile Modal -->
-<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileLabel" aria-hidden="true" style="z-index: 10050;">
-    <div class="modal-backdrop fade show" style="z-index: 10040; background-color: rgba(0, 0, 0, 0.7);"></div>
-    <div class="modal-dialog modal-xl modal-dialog-scrollable" style="z-index: 10050;">
-        <div class="modal-content" style="border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);">
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileLabel" aria-hidden="true" style="z-index: 10060 !important;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" style="z-index: 10060 !important; position: relative; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);">
+        <div class="modal-content" style="border-radius: 8px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); position: relative; z-index: 10060 !important;">
             <div class="modal-header" style="background: #860000; color: white; border-bottom: 2px solid #6B0000; padding: 1rem 1.5rem;">
                 <h5 class="modal-title" id="editProfileLabel" style="font-size: 1.25rem; font-weight: 600; color: white; margin: 0;">
                     <i class="bi bi-pencil-square"></i> Edit Cooperative Profile
@@ -677,13 +676,52 @@
 </div>
 
 <style>
-    /* Edit Modal Overrides */
+    /* Edit Modal Overrides - Same z-index as OCR drawer (10060) */
     #editProfileModal {
-        z-index: 10050 !important;
+        z-index: 10060 !important;
     }
     
-    #editProfileModal .modal-backdrop {
-        z-index: 10040 !important;
+    #editProfileModal .modal-dialog {
+        z-index: 10060 !important;
+        position: relative;
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        max-width: 1140px;
+        margin: 1.75rem auto;
+    }
+    
+    /* Adjust modal position when OCR drawer is open */
+    #editProfileModal.ocr-open .modal-dialog {
+        margin-right: 400px;
+        max-width: calc(100% - 450px);
+    }
+    
+    #editProfileModal .modal-content {
+        z-index: 10060 !important;
+        position: relative;
+    }
+    
+    /* Bootstrap modal backdrop for Edit Profile Modal */
+    #editProfileModal + .modal-backdrop,
+    .modal-backdrop.show {
+        z-index: 10050 !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+    }
+    
+    /* Ensure OCR drawer stays above backdrop and is clickable */
+    .ocr-drawer-wrapper {
+        z-index: 10070 !important;
+        pointer-events: none;
+    }
+    
+    /* Make OCR drawer clickable when open */
+    .ocr-drawer-wrapper .ocr-drawer.open {
+        pointer-events: all;
+        z-index: 10070 !important;
+    }
+    
+    .ocr-drawer {
+        pointer-events: all;
+        z-index: 10070 !important;
     }
     
     /* Form Styling Improvements */
@@ -892,6 +930,27 @@
         font-size: 0.85rem;
         color: #6B6B6B;
         margin: 0;
+    }
+    
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 1400px) {
+        #editProfileModal.ocr-open .modal-dialog {
+            margin-right: 390px;
+            max-width: calc(100% - 410px);
+        }
+    }
+    
+    @media (max-width: 1200px) {
+        #editProfileModal.ocr-open .modal-dialog {
+            margin-right: 0;
+            max-width: 1140px;
+        }
+        
+        /* Stack OCR drawer on top on smaller screens */
+        .ocr-drawer {
+            width: 100%;
+            max-width: 380px;
+        }
     }
 </style>
 
@@ -1781,9 +1840,19 @@ document.addEventListener('DOMContentLoaded', () => {
         function toggleOcrDrawer(open) {
             if (open) {
                 ocrDrawer.classList.add('open');
+                // Adjust edit profile modal position if it's open
+                const editModal = document.getElementById('editProfileModal');
+                if (editModal && editModal.classList.contains('show')) {
+                    editModal.classList.add('ocr-open');
+                }
             } else {
                 ocrDrawer.classList.remove('open');
                 stopCamera();
+                // Reset edit profile modal position
+                const editModal = document.getElementById('editProfileModal');
+                if (editModal) {
+                    editModal.classList.remove('ocr-open');
+                }
             }
         }
 
@@ -1798,18 +1867,41 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ocrBtnEditProfile) {
             ocrBtnEditProfile.addEventListener('click', (e) => {
                 e.stopPropagation();
-                toggleOcrDrawer(true);
+                // Toggle functionality - close if already open, open if closed
+                const isOpen = ocrDrawer.classList.contains('open');
+                toggleOcrDrawer(!isOpen);
+                
+                // Adjust edit profile modal position
+                const editModal = document.getElementById('editProfileModal');
+                if (editModal) {
+                    if (!isOpen) {
+                        editModal.classList.add('ocr-open');
+                    } else {
+                        editModal.classList.remove('ocr-open');
+                    }
+                }
             });
         }
 
         if (ocrDrawerClose) {
-            ocrDrawerClose.addEventListener('click', () => toggleOcrDrawer(false));
+            ocrDrawerClose.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleOcrDrawer(false);
+            });
         }
 
-        // Close drawer when clicking outside
+        // Prevent clicks inside the OCR drawer from closing it
+        if (ocrDrawer) {
+            ocrDrawer.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent event from bubbling up
+            });
+        }
+
+        // Close drawer when clicking on the wrapper (outside the drawer)
         const ocrDrawerWrapper = document.querySelector('.ocr-drawer-wrapper');
         if (ocrDrawerWrapper) {
             ocrDrawerWrapper.addEventListener('click', (e) => {
+                // Only close if clicking directly on the wrapper, not its children
                 if (e.target === ocrDrawerWrapper) {
                     toggleOcrDrawer(false);
                 }
@@ -1941,6 +2033,67 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert("No image found.");
                 } catch (e) {
                     alert("Clipboard access denied.");
+                }
+            });
+        }
+
+        // Screenshot button functionality
+        const ocrScreenshotBtn = document.getElementById('ocrScreenshotBtn');
+        if (ocrScreenshotBtn) {
+            ocrScreenshotBtn.addEventListener('click', async () => {
+                try {
+                    // Check if the browser supports the Screen Capture API
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                        alert("Screenshot capture is not supported in this browser. Please use Chrome, Edge, or Firefox.");
+                        return;
+                    }
+
+                    // Request screen capture
+                    const stream = await navigator.mediaDevices.getDisplayMedia({
+                        video: { mediaSource: 'screen' }
+                    });
+
+                    // Create video element to capture the stream
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.play();
+
+                    // Wait for video to be ready
+                    await new Promise((resolve) => {
+                        video.onloadedmetadata = resolve;
+                    });
+
+                    // Create canvas and capture the frame
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+
+                    // Stop the stream
+                    stream.getTracks().forEach(track => track.stop());
+
+                    // Convert to base64 and process
+                    const base64 = canvas.toDataURL('image/jpeg', 0.9);
+                    
+                    // Show preview
+                    const preview = document.getElementById('ocr-image-preview');
+                    const previewImg = document.getElementById('ocr-preview-img');
+                    if (preview && previewImg) {
+                        previewImg.src = base64;
+                        preview.style.display = 'block';
+                    }
+                    
+                    processBase64Image(base64);
+                } catch (e) {
+                    console.error('Screenshot error:', e);
+                    if (e.name === 'NotAllowedError') {
+                        alert("Screenshot permission denied. Please allow screen sharing to use this feature.");
+                    } else if (e.name === 'NotSupportedError') {
+                        alert("Screenshot capture is not supported in this browser.");
+                    } else {
+                        alert("Failed to capture screenshot: " + e.message);
+                    }
                 }
             });
         }
@@ -2156,10 +2309,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.success && data.sessions.length > 0) {
                     sessionsList.innerHTML = '';
-                    // Reverse to show newest first, then number them
-                    const reversedSessions = [...data.sessions].reverse();
-                    reversedSessions.forEach((session, index) => {
-                        const scanNumber = data.sessions.length - index; // Number from highest to lowest
+                    // Show newest first (already ordered by -created_at), number them sequentially
+                    data.sessions.forEach((session, index) => {
+                        const scanNumber = data.sessions.length - index; // Newest scan gets highest number (1, 2, 3, 4...)
                         const sessionDiv = document.createElement('div');
                         sessionDiv.className = 'ocr-session-item';
                         sessionDiv.style.cssText = 'padding: 12px; margin-bottom: 8px; background: white; border-radius: 8px; border: 1px solid #edf2f7; cursor: pointer; transition: all 0.2s;';
@@ -2566,6 +2718,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Ensure modal appears above profile modal
             editModalElement.style.zIndex = '10050';
+            
+            // Close OCR drawer when modal is hidden
+            editModalElement.addEventListener('hidden.bs.modal', function() {
+                toggleOcrDrawer(false);
+                editModalElement.classList.remove('ocr-open');
+            });
             
             formContainer.innerHTML = '<div class="text-center" style="padding: 40px;"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Loading form...</p></div>';
             editModal.show();

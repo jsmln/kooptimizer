@@ -17,8 +17,43 @@ def send_push_notification_for_message(message, receiver_user):
         if not message_preview and message.attachment:
             message_preview = "Sent an attachment"
 
-        # Get sender username safely
-        sender_name = message.sender.username if message.sender else "Unknown"
+        # Get sender fullname safely
+        def get_fullname(user_obj):
+            if not user_obj:
+                return "Unknown"
+            # Try Admin profile (OneToOneField, related_name defaults to lowercase model name)
+            try:
+                if hasattr(user_obj, 'admin'):
+                    fullname = getattr(user_obj.admin, 'fullname', None)
+                    if fullname:
+                        return fullname
+            except Exception:
+                pass
+            
+            # Try Staff profile
+            try:
+                if hasattr(user_obj, 'staff'):
+                    fullname = getattr(user_obj.staff, 'fullname', None)
+                    if fullname:
+                        return fullname
+            except Exception:
+                pass
+            
+            # Try Officer profile (uses custom related_name, ForeignKey returns queryset)
+            try:
+                if hasattr(user_obj, 'cooperatives_officer_profile'):
+                    officer = user_obj.cooperatives_officer_profile.first()
+                    if officer:
+                        fullname = getattr(officer, 'fullname', None)
+                        if fullname:
+                            return fullname
+            except Exception:
+                pass
+            
+            # Fallback to username
+            return getattr(user_obj, 'username', 'Unknown')
+        
+        sender_name = get_fullname(message.sender)
 
         # Use the centralized notification utility
         return send_push_notification(

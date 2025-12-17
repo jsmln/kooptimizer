@@ -622,7 +622,7 @@ table tr.selected .sticky-col {
     right: 0;
     top: 0;
     height: 100vh;
-    z-index: 10060;
+    z-index: 10070;
     pointer-events: none;
 }
 
@@ -638,10 +638,10 @@ table tr.selected .sticky-col {
     pointer-events: all;
     overflow-y: auto;
     border-left: 1px solid #edf2f7;
-    z-index: 10060;
+    z-index: 10070;
 }
 
-.ocr-drawer.open { right: 0; z-index: 10060; }
+.ocr-drawer.open { right: 0; z-index: 10070; pointer-events: all; }
 
 .ocr-drawer-header {
     background: linear-gradient(135deg, #a91e2c 0%, #8a1824 100%);

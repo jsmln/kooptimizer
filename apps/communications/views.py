@@ -1385,22 +1385,35 @@ def get_recent_activity(request):
         def _friendly_name(user_obj):
             if not user_obj:
                 return 'Unknown'
-            # Prefer explicit first/last if present
-            fn = getattr(user_obj, 'first_name', None)
-            ln = getattr(user_obj, 'last_name', None)
-            if fn or ln:
-                return f"{fn or ''} {ln or ''}".strip()
-
-            # Try related profile models that have `fullname`
-            for rel in ('admin_profile', 'staff_profile', 'officer_profile'):
-                try:
-                    prof = getattr(user_obj, rel)
-                except Exception:
-                    prof = None
-                if prof:
-                    fullname = getattr(prof, 'fullname', None)
+            
+            # Try Admin profile (OneToOneField, related_name defaults to lowercase model name)
+            try:
+                if hasattr(user_obj, 'admin'):
+                    fullname = getattr(user_obj.admin, 'fullname', None)
                     if fullname:
                         return fullname
+            except Exception:
+                pass
+            
+            # Try Staff profile
+            try:
+                if hasattr(user_obj, 'staff'):
+                    fullname = getattr(user_obj.staff, 'fullname', None)
+                    if fullname:
+                        return fullname
+            except Exception:
+                pass
+            
+            # Try Officer profile (uses custom related_name, ForeignKey returns queryset)
+            try:
+                if hasattr(user_obj, 'cooperatives_officer_profile'):
+                    officer = user_obj.cooperatives_officer_profile.first()
+                    if officer:
+                        fullname = getattr(officer, 'fullname', None)
+                        if fullname:
+                            return fullname
+            except Exception:
+                pass
 
             # Fallback to username
             return getattr(user_obj, 'username', 'Unknown')
@@ -1418,7 +1431,9 @@ def get_recent_activity(request):
         activities.append({
             'title': 'New Message',
             'sender': f"from {sender_name}",
-            'time': time_display
+            'time': time_display,
+            'message_id': msg.message_id,
+            'sender_id': msg.sender.user_id if msg.sender else None
         })
 
     return JsonResponse({'status': 'success', 'activities': activities})

@@ -2302,6 +2302,25 @@
         
         await loadContacts();
         
+        // Check for URL parameter to open specific conversation
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('user');
+        
+        if (userId) {
+            // Security: Only allow opening conversations with users in contact list
+            const foundContact = allContacts.find(c => c.user_id == userId);
+            if (foundContact) {
+                await selectContact(foundContact);
+                return; // Skip opening last contact
+            } else {
+                // Invalid user parameter - remove it from URL for security
+                // This prevents users from manually changing the URL to access unauthorized conversations
+                const cleanUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, cleanUrl);
+                console.warn('Invalid user parameter in URL. Access denied.');
+            }
+        }
+        
         // Auto-open last conversation if exists (but only on desktop)
         const lastContact = localStorage.getItem('lastOpenedContact');
         if (lastContact && window.innerWidth > 900) {
